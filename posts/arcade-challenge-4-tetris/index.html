@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Arcade Challenge 4: Tetris | megacolorboy</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="author" content="Abdush Shakoor">
+	<meta name="description" content="This is the fourth article of the Arcade Challenge series. In this article, I'll be talking about Tetris, it's history and game mechanics, in short..">
+
+	<meta name="og:title" content="Arcade Challenge 4: Tetris | megacolorboy" />
+	<meta name="og:type" content="article" />
+	<meta name="og:url" content="https://www.megacolorboy.com/posts/arcade-challenge-4-tetris/" />
+	<meta name="og:description" content="This is the fourth article of the Arcade Challenge series. In this article, I'll be talking about Tetris, it's history and game mechanics, in short." />
+	<meta name="og:site_name" content="Abdush Shakoor's Blog | megacolorboy" />
+
+	<link href="/static/favicon.ico" rel="shortcut icon" type="image/x-icon"/>
+	<link rel="stylesheet" href="/static/css/main.css" type="text/css"/>
+	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.1/css/all.css" integrity="sha384-gfdkjb5BdAXd+lj+gudLWI+BXq4IuLW5IT+brZEZsLFm++aCMlF1V92rMkPaX4PP" crossorigin="anonymous">
+	<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.13.1/styles/dracula.min.css">
+</head>
+<body>
+	<main class="article-main">
+		<!-- Website header -->
+		<header class="navbar">
+			<a class="logo-link" href="/">
+				<div class="header-logo">
+					<img src="/static/images/avatar2.gif"/>
+					<div class="logo-text">
+						<p class="logo-title">mega<span class="trademark">color</span>boy</p>
+						<p class="logo-subtitle">The blog of Abdush Shakoor</p>
+					</div>
+				</div>
+			</a>
+			<ul class="header-links">
+				<li><a href="/">Writings</a></li>
+				<!-- <li><a href="#">Projects</a></li> -->
+				<li><a href="/about">About me</a></li>
+			</ul>
+		</header>
+		<!-- Website header -->
+
+		<div id="article-bg-image">
+			<canvas id="bg-pattern" class="bg-pattern" width="1280px" height="450px" style="display:none;"></canvas>
+			<div class="post-details">
+				<div class="grid__item">
+					<div>
+						<h5>Arcade Challenge</h5>
+						<h1>Arcade Challenge 4: Tetris</h1>
+					</div>
+				</div>
+				<div class="grid__item">
+					<div>
+						<p>This is the fourth article of the Arcade Challenge series. In this article, I'll be talking about Tetris, it's history and game mechanics, in short.</p>
+						<h6>Abdush Shakoor <span style="margin:0px 5px;">&#9679;</span> August 12th, 2017</h6>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<article class="article-container">
+			<div class="content">
+				<div class="content-html">
+				<script defer type="text/javascript" src="/static/projects/tetris/js/tetris.js"></script>
+
+<script defer type="text/javascript" src="/static/projects/tetris/js/render.js"></script>
+
+<script defer type="text/javascript" src="/static/projects/tetris/js/controller.js"></script>
+
+<figure>
+    <canvas style="border-radius: 0px;background-color:#333;" id="tetris_canvas" width="300" height="600"></canvas>
+</figure>
+
+<p>Before you read more about this article, play with the above game. It's simple, control each block using <strong><em>WASD</em></strong> keys to rotate and move the block to the left, right and down of the canvas.</p>
+
+<p>This is part of the <a href="/posts/i-challenged-myself-to-build-4-arcade-games">Arcade Challenge</a> series. If you haven't read the previous articles, here you go:</p>
+
+<ul>
+<li><a href="/posts/arcade-challenge-1-snake-game/">Snake Game</a></li>
+<li><a href="/posts/arcade-challenge-2-breakout/">Breakout</a></li>
+<li><a href="/posts/arcade-challenge-3-pong/">Pong</a></li>
+</ul>
+
+<h2>Background</h2>
+
+<p>Tetris is a tile-matching puzzle game in which you have shapes called "Tetrominoes" (I'll be talking about it more in detail below.) falling down vertically from above into a matrix or "the well". The game's objective is to set a high score by manipulating the seven shapes (but I didn't set a scoring system for this implementation) by moving left, right, down or rotating the shape by 90 degree units. As the game progresses, the tetrominoes would fall faster in every level, thus, making it challenging to play.</p>
+
+<h2>History</h2>
+
+<p>In 1984, the game was invented, designed and programmed by an AI researcher named <a href="https://en.wikipedia.org/wiki/Alexey_Pajitnov">Alexey Pajitnov</a>, who at the time worked for the <strong><em>Soviet Academy of Sciences</em></strong> in Moscow.</p>
+
+<figure>
+    <img src="https://upload.wikimedia.org/wikipedia/en/8/8d/NES_Tetris_Box_Front.jpg"/>
+    <figcaption>Tetris cover art</figcaption>
+</figure>
+
+<p>Alexey Pajitnov was inspired by the classic Roman puzzle game called <a href="https://en.wikipedia.org/wiki/Pentomino">Pentomino</a>. In 1985, the game was published for various game consoles.</p>
+
+<h2>Game mechanics</h2>
+
+<p>This game has quite some interesting mechanics, for those who don't know, here it is:</p>
+
+<ul>
+<li><a href="#generating-shapes">Generating Shapes</a></li>
+<li><a href="#collision">Collision</a></li>
+<li><a href="#freeze-the-line">Freeze the Line</a></li>
+<li><a href="#rotating-shapes">Rotating Shapes</a></li>
+<li><a href="#clearing-the-line">Clearing the Line</a></li>
+</ul>
+
+<h3><a id="generating-shapes"></a> Generating Shapes</h3>
+
+<p>These shapes are called <strong><em>"tetrominoes"</em></strong> i.e. a unique arrangement of 4 cells in a 4x4 grid. Mathematically, it is proven that there can only be seven tetrominoes on a <strong><em>two-dimensional space</em></strong>, which also means seven different ways to arrange 4 cells.</p>
+
+<figure>
+    <img src="http://oopsilon.com/06/texts/tetris-shapes.gif"/>
+    <figcaption>The Seven Tetrominoes</figcaption>
+</figure>
+
+<p>I'm sure a lot of you know that Javascript doesn't have a special way of creating multi-dimensional arrays. So in order to draw a random shape, I had to convert a two-dimensional array index to a one-dimensional array index to fill each cell i.e. if it was a '1', it would be filled with color and if it's a '0', it would be empty.</p>
+
+<pre>
+    <code class="js">
+    //Generate new random shape
+    function newShape()
+    {
+        current = [];
+
+        var rand = Math.floor(Math.random() * shapes.length);
+        var shape = shapes[rand];
+
+        for(var y=0; y<4; y++)
+        {
+            current[y] = [];
+            for(var x=0; x<4; x++)
+            {
+                //convert 2D index to 1D index
+                var i = 4 * y + x;
+                if(shape[i])
+                {
+                    current[y][x] = rand + 1;
+                }
+                else
+                {
+                    current[y][x] = 0;
+                }
+            }
+        }
+
+        currentX = 5;
+        currentY = 0;
+    }
+    </code>
+</pre>
+
+<h3><a id="collision"></a> Collision</h3>
+
+<p>As I had mentioned in my <a href="/posts/arcade-challenge-3-pong/">previous post</a>, I was inspired to use the <a href="https://en.wikipedia.org/wiki/Minimum_bounding_box#Axis-aligned_minimum_bounding_box">AABB collision</a> algorithm to prevent the tetrominoes from going away from the canvas. Well, we all know that simple physics says that if an object is dropped from above, it should break the ones below but in this case, that doesn't happen. Instead, the tetrominoes are stacked on top of each other, which unlike real gravity, that contributes to the actual gameplay.</p>
+
+<pre>
+    <code class="js">
+    //Check if this shape's position is valid in the board
+    function isValid(offsetX, offsetY, newCurrent)
+    {
+        //if offsetX is not set, set it to 0
+        offsetX = offsetX || 0;
+        //if offsetY is not set, set it to 0
+        offsetY = offsetY || 0;
+
+        offsetX = currentX + offsetX;
+        offsetY = currentY + offsetY;
+
+        newCurrent = newCurrent || current;
+
+        for(var y=0; y<4; y++)
+        {
+            for(var x=0; x<4; x++)
+            {
+                if(newCurrent[y][x])
+                {
+                    if(typeof board[y + offsetY] == 'undefined' ||
+                    typeof board[y + offsetY][x + offsetX] == 'undefined' ||
+                    board[y + offsetY][x + offsetX] ||
+                    x + offsetX < 0 ||
+                    y + offsetY >= rows ||
+                    x + offsetX >= cols)
+                    {
+                        if(offsetY == 1){lose = true;}
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    } 
+    </code>
+</pre>
+
+<h3><a id="freeze-the-line"></a> Freeze the Line</h3>
+
+<p>Honestly, I could have come up with a better name but the method freeze() stops the shape at it's current position (i.e. after a collision has occurred) and saves it to the 2D canvas.</p>
+
+<pre>
+    <code class="js">
+    function freeze()
+    {
+        for(var y=0; y<4; y++)
+        {
+            for(var x=0; x<4; x++)
+            {
+                if(current[y][x])
+                {
+                    board[y+currentY][x+currentX] = current[y][x];
+                }
+            }
+        }
+    }
+    </code>
+</pre>
+
+<h3><a id="rotating-shapes"></a> Rotating Shapes</h3>
+
+<p>In order to rotate a shape perpendicularly anticlockwise, you have to perform an operation that flips the indices from bottom to top of the matrix, this operation is called <a href="https://en.wikipedia.org/wiki/Transpose">Matrix Transpose</a>. Although I learnt this in my math classes, I implemented this operation in a Computer Graphics course that I took, as an elective, in my university on Spring 2016 for the first time.</p>
+
+<pre>
+    <code class="js">
+    //Rotate the current moving shape
+    function rotate(current)
+    {
+        var newCurrent = [];
+        for(var y=0; y<4; y++)
+        {
+            newCurrent[y] = [];
+            for(var x=0; x<4; x++)
+            {
+                newCurrent[y][x] = current[3-x][y];
+            }
+        }
+        return newCurrent;
+    }
+    </code>
+</pre>
+
+<h3><a id="clearing-the-line"></a> Clearing the Line</h3>
+
+<p>At every update, the method named <strong><em>clearLines()</em></strong> has to scan for any complete row(s), if it's complete, the cells in those rows must be replaced with the ones above it. This gives a sort of <strong><em>"falling gravity"</em></strong> effect, when the remaining cells are replaced with the row that has been cleared.</p>
+
+<pre>
+    <code class="js">
+    function clearLines()
+    {
+        //Bottom up approach
+        for(var y = rows - 1; y>=0; y--)
+        {
+            var isComplete = true;
+            for(var x=0; x < cols; x++)
+            {
+                //if there's any empty cell in the row
+                if(board[y][x] == 0)
+                {
+                    //Then the row isn't complete
+                    isComplete = false;
+                    break;
+                }
+            }
+
+            //This code is to remove the current completed line,
+            //and replace it with the line above it.
+            if(isComplete)
+            {
+                for(var i=y; i>0; i--)
+                {
+                    for(var j=0; j < cols; j++)
+                    {
+                        board[i][j] = board[i-1][j];
+                    }
+                }
+                y++;
+            }
+        }
+    }
+    </code>
+</pre>
+
+<p>The game was built using HTML5 Canvas and Javascript, so please feel free to read the source code to understand the logic of the game. </p>
+
+<h2>What's next?</h2>
+
+<p>I know that in my <a href="/posts/i-challenged-myself-to-build-4-arcade-games/">first post</a>, I had mentioned that I'll do this whole challenge for a month but then I wasn't able to do everything in a month. So, I decided that I will be trying my best to remake more arcade games in the future and keep posting them on this blog. Hope you guys liked reading these articles!</p>
+
+<p>Sayonara!</p>
+
+<h2>References</h2>
+
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Tetris">Tetris (1984)</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Alexey_Pajitnov">Alexey Pajitnov</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Transpose">Matrix Transpose</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Minimum_bounding_box#Axis-aligned_minimum_bounding_box">Axis Aligned Bounding Collision</a></li>
+</ul>
+
+				</div>
+
+				<div class="share-container">
+					<p>Share this article:</p>
+					<div class="share-links">
+						<a href="https://www.facebook.com/sharer/sharer.php?u=https://www.megacolorboy.com/posts/arcade-challenge-4-tetris/"><i class="fab fa-facebook-f"></i></a>
+						<a href="https://www.twitter.com/home?status=https://www.megacolorboy.com/posts/arcade-challenge-4-tetris/"><i class="fab fa-twitter"></i></a>
+						<a href="https://www.linkedin.com/shareArticle?mini=true&url=https://www.megacolorboy.com/posts/arcade-challenge-4-tetris/&title=Arcade Challenge 4: Tetris | megacolorboy&summary=&source="><i class="fab fa-linkedin-in"></i></a>
+						<a href="https://www.plus.google.com/share?url=https://www.megacolorboy.com/posts/arcade-challenge-4-tetris/"><i class="fab fa-google-plus-g"></i></a>
+					</div>
+				</div>
+			</div>
+		</article>
+
+	</main>
+</body>
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.2/jquery.min.js"></script>
+<script src="/static/js/script.js" type="text/javascript"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.13.1/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-98290003-2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-98290003-2');
+</script>
+</html>

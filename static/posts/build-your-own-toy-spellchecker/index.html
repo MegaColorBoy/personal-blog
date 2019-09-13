@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Build your own toy spellchecker | megacolorboy</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="author" content="Abdush Shakoor">
+	<meta name="description" content="Wrote a simple toy spellchecker using C++ by taking inspiration from Peter Norvig's article..">
+
+	<meta name="og:title" content="Build your own toy spellchecker | megacolorboy" />
+	<meta name="og:type" content="article" />
+	<meta name="og:url" content="https://www.megacolorboy.com/posts/build-your-own-toy-spellchecker/" />
+	<meta name="og:description" content="Wrote a simple toy spellchecker using C++ by taking inspiration from Peter Norvig's article." />
+	<meta name="og:site_name" content="Abdush Shakoor's Blog | megacolorboy" />
+
+	<link href="/static/favicon.ico" rel="shortcut icon" type="image/x-icon"/>
+	<link rel="stylesheet" href="/static/css/main.css" type="text/css"/>
+	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.1/css/all.css" integrity="sha384-gfdkjb5BdAXd+lj+gudLWI+BXq4IuLW5IT+brZEZsLFm++aCMlF1V92rMkPaX4PP" crossorigin="anonymous">
+	<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.13.1/styles/dracula.min.css">
+</head>
+<body>
+	<main class="article-main">
+		<!-- Website header -->
+		<header class="navbar">
+			<a class="logo-link" href="/">
+				<div class="header-logo">
+					<img src="/static/images/avatar2.gif"/>
+					<div class="logo-text">
+						<p class="logo-title">mega<span class="trademark">color</span>boy</p>
+						<p class="logo-subtitle">The blog of Abdush Shakoor</p>
+					</div>
+				</div>
+			</a>
+			<ul class="header-links">
+				<li><a href="/">Writings</a></li>
+				<!-- <li><a href="#">Projects</a></li> -->
+				<li><a href="/about">About me</a></li>
+			</ul>
+		</header>
+		<!-- Website header -->
+
+		<div id="article-bg-image">
+			<canvas id="bg-pattern" class="bg-pattern" width="1280px" height="450px" style="display:none;"></canvas>
+			<div class="post-details">
+				<div class="grid__item">
+					<div>
+						<h5>Algorithms</h5>
+						<h1>Build your own toy spellchecker</h1>
+					</div>
+				</div>
+				<div class="grid__item">
+					<div>
+						<p>Wrote a simple toy spellchecker using C++ by taking inspiration from Peter Norvig's article.</p>
+						<h6>Abdush Shakoor <span style="margin:0px 5px;">&#9679;</span> July 19th, 2019</h6>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<article class="article-container">
+			<div class="content">
+				<div class="content-html">
+				<p>Spellcheckers and autocorrect, aren't they magical? They do feel like magic to me. I mean, how is it able to predict what word do you want to type?</p>
+
+<p>According to <a href="https://norvig.com">Norvig</a>, some of the most talented engineers at Google don't have a complete understanding of how a spellchecker works.</p>
+
+<p>Peter Norvig's <a href="https://norvig.com/spell-correct.html">solution in Python</a> is so elegant and simple, I don't think anyone can write better than that. However, I wanted to know how it works, so I thought of building it to understand it's functionality. Also, an excuse to exercise my C++ skills.</p>
+
+<p>So, are you as curious as I am? If you are, I think you're in the right spot.</p>
+
+<h2>How it works?</h2>
+
+<p>Okay, so think about it? What does a spellchecker do? You type in a misspelled word and it returns a word with the highest probability, right? </p>
+
+<p>Well, there's a little bit more to it.</p>
+
+<h3>Create a word dictionary</h3>
+
+<p>First, we must create a dictionary, in order to do that, you need to extract words from a large piece of text and store it in a Hashmap in which each word will have a word count. In this example, I've used a Sherlock Holmes novel (which is around 6MB). The words are extracted from a novel instead of an actual dictionary because it can be used to create a simple Language Model.</p>
+
+<p><strong>Source code to create a dictionary:</strong></p>
+
+<pre>
+    <code class="cpp">
+    void SpellChecker::extractWords(string &filename)
+    {
+        ifstream infile;
+        infile.open(filename);
+        string x;
+        while(infile &gt;&gt; x)
+        {
+            x = filterAlpha(x);
+            dictionary[x]++;
+        }
+    }
+
+    string SpellChecker::filterAlpha(string &word)
+    {
+        for(int i=0; i&lt;word.size(); i++)
+        {
+            char ch = word[i];
+
+            if(ch &lt; 0)
+            {
+                word[i] = '-';
+            }
+
+            if(isalpha(ch))
+            {
+                word[i] = tolower(ch);
+            }
+        }
+
+        return word;
+    }
+    </code>
+</pre>
+
+<h3>Create a list of candidates</h3>
+
+<p>Second, we must able to predict/hypothesize the ways of editing text when the user types. It could be one of the following types of editing:</p>
+
+<ul>
+<li><a href="#inserts">Adding a letter</a></li>
+<li><a href="#replaces">Replacing a letter</a></li>
+<li><a href="#transposes">Switching two adjacent letters</a></li>
+<li><a href="#deletes">Removing a letter</a></li>
+</ul>
+
+<p>Based on the types of edits a user could make, we can generate a list of possible candidates by creating permutations using these edit methods mentioned above.</p>
+
+<h4><a id="inserts"></a> Adding a letter</h4>
+
+<p>In this method, you generate a list of candidates by inserting a letter in every iteration.</p>
+
+<pre>
+    <code class="cpp">
+    void SpellChecker::inserts(string &word, Vector &result)
+    {
+        for(int i=0; i&lt;word.size()+1; i++)
+        {
+            for(int j=0; j&lt;alphabets.size(); j++)
+            {
+                char ch = alphabets[j];
+                result.push_back(word.substr(0,i) + ch + word.substr(i));
+            }
+        }
+    }
+    </code>
+</pre>
+
+<h4><a id="replaces"></a> Replacing a letter</h4>
+
+<p>In this method, you generate a list of candidates by replacing each character with a letter from a list of alphabets in every iteration.</p>
+
+<pre>
+    <code class="cpp">
+    void SpellChecker::replaces(string &word, Vector &result)
+    {
+        for(int i=0; i&lt;word.size(); i++)
+        {
+            for(int j=0; j&lt;alphabets.size(); j++)
+            {
+                char ch = alphabets[j];
+                result.push_back(word.substr(0,i) + ch + word.substr(i+1));
+            }
+        }
+    }
+    </code>
+</pre>
+
+<h4><a id="transposes"></a> Switching two adjacent letters</h4>
+
+<p>In this method, you generate a list of candidates by switcing two adjacent letters in every iteration. For example: the word "ornage" would look like this: "orange", when the letters "n" and "a" are swapped.</p>
+
+<pre>
+    <code class="cpp">
+    void SpellChecker::transposes(string &word, Vector &result)
+    {
+        for(int i=0; i&lt;word.size()-1; i++)
+        {
+            result.push_back(word.substr(0,i) + word[i+1] + word[i] + word.substr(i+2));
+        }
+    }
+    </code>
+</pre>
+
+<h4><a id="deletes"></a> Removing a letter</h4>
+
+<p>In this method, you generate a list of candidates by removing a letter in every iteration.</p>
+
+<pre>
+    <code class="cpp">
+    void SpellChecker::deletes(string &word, Vector &result)
+    {
+        for(int i=0; i&lt;word.size(); i++)
+        {
+            result.push_back(word.substr(0,i) + word.substr(i+1));
+        }
+    }
+    </code>
+</pre>
+
+<p>All of these methods are called in one wrapper method:</p>
+
+<pre>
+    <code class="cpp">
+    void SpellChecker::edits(string &word, Vector &result)
+    {
+        //Deletion
+        deletes(word, result);
+
+        //Transposition
+        transposes(word, result);
+
+        //Replacement
+        replaces(word, result);
+
+        //Insertion
+        inserts(word, result);
+    }
+    </code>
+</pre>
+
+<h3>Extract the known words</h3>
+
+<p>Third, at this stage, the above step would've generated a huge list of words but 90% of them would be gibberish, so we need to "clean" the list and extract the known words using the dictionary we've created.</p>
+
+<pre>
+    <code class="cpp">
+    void SpellChecker::known_words(Vector& results, Dictionary &candidates)
+    {
+        Dictionary::iterator end = dictionary.end();
+
+        for(int i=0; i&lt;results.size(); i++)
+        {
+            Dictionary::iterator val = dictionary.find(results[i]);
+
+            if(val != end)
+            {
+                candidates[val->first] = val->second;
+            }
+        }
+    }
+    </code>
+</pre>
+
+<p>The <mark>edits()</mark> method apply to words that have a edit distance of 1, what if it was 2 or more? Like if the user typed "the", it could've been "then" or "they". So, all you have to do is create a method that generates a new set of permutations based on the already generated list of edited words and extract the known words.</p>
+
+<pre>
+    <code class="cpp">
+    void SpellChecker::edits2(Vector &result, Dictionary &candidates)
+    {
+        for(int i=0; i&lt;result.size(); i++)
+        {
+            Vector edit2;
+
+            edits(result[i], edit2);
+            known_words(edit2, candidates);
+        }   
+    }
+    </code>
+</pre>
+
+<h3>Display the correct word</h3>
+
+<p>In order to determine the correct word, the following possibilities are considered:</p>
+
+<ol>
+<li>Check if this word is in the dictionary, if it does, display it.</li>
+<li>Generate known words that have an edit distance of 1 and check in the dictionary, if it does, display it.</li>
+<li>Generate known words that have an edit distance of 2 and check in the dictionary, if it does, display it.</li>
+<li>If all else fails, this word is unique or not a known word.</li>
+</ol>
+
+<pre>
+    <code class="cpp">
+    string SpellChecker::correct(string &word)
+    {
+        Vector result;
+        Dictionary candidates;
+
+        string file = "big.txt";
+
+        //1. if it's in the dictionary, display it
+        if(dictionary.find(word) != dictionary.end())
+        {
+            return word;
+        }
+
+        extractWords(file);
+
+        edits(word, result);
+        known_words(result, candidates);
+
+        //2. if it's a known word but one edit away
+        if(candidates.size() &gt; 0)
+        {
+            return max_element(candidates.begin(), candidates.end())-&gt;first;
+        }
+
+        //3. if it's a known word but two edits away
+        edits2(result, candidates);
+
+        if(candidates.size() &gt; 0)
+        {
+            return max_element(candidates.begin(), candidates.end())-&gt;first;
+        }
+
+        //4. Display nothing if it doesn't exist
+        return "This word doesn't exist!";
+    }
+    </code>
+</pre>
+
+<p>However, for conditions 2 and 3, the word displayed would most likely have the highest word frequency in the dictionary.</p>
+
+<h2>Conclusion</h2>
+
+<p>Phew! I hope that wasn't a long read. Although, I've written this on C++, I plan to rewrite this on Javascript for some of my future projects.</p>
+
+<p>To be honest, I don't think it's completely accurate, although, I got most of the words correct when tested.</p>
+
+<p>The source code can be found on my <a href="https://www.github.com/megacolorboy/ToySpellChecker">GitHub</a> repository.</p>
+
+<p>Hope you liked reading this article!</p>
+
+<p>Stay tuned for more!</p>
+
+				</div>
+
+				<div class="share-container">
+					<p>Share this article:</p>
+					<div class="share-links">
+						<a href="https://www.facebook.com/sharer/sharer.php?u=https://www.megacolorboy.com/posts/build-your-own-toy-spellchecker/"><i class="fab fa-facebook-f"></i></a>
+						<a href="https://www.twitter.com/home?status=https://www.megacolorboy.com/posts/build-your-own-toy-spellchecker/"><i class="fab fa-twitter"></i></a>
+						<a href="https://www.linkedin.com/shareArticle?mini=true&url=https://www.megacolorboy.com/posts/build-your-own-toy-spellchecker/&title=Build your own toy spellchecker | megacolorboy&summary=&source="><i class="fab fa-linkedin-in"></i></a>
+						<a href="https://www.plus.google.com/share?url=https://www.megacolorboy.com/posts/build-your-own-toy-spellchecker/"><i class="fab fa-google-plus-g"></i></a>
+					</div>
+				</div>
+			</div>
+		</article>
+
+	</main>
+</body>
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.2/jquery.min.js"></script>
+<script src="/static/js/script.js" type="text/javascript"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.13.1/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-98290003-2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-98290003-2');
+</script>
+</html>

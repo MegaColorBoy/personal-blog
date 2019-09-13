@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>The 15 Puzzle Game | megacolorboy</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="author" content="Abdush Shakoor">
+	<meta name="description" content="A classical numbered puzzle that requires the player to place all the tiles in an ordered sequence..">
+
+	<meta name="og:title" content="The 15 Puzzle Game | megacolorboy" />
+	<meta name="og:type" content="article" />
+	<meta name="og:url" content="https://www.megacolorboy.com/posts/the-15-puzzle-game/" />
+	<meta name="og:description" content="A classical numbered puzzle that requires the player to place all the tiles in an ordered sequence." />
+	<meta name="og:site_name" content="Abdush Shakoor's Blog | megacolorboy" />
+
+	<link href="/static/favicon.ico" rel="shortcut icon" type="image/x-icon"/>
+	<link rel="stylesheet" href="/static/css/main.css" type="text/css"/>
+	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.1/css/all.css" integrity="sha384-gfdkjb5BdAXd+lj+gudLWI+BXq4IuLW5IT+brZEZsLFm++aCMlF1V92rMkPaX4PP" crossorigin="anonymous">
+	<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.13.1/styles/dracula.min.css">
+</head>
+<body>
+	<main class="article-main">
+		<!-- Website header -->
+		<header class="navbar">
+			<a class="logo-link" href="/">
+				<div class="header-logo">
+					<img src="/static/images/avatar2.gif"/>
+					<div class="logo-text">
+						<p class="logo-title">mega<span class="trademark">color</span>boy</p>
+						<p class="logo-subtitle">The blog of Abdush Shakoor</p>
+					</div>
+				</div>
+			</a>
+			<ul class="header-links">
+				<li><a href="/">Writings</a></li>
+				<!-- <li><a href="#">Projects</a></li> -->
+				<li><a href="/about">About me</a></li>
+			</ul>
+		</header>
+		<!-- Website header -->
+
+		<div id="article-bg-image">
+			<canvas id="bg-pattern" class="bg-pattern" width="1280px" height="450px" style="display:none;"></canvas>
+			<div class="post-details">
+				<div class="grid__item">
+					<div>
+						<h5>Personal Challenge</h5>
+						<h1>The 15 Puzzle Game</h1>
+					</div>
+				</div>
+				<div class="grid__item">
+					<div>
+						<p>A classical numbered puzzle that requires the player to place all the tiles in an ordered sequence.</p>
+						<h6>Abdush Shakoor <span style="margin:0px 5px;">&#9679;</span> June 22nd, 2019</h6>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<article class="article-container">
+			<div class="content">
+				<div class="content-html">
+				<iframe src="/static/projects/15-puzzle" width="500" height="500"></iframe>
+
+<p>Before you read this article, play with the above puzzle. You can move the block around by <strong><em>left-clicking</em></strong> on a numbered tile that's adjacent to the empty tile.</p>
+
+<p>The source code for this puzzle can be found <a href="https://github.com/megacolorboy/BlogProjects/tree/master/15-puzzle">over here</a>.</p>
+
+<h2>Background</h2>
+
+<p>This is a game that has been on my list of projects for a long time and I've finally decided to work on it last night. Although, this post has nothing to do with Artificial Intelligence, I was inspired to write this game when I studied about <a href="https://en.wikipedia.org/wiki/Heuristic_(computer_science)">Heuristics</a> in the book named <a href="/posts/artificial-intelligence-a-modern-approach--chapter-1">Artificial Intelligence: A Modern Approach</a> and on how it was applied to this game.</p>
+
+<h2>What are the game mechanics?</h2>
+
+<p>This game is played on a <strong><em>four-by-four</em></strong> grid with numbered tiles that are shuffled randomly. As you can see, there are <strong><em>15 numbered cells</em></strong> and <strong><em>1 empty cell</em></strong> in the grid, this is to allow movement of the tiles within the grid.</p>
+
+<p>However, the movement is limited to the numbered tiles that are adjacent to the empty tile.</p>
+
+<p>The player wins the game after ordering all the numbered tiles in the grid in an order of ascending sequence.</p>
+
+<h2>Source code</h2>
+
+<pre>
+    <code class="js">
+    var board = [], rows = 4, cols = 4;
+    var possibleMoves, zx, zy, oldzx = -1, oldzy = -1;
+
+    //Generate 2D Board
+    function generateBoard()
+    {
+        for(var i=0; i&lt;rows; i++)
+        {
+            board[i] = [];
+        }
+
+        for(var j=0; j&lt;cols; j++)
+        {
+            for(var i=0; i&lt;rows; i++)
+            {
+                board[j][i] = (i + j * 4) + 1;
+            }
+        }
+
+        //position of the empty cell in the grid i.e. 3,3
+        zx = zy = 3;
+        board[zx][zy] = 16;
+    }
+
+    //Generate the cells
+    function generateCells()
+    {
+        var grid = document.createElement("div");
+        grid.className += "board";
+
+        document.body.appendChild(grid);
+
+        for(var j=0; j&lt;4; j++)
+        {
+            for(var i=0; i&lt;4; i++)
+            {
+                var cell = document.createElement("div");
+                cell.className += "cell";
+                cell.id = "cell_" + (i + j * 4);
+                cell.row = i;
+                cell.col = j;
+                cell.addEventListener("click", cellEventHandle, false);
+                cell.appendChild(document.createTextNode(""));
+                grid.appendChild(cell);
+            }
+        }
+    }
+
+    /*
+        Determine the possible number of moves
+        based on the empty cell's coordinates.
+    */
+    function genPossibleMoves()
+    {
+        possibleMoves = [];
+        var ii, jj;
+
+        /*
+            Just for reference:
+            The empty cell can be moved in the following x,y coords:
+            -1,0, 0,-1, 1,0, 0,1
+        */
+        var xCoords = [-1, 0, 1, 0];
+        var yCoords = [0, -1, 0, 1];
+
+        for(var i=0; i&lt;4; i++)
+        {
+            ii = zx + xCoords[i];
+            jj = zy + yCoords[i];
+
+            //If it's out of bounds, skip it
+            if(ii &lt; 0 || jj &lt; 0 || ii &gt; 3 || jj &gt; 3)
+            {
+                continue;
+            }
+
+            possibleMoves.push({x: ii, y: jj});
+        }
+    }
+
+    function updateCells()
+    {
+        for(var j=0; j&lt;cols; j++)
+        {
+            for(var i=0; i&lt;rows; i++)
+            {
+                var cell_id = "cell_" + (i + j * 4);
+                var cell = document.getElementById(cell_id);
+                var val = board[i][j];
+
+                if(val &lt; 16)
+                {
+                    cell.innerHTML = ("" + val);
+                    if(val % 2 == 0)
+                    {
+                        cell.className = "cell dark";               
+                    }
+                    else
+                    {
+                        cell.className = "cell light";
+                    }
+                }
+                else
+                {
+                    cell.innerHTML = "";
+                    cell.className = "empty";
+                }
+            }
+        }
+    }
+
+    //Event handler for each cell
+    function cellEventHandle(e)
+    {
+        genPossibleMoves();
+
+        //Current coords of the cell
+        var r = e.target.row;
+        var c = e.target.col;
+        var pos = -1;
+        var isPossible = false;
+        // console.log(r + "," + c);
+
+        /*
+            Check if the current cell is 
+            one of the possible moves
+        */
+        for(var i=0; i&lt;possibleMoves.length; i++)
+        {
+            if(possibleMoves[i].x == r && possibleMoves[i].y == c)
+            {
+                isPossible = true;
+                pos = i;
+                break;
+            }
+        }
+
+        if(isPossible)
+        {
+            var temp = possibleMoves[pos];
+
+            //Swap position of the empty cell
+            board[zx][zy] = board[temp.x][temp.y];
+            //Update the coordinates of the empty cell
+            zx = temp.x;
+            zy = temp.y;
+            board[zx][zy] = 16;
+            updateCells();
+
+            //Check if the game is over
+            if(is_game_over())
+            {
+                setTimeout(function(){
+                    alert("Congrats!");
+                }, 2);
+            }
+        }
+
+    }
+
+    //Check if the game is over
+    function is_game_over()
+    {
+        var currentVal = 0;
+        for(var j=0; j&lt;cols; j++)
+        {
+            for(var i=0; i&lt;rows; i++)
+            {
+                if(board[i][j] &lt; currentVal)
+                {
+                    return false;
+                }
+
+                currentVal = board[i][j];
+            }
+        }
+        return true;
+    }
+
+    //Shuffle the board
+    function shuffleBoard()
+    {
+        var shuffleLimit = 0;
+        var temp;
+
+        do
+        {
+            genPossibleMoves();
+
+            while(true)
+            {
+                // Pick a random cell of possible moves
+                temp = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
+                if (temp.x != oldzx || temp.y != oldzy)
+                {
+                    break;
+                }
+            }
+
+            oldzx = zx;
+            oldzy = zy;
+
+            board[zx][zy] = board[temp.x][temp.y];
+            zx = temp.x;
+            zy = temp.y;
+            board[zx][zy] = 16;
+
+        }while(++shuffleLimit &lt; 200);
+    }
+
+    //REstart the game
+    function restart()
+    {
+        shuffleBoard();
+        updateCells();
+    }
+
+    //Start the game
+    function start()
+    {
+        generateBoard();
+        generateCells();
+        restart();
+    }
+    </code>
+</pre>
+
+<p>As I had mentioned above, today's article has nothing to do with Artificial Intelligence but in the future, I plan to write a solver for this game that makes use of Heuristics.</p>
+
+<p>Hope you liked reading this article and have fun playing the game!</p>
+
+<p>Stay tuned for more!</p>
+
+				</div>
+
+				<div class="share-container">
+					<p>Share this article:</p>
+					<div class="share-links">
+						<a href="https://www.facebook.com/sharer/sharer.php?u=https://www.megacolorboy.com/posts/the-15-puzzle-game/"><i class="fab fa-facebook-f"></i></a>
+						<a href="https://www.twitter.com/home?status=https://www.megacolorboy.com/posts/the-15-puzzle-game/"><i class="fab fa-twitter"></i></a>
+						<a href="https://www.linkedin.com/shareArticle?mini=true&url=https://www.megacolorboy.com/posts/the-15-puzzle-game/&title=The 15 Puzzle Game | megacolorboy&summary=&source="><i class="fab fa-linkedin-in"></i></a>
+						<a href="https://www.plus.google.com/share?url=https://www.megacolorboy.com/posts/the-15-puzzle-game/"><i class="fab fa-google-plus-g"></i></a>
+					</div>
+				</div>
+			</div>
+		</article>
+
+	</main>
+</body>
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.2/jquery.min.js"></script>
+<script src="/static/js/script.js" type="text/javascript"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.13.1/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-98290003-2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-98290003-2');
+</script>
+</html>

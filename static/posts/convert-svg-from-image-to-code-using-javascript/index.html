@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Convert SVG from Image to Code using Javascript | megacolorboy</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="author" content="Abdush Shakoor">
+	<meta name="description" content="Two weeks ago, I wrote a small script to convert SVG from Image to Code using Javascript that allowed me to play around with it's attributes and properties..">
+
+	<meta name="og:title" content="Convert SVG from Image to Code using Javascript | megacolorboy" />
+	<meta name="og:type" content="article" />
+	<meta name="og:url" content="https://www.megacolorboy.com/posts/convert-svg-from-image-to-code-using-javascript/" />
+	<meta name="og:description" content="Two weeks ago, I wrote a small script to convert SVG from Image to Code using Javascript that allowed me to play around with it's attributes and properties." />
+	<meta name="og:site_name" content="Abdush Shakoor's Blog | megacolorboy" />
+
+	<link href="/static/favicon.ico" rel="shortcut icon" type="image/x-icon"/>
+	<link rel="stylesheet" href="/static/css/main.css" type="text/css"/>
+	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.1/css/all.css" integrity="sha384-gfdkjb5BdAXd+lj+gudLWI+BXq4IuLW5IT+brZEZsLFm++aCMlF1V92rMkPaX4PP" crossorigin="anonymous">
+	<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.13.1/styles/dracula.min.css">
+</head>
+<body>
+	<main class="article-main">
+		<!-- Website header -->
+		<header class="navbar">
+			<a class="logo-link" href="/">
+				<div class="header-logo">
+					<img src="/static/images/avatar2.gif"/>
+					<div class="logo-text">
+						<p class="logo-title">mega<span class="trademark">color</span>boy</p>
+						<p class="logo-subtitle">The blog of Abdush Shakoor</p>
+					</div>
+				</div>
+			</a>
+			<ul class="header-links">
+				<li><a href="/">Writings</a></li>
+				<!-- <li><a href="#">Projects</a></li> -->
+				<li><a href="/about">About me</a></li>
+			</ul>
+		</header>
+		<!-- Website header -->
+
+		<div id="article-bg-image">
+			<canvas id="bg-pattern" class="bg-pattern" width="1280px" height="450px" style="display:none;"></canvas>
+			<div class="post-details">
+				<div class="grid__item">
+					<div>
+						<h5>Programming</h5>
+						<h1>Convert SVG from Image to Code using Javascript</h1>
+					</div>
+				</div>
+				<div class="grid__item">
+					<div>
+						<p>Two weeks ago, I wrote a small script to convert SVG from Image to Code using Javascript that allowed me to play around with it's attributes and properties.</p>
+						<h6>Abdush Shakoor <span style="margin:0px 5px;">&#9679;</span> February 24th, 2018</h6>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<article class="article-container">
+			<div class="content">
+				<div class="content-html">
+				<p>Have you ever downloaded minimal and beautiful looking SVG icons and
+added them into your HTML code as an <strong><em>&lt;img&gt;</em></strong> instead of
+<strong><em>&lt;svg&gt;</em></strong> tag? The answer is: <strong><em>"yes, you're right!"</em></strong>.</p>
+
+<p>Okay, how about another question?</p>
+
+<p>What would you do if you want to change all of those SVG icons to black,
+red or blue? Your answer would be: <strong><em>"Well, I would edit the colors of
+all the vector images in Adobe Illustrator and then refresh my page to
+see the changes."</em></strong>, if that's your answer, then what would you do if
+you have to do it for multiple icons in multiple pages in a short amount
+of time?</p>
+
+<p>Two weeks ago, I faced this same scenario and I found a quick solution
+to it and I will be sharing it in this article on how to convert SVG
+from image to code using Javascript and how it allowed me to play around
+with attributes and properties.</p>
+
+<h2>Why convert from Image to Code?</h2>
+
+<p>Well, as a developer, it allows me to interact with every part of the
+SVG such as changing the colors, adjusting the height and width, animate
+it and so on. In this article, I will show you an example on how I could
+do a simple color change on an SVG image that I had downloaded from
+<a href="https://www.flaticon.com">flaticon</a>.</p>
+
+<figure>
+    <img src="/static/images/space.svg"/>
+    <figcaption>
+        Figure 1. Original SVG Space Icon
+    </figcaption>
+</figure>
+
+<h2>How to convert from Image to Code?</h2>
+
+<p>Simple, just convert the SVG image into an XML format using
+<strong><em>XMLSerializer()</em></strong> then give it a class name like <strong><em>"custom-svg-icon"</em></strong>
+and execute the code! Below, I have provided a code snippet, I hope the
+comments will help you out!</p>
+
+<p><strong>Code snippet:</strong></p>
+
+<pre>
+    <code class="js">
+    $(function(){
+     //Change the class name, if it has to be applied for more SVG elements
+     jQuery('img.custom-svg-icon').each(function(){
+     var $img = jQuery(this); // The image
+     var imgID = $img.attr('id'); // ID attribute
+     var imgClass = $img.attr('class'); // Class Name
+     var imgURL = $img.attr('src'); // URL of the SVG image
+
+     jQuery.get(imgURL, function(data) {
+     //The data param contains the XML data of the SVG image
+     //alert(new XMLSerializer().serializeToString(data));
+
+     // Get the SVG tag, ignore the rest
+     var $svg = jQuery(data).find('svg');
+
+     // Give the image's ID to the SVG
+     if(typeof imgID !== 'undefined') 
+     {
+     $svg = $svg.attr('id', imgID);
+     }
+
+     // Give the image's class to the SVG
+     if(typeof imgClass !== 'undefined') 
+     {
+     $svg = $svg.attr('class', imgClass+' replaced-svg');
+     }
+
+     // Remove any invalid XML tags as per http://validator.w3.org
+     $svg = $svg.removeAttr('xmlns:a');
+
+     // Check if the viewport is set, else we gonna set it if we can.
+     if(!$svg.attr('viewBox') && $svg.attr('height') && $svg.attr('width')) 
+     {
+     $svg.attr('viewBox', '0 0 ' + $svg.attr('height') + ' ' + $svg.attr('width'))
+     }
+
+     // Replace image with new SVG
+     $img.replaceWith($svg);
+
+     }, 'xml'); //Returns as XML
+     });
+    });
+    </code>
+</pre>
+
+<p>Give it some custom CSS to change the color and width of the SVG image:</p>
+
+<pre>
+    <code class="css">
+    svg path, svg rect
+    {
+        fill: #ff5a5f;
+    }
+
+    .custom-svg-icon
+    {
+        width: 170px;
+        height: 170px;
+    }
+    </code>
+</pre>
+
+<p>Right-click on the image, hit <strong><em>"Inspect Element"</em></strong> and view the
+converted image below but this time, you'll see it as an SVG element:</p>
+
+<script defer src="/static/projects/svg-img-to-code/script.js"></script>
+
+<figure>
+    <img class="custom-svg-icon" src="/static/images/space.svg"/>
+    <figcaption>
+        Figure 2. Converted SVG Space Icon
+    </figcaption>
+</figure>
+
+<p>However, there are a few downsides to this as SVG code is hard to
+maintain, pretty messy and sometimes quite complex especially if it
+contains a lot of paths, circles and rectangles but in a scenario that
+is similar to what I have faced, I think it's pretty useful, otherwise,
+just stick to adding your SVG images using the <strong><em>&lt;img&gt;</em></strong> tag.</p>
+
+<p>Hope you have found this article useful!</p>
+
+<h2>Credit</h2>
+
+<p>Icons made by <a href="https://www.flaticon.com/authors/eucalyp">Eucalyp</a> from <a href="https://www.flaticon.com/">www.flaticon.com</a> is licensed by <a href="http://creativecommons.org/licenses/by/3.0/">CC 3.0
+BY</a></p>
+
+				</div>
+
+				<div class="share-container">
+					<p>Share this article:</p>
+					<div class="share-links">
+						<a href="https://www.facebook.com/sharer/sharer.php?u=https://www.megacolorboy.com/posts/convert-svg-from-image-to-code-using-javascript/"><i class="fab fa-facebook-f"></i></a>
+						<a href="https://www.twitter.com/home?status=https://www.megacolorboy.com/posts/convert-svg-from-image-to-code-using-javascript/"><i class="fab fa-twitter"></i></a>
+						<a href="https://www.linkedin.com/shareArticle?mini=true&url=https://www.megacolorboy.com/posts/convert-svg-from-image-to-code-using-javascript/&title=Convert SVG from Image to Code using Javascript | megacolorboy&summary=&source="><i class="fab fa-linkedin-in"></i></a>
+						<a href="https://www.plus.google.com/share?url=https://www.megacolorboy.com/posts/convert-svg-from-image-to-code-using-javascript/"><i class="fab fa-google-plus-g"></i></a>
+					</div>
+				</div>
+			</div>
+		</article>
+
+	</main>
+</body>
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.2/jquery.min.js"></script>
+<script src="/static/js/script.js" type="text/javascript"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.13.1/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-98290003-2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-98290003-2');
+</script>
+</html>
