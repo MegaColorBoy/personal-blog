@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Symbolic storage link in shared hosting | megacolorboy</title>
+	<base href="/"/>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="author" content="Abdush Shakoor">
+	<meta name="description" content="Symbolic storage link in shared hosting">
+	<link href="../static/favicon.ico" rel="shortcut icon" type="image/x-icon"/>
+	<link rel="stylesheet" href="../static/css/til.css" type="text/css"/>
+	<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.13.1/styles/an-old-hope.min.css">
+	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.1/css/all.css" integrity="sha384-gfdkjb5BdAXd+lj+gudLWI+BXq4IuLW5IT+brZEZsLFm++aCMlF1V92rMkPaX4PP" crossorigin="anonymous">
+</head>
+<body>
+	<!-- Website header -->
+	<header class="navbar">
+		<a class="logo-link" href="/til">
+			<div class="header-logo">
+				<img src="/static/images/avatar2.gif"/>
+				<div class="logo-text">
+					<p class="logo-title">mega<span class="trademark">color</span>boy</p>
+					<p class="logo-subtitle">The microblog of Abdush Shakoor</p>
+				</div>
+			</div>
+		</a>
+	</header>
+
+	<main>
+		<div class="_til-grid">
+			<div class="_item">
+				<div class="_wrapper">					
+					<div class="_heading">
+						<p class="tag"><span>Laravel</span></p>
+						<h1>Symbolic storage link in shared hosting</h1>
+						<div>
+							<p class="_date">Published on May 25th, 2020</p>
+						</div>
+					</div>
+					<hr/>
+					<div class="_content">
+						<p>If you're hosting a laravel project via cPanel, chances are that it could be a shared hosting server and that means you can't really use <code>php artisan storage:link</code> for this.
+But don't worry, there's another way to this. Just follow the steps below:</p>
+
+<h2>1. Create a symlink</h2>
+
+<p>In your <code>public_html/public</code> directory, remove the <code>storage</code> folder. Next, create a <code>symlink.php</code> file in your <code>public_html</code> directory and add the following code:</p>
+
+<pre>
+<code class="php">
+$targetFolder = $_SERVER['DOCUMENT_ROOT'].'/storage/app/public';
+$linkedFolder = $_SERVER['DOCUMENT_ROOT'].'/public/storage';
+symlink($targetFolder, $linkFolder);
+echo "done";
+</code>
+</pre>
+
+<h2>2. Create a custom route to access storage</h2>
+
+<p>Alright, this is kind of a hack but it works extremely fine. Just add the following route in your <code>routes/web.php</code> file:</p>
+
+<pre>
+<code class="php">
+Route::get('/storage/anyfolder/{filename}', function($filename){
+    // Your folder path
+    $folder_path = storage_path('app/public/anyfolder/'.$filename);
+
+    // check if the file exists
+    if(!File::exists($folder_path)) {
+        abort(404);
+    }
+
+    $file = File::get($folder_path);
+    $type = File::mimeType($folder_path);
+
+    $response = Response::make($file, 200);
+    $response->header("Content-Type", $type);
+
+    return $response;
+</code>
+</pre>
+
+<p>Now, you can access your images or any other assets easily using: </p>
+
+<pre>
+<code class="php">
+asset('storage/anyfolder/'.$filename)
+</code>
+</pre>
+
+<p>Hope this helps you out!</p>
+
+						<hr/>
+						<div class="_footer">
+							
+							<div class="share-container">
+								<p>Like this? Share it with others!</p>
+								<div class="share-links">
+									<a href="https://www.facebook.com/sharer/sharer.php?u=https://www.megacolorboy.com/til/posts/symlink-shared-hosting/"><i class="fab fa-facebook-f"></i></a>
+									<a href="https://www.twitter.com/home?status=https://www.megacolorboy.com/til/posts/symlink-shared-hosting/"><i class="fab fa-twitter"></i></a>
+									<a href="https://www.linkedin.com/shareArticle?mini=true&url=https://www.megacolorboy.com/til/posts/symlink-shared-hosting/&title=Symbolic storage link in shared hosting | megacolorboy&summary=&source="><i class="fab fa-linkedin-in"></i></a>
+									<a href="https://www.plus.google.com/share?url=https://www.megacolorboy.com/til/posts/symlink-shared-hosting/"><i class="fab fa-google-plus-g"></i></a>
+								</div>
+							</div>
+						</div>
+					</div>
+					
+				</div>
+			</div>
+		</div>
+
+	</main>
+</body>
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.13.1/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-98290003-2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-98290003-2');
+</script>
+</html>
