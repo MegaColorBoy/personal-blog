@@ -24,8 +24,8 @@ $(document).ready(function(){
 
 	$("#searchinput").focus(function(e){
 		openSearch();
-	}).blur(function(e){
-		closeSearch(resultsEl);
+	// }).blur(function(e){
+	// 	closeSearch(resultsEl);
 	}).keyup(function(e){
 		var code = e.keyCode ? e.keyCode : e.which;
 		var keyword = $("#searchinput").val();
