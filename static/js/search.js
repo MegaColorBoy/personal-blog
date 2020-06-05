@@ -1,14 +1,41 @@
 // A mini search engine for the blog
 var _url = "../json/til-posts.json";
 
+function openSearch(){
+	$("body").addClass("overlay");
+	$(".tip, #closeSearch").show();
+}
+
+function closeSearch(resultsEl){
+	$("body").removeClass("overlay");
+	$(".tip, #closeSearch").hide();
+	if(resultsEl){
+		$(resultsEl).html('').hide();	
+	}
+}
+
 $(document).ready(function(){
-	$("#searchinput").keyup(function(e){
+
+	var resultsEl = "#searchresults ul";
+	
+	$("#closeSearch").click(function(e){
+		closeSearch(resultsEl);
+	});
+
+	$("#searchinput").focus(function(e){
+		openSearch();
+	}).blur(function(e){
+		closeSearch(resultsEl);
+	}).keyup(function(e){
 		var code = e.keyCode ? e.keyCode : e.which;
-		var resultsEl = "#searchresults ul";
 		var keyword = $("#searchinput").val();
 		var pattern = new RegExp(keyword, "gi");
-		$(resultsEl).html('');
-		if(keyword.length > 0){
+		
+		$(resultsEl).removeClass('no_results').html('');
+
+		// Execute search if "Enter" key is pressed
+		if(code == 13){
+			$('.loader').show();				
 			$.ajax({
 				url: _url,
 				type: "GET",
@@ -18,6 +45,7 @@ $(document).ready(function(){
 					// console.log('ok');
 				}
 			}).done(function(data){
+				var results = "";
 				if(data.posts.length > 0){
 					$.each(data.posts, function(k,v){
 						if(v.category.search(pattern) != -1 || v.title.search(pattern) != -1){
@@ -27,20 +55,30 @@ $(document).ready(function(){
 								return `<b>${keyword}</b>`
 							});
 
-							$(resultsEl).append(`<li onclick="window.location.href='../til/posts/${v.slug}'">
+							results += `<li onclick="window.location.href='../til/posts/${v.slug}'">
 								<a>
 									<span class="tag">${v.category}</span>${text}
 								</a>
-							</li>`);
+							</li>`;
 						}
 					});
 				}
+
+				if(results.length > 0){
+					$(resultsEl).removeClass('no_results').html(results);
+				}
+				else {
+					$(resultsEl).addClass('no_results').html(`<p style="margin:0;text-align:center;">No results matched.</p>`);
+				}
+
+				setTimeout(function(){
+					$('.loader').hide();				
+					$(resultsEl).show();
+				}, 1000);
+				
 			});
-			$("body").addClass("overlay");
-			$(resultsEl).show();
 		}
 		else {
-			$("body").removeClass("overlay");
 			$(resultsEl).hide();
 		}
 	});
