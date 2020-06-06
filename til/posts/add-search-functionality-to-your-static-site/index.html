@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Add search functionality to your static site | megacolorboy</title>
+	<base href="/"/>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="author" content="Abdush Shakoor">
+	<meta name="description" content="Add search functionality to your static site">
+	<link href="../static/favicon.ico" rel="shortcut icon" type="image/x-icon"/>
+	<link rel="stylesheet" href="../static/css/til.css" type="text/css"/>
+	<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.13.1/styles/an-old-hope.min.css">
+	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.1/css/all.css" integrity="sha384-gfdkjb5BdAXd+lj+gudLWI+BXq4IuLW5IT+brZEZsLFm++aCMlF1V92rMkPaX4PP" crossorigin="anonymous">
+</head>
+<body>
+	<!-- Website header -->
+	<header class="navbar">
+		<a class="logo-link" href="/til">
+			<div class="header-logo">
+				<img src="/static/images/avatar2.gif"/>
+				<div class="logo-text">
+					<p class="logo-title">mega<span class="trademark">color</span>boy</p>
+					<p class="logo-subtitle">The microblog of Abdush Shakoor</p>
+				</div>
+			</div>
+		</a>
+	</header>
+
+	<main>
+		<div class="_til-grid">
+			<div class="_item">
+				<div class="_wrapper">					
+					<div class="_heading">
+						<p class="tag"><span>JavaScript</span></p>
+						<h1>Add search functionality to your static site</h1>
+						<div>
+							<p class="_date">Published on June 6th, 2020</p>
+						</div>
+					</div>
+					<hr/>
+					<div class="_content">
+						<p>If you have a static site or a blog generated using a static-site generator but want to add a simple search functionality? This could be of your interest.</p>
+
+<p>I'll take you through an example on how to build a simple search engine using a JSON file and AJAX requests.</p>
+
+<h2>1. Generate a JSON dump of your site</h2>
+
+<p>Although, it's not a database but it can act as an alternative to having one. Your JSON dump can contain any metadata that you wanted your users to search in your site. In my case, I thought of allowing the user to search <code>title</code> and <code>category</code>. </p>
+
+<p>Is your site generated using Python and want to create a JSON dump? <a href="til/posts/read-and-write-json-to-a-file-in-python">Read this article</a> for more information.</p>
+
+<h2>2. Build search functionality</h2>
+
+<p>I won't go through the aspects of UI design in this article as I feel that it's subjective and depends on one's preferences but let's keep it simple enough for this tutorial.</p>
+
+<p>Before you begin writing the function, place this component in your HTML template:</p>
+
+<pre>
+<code class="html">
+&lt;div class="searchbox"&gt;
+    &lt;input id="searchinput" type="text"&gt;
+    &lt;div id="searchresults"&gt;
+        &lt;ul&gt;&lt;/ul&gt;
+    &lt;/div&gt;
+&lt;/div&gt;
+</code>
+</pre>
+
+<p>Anyway, here's the function and you can place it directly on your template or in a separate <code>.js</code> file:</p>
+
+<pre>
+<code class="js">
+var _url = "path-of-your-file.json";
+
+$(document).ready(function(){
+    $('#searchinput').keyup(function(e){
+        var keyword = $(this).val();
+        var code = e.keyCode ? e.keyCode : e.which;
+
+        if(code == 13){
+            $.ajax({
+                url: _url,
+                type: "GET",
+                async: false,
+            }).done(function(data){
+                var results = "";
+                if(data.articles.length > 0){
+                    $.each(data.articles, function(key, value){
+                        if(v.title.search(pattern) != -1 || v.category.search(pattern) != -1){
+                            results += `&lt;li&gt;&lt;a href="${v.slug}"&gt;${v.title}&lt;/a&gt;&lt;/li&gt;`;
+                        }
+                    });
+                    $("#searchresults ul").html(results);
+                }
+            });
+        }
+    });
+});
+</code>
+</pre>
+
+<p>That's it! Now, when you execute your script, you should be able to view your search results just like as if it were using a database.</p>
+
+<p>If you want to make it similar to mine, please feel free to inspect the code on the browser or go to my <a href="https://github.com/megacolorboy/personal-blog/blob/master/static/js/search.js">repository</a> to see how it works.</p>
+
+						<hr/>
+						<div class="_footer">
+							
+							<div class="share-container">
+								<p>Like this? Share it with others!</p>
+								<div class="share-links">
+									<a href="https://www.facebook.com/sharer/sharer.php?u=https://www.megacolorboy.com/til/posts/add-search-functionality-to-your-static-site/"><i class="fab fa-facebook-f"></i></a>
+									<a href="https://www.twitter.com/home?status=https://www.megacolorboy.com/til/posts/add-search-functionality-to-your-static-site/"><i class="fab fa-twitter"></i></a>
+									<a href="https://www.linkedin.com/shareArticle?mini=true&url=https://www.megacolorboy.com/til/posts/add-search-functionality-to-your-static-site/&title=Add search functionality to your static site | megacolorboy&summary=&source="><i class="fab fa-linkedin-in"></i></a>
+									<a href="https://www.plus.google.com/share?url=https://www.megacolorboy.com/til/posts/add-search-functionality-to-your-static-site/"><i class="fab fa-google-plus-g"></i></a>
+								</div>
+							</div>
+						</div>
+					</div>
+					
+				</div>
+			</div>
+		</div>
+
+	</main>
+</body>
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.13.1/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-98290003-2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-98290003-2');
+</script>
+</html>
