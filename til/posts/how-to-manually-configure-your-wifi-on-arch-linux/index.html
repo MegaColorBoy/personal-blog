@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>How to manually configure your WiFi on Arch Linux? | megacolorboy</title>
+	<base href="/"/>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="author" content="Abdush Shakoor">
+	<meta name="description" content="How to manually configure your WiFi on Arch Linux?">
+	<link href="../static/favicon.ico" rel="shortcut icon" type="image/x-icon"/>
+	<link rel="stylesheet" href="../static/css/til.css" type="text/css"/>
+	<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.13.1/styles/an-old-hope.min.css">
+	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.1/css/all.css" integrity="sha384-gfdkjb5BdAXd+lj+gudLWI+BXq4IuLW5IT+brZEZsLFm++aCMlF1V92rMkPaX4PP" crossorigin="anonymous">
+</head>
+<body>
+	<!-- Website header -->
+	<header class="navbar">
+		<a class="logo-link" href="/til">
+			<div class="header-logo">
+				<img src="/static/images/avatar2.gif"/>
+				<div class="logo-text">
+					<p class="logo-title">mega<span class="trademark">color</span>boy</p>
+					<p class="logo-subtitle">The microblog of Abdush Shakoor</p>
+				</div>
+			</div>
+		</a>
+	</header>
+
+	<main>
+		<div class="_til-grid">
+			<div class="_item">
+				<div class="_wrapper">					
+					<div class="_heading">
+						<p class="tag"><span>Linux</span></p>
+						<h1>How to manually configure your WiFi on Arch Linux?</h1>
+						<div>
+							<p class="_date">Published on June 9th, 2020</p>
+						</div>
+					</div>
+					<hr/>
+					<div class="_content">
+						<p>Recently, I thought of playing around with Arch Linux to learn more about Linux under-the-hood and to see if it can become my new daily driver.</p>
+
+<p>As I booted from live USB, I tried connecting to my WiFi using <code>wifi-menu</code> but it never worked after selecting my network name and entering the credentials.</p>
+
+<p>So, I did a little bit of research in <a href="https://wiki.archlinux.org">ArchWiki</a> and forums and I figured a way to set it up manually using <code>netctl</code> by myself.</p>
+
+<p><code>netctl</code> is a network profile manager and it's apparently an Arch Linux project.</p>
+
+<h2>1. Select your interface</h2>
+
+<p>Before you begin to set up your WiFi connection from your computer, check if your network interface is being detected:</p>
+
+<pre>
+<code class="bash">
+iwconfig
+</code>
+</pre>
+
+<p>Since it's a WiFi connection, your interface most probably must be <code>wlan0</code>. If you see it, then set the interface up:</p>
+
+<pre>
+<code class="bash">
+ip link set wlan0 up
+</code>
+</pre>
+
+<h2>2. Scan for networks</h2>
+
+<p>Now, that your interface, use it to scan for your WiFi network:</p>
+
+<pre>
+<code class="bash">
+iwlist wlan0 scan | less
+</code>
+</pre>
+
+<p>Once, you execute this command, you must be able to see your WiFi's SSID (or network name).</p>
+
+<p>Now, put your interface down for a while:</p>
+
+<pre>
+<code class="bash">
+ip link set wlan0 down
+</code>
+</pre>
+
+<h2>3. Create a network profile</h2>
+
+<p>Alright, go to <code>/etc/netctl/examples/</code> directory and make a copy of the <code>wireless-wpa</code> file to the <code>/etc/netctl</code> directory:</p>
+
+<pre>
+<code class="bash">
+cd /etc/netctl/examples
+cp /etc/netctl/examples/wireless-wpa /etc/netctl/your-wifi-name
+</code>
+</pre>
+
+<p>Now, go back to <code>/etc/netctl/</code> directory and open the <code>your-wifi-name</code> file with your preferred text editor and edit the following only:</p>
+
+<pre>
+<code class="bash">
+ESSID: your-wifi-name
+key: your-wifi-password
+</code>
+</pre>
+
+<p>After you're done editing, save the file.</p>
+
+<h2>4. Test network profile</h2>
+
+<p>To test if your profile is working, do the following:</p>
+
+<pre>
+<code class="bash">
+netctl start your-wifi-name
+ping -c 3 www.google.com
+</code>
+</pre>
+
+<p>In case, you get an error, try doing this:</p>
+
+<pre>
+<code class="bash">
+ip link set dev wlan0 down
+netctl start your-wifi-name
+ping -c 3 www.google.com
+</code>
+</pre>
+
+<p>If you're able to ping, then it works. Else, edit your network profile and try connecting to it again.</p>
+
+<h2>5. Enable network profile</h2>
+
+<p>If you've reached this stage that means your network profile must be working fine. Just do the following to enable the network profile to run the internet throughout the setup:</p>
+
+<pre>
+<code class="bash">
+netctl enable your-wifi-name
+</code>
+</pre>
+
+<p>Try reading more about using <a href="https://wiki.archlinux.org/index.php/Netctl">netctl</a> in Arch Linux's official wikipage.</p>
+
+						<hr/>
+						<div class="_footer">
+							
+							<div class="share-container">
+								<p>Like this? Share it with others!</p>
+								<div class="share-links">
+									<a href="https://www.facebook.com/sharer/sharer.php?u=https://www.megacolorboy.com/til/posts/how-to-manually-configure-your-wifi-on-arch-linux/"><i class="fab fa-facebook-f"></i></a>
+									<a href="https://www.twitter.com/home?status=https://www.megacolorboy.com/til/posts/how-to-manually-configure-your-wifi-on-arch-linux/"><i class="fab fa-twitter"></i></a>
+									<a href="https://www.linkedin.com/shareArticle?mini=true&url=https://www.megacolorboy.com/til/posts/how-to-manually-configure-your-wifi-on-arch-linux/&title=How to manually configure your WiFi on Arch Linux? | megacolorboy&summary=&source="><i class="fab fa-linkedin-in"></i></a>
+									<a href="https://www.plus.google.com/share?url=https://www.megacolorboy.com/til/posts/how-to-manually-configure-your-wifi-on-arch-linux/"><i class="fab fa-google-plus-g"></i></a>
+								</div>
+							</div>
+						</div>
+					</div>
+					
+				</div>
+			</div>
+		</div>
+
+	</main>
+</body>
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.13.1/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-98290003-2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-98290003-2');
+</script>
+</html>

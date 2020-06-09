@@ -30,7 +30,7 @@
 		<h1>Today I Learned</h1>
 
 		<p>This project is a collection of short write-ups on the things that I learn on a day-to-day basis across a variety of fields such as Computer Science, Mathematics, Software Engineering and Digital Design.</p>
-		<p>I consider this to be a microblog of sorts that can help me accumulate and share my knowledge with everyone! So far, I've published <strong>33</strong> short articles.</p>
+		<p>I consider this to be a microblog of sorts that can help me accumulate and share my knowledge with everyone! So far, I've published <strong>34</strong> short articles.</p>
 		<p>Hope you enjoy learning along with me! &#x1F604;</p>
 
 		<div class="_footer">
@@ -63,6 +63,140 @@
 
 	<main>
 		<div class="_til-grid">
+			
+				<div class="_item">
+					<div class="_wrapper">					
+						<div class="_heading">
+							<p class="tag"><span>Linux</span></p>
+							<a href="til/posts/how-to-manually-configure-your-wifi-on-arch-linux">
+								<h1>How to manually configure your WiFi on Arch Linux?</h1>
+							</a>
+							<div>
+								<p class="_date">Published on June 9th, 2020</p>
+							</div>
+						</div>
+						<hr/>
+						<div class="_content">
+							<p>Recently, I thought of playing around with Arch Linux to learn more about Linux under-the-hood and to see if it can become my new daily driver.</p>
+
+<p>As I booted from live USB, I tried connecting to my WiFi using <code>wifi-menu</code> but it never worked after selecting my network name and entering the credentials.</p>
+
+<p>So, I did a little bit of research in <a href="https://wiki.archlinux.org">ArchWiki</a> and forums and I figured a way to set it up manually using <code>netctl</code> by myself.</p>
+
+<p><code>netctl</code> is a network profile manager and it's apparently an Arch Linux project.</p>
+
+<h2>1. Select your interface</h2>
+
+<p>Before you begin to set up your WiFi connection from your computer, check if your network interface is being detected:</p>
+
+<pre>
+<code class="bash">
+iwconfig
+</code>
+</pre>
+
+<p>Since it's a WiFi connection, your interface most probably must be <code>wlan0</code>. If you see it, then set the interface up:</p>
+
+<pre>
+<code class="bash">
+ip link set wlan0 up
+</code>
+</pre>
+
+<h2>2. Scan for networks</h2>
+
+<p>Now, that your interface, use it to scan for your WiFi network:</p>
+
+<pre>
+<code class="bash">
+iwlist wlan0 scan | less
+</code>
+</pre>
+
+<p>Once, you execute this command, you must be able to see your WiFi's SSID (or network name).</p>
+
+<p>Now, put your interface down for a while:</p>
+
+<pre>
+<code class="bash">
+ip link set wlan0 down
+</code>
+</pre>
+
+<h2>3. Create a network profile</h2>
+
+<p>Alright, go to <code>/etc/netctl/examples/</code> directory and make a copy of the <code>wireless-wpa</code> file to the <code>/etc/netctl</code> directory:</p>
+
+<pre>
+<code class="bash">
+cd /etc/netctl/examples
+cp /etc/netctl/examples/wireless-wpa /etc/netctl/your-wifi-name
+</code>
+</pre>
+
+<p>Now, go back to <code>/etc/netctl/</code> directory and open the <code>your-wifi-name</code> file with your preferred text editor and edit the following only:</p>
+
+<pre>
+<code class="bash">
+ESSID: your-wifi-name
+key: your-wifi-password
+</code>
+</pre>
+
+<p>After you're done editing, save the file.</p>
+
+<h2>4. Test network profile</h2>
+
+<p>To test if your profile is working, do the following:</p>
+
+<pre>
+<code class="bash">
+netctl start your-wifi-name
+ping -c 3 www.google.com
+</code>
+</pre>
+
+<p>In case, you get an error, try doing this:</p>
+
+<pre>
+<code class="bash">
+ip link set dev wlan0 down
+netctl start your-wifi-name
+ping -c 3 www.google.com
+</code>
+</pre>
+
+<p>If you're able to ping, then it works. Else, edit your network profile and try connecting to it again.</p>
+
+<h2>5. Enable network profile</h2>
+
+<p>If you've reached this stage that means your network profile must be working fine. Just do the following to enable the network profile to run the internet throughout the setup:</p>
+
+<pre>
+<code class="bash">
+netctl enable your-wifi-name
+</code>
+</pre>
+
+<p>Try reading more about using <a href="https://wiki.archlinux.org/index.php/Netctl">netctl</a> in Arch Linux's official wikipage.</p>
+
+							<hr/>
+							<div class="_footer">
+								
+								<div class="share-container">
+									<p>Like this? Share it with others!</p>
+									<div class="share-links">
+										<a href="https://www.facebook.com/sharer/sharer.php?u=https://www.megacolorboy.com/til/posts/how-to-manually-configure-your-wifi-on-arch-linux/"><i class="fab fa-facebook-f"></i></a>
+										<a href="https://www.twitter.com/home?status=https://www.megacolorboy.com/til/posts/how-to-manually-configure-your-wifi-on-arch-linux/"><i class="fab fa-twitter"></i></a>
+										<a href="https://www.linkedin.com/shareArticle?mini=true&url=https://www.megacolorboy.com/til/posts/how-to-manually-configure-your-wifi-on-arch-linux/&title=How to manually configure your WiFi on Arch Linux? | megacolorboy&summary=&source="><i class="fab fa-linkedin-in"></i></a>
+										<a href="https://www.plus.google.com/share?url=https://www.megacolorboy.com/til/posts/how-to-manually-configure-your-wifi-on-arch-linux/"><i class="fab fa-google-plus-g"></i></a>
+									</div>
+								</div>
+							</div>
+						</div>
+						
+					</div>
+				</div>
 			
 				<div class="_item">
 					<div class="_wrapper">					
