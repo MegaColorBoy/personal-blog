@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Enable copy-paste clipboard in URxvt Terminal Emulator | megacolorboy</title>
+	<base href="/"/>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="author" content="Abdush Shakoor">
+	<meta name="description" content="Enable copy-paste clipboard in URxvt Terminal Emulator">
+	<link href="../static/favicon.ico" rel="shortcut icon" type="image/x-icon"/>
+	<link rel="stylesheet" href="../static/css/til.css" type="text/css"/>
+	<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.13.1/styles/an-old-hope.min.css">
+	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.1/css/all.css" integrity="sha384-gfdkjb5BdAXd+lj+gudLWI+BXq4IuLW5IT+brZEZsLFm++aCMlF1V92rMkPaX4PP" crossorigin="anonymous">
+</head>
+<body>
+	<!-- Website header -->
+	<header class="navbar">
+		<a class="logo-link" href="/til">
+			<div class="header-logo">
+				<img src="/static/images/avatar2.gif"/>
+				<div class="logo-text">
+					<p class="logo-title">mega<span class="trademark">color</span>boy</p>
+					<p class="logo-subtitle">The microblog of Abdush Shakoor</p>
+				</div>
+			</div>
+		</a>
+	</header>
+
+	<main>
+		<div class="_til-grid">
+			<div class="_item">
+				<div class="_wrapper">					
+					<div class="_heading">
+						<p class="tag"><span>Linux</span></p>
+						<h1>Enable copy-paste clipboard in URxvt Terminal Emulator</h1>
+						<div>
+							<p class="_date">Published on June 20th, 2020</p>
+						</div>
+					</div>
+					<hr/>
+					<div class="_content">
+						<p>In my current Arch Linux installation, I decided to use a window manager called i3. It's really awesome and it comes with a really lightweight terminal emulator called <strong>urxvt</strong>. It's very minimal and I lked it but when I tried to copy-paste text from one terminal to another, I wasn't able to.</p>
+
+<p>However, thanks to the internet, I did some research and figured a way out.</p>
+
+<h2>1. Install xClip</h2>
+
+<p>First, you need to ensure that you have installed the <code>xclip</code> package, which will be used to copy-paste text in the emulator.</p>
+
+<p>Type the following command to install the package:</p>
+
+<pre>
+<code class="bash">
+pacman -S xclip
+</code>
+</pre>
+
+<h2>2. Activate Clipboard using Perl</h2>
+
+<p>Now, you have to paste these custom commands into your <code>clipboard</code> file, which is found in <code>/usr/lib/urxvt/perl</code> directory:</p>
+
+<pre>
+<code class="perl">
+# paste selection from clipboard
+sub paste {
+     my ($self) = @_;
+     my $content = `/usr/bin/xclip -loop 1 -out -selection clipboard` ;
+     $self->tt_write ($content);
+}
+
+# copy text to clipbard on selection
+sub on_sel_grab {
+     my $query = $_[0]->selection;
+     open (my $pipe, '| /usr/bin/xclip -in -selection clipboard') or die;
+     print $pipe $query;
+     close $pipe;
+ }
+</code>
+</pre>
+
+<h2>3. Modify your .Xresources</h2>
+
+<p>Add these keybindings to your <code>.Xresources</code> file:</p>
+
+<pre>
+<code class="bash">
+URxvt.keysym.Shift-Control-V: perl:clipboard:paste
+URxvt.iso14755: False
+URxvt.perl-ext-common: default,clipboard
+</code>
+</pre>
+
+<p>After adding it, refresh your <code>.Xresources</code> settings:</p>
+
+<pre>
+<code class="bash">
+xrdb -merge .Xresources
+</code>
+</pre>
+
+<p>Reboot your terminal and try selecting some text from your terminal using your mouse and paste it using <code>Ctrl</code>+<code>Shift</code>+<code>V</code> and it should work! </p>
+
+<p>That's it! Enjoy &#x1F603;</p>
+
+						<hr/>
+						<div class="_footer">
+							
+							<div class="share-container">
+								<p>Like this? Share it with others!</p>
+								<div class="share-links">
+									<a href="https://www.facebook.com/sharer/sharer.php?u=https://www.megacolorboy.com/til/posts/enable-copy-paste-clipboard-in-urxvt-terminal-emulator/"><i class="fab fa-facebook-f"></i></a>
+									<a href="https://www.twitter.com/home?status=https://www.megacolorboy.com/til/posts/enable-copy-paste-clipboard-in-urxvt-terminal-emulator/"><i class="fab fa-twitter"></i></a>
+									<a href="https://www.linkedin.com/shareArticle?mini=true&url=https://www.megacolorboy.com/til/posts/enable-copy-paste-clipboard-in-urxvt-terminal-emulator/&title=Enable copy-paste clipboard in URxvt Terminal Emulator | megacolorboy&summary=&source="><i class="fab fa-linkedin-in"></i></a>
+									<a href="https://www.plus.google.com/share?url=https://www.megacolorboy.com/til/posts/enable-copy-paste-clipboard-in-urxvt-terminal-emulator/"><i class="fab fa-google-plus-g"></i></a>
+								</div>
+							</div>
+						</div>
+					</div>
+					
+				</div>
+			</div>
+		</div>
+
+	</main>
+</body>
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.13.1/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-98290003-2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-98290003-2');
+</script>
+</html>

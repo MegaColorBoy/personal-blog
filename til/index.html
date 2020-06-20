@@ -30,7 +30,7 @@
 		<h1>Today I Learned</h1>
 
 		<p>This project is a collection of short write-ups on the things that I learn on a day-to-day basis across a variety of fields such as Computer Science, Mathematics, Software Engineering and Digital Design.</p>
-		<p>I consider this to be a microblog of sorts that can help me accumulate and share my knowledge with everyone! So far, I've published <strong>36</strong> short articles.</p>
+		<p>I consider this to be a microblog of sorts that can help me accumulate and share my knowledge with everyone! So far, I've published <strong>38</strong> short articles.</p>
 		<p>Hope you enjoy learning along with me! &#x1F604;</p>
 
 		<div class="_footer">
@@ -63,6 +63,188 @@
 
 	<main>
 		<div class="_til-grid">
+			
+				<div class="_item">
+					<div class="_wrapper">					
+						<div class="_heading">
+							<p class="tag"><span>Linux</span></p>
+							<a href="til/posts/enable-copy-paste-clipboard-in-urxvt-terminal-emulator">
+								<h1>Enable copy-paste clipboard in URxvt Terminal Emulator</h1>
+							</a>
+							<div>
+								<p class="_date">Published on June 20th, 2020</p>
+							</div>
+						</div>
+						<hr/>
+						<div class="_content">
+							<p>In my current Arch Linux installation, I decided to use a window manager called i3. It's really awesome and it comes with a really lightweight terminal emulator called <strong>urxvt</strong>. It's very minimal and I lked it but when I tried to copy-paste text from one terminal to another, I wasn't able to.</p>
+
+<p>However, thanks to the internet, I did some research and figured a way out.</p>
+
+<h2>1. Install xClip</h2>
+
+<p>First, you need to ensure that you have installed the <code>xclip</code> package, which will be used to copy-paste text in the emulator.</p>
+
+<p>Type the following command to install the package:</p>
+
+<pre>
+<code class="bash">
+pacman -S xclip
+</code>
+</pre>
+
+<h2>2. Activate Clipboard using Perl</h2>
+
+<p>Now, you have to paste these custom commands into your <code>clipboard</code> file, which is found in <code>/usr/lib/urxvt/perl</code> directory:</p>
+
+<pre>
+<code class="perl">
+# paste selection from clipboard
+sub paste {
+     my ($self) = @_;
+     my $content = `/usr/bin/xclip -loop 1 -out -selection clipboard` ;
+     $self->tt_write ($content);
+}
+
+# copy text to clipbard on selection
+sub on_sel_grab {
+     my $query = $_[0]->selection;
+     open (my $pipe, '| /usr/bin/xclip -in -selection clipboard') or die;
+     print $pipe $query;
+     close $pipe;
+ }
+</code>
+</pre>
+
+<h2>3. Modify your .Xresources</h2>
+
+<p>Add these keybindings to your <code>.Xresources</code> file:</p>
+
+<pre>
+<code class="bash">
+URxvt.keysym.Shift-Control-V: perl:clipboard:paste
+URxvt.iso14755: False
+URxvt.perl-ext-common: default,clipboard
+</code>
+</pre>
+
+<p>After adding it, refresh your <code>.Xresources</code> settings:</p>
+
+<pre>
+<code class="bash">
+xrdb -merge .Xresources
+</code>
+</pre>
+
+<p>Reboot your terminal and try selecting some text from your terminal using your mouse and paste it using <code>Ctrl</code>+<code>Shift</code>+<code>V</code> and it should work! </p>
+
+<p>That's it! Enjoy &#x1F603;</p>
+
+							<hr/>
+							<div class="_footer">
+								
+								<div class="share-container">
+									<p>Like this? Share it with others!</p>
+									<div class="share-links">
+										<a href="https://www.facebook.com/sharer/sharer.php?u=https://www.megacolorboy.com/til/posts/enable-copy-paste-clipboard-in-urxvt-terminal-emulator/"><i class="fab fa-facebook-f"></i></a>
+										<a href="https://www.twitter.com/home?status=https://www.megacolorboy.com/til/posts/enable-copy-paste-clipboard-in-urxvt-terminal-emulator/"><i class="fab fa-twitter"></i></a>
+										<a href="https://www.linkedin.com/shareArticle?mini=true&url=https://www.megacolorboy.com/til/posts/enable-copy-paste-clipboard-in-urxvt-terminal-emulator/&title=Enable copy-paste clipboard in URxvt Terminal Emulator | megacolorboy&summary=&source="><i class="fab fa-linkedin-in"></i></a>
+										<a href="https://www.plus.google.com/share?url=https://www.megacolorboy.com/til/posts/enable-copy-paste-clipboard-in-urxvt-terminal-emulator/"><i class="fab fa-google-plus-g"></i></a>
+									</div>
+								</div>
+							</div>
+						</div>
+						
+					</div>
+				</div>
+			
+				<div class="_item">
+					<div class="_wrapper">					
+						<div class="_heading">
+							<p class="tag"><span>Linux</span></p>
+							<a href="til/posts/configuring-audio-drivers-in-arch-Linux">
+								<h1>Configuring audio drivers in Arch Linux</h1>
+							</a>
+							<div>
+								<p class="_date">Published on June 20th, 2020</p>
+							</div>
+						</div>
+						<hr/>
+						<div class="_content">
+							<p>Yesterday, I thought of testing my Arch Linux system's audio and turns out, I didn't even install it yet! &#x1F612;</p>
+
+<p>Well, thanks to <a href="https://wiki.archlinux.org">ArchWiki</a>, it was simple enough to install to make the audio work on my old laptop. Just install the following packages:</p>
+
+<pre>
+<code class="bash">
+pacman -S alsa-firmware alsa-lib alsa-utils
+</code>
+</pre>
+
+<p>Reboot the system once you're done installing the packages. Depending on your window manager, you should be able to see your sound icon being active.</p>
+
+<h2>Bonus: Bash script to control your volume from the terminal</h2>
+
+<p>In my current laptop, I still haven't mapped out the keys to control the audio volume, so I thought of writing a small method in my <code>.bashrc</code> file, so that I can control it from my terminal.</p>
+
+<p>Open your favorite text editor and Add this method in your <code>.bashrc</code> file:</p>
+
+<pre>
+<code class="bash">
+# simple volume control
+volume(){
+    x=5
+    if [ $1 == 'up' ]
+    then
+        amixer set Master $x%+ &> /dev/null
+    elif [ $1 == 'down' ]
+    then
+        amixer set Master $x%- &> /dev/null
+    elif [ $1 == 'toggle' ]
+    then
+        amixer set Master toggle &> /dev/null
+    fi
+}
+</code>
+</pre> 
+
+<p>Save the file, close your edit and refresh your file by typing:</p>
+
+<pre>
+<code class="bash">
+source .bashrc
+</code>
+</pre>
+
+<p>Now, it should work when you type any of these commands:</p>
+
+<pre>
+<code class="bash">
+volume up
+volume down
+volume toggle
+</code>
+</pre>
+
+<p>Hope this tiny script helps you out! </p>
+
+							<hr/>
+							<div class="_footer">
+								
+								<div class="share-container">
+									<p>Like this? Share it with others!</p>
+									<div class="share-links">
+										<a href="https://www.facebook.com/sharer/sharer.php?u=https://www.megacolorboy.com/til/posts/configuring-audio-drivers-in-arch-Linux/"><i class="fab fa-facebook-f"></i></a>
+										<a href="https://www.twitter.com/home?status=https://www.megacolorboy.com/til/posts/configuring-audio-drivers-in-arch-Linux/"><i class="fab fa-twitter"></i></a>
+										<a href="https://www.linkedin.com/shareArticle?mini=true&url=https://www.megacolorboy.com/til/posts/configuring-audio-drivers-in-arch-Linux/&title=Configuring audio drivers in Arch Linux | megacolorboy&summary=&source="><i class="fab fa-linkedin-in"></i></a>
+										<a href="https://www.plus.google.com/share?url=https://www.megacolorboy.com/til/posts/configuring-audio-drivers-in-arch-Linux/"><i class="fab fa-google-plus-g"></i></a>
+									</div>
+								</div>
+							</div>
+						</div>
+						
+					</div>
+				</div>
 			
 				<div class="_item">
 					<div class="_wrapper">					
