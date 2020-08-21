@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Do we really need to use pointers? | megacolorboy</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="author" content="Abdush Shakoor">
+	<meta name="description" content="Did a little digging on whether it's useful to make use of pointers in your application.">
+
+	<meta name="og:title" content="Do we really need to use pointers? | megacolorboy" />
+	<meta name="og:type" content="article" />
+	<meta name="og:url" content="https://www.megacolorboy.com/posts/do-we-really-need-to-use-pointers/" />
+	<meta name="og:description" content="Did a little digging on whether it's useful to make use of pointers in your application" />
+	<meta name="og:site_name" content="Abdush Shakoor's Blog | megacolorboy" />
+
+	<link href="/static/favicon.ico" rel="shortcut icon" type="image/x-icon"/>
+	<link rel="stylesheet" href="/static/css/main.css" type="text/css"/>
+	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.1/css/all.css" integrity="sha384-gfdkjb5BdAXd+lj+gudLWI+BXq4IuLW5IT+brZEZsLFm++aCMlF1V92rMkPaX4PP" crossorigin="anonymous">
+	<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.13.1/styles/gruvbox-dark.min.css">
+</head>
+<body>
+	<main class="article-main">
+		<!-- Website header -->
+		<header class="navbar">
+			<a class="logo-link" href="/">
+				<div class="header-logo">
+					<img src="/static/images/avatar2.gif"/>
+					<div class="logo-text">
+						<p class="logo-title">mega<span class="trademark">color</span>boy</p>
+						<p class="logo-subtitle">The blog of Abdush Shakoor</p>
+					</div>
+				</div>
+			</a>
+			<ul class="header-links">
+				<li><a href="/">Writings</a></li>
+				<li><a href="/til">TIL</a></li>
+				<li><a href="/about">About me</a></li>
+			</ul>
+		</header>
+		<!-- Website header -->
+
+		<div id="article-bg-image">
+			<canvas id="bg-pattern" class="bg-pattern" width="1280px" height="450px" style="display:none;"></canvas>
+			<div class="post-details">
+				<div class="grid__item">
+					<div>
+						<h5>Programming</h5>
+						<h1>Do we really need to use pointers?</h1>
+					</div>
+				</div>
+				<div class="grid__item">
+					<div>
+						<p>Did a little digging on whether it's useful to make use of pointers in your application</p>
+						<h6>Abdush Shakoor <span style="margin:0px 5px;">&#9679;</span> August 21st, 2020</h6>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<article class="article-container">
+			<div class="content">
+				<div class="content-html">
+				<p>The topic about pointers isn't new as you're probably introduced to this concept in your first computer science class. I started learning Go and once again, I came across the concept of using Pointers and wanted to finally understand, why are they used and do we really need to use it?</p>
+
+<p>Frankly, I don't really remember using pointers when I was developing web applications in PHP and JavaScript but it was quite a refresher to get back on track again.</p>
+
+<h2>Well, what is a pointer?</h2>
+
+<p>In it's basic form, a pointer is a variable that contains the memory address of another variable.</p>
+
+<p>For example, you have a variable named <mark>x</mark> that contains some data, in this case, we'll store an integer:</p>
+
+<pre>
+    <code class="go">
+        package main
+
+        import "fmt"
+
+        func main() {
+            x := 10
+            fmt.Println(x) // prints 10
+        }
+    </code>
+</pre>
+
+<p>The code above prints the variable <mark>x</mark> by referring to it's name. We can do the same using pointers by referring to it's memory address via another variable that points to variable <mark>x</mark>.</p>
+
+<p>To do this, we must use <mark>&amp;</mark> operator to get the address and <mark>*</mark> to return the value stored in the address of variable <mark>x</mark> like this:</p>
+
+<pre>
+    <code class="go">
+        package main
+
+        import "fmt"
+
+        func main() {
+            x := 10
+            p := &x
+            fmt.Println(x)   // prints 10
+            fmt.Println(*p)  // also, prints 10
+        }
+    </code>
+</pre>
+
+<p>Hmm, that was pretty straight forward.</p>
+
+<h2>So, why was it created?</h2>
+
+<p>In the modern era, most high-level programming languages are capable of handling memory allocation (like <strong>Java</strong> or <strong>C#</strong>), automatically.</p>
+
+<p>But when <strong>C</strong> was developed, computers weren't as powerful as today but that also meant the programmers must create systems that made use of memory and speed, efficiently. Which is why some tasks do require it when programming low-level embedded systems or microcontrollers.</p>
+
+<h2>Why use them?</h2>
+
+<p>Whenever you pass a variable to a function, you're basically creating a copy of the variable. But if you're using pointers, you just have to pass the address of the variable and in most cases, a pointer is much smaller in size than the value being pointed at.</p>
+
+<p>It allows you share data and it's quite appropriate when it comes to modifying the data being passed to it.</p>
+
+<p>To some extent, it might seem efficient but there are some tradeoffs, when you're going to talk about optimization.</p>
+
+<h2>Do pointers really optimize your application?</h2>
+
+<p>I was thinking if pointers are used to optimize applications, I mean, you don't have to duplicate data and it saves memory, so why not?</p>
+
+<p>Turns out that there are a few points that I came across:</p>
+
+<ol>
+<li>Accessing values can use up memory though not so much but it can add up.</li>
+<li>Data will be placed on top of heap stack which increases the memory overhead and can be cleaned up the garbage collector.</li>
+</ol>
+
+<p>Most programmers tend to avoid using it in order to make their codebase less complex and reduce the increased work for the garbage collector.</p>
+
+<p>Apart from that, there are some concerns when it comes to the security of the application implying that it could be unsafe when using pointers.</p>
+
+<h2>Takeaway</h2>
+
+<p>Pointers are useful but don't think of using it, blindly, by assuming that it might give you a boost in performance.</p>
+
+<p>Hope you found this article useful!</p>
+
+<h2>Readings</h2>
+
+<ul>
+<li><a href="http://duramecho.com/ComputerInformation/WhyCPointers.html">Why C has pointers?</a></li>
+<li><a href="https://www.quora.com/Why-dont-we-use-pointers-in-Java-but-we-use-them-in-C-and-C++">Why do we use pointers in Java but we use them in C and C++</a></li>
+</ul>
+
+				</div>
+
+				<div class="share-container">
+					<p>Share this article:</p>
+					<div class="share-links">
+						<a href="https://www.facebook.com/sharer/sharer.php?u=https://www.megacolorboy.com/posts/do-we-really-need-to-use-pointers/"><i class="fab fa-facebook-f"></i></a>
+						<a href="https://www.twitter.com/home?status=https://www.megacolorboy.com/posts/do-we-really-need-to-use-pointers/"><i class="fab fa-twitter"></i></a>
+						<a href="https://www.linkedin.com/shareArticle?mini=true&url=https://www.megacolorboy.com/posts/do-we-really-need-to-use-pointers/&title=Do we really need to use pointers? | megacolorboy&summary=&source="><i class="fab fa-linkedin-in"></i></a>
+						<a href="https://www.plus.google.com/share?url=https://www.megacolorboy.com/posts/do-we-really-need-to-use-pointers/"><i class="fab fa-google-plus-g"></i></a>
+					</div>
+				</div>
+			</div>
+		</article>
+
+	</main>
+</body>
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.2/jquery.min.js"></script>
+<script src="/static/js/script.js" type="text/javascript"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.13.1/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-98290003-2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-98290003-2');
+</script>
+</html>
