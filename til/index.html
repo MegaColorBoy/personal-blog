@@ -30,7 +30,7 @@
 		<h1>Today I Learned</h1>
 
 		<p>This project is a collection of short write-ups on the things that I learn on a day-to-day basis across a variety of fields such as Computer Science, Mathematics, Software Engineering and Digital Design.</p>
-		<p>I consider this to be a microblog of sorts that can help me accumulate and share my knowledge with everyone! So far, I've published <strong>58</strong> short articles.</p>
+		<p>I consider this to be a microblog of sorts that can help me accumulate and share my knowledge with everyone! So far, I've published <strong>60</strong> short articles.</p>
 		<p>Hope you enjoy learning along with me! &#x1F604;</p>
 
 		<div class="_footer">
@@ -63,6 +63,189 @@
 
 	<main>
 		<div class="_til-grid">
+			
+				<div class="_item">
+					<div class="_wrapper">					
+						<div class="_heading">
+							<p class="tag"><span>Apache + WAMP</span></p>
+							<a href="til/posts/enable-httpsssl-on-wamp-server">
+								<h1>Enable HTTPS/SSL on WAMP Server</h1>
+							</a>
+							<div>
+								<p class="_date">Published on September 13th, 2020</p>
+							</div>
+						</div>
+						<hr/>
+						<div class="_content">
+							<p>Building a website with HTTPS/SSL in mind can help resolve a lot of problems when you're going to deploy it on production server.</p>
+
+<p>So, here's a small tutorial on how to enable HTTPS mode and install SSL certificate on your local WAMP Server.</p>
+
+<p><strong>Note: This tutorial assumes that you have a Windows PC and have installed WAMP Server 3.2.0 in your local system, if not, <a href="https://www.wampserver.com/en/">download it from here</a>.</strong></p>
+
+<h2>Download OpenSSL</h2>
+
+<p>Based on your system's architecture, you can download either a 32 or 64-bit installer. You can find the latest version of OpenSSL from here. While installing, please make sure all the options selected are default.</p>
+
+<h2>Generate SSL Key and Certificate</h2>
+
+<p>Open your terminal or command-line prompt and navigate to the following folder:</p>
+
+<pre>
+<code class="bash">
+cd "C:\Program Files\OpenSSL-Win64\bin"
+</code>
+</pre>
+
+<p>Next, you need to create a private key. While generating a private key, you'll have to enter a passphrase, it can be anything but make sure that you can remember it for the next step &#x1F602;.</p>
+
+<p>Execute the following command:</p>
+
+<pre>
+<code class="bash">
+openssl genrsa -aes256 -out private.key 2048
+</code>
+</pre>
+
+<p>Good, now let's generate our certificate and in this step, you'll be prompted with several questions. You can fill as per your wish or just hit "Enter" to leave it as default. The only thing that matters is <strong>Common Name</strong> and this should named as <code>localhost</code></p>
+
+<p>Execute the following command:</p>
+
+<pre>
+<code class="bash">
+openssl req -new -x509 -nodes -sha1 -key private.key -out certificate.crt -days 36500
+</code>
+</pre>
+
+<h2>Move the certificate and key to Apache's directory</h2>
+
+<p>Create a folder named <code>keys</code> and move both <code>private.key</code> and <code>certificate.crt</code> to this directory: <code>C:\wamp64\bin\apache\apache2.4.41\conf</code>.</p>
+
+<h2>Modify your httpd.conf file</h2>
+
+<p>You have to uncomment 3 lines from <code>C:/wamp64/bin/apache/apache2.4.41/conf/httpd.conf</code>:</p>
+
+<pre>
+<code class="apache">
+LoadModule ssl_module modules/mod_ssl.so
+Include conf/extra/httpd-ssl.conf
+LoadModule socache_shmcb_module modules/mod_socache_shmcb.so
+</code>
+</pre>
+
+<h2>Modify your httpd-ssl.conf file</h2>
+
+<p>Go to <code>C:/wamp64/bin/apache/apache2.4.41/conf/extra/httpd-ssl.conf</code> and modify the following parameters:</p>
+
+<pre>
+<code class="apache">
+DocumentRoot "c:/wamp64/www"
+ServerName localhost:443
+ServerAdmin admin@youremail.com
+ErrorLog "${SRVROOT}/logs/error.log"
+TransferLog "${SRVROOT}/logs/access.log"
+SSLSessionCache "shmcb:${SRVROOT}/logs/ssl_scache(512000)"
+SSLCertificateFile "${SRVROOT}/conf/keys/certificate.crt"
+SSLCertificateKeyFile "${SRVROOT}/conf/keys/private.key"
+CustomLog "${SRVROOT}/logs/ssl_request.log"
+</code>
+</pre>
+
+<p><code>DocumentRoot</code> is the location of where your website files are located. <code>ServerName</code> can be anything but preferable to use <code>localhost</code>.</p>
+
+<h2>Restart your WAMP Server</h2>
+
+<p>Just restart your WAMP Server for the changes to take effect. If the WAMP icon turns green, you're good else, an typo or syntax error must have occurred.</p>
+
+<p>Hope you found this tutorial useful! &#x1F600;</p>
+
+							<hr/>
+							<div class="_footer">
+								
+								<div class="share-container">
+									<p>Like this? Share it with others!</p>
+									<div class="share-links">
+										<a href="https://www.facebook.com/sharer/sharer.php?u=https://www.megacolorboy.com/til/posts/enable-httpsssl-on-wamp-server/"><i class="fab fa-facebook-f"></i></a>
+										<a href="https://www.twitter.com/home?status=https://www.megacolorboy.com/til/posts/enable-httpsssl-on-wamp-server/"><i class="fab fa-twitter"></i></a>
+										<a href="https://www.linkedin.com/shareArticle?mini=true&url=https://www.megacolorboy.com/til/posts/enable-httpsssl-on-wamp-server/&title=Enable HTTPS/SSL on WAMP Server | megacolorboy&summary=&source="><i class="fab fa-linkedin-in"></i></a>
+										<a href="https://www.plus.google.com/share?url=https://www.megacolorboy.com/til/posts/enable-httpsssl-on-wamp-server/"><i class="fab fa-google-plus-g"></i></a>
+									</div>
+								</div>
+							</div>
+						</div>
+						
+					</div>
+				</div>
+			
+				<div class="_item">
+					<div class="_wrapper">					
+						<div class="_heading">
+							<p class="tag"><span>Apache + WAMP</span></p>
+							<a href="til/posts/accessing-wamp-server-from-other-computers-on-lan">
+								<h1>Accessing WAMP Server from other computers on LAN</h1>
+							</a>
+							<div>
+								<p class="_date">Published on September 13th, 2020</p>
+							</div>
+						</div>
+						<hr/>
+						<div class="_content">
+							<p>Whenever you develop a website using the <strong>LAMP</strong> or <strong>WAMP</strong> stack, you'll want to access the website, locally, via different systems and devices solely for testing purposes.</p>
+
+<h2>Modify your VirtualHosts configuration</h2>
+
+<p>Setting up your WAMP Server for LAN access only requires you to tweak your <strong>VirtualHosts</strong> configuration file found in <code>C:\wamp64\bin\apache\apache2.4.41\conf\extra\httpd-vhost.conf</code></p>
+
+<pre>
+<code class="apache">
+&lt;VirtualHost *:80&gt;
+  ServerName example.test
+  ServerAlias example.test
+  DocumentRoot "c:/wamp64/www/yourprojectname"
+  &lt;Directory "c:/wamp64/www/yourprojectname/"&gt;
+    Options +Indexes +Includes +FollowSymLinks +MultiViews
+    AllowOverride All
+    Require all granted
+  &lt;/Directory&gt;
+&lt;/VirtualHost&gt;
+</code>
+</pre>
+
+<p>Oh, if you're using Linux, you'll find the file <code>000-default.conf</code> in <code>/etc/apache2/sites-available</code> directory.</p>
+
+<h2>Update your hosts file</h2>
+
+<p>If you type the URL of the website that you want to visit, the computer will first refer to the <code>hosts</code> file and then it'll go out to fetch DNS information. So, if you want <code>http:\\example.test</code> url to point to your local system, you just have add it in your <code>hosts</code> file:</p>
+
+<p>Open the hosts file(<code>C:\Windows\System32\drivers\etc\hosts</code>) using a text editor and add this line to your <code>hosts</code> file:</p>
+
+<pre>
+<code class="txt">
+127.0.0.1   example.test
+</code>
+</pre>
+
+<p>Once done, save the file and restart your WAMP Server and you're all set to go!</p>
+
+<p>Hope you found this tip useful!</p>
+
+							<hr/>
+							<div class="_footer">
+								
+								<div class="share-container">
+									<p>Like this? Share it with others!</p>
+									<div class="share-links">
+										<a href="https://www.facebook.com/sharer/sharer.php?u=https://www.megacolorboy.com/til/posts/accessing-wamp-server-from-other-computers-on-lan/"><i class="fab fa-facebook-f"></i></a>
+										<a href="https://www.twitter.com/home?status=https://www.megacolorboy.com/til/posts/accessing-wamp-server-from-other-computers-on-lan/"><i class="fab fa-twitter"></i></a>
+										<a href="https://www.linkedin.com/shareArticle?mini=true&url=https://www.megacolorboy.com/til/posts/accessing-wamp-server-from-other-computers-on-lan/&title=Accessing WAMP Server from other computers on LAN | megacolorboy&summary=&source="><i class="fab fa-linkedin-in"></i></a>
+										<a href="https://www.plus.google.com/share?url=https://www.megacolorboy.com/til/posts/accessing-wamp-server-from-other-computers-on-lan/"><i class="fab fa-google-plus-g"></i></a>
+									</div>
+								</div>
+							</div>
+						</div>
+						
+					</div>
+				</div>
 			
 				<div class="_item">
 					<div class="_wrapper">					

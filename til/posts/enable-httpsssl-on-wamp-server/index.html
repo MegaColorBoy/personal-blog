@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Enable HTTPS/SSL on WAMP Server | megacolorboy</title>
+	<base href="/"/>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="author" content="Abdush Shakoor">
+	<meta name="description" content="Enable HTTPS/SSL on WAMP Server">
+	<link href="../static/favicon.ico" rel="shortcut icon" type="image/x-icon"/>
+	<link rel="stylesheet" href="../static/css/til.css" type="text/css"/>
+	<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.13.1/styles/an-old-hope.min.css">
+	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.1/css/all.css" integrity="sha384-gfdkjb5BdAXd+lj+gudLWI+BXq4IuLW5IT+brZEZsLFm++aCMlF1V92rMkPaX4PP" crossorigin="anonymous">
+</head>
+<body>
+	<!-- Website header -->
+	<header class="navbar">
+		<a class="logo-link" href="/til">
+			<div class="header-logo">
+				<img src="/static/images/avatar2.gif"/>
+				<div class="logo-text">
+					<p class="logo-title">mega<span class="trademark">color</span>boy</p>
+					<p class="logo-subtitle">The microblog of Abdush Shakoor</p>
+				</div>
+			</div>
+		</a>
+	</header>
+
+	<main>
+		<div class="_til-grid">
+			<div class="_item">
+				<div class="_wrapper">					
+					<div class="_heading">
+						<p class="tag"><span>Apache + WAMP</span></p>
+						<h1>Enable HTTPS/SSL on WAMP Server</h1>
+						<div>
+							<p class="_date">Published on September 13th, 2020</p>
+						</div>
+					</div>
+					<hr/>
+					<div class="_content">
+						<p>Building a website with HTTPS/SSL in mind can help resolve a lot of problems when you're going to deploy it on production server.</p>
+
+<p>So, here's a small tutorial on how to enable HTTPS mode and install SSL certificate on your local WAMP Server.</p>
+
+<p><strong>Note: This tutorial assumes that you have a Windows PC and have installed WAMP Server 3.2.0 in your local system, if not, <a href="https://www.wampserver.com/en/">download it from here</a>.</strong></p>
+
+<h2>Download OpenSSL</h2>
+
+<p>Based on your system's architecture, you can download either a 32 or 64-bit installer. You can find the latest version of OpenSSL from here. While installing, please make sure all the options selected are default.</p>
+
+<h2>Generate SSL Key and Certificate</h2>
+
+<p>Open your terminal or command-line prompt and navigate to the following folder:</p>
+
+<pre>
+<code class="bash">
+cd "C:\Program Files\OpenSSL-Win64\bin"
+</code>
+</pre>
+
+<p>Next, you need to create a private key. While generating a private key, you'll have to enter a passphrase, it can be anything but make sure that you can remember it for the next step &#x1F602;.</p>
+
+<p>Execute the following command:</p>
+
+<pre>
+<code class="bash">
+openssl genrsa -aes256 -out private.key 2048
+</code>
+</pre>
+
+<p>Good, now let's generate our certificate and in this step, you'll be prompted with several questions. You can fill as per your wish or just hit "Enter" to leave it as default. The only thing that matters is <strong>Common Name</strong> and this should named as <code>localhost</code></p>
+
+<p>Execute the following command:</p>
+
+<pre>
+<code class="bash">
+openssl req -new -x509 -nodes -sha1 -key private.key -out certificate.crt -days 36500
+</code>
+</pre>
+
+<h2>Move the certificate and key to Apache's directory</h2>
+
+<p>Create a folder named <code>keys</code> and move both <code>private.key</code> and <code>certificate.crt</code> to this directory: <code>C:\wamp64\bin\apache\apache2.4.41\conf</code>.</p>
+
+<h2>Modify your httpd.conf file</h2>
+
+<p>You have to uncomment 3 lines from <code>C:/wamp64/bin/apache/apache2.4.41/conf/httpd.conf</code>:</p>
+
+<pre>
+<code class="apache">
+LoadModule ssl_module modules/mod_ssl.so
+Include conf/extra/httpd-ssl.conf
+LoadModule socache_shmcb_module modules/mod_socache_shmcb.so
+</code>
+</pre>
+
+<h2>Modify your httpd-ssl.conf file</h2>
+
+<p>Go to <code>C:/wamp64/bin/apache/apache2.4.41/conf/extra/httpd-ssl.conf</code> and modify the following parameters:</p>
+
+<pre>
+<code class="apache">
+DocumentRoot "c:/wamp64/www"
+ServerName localhost:443
+ServerAdmin admin@youremail.com
+ErrorLog "${SRVROOT}/logs/error.log"
+TransferLog "${SRVROOT}/logs/access.log"
+SSLSessionCache "shmcb:${SRVROOT}/logs/ssl_scache(512000)"
+SSLCertificateFile "${SRVROOT}/conf/keys/certificate.crt"
+SSLCertificateKeyFile "${SRVROOT}/conf/keys/private.key"
+CustomLog "${SRVROOT}/logs/ssl_request.log"
+</code>
+</pre>
+
+<p><code>DocumentRoot</code> is the location of where your website files are located. <code>ServerName</code> can be anything but preferable to use <code>localhost</code>.</p>
+
+<h2>Restart your WAMP Server</h2>
+
+<p>Just restart your WAMP Server for the changes to take effect. If the WAMP icon turns green, you're good else, an typo or syntax error must have occurred.</p>
+
+<p>Hope you found this tutorial useful! &#x1F600;</p>
+
+						<hr/>
+						<div class="_footer">
+							
+							<div class="share-container">
+								<p>Like this? Share it with others!</p>
+								<div class="share-links">
+									<a href="https://www.facebook.com/sharer/sharer.php?u=https://www.megacolorboy.com/til/posts/enable-httpsssl-on-wamp-server/"><i class="fab fa-facebook-f"></i></a>
+									<a href="https://www.twitter.com/home?status=https://www.megacolorboy.com/til/posts/enable-httpsssl-on-wamp-server/"><i class="fab fa-twitter"></i></a>
+									<a href="https://www.linkedin.com/shareArticle?mini=true&url=https://www.megacolorboy.com/til/posts/enable-httpsssl-on-wamp-server/&title=Enable HTTPS/SSL on WAMP Server | megacolorboy&summary=&source="><i class="fab fa-linkedin-in"></i></a>
+									<a href="https://www.plus.google.com/share?url=https://www.megacolorboy.com/til/posts/enable-httpsssl-on-wamp-server/"><i class="fab fa-google-plus-g"></i></a>
+								</div>
+							</div>
+						</div>
+					</div>
+					
+				</div>
+			</div>
+		</div>
+
+	</main>
+</body>
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.13.1/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-98290003-2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-98290003-2');
+</script>
+</html>
