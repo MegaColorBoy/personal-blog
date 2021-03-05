@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html data-theme="" lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="author" content="Abdush Shakoor">
+	<title>Make your own generative pixel art in less than 100 lines of code | megacolorboy</title>
+
+	
+	<meta name="description" content="By modifying my old random pixel generator, I was able to generate a Space Invaders-esque pixel art..">
+	<meta name="og:title" content="Make your own generative pixel art in less than 100 lines of code | megacolorboy" />
+	<meta name="og:type" content="article" />
+	<meta name="og:url" content="https://www.megacolorboy.com/posts/make-your-own-generative-pixel-art-in-less-than-100-lines-of-code/" />
+	<meta name="og:description" content="By modifying my old random pixel generator, I was able to generate a Space Invaders-esque pixel art." />
+	<meta name="og:site_name" content="Abdush Shakoor's Blog | megacolorboy" />
+	
+	
+	<link rel="stylesheet" href="/static/css/main.css" type="text/css">
+	<link rel="stylesheet" href="/static/vendor/hljs/css/default.min.css">
+	<link href="/static/favicon.ico" rel="shortcut icon" type="image/x-icon"/>
+	<!-- Add OG tags  -->
+</head>
+<body class="details-page writings">
+	<!-- Navbar -->
+	<header class="header">
+	<div class="author">
+		<a href="/">
+			<div class="logo"></div>
+			<p>megacolorboy</p>
+		</a>
+	</div>
+	<nav>
+		<ul class="menu">
+			
+				<li><a href="/about">About</a></li>
+			
+				<li><a href="/writings">Writings</a></li>
+			
+				<li><a href="/til">Today I Learned</a></li>
+			
+		</ul>
+	</nav>
+</header>
+
+<div class="article-top">
+	<a class="back" href="/writings"><span>&larr;</span> Back</a>
+	<p class="date">Published on March 5th, 2021</p>	
+</div>
+
+<main>
+	<section class="article-head">
+		<p class="cat">Generative Art + JavaScript</p>
+		<h1>Make your own generative pixel art in less than 100 lines of code</h1>
+		
+			<p>By modifying my old random pixel generator, I was able to generate a Space Invaders-esque pixel art.</p>
+		
+		<p class="date">4 minutes read</p>
+	</section>
+	<article>
+		<p><canvas id="myCanvas" width="500" height="302" style="border:0px solid #40514e;background-color: #e4f9f5;"></canvas></p>
+
+<script defer type="text/javascript" src="/static/projects/invaders-sprites/script.js"></script>
+
+<div class="post-notification success">
+    <h3>Try it out!</h3>
+    <p>Refresh the page to generate unique Space Invader-esque patterns as the results are unpredictable!</p>
+</div>
+
+<p>Generative art is a topic that still fascinates me because of the fact that you can produce something unique by just writing few (sometimes, more) lines of code. Especially, if it's self-generating art that makes use of fixed rules and a slight dash of randomness to produce unique results.</p>
+
+<p>When it comes to writing code, it's quite straightforward. You come up with the rules and constraints and voila, you have something that works. Having said that, setting up rules for generative art can get quite tricky.</p>
+
+<p>You might have read about my previous post about <a href="/writings/posts/the-game-of-life/">The Game of Life</a>, it contains only four rules and each of them took a part in evolving the system through each generation. With generative systems like that, you can never predict the results as complex patterns will emerge due to it's randomness.</p>
+
+<p>In my view, a combination of predictability and randomness is needed in order to create a good looking generative art.</p>
+
+<h2>Why you should explore it?</h2>
+
+<p>There could be many reasons, maybe you're bored, curious or passionate to learn something new. Who knows? Open up your editor and try it for yourself.</p>
+
+<p>Exploring the craft of making generative art has allowed me to:</p>
+
+<ul>
+<li>Gain different experiences &mdash; It allows you to sharpen your algorithms &amp; data structures and maybe even, learn a new technique.</li>
+<li>Create something visually appealing &mdash; A picture is equal to a thousand words.</li>
+<li>Instant results that makes you feel good &mdash; I mean, it's hard to explain but y'know what I mean, right?</li>
+</ul>
+
+<h2>Where to start?</h2>
+
+<p>Just like any other project, you just need:</p>
+
+<ul>
+<li>An inspiration or an idea that you can work on.</li>
+<li>The right kind of technology to use.</li>
+</ul>
+
+<p>With today's article, I'll be showing you how I built a Space Invader-esque pixel art generator in JavaScript that makes use of the Canvas API.</p>
+
+<h2>Building a generator</h2>
+
+<p>I'd like to give a shout out to the <a href="https://www.erdavids.com/">person</a> who built a twitterbot that generates random sprites using Python's Pillow image library.</p>
+
+<p>I was inspired and I thought of writing it in JavaScript and as you can see above, it did turn out pretty well.</p>
+
+<p>Here's the code for your reference and please read the comments to know how it functions:</p>
+
+<pre>
+    <code class="javascript">
+    // To store any used colors
+    var colorStack = [];
+
+    // Selected color palette
+    var colors = [
+        '#30e3ca',
+        '#ff5a5f',
+        '#40514e',
+        '#e4f9f5',
+        '#40514e',
+        '#e4f9f5',
+        '#e4f9f5',
+    ];
+
+    var canvas = document.getElementById("myCanvas");
+    var ctx = canvas.getContext('2d');
+
+    var width = canvas.width;
+    var height = canvas.height;
+
+    function createSquare(squareDimensions, color, element, spriteDim) {
+        const {squareX, squareY, squareWidth, squareHeight} = squareDimensions;
+
+        // If it's a middle element, apply a color
+        if (element == parseInt(spriteDim/2)) {
+            ctx.fillStyle = color;
+            ctx.fillRect(parseInt(squareX), parseInt(squareY), parseInt(squareWidth/squareX)+3, parseInt(squareHeight/squareY)+3);
+        }
+        // If it's the last element, then use the color that you saved previously
+        else if (colorStack.length == element + 1) {
+            ctx.fillStyle = colorStack.pop();
+            ctx.fillRect(parseInt(squareX), parseInt(squareY), parseInt(squareWidth/squareX)+3, parseInt(squareHeight/squareY)+3);  
+        }
+        // Else, apply a color and save this for the last element.
+        else {
+            colorStack.push(color);
+            ctx.fillStyle = color;
+            ctx.fillRect(parseInt(squareX), parseInt(squareY), parseInt(squareWidth/squareX)+3, parseInt(squareHeight/squareY)+3);      
+        }
+    }
+
+    function createInvader(invaderDimensions, spriteDim) { 
+
+        var {posX, posY, invaderWidth, invaderHeight} = invaderDimensions;
+        var squareSize = (invaderWidth - posX) / spriteDim;
+
+        var cellPosition = 1;
+        var element = 0;
+
+        for(var y=0; y&lt;spriteDim; y++){
+            /* 
+                Starts from the left side of the grid.
+                Think of it as something like this:
+                [-3,-2,-1,0,1,2,3]
+            */
+            cellPosition *= -1;
+
+            // First element
+            element = 0;
+
+            for(var x=0; x&lt;spriteDim; x++) {
+                squareX = x * squareSize + posX;
+                squareY = y * squareSize + posY;
+                squareWidth = squareX + squareSize;
+                squareHeight = squareY + squareSize;
+
+                // Pick a random color from the color palette
+                var color = colors[Math.floor(Math.random() * colors.length)];
+
+                var squareDimensions = {
+                    'squareX': squareX+2,
+                    'squareY':squareY+2,
+                    'squareWidth':squareWidth,
+                    'squareHeight':squareHeight,
+                };
+
+                // Create a square with a color and desired dimensions.
+                createSquare(squareDimensions, color, element, spriteDim);
+
+                /*
+                     If it's the middle element or the starting element, 
+                     then shift it's position to the leftmost.
+                */
+                if(element == parseInt(spriteDim/2) || element == 0) {
+                    cellPosition *= -1;
+                }
+
+                element += cellPosition;
+            }
+        }
+    }
+
+    function main() {
+        var spriteDim = 7;
+        var numberOfInvaders = 15;
+        var invadersSize = parseInt(width / numberOfInvaders);
+        var padding = parseInt(invadersSize / spriteDim);
+
+        for(var x=0; x&lt;numberOfInvaders; x++) {
+            for(var y=0; y&lt;numberOfInvaders; y++) {
+                var posX = (x * invadersSize) + padding + 2;
+                var posY = (y * invadersSize) + padding + 2;
+                var invaderWidth = posX + invadersSize - (padding * 3);
+                var invaderHeight = posY + invadersSize - (padding * 3);
+
+                var invaderDimensions = {
+                    'posX': posX,
+                    'posY': posY,
+                    'invaderWidth': invaderWidth,
+                    'invaderHeight': invaderHeight
+                };
+
+                createInvader(invaderDimensions, spriteDim);
+            }
+        }   
+    }
+
+    main();
+    </code>
+</pre>
+
+<p>Well, I won't say that is a perfect solution but hey, it works and yes, it doesn't take a lot of code to achieve something like this.</p>
+
+<h2>Explanation</h2>
+
+<p>I'll try my best to explain how this whole thing works.</p>
+
+<p>First, you need to initialize a <code>&lt;canvas&gt;</code> DOM element of the desired width and height. Then in the <code>main()</code> function, you determine the size of each invader by specifying the number of invaders and dividing it with the width of the canvas. These values will then be used to determine the coordinates for each invader.</p>
+
+<p>Second, the function <code>createInvader()</code> follows nearly the same process as the <code>main</code> function except that the coordinates for each pixel is determined by calculating the width of the invader and subtracting it's <code>x</code> position divided by the dimensions of each invader.</p>
+
+<p>Third, as you can see in the function <code>createSquare()</code>, it contains 3 simple rules in which all of them draws a square with a color but with an emphasis that each invader has a symmetrical pattern.</p>
+
+<p>The code looks deceptively simple but achieving this complexity did take a lot of trial and error and a little bit of simple calculus &#x1F602;.</p>
+
+<h2>Conclusion</h2>
+
+<p>Generative art might be something that you may not need to explore but it's quite fun and you may never know what you might be able to produce by combining both code and visuals.</p>
+
+<p>Hope you liked reading this article.</p>
+
+<p>Stay tuned for more! &#x1F918;</p>
+
+	</article>
+</main>
+
+<script src="/static/vendor/jquery/jquery-3.5.1.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+<script src="/static/vendor/hljs/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-98290003-2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-98290003-2');
+</script>
+<script>
+	var currentURI = window.location.href;
+	currentURI = currentURI.replace(window.location.protocol + "//", "");
+	var currentPage	 = currentURI.split('/')[1];
+
+	if(currentPage) {
+		$('a[href="/' + currentPage + '"').parent().addClass('active');
+	}
+</script>
+</body>
+</html>
