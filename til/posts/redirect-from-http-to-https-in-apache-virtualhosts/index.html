@@ -4,14 +4,14 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta name="author" content="Abdush Shakoor">
-	<title>Create migrations and seeds from an existing database | megacolorboy</title>
+	<title>Redirect from HTTP to HTTPS in Apache VirtualHosts | megacolorboy</title>
 
 	
-	<meta name="description" content="Up until now, I've written migrations and generated seeders for some Laravel projects that I have worked on but recently, I thought of seeing if there's a way to generate migrations and seeds from an existing database especially if it's a project that never had any migrations or seeds created before.Luckily, I found these two packages, which turned out to be quite productive:kitloong/laravel-migrations-generatororangehill/iseedExecute the following commands to install the packages mentioned above:Generate migrations using existing databaseYou can generate your migrations for all tables like this:Or, you can specify the tables you wish to generate:Generate new seeds using existing databaseYou can generate seeds for a single table like this:And for multiple tables, you can do this:Hope you find this tip useful!..">
-	<meta name="og:title" content="Create migrations and seeds from an existing database | megacolorboy" />
+	<meta name="description" content="Here's a simple technique on how I learned to redirect a site from HTTP to HTTPS automatically using Apache's VirtualHost configuration.Go to your configuration file or  and modify your configuration to something like this:Save the file and check if the configuration is correct before your restart the server:If you get the message, , then go ahead and restart the server:Now, your visitors will be redirected from HTTP to HTTPS automatically!Hope you found this tip useful!.">
+	<meta name="og:title" content="Redirect from HTTP to HTTPS in Apache VirtualHosts | megacolorboy" />
 	<meta name="og:type" content="article" />
-	<meta name="og:url" content="https://www.megacolorboy.com/posts/create-migrations-and-seeds-from-an-existing-database/" />
-	<meta name="og:description" content="Up until now, I've written migrations and generated seeders for some Laravel projects that I have worked on but recently, I thought of seeing if there's a way to generate migrations and seeds from an existing database especially if it's a project that never had any migrations or seeds created before.Luckily, I found these two packages, which turned out to be quite productive:kitloong/laravel-migrations-generatororangehill/iseedExecute the following commands to install the packages mentioned above:Generate migrations using existing databaseYou can generate your migrations for all tables like this:Or, you can specify the tables you wish to generate:Generate new seeds using existing databaseYou can generate seeds for a single table like this:And for multiple tables, you can do this:Hope you find this tip useful!." />
+	<meta name="og:url" content="https://www.megacolorboy.com/posts/redirect-from-http-to-https-in-apache-virtualhosts/" />
+	<meta name="og:description" content="Here's a simple technique on how I learned to redirect a site from HTTP to HTTPS automatically using Apache's VirtualHost configuration.Go to your configuration file or  and modify your configuration to something like this:Save the file and check if the configuration is correct before your restart the server:If you get the message, , then go ahead and restart the server:Now, your visitors will be redirected from HTTP to HTTPS automatically!Hope you found this tip useful!" />
 	<meta name="og:site_name" content="Abdush Shakoor's Blog | megacolorboy" />
 	
 	
@@ -53,74 +53,57 @@
 
 <div class="article-top">
 	<a class="back" href="/til"><span>&larr;</span> Back</a>
-	<p class="date">Published on March 12th, 2021</p>	
+	<p class="date">Published on July 9th, 2021</p>	
 </div>
 
 <main>
 	<section class="article-head">
-		<p class="cat">Laravel</p>
-		<h1>Create migrations and seeds from an existing database</h1>
+		<p class="cat">DevOps</p>
+		<h1>Redirect from HTTP to HTTPS in Apache VirtualHosts</h1>
 		
-			<p class="desc">Up until now, I've written migrations and generated seeders for some Laravel projects that I have worked on but recently, I thought of seeing if there's a way to generate migrations and seeds from an existing database especially if it's a project that never had any migrations or seeds created before.Luckily, I found these two packages, which turned out to be quite productive:kitloong/laravel-migrations-generatororangehill/iseedExecute the following commands to install the packages mentioned above:Generate migrations using existing databaseYou can generate your migrations for all tables like this:Or, you can specify the tables you wish to generate:Generate new seeds using existing databaseYou can generate seeds for a single table like this:And for multiple tables, you can do this:Hope you find this tip useful!.</p>
+			<p class="desc">Here's a simple technique on how I learned to redirect a site from HTTP to HTTPS automatically using Apache's VirtualHost configuration.Go to your configuration file or  and modify your configuration to something like this:Save the file and check if the configuration is correct before your restart the server:If you get the message, , then go ahead and restart the server:Now, your visitors will be redirected from HTTP to HTTPS automatically!Hope you found this tip useful!</p>
 		
 		<p class="date">1 minute read</p>
 	</section>
 	<article>
-		<p>Up until now, I've written migrations and generated seeders for some Laravel projects that I have worked on but recently, I thought of seeing if there's a way to generate migrations and seeds from an existing database especially if it's a project that never had any migrations or seeds created before.</p>
+		<p>Here's a simple technique on how I learned to redirect a site from HTTP to HTTPS automatically using Apache's VirtualHost configuration.</p>
 
-<p>Luckily, I found these two packages, which turned out to be quite productive:</p>
-
-<ol>
-<li><a href="https://github.com/kitloong/laravel-migrations-generator">kitloong/laravel-migrations-generator</a></li>
-<li><a href="https://github.com/orangehill/iseed">orangehill/iseed</a></li>
-</ol>
-
-<p>Execute the following commands to install the packages mentioned above:</p>
+<p>Go to your configuration file or <code>000-default.conf</code> and modify your configuration to something like this:</p>
 
 <pre>
-<code class="bash">
-composer require --dev "kitloong/laravel-migrations-generator"
-composer require orangehill/iseed
+<code class="config">
+&lt;VirtualHost *:80&gt;
+    ServerName your.domain.com
+    Redirect permanent / https://your.domain.com/
+&lt;/VirtualHost&gt;
+
+&lt;VirtualHost *:443&gt;
+    ServerName your.domain.com
+    SSLEngine On
+    # insert code here...
+&lt;/VirtualHost&gt;
 </code>
 </pre>
 
-<h2>Generate migrations using existing database</h2>
-
-<p>You can generate your migrations for all tables like this:</p>
+<p>Save the file and check if the configuration is correct before your restart the server:</p>
 
 <pre>
 <code class="bash">
-php artisan migrate:generate
+sudo apachectl configtest
 </code>
 </pre>
 
-<p>Or, you can specify the tables you wish to generate:</p>
+<p>If you get the message, <code>Syntax OK</code>, then go ahead and restart the server:</p>
 
 <pre>
 <code class="bash">
-php artisan migrate:generate table1,table2,table3
+sudo systemctl restart apache2
 </code>
 </pre>
 
-<h2>Generate new seeds using existing database</h2>
+<p>Now, your visitors will be redirected from HTTP to HTTPS automatically!</p>
 
-<p>You can generate seeds for a single table like this:</p>
-
-<pre>
-<code class="bash">
-php artisan iseed table_name
-</code>
-</pre>
-
-<p>And for multiple tables, you can do this:</p>
-
-<pre>
-<code class="bash">
-php artisan iseed table1,table2,table3
-</code>
-</pre>
-
-<p>Hope you find this tip useful!.</p>
+<p>Hope you found this tip useful!</p>
 
 	</article>
 </main>
