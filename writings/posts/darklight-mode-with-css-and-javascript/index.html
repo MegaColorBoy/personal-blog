@@ -53,7 +53,7 @@
 
 <div class="article-top">
 	<a class="back" href="/writings"><span>&larr;</span> Back</a>
-	<p class="date">Published on July 23rd, 2021</p>	
+	<p class="date">Published on September 9th, 2021</p>	
 </div>
 
 <main>
@@ -63,7 +63,7 @@
 		
 			<p class="desc">A simple guide on how to implement a dark/light theme switcher with CSS and JavaScript</p>
 		
-		<p class="date">1 minute read</p>
+		<p class="date">2 minutes read</p>
 	</section>
 	<article>
 		<p>It's quite common these days that many websites let their users to decide their preferred color scheme(s). Giving this sort of customizability offers good user experience.</p>
@@ -120,11 +120,83 @@
 
 <h2>Add some markup</h2>
 
+<p>That depends on what you really want to have in your website but for this tutorial, you can just place a simple button somewhere in your navigation bar or anywhere you like:</p>
+
+<pre>
+    <code>
+    &lt;button class="themeSwitcher"&gt;Dark/Light&lt;/button&gt;
+    </code>
+</pre>
+
 <h2>Toggle between light and dark themes</h2>
+
+<p>Yes, we are getting there and you just have to write a simple logic that checks if whether the current theme is dark or light based on the class used on the <code>&lt;body&gt;</code> element.</p>
+
+<pre>
+    <code>
+    $('.themeSwitcher').on('click', function(){
+        switch($('body').attr('data-theme')){
+            case "dark":
+                $('body').attr('data-theme', 'dark');
+                break;
+
+            case "light":
+            default:
+                $('body').attr('data-theme', '');
+                break;
+        }
+    });
+    </code>
+</pre>
 
 <h3>Save user's preference in their browser</h3>
 
+<p>If your button works as expected, good! Now, once you refresh the page, the background would return to it's default mode but that's not what we wanted, right?</p>
+
+<p>But why does it return instead of staying dark? Because your "preference" is not stored in your browser.</p>
+
+<p>Modify your code to store your preferences in your browser:</p>
+
+<pre>
+    <code>
+    &lt;script&gt;
+    $('.themeSwitcher').on('click', function(){
+        switch($('body').attr('data-theme')){
+            case "dark":
+                $('body').attr('data-theme', 'dark');
+                localStorage.setItem("theme", "dark");
+                break;
+
+            case "light":
+            default:
+                $('body').attr('data-theme', '');
+                localStorage.setItem("theme", "");
+                break;
+        }
+    });
+    &lt;/script&gt;
+    </code>
+</pre>
+
+<p>This should work fine but you'll want to avoid the "flickering" issue while changing themes or refreshing the page, in order to do that, make sure that you check the user preference before the page is completely loaded:</p>
+
+<pre>
+    <code>
+    &lt;script&gt;
+        if(localStorage.theme){
+            document.documentElement.setAttribute('data-theme', localStorage.getItem("theme"));
+        }
+    &lt;/script&gt;
+    </code>
+</pre>
+
 <h2>Conclusion</h2>
+
+<p>Well, if you've noticed, I wrote a simple theme switcher for my blog too. Try it out and you can inspect the code to see how it works.</p>
+
+<p>Hope you enjoyed this article!</p>
+
+<p>Stay tuned for more!</p>
 
 	</article>
 </main>
