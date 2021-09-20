@@ -4,16 +4,14 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta name="author" content="Abdush Shakoor">
-	<title>Symbolic storage link in shared hosting | megacolorboy</title>
+	<title>Display list of files with their extension and file sizes | megacolorboy</title>
 
 	
-	<meta name="description" content="If you're hosting a laravel project via cPanel, chances are that it could be a shared hosting server and that means you can't really use  for this.
-But don't worry, there's another way to this. Just follow the steps below:1. Create a symlinkIn your  directory, remove the  folder. Next, create a  file in your  directory and add the following code:2. Create a custom route to access storageAlright, this is kind of a hack but it works extremely fine. Just add the following route in your  file:Now, you can access your images or any other assets easily using: Hope this helps you out!.">
-	<meta name="og:title" content="Symbolic storage link in shared hosting | megacolorboy" />
+	<meta name="description" content="Last month, I was trying to free up some space in my company servers and I realized that there were a lot of  files taking up a lot of space.So, I wrote the following command to list files by their extension:And later to determine which files are the largest, I executed this command to sort the list by file size:Hope this tip helps you too! 😄.">
+	<meta name="og:title" content="Display list of files with their extension and file sizes | megacolorboy" />
 	<meta name="og:type" content="article" />
-	<meta name="og:url" content="https://www.megacolorboy.com/posts/symlink-shared-hosting/" />
-	<meta name="og:description" content="If you're hosting a laravel project via cPanel, chances are that it could be a shared hosting server and that means you can't really use  for this.
-But don't worry, there's another way to this. Just follow the steps below:1. Create a symlinkIn your  directory, remove the  folder. Next, create a  file in your  directory and add the following code:2. Create a custom route to access storageAlright, this is kind of a hack but it works extremely fine. Just add the following route in your  file:Now, you can access your images or any other assets easily using: Hope this helps you out!" />
+	<meta name="og:url" content="https://www.megacolorboy.com/posts/display-list-of-files-with-their-extension-and-file-sizes/" />
+	<meta name="og:description" content="Last month, I was trying to free up some space in my company servers and I realized that there were a lot of  files taking up a lot of space.So, I wrote the following command to list files by their extension:And later to determine which files are the largest, I executed this command to sort the list by file size:Hope this tip helps you too! 😄" />
 	<meta name="og:site_name" content="Abdush Shakoor's Blog | megacolorboy" />
 	
 	
@@ -55,70 +53,38 @@ But don't worry, there's another way to this. Just follow the steps below:1. Cre
 
 <div class="article-top">
 	<a class="back" href="/til"><span>&larr;</span> Back</a>
-	<p class="date">Published on May 25th, 2020</p>	
+	<p class="date">Published on September 20th, 2021</p>	
 </div>
 
 <main>
 	<section class="article-head">
-		<p class="cat">Laravel</p>
-		<h1>Symbolic storage link in shared hosting</h1>
+		<p class="cat">Linux</p>
+		<h1>Display list of files with their extension and file sizes</h1>
 		
-			<p class="desc">If you're hosting a laravel project via cPanel, chances are that it could be a shared hosting server and that means you can't really use  for this.
-But don't worry, there's another way to this. Just follow the steps below:1. Create a symlinkIn your  directory, remove the  folder. Next, create a  file in your  directory and add the following code:2. Create a custom route to access storageAlright, this is kind of a hack but it works extremely fine. Just add the following route in your  file:Now, you can access your images or any other assets easily using: Hope this helps you out!</p>
+			<p class="desc">Last month, I was trying to free up some space in my company servers and I realized that there were a lot of  files taking up a lot of space.So, I wrote the following command to list files by their extension:And later to determine which files are the largest, I executed this command to sort the list by file size:Hope this tip helps you too! 😄</p>
 		
 		<p class="date">1 minute read</p>
 	</section>
 	<article>
-		<p>If you're hosting a laravel project via cPanel, chances are that it could be a shared hosting server and that means you can't really use <code>php artisan storage:link</code> for this.
-But don't worry, there's another way to this. Just follow the steps below:</p>
+		<p>Last month, I was trying to free up some space in my company servers and I realized that there were a lot of <code>.zip</code> files taking up a lot of space.</p>
 
-<h2>1. Create a symlink</h2>
-
-<p>In your <code>public_html/public</code> directory, remove the <code>storage</code> folder. Next, create a <code>symlink.php</code> file in your <code>public_html</code> directory and add the following code:</p>
+<p>So, I wrote the following command to list files by their extension:</p>
 
 <pre>
-<code class="php">
-$targetFolder = $_SERVER['DOCUMENT_ROOT'].'/storage/app/public';
-$linkedFolder = $_SERVER['DOCUMENT_ROOT'].'/public/storage';
-symlink($targetFolder, $linkedFolder);
-echo "done";
+<code class="bash">
+find . -iname \*.extension -exec du -sh {} \; &gt; file-list.txt
 </code>
 </pre>
 
-<h2>2. Create a custom route to access storage</h2>
-
-<p>Alright, this is kind of a hack but it works extremely fine. Just add the following route in your <code>routes/web.php</code> file:</p>
+<p>And later to determine which files are the largest, I executed this command to sort the list by file size:</p>
 
 <pre>
-<code class="php">
-Route::get('/storage/anyfolder/{filename}', function($filename){
-    // Your folder path
-    $folder_path = storage_path('app/public/anyfolder/'.$filename);
-
-    // check if the file exists
-    if(!File::exists($folder_path)) {
-        abort(404);
-    }
-
-    $file = File::get($folder_path);
-    $type = File::mimeType($folder_path);
-
-    $response = Response::make($file, 200);
-    $response->header("Content-Type", $type);
-
-    return $response;
+<code class="bash">
+sort -rh file-list.txt > newfile.txt
 </code>
 </pre>
 
-<p>Now, you can access your images or any other assets easily using: </p>
-
-<pre>
-<code class="php">
-asset('storage/anyfolder/'.$filename)
-</code>
-</pre>
-
-<p>Hope this helps you out!</p>
+<p>Hope this tip helps you too! &#x1F604;</p>
 
 	</article>
 </main>
