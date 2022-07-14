@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html data-theme="" lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="author" content="Abdush Shakoor">
+	<title>Today I Learned | Abdush Shakoor's Weblog </title>
+
+	
+	
+	<link rel="stylesheet" href="/static/css/main.css" type="text/css">
+	<link rel="stylesheet" href="/static/css/pygments.css" type="text/css">
+	<link href="/static/favicon.ico" rel="shortcut icon" type="image/x-icon"/>
+	
+	<script src="https://unpkg.com/phosphor-icons"></script>
+	<!-- Add OG tags  -->
+
+	<script>
+		if(localStorage.theme){
+			document.documentElement.setAttribute('data-theme', localStorage.getItem("theme"));
+		}
+	</script>
+
+</head>
+<body class="">
+	<!-- Navbar -->
+	<header class="header">
+	<!-- Logo with Author Name -->
+	<div class="author">
+		<a href="/">
+			<img src="/static/logo.png" alt="megacolorboy">
+			<div class="name">
+				<h1>Abdush Shakoor's Weblog</h1>
+				<p>Writings, experiments & ideas.</p>
+			</div>
+		</a>
+	</div>
+	<!-- Logo with Author Name -->
+	<nav>
+		<ul class="menu">
+			
+				<li><a href="/about">About</a></li>
+			
+				<li><a href="/archive">Archive</a></li>
+			
+		</ul>
+	</nav>	
+</header>
+
+<main>
+	<div class="two-col-grid">
+		<section id="primary">
+			<div class="articles">
+				
+					<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/enable-http-strict-transport-security-hsts">Enable HTTP Strict Transport Security (HSTS)</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>As part of a project that I was working on, I learnt about <a href="https://en.wikipedia.org/wiki/HTTP_Strict_Transport_Security">HTTP Strict Transport Security</a> protocol which tells the browser about making future web requests over HTTPS only. So, even if you attempt to use <code>http://</code>, the browser will force you to use <code>https://</code> URLs in the future.</p>
+
+<p>You can enable it by writing this header in your <code>.htaccess</code> file in your <code>public</code> directory:</p>
+
+<div class="codehilite"><pre><span></span><code>Header always <span class="nb">set</span> Strict-Transport-Security <span class="s2">&quot;max-age=31536000&quot;</span> <span class="nv">env</span><span class="o">=</span>HTTPS
+</code></pre></div>
+
+<p>Please note that once you enable this protocol, your web application is committed to using SSL i.e. you won't be able to use insecure HTTP for your web application.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>June 22nd, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/apache/">
+					Apache
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+				
+					<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/forcing-http-to-https-redirect-after-enabling-ssl">Forcing HTTP to HTTPS redirect after enabling SSL</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>You can manually force HTTP to HTTPS after enabling your SSL certificate by adding the following condition at the beginning of your <code>.htaccess</code> file in your <code>public</code> directory:</p>
+
+<div class="codehilite"><pre><span></span><code>RewriteCond %<span class="o">{</span>HTTP:X-Forward-Proto<span class="o">}</span> !<span class="o">=</span>https
+RewriteRule .* https://%<span class="o">{</span>HTTP_HOST<span class="o">}</span>%<span class="o">{</span>REQUEST_URI<span class="o">}</span> <span class="o">[</span><span class="nv">R</span><span class="o">=</span><span class="m">301</span>,L<span class="o">]</span>
+</code></pre></div>
+
+<p>Save your file and restart your Apache server and now, your web application will redirect all your users to <code>https://</code> instead of <code>http://</code> URLs in the future.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>June 22nd, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/apache/">
+					Apache
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+				
+					<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/enable-copy-paste-clipboard-in-urxvt-terminal-emulator">Enable copy-paste clipboard in URxvt Terminal Emulator</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>In my current Arch Linux installation, I decided to use a window manager called i3. It's really awesome and it comes with a really lightweight terminal emulator called <strong>urxvt</strong>. It's very minimal and I lked it but when I tried to copy-paste text from one terminal to another, I wasn't able to.</p>
+
+<p>However, thanks to the internet, I did some research and figured a way out.</p>
+
+<h2>1. Install xClip</h2>
+
+<p>First, you need to ensure that you have installed the <code>xclip</code> package, which will be used to copy-paste text in the emulator.</p>
+
+<p>Type the following command to install the package:</p>
+
+<div class="codehilite"><pre><span></span><code>pacman -S xclip
+</code></pre></div>
+
+<h2>2. Activate Clipboard using Perl</h2>
+
+<p>Now, you have to paste these custom commands into your <code>clipboard</code> file, which is found in <code>/usr/lib/urxvt/perl</code> directory:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="c1"># paste selection from clipboard</span>
+<span class="k">sub</span> <span class="nf">paste</span> <span class="p">{</span>
+     <span class="k">my</span> <span class="p">(</span><span class="nv">$self</span><span class="p">)</span> <span class="o">=</span> <span class="nv">@_</span><span class="p">;</span>
+     <span class="k">my</span> <span class="nv">$content</span> <span class="o">=</span> <span class="sb">`/usr/bin/xclip -loop 1 -out -selection clipboard`</span> <span class="p">;</span>
+     <span class="nv">$self</span><span class="o">-&gt;</span><span class="n">tt_write</span> <span class="p">(</span><span class="nv">$content</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="c1"># copy text to clipbard on selection</span>
+<span class="k">sub</span> <span class="nf">on_sel_grab</span> <span class="p">{</span>
+     <span class="k">my</span> <span class="nv">$query</span> <span class="o">=</span> <span class="nv">$_</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">selection</span><span class="p">;</span>
+     <span class="nb">open</span> <span class="p">(</span><span class="k">my</span> <span class="nv">$pipe</span><span class="p">,</span> <span class="s">&#39;| /usr/bin/xclip -in -selection clipboard&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">die</span><span class="p">;</span>
+     <span class="k">print</span> <span class="nv">$pipe</span> <span class="nv">$query</span><span class="p">;</span>
+     <span class="nb">close</span> <span class="nv">$pipe</span><span class="p">;</span>
+ <span class="p">}</span>
+</code></pre></div>
+
+<h2>3. Modify your .Xresources</h2>
+
+<p>Add these keybindings to your <code>.Xresources</code> file:</p>
+
+<div class="codehilite"><pre><span></span><code>URxvt.keysym.Shift-Control-V: perl:clipboard:paste
+URxvt.iso14755: False
+URxvt.perl-ext-common: default,clipboard
+</code></pre></div>
+
+<p>After adding it, refresh your <code>.Xresources</code> settings:</p>
+
+<div class="codehilite"><pre><span></span><code>xrdb -merge .Xresources
+</code></pre></div>
+
+<p>Reboot your terminal and try selecting some text from your terminal using your mouse and paste it using <code>Ctrl</code>+<code>Shift</code>+<code>V</code> and it should work! </p>
+
+<p>That's it! Enjoy &#x1F603;</p>
+
+	</div>
+	<div class="article-footer">
+		<time>June 20th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+				
+					<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/configuring-audio-drivers-in-arch-Linux">Configuring audio drivers in Arch Linux</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Yesterday, I thought of testing my Arch Linux system's audio and turns out, I didn't even install it yet! &#x1F612;</p>
+
+<p>Well, thanks to <a href="https://wiki.archlinux.org">ArchWiki</a>, it was simple enough to install to make the audio work on my old laptop. Just install the following packages:</p>
+
+<div class="codehilite"><pre><span></span><code>pacman -S alsa-firmware alsa-lib alsa-utils
+</code></pre></div>
+
+<p>Reboot the system once you're done installing the packages. Depending on your window manager, you should be able to see your sound icon being active.</p>
+
+<h2>Bonus: Bash script to control your volume from the terminal</h2>
+
+<p>In my current laptop, I still haven't mapped out the keys to control the audio volume, so I thought of writing a small method in my <code>.bashrc</code> file, so that I can control it from my terminal.</p>
+
+<p>Open your favorite text editor and Add this method in your <code>.bashrc</code> file:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="c1"># simple volume control</span>
+volume<span class="o">(){</span>
+    <span class="nv">x</span><span class="o">=</span><span class="m">5</span>
+    <span class="k">if</span> <span class="o">[</span> <span class="nv">$1</span> <span class="o">==</span> <span class="s1">&#39;up&#39;</span> <span class="o">]</span>
+    <span class="k">then</span>
+        amixer <span class="nb">set</span> Master <span class="nv">$x</span>%+ <span class="p">&amp;</span>&gt; /dev/null
+    <span class="k">elif</span> <span class="o">[</span> <span class="nv">$1</span> <span class="o">==</span> <span class="s1">&#39;down&#39;</span> <span class="o">]</span>
+    <span class="k">then</span>
+        amixer <span class="nb">set</span> Master <span class="nv">$x</span>%- <span class="p">&amp;</span>&gt; /dev/null
+    <span class="k">elif</span> <span class="o">[</span> <span class="nv">$1</span> <span class="o">==</span> <span class="s1">&#39;toggle&#39;</span> <span class="o">]</span>
+    <span class="k">then</span>
+        amixer <span class="nb">set</span> Master toggle <span class="p">&amp;</span>&gt; /dev/null
+    <span class="k">fi</span>
+<span class="o">}</span>
+</code></pre></div>
+
+<p>Save the file, close your edit and refresh your file by typing:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="nb">source</span> .bashrc
+</code></pre></div>
+
+<p>Now, it should work when you type any of these commands:</p>
+
+<div class="codehilite"><pre><span></span><code>volume up
+volume down
+volume toggle
+</code></pre></div>
+
+<p>Hope this tiny script helps you out! </p>
+
+	</div>
+	<div class="article-footer">
+		<time>June 20th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+				
+					<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/troubleshoot-time-related-ssl-errors-on-secure-websites">Troubleshoot time-related SSL errors on secure websites</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>As I was configuring Arch Linux setup on my old HP 8460p laptop, I noticed that I wasn't able to access any site using Chrome or Firefox as I was faced with a weird error:</p>
+
+<p><!--- <img src="../../../static/til_images/ssl-time-error.png" alt="SSL Certificate Error" />-->
+<img src="../../../static/til_images/ssl-time-error.png" style="width: 500px;" /></p>
+
+<p>I was quite confused and thought it might be an issue with my WiFi card or probably some server issue but turns out it was neither of them.</p>
+
+<p>On the side of my screen, I noticed my system time was displaying 4 hours ahead of the current local time, which is wrong. So, I did a little research and turns out my suspicions were correct, it's a time-related issue.</p>
+
+<h2>How is time related to secure websites?</h2>
+
+<p>Well, each website that uses SSL or that begins with <code>https://</code> are only valid for a period of time before getting expired. If the website that you're trying to visit presents a certificate with a time and date that doesn't match with your system's clock, Firefox will prevent you from accessing the page.</p>
+
+<h2>How to fix it?</h2>
+
+<p>Actually, the fix is quite simple. All you have to is just set the correct date and time on your system and you're good to go!</p>
+
+<p>If you're using Linux, just do the following:</p>
+
+<h3>1. Set up your timezone</h3>
+
+<p>You can look up for your timezones by executing the following:</p>
+
+<div class="codehilite"><pre><span></span><code>timedatectl list-timezones <span class="p">|</span> less
+</code></pre></div>
+
+<p>Once, you've found your timezone, execute the following by replacing <code>Continent/Country</code> with your timezone:</p>
+
+<div class="codehilite"><pre><span></span><code>timedatectl set-timezone Continent/Country
+</code></pre></div>
+
+<h3>2. Manually set your local time</h3>
+
+<p>Execute the following to set up your time, locally on your system:</p>
+
+<div class="codehilite"><pre><span></span><code>timedatectl set-time <span class="s2">&quot;yyyy-MM-dd hh:mm:ss&quot;</span>
+</code></pre></div>
+
+<h3>3. Set the hardware clock from the system clock</h3>
+
+<p>The following command sets the hardware clock from the system clock:</p>
+
+<div class="codehilite"><pre><span></span><code>hwclock --systohc
+</code></pre></div>
+
+<p>Now, that you've executed them, you should be able to view the correct time on your system by executing <code>timedatectl status</code> and you should see something like this:</p>
+
+<div class="codehilite"><pre><span></span><code>               Local time: Sun <span class="m">2020</span>-06-14 <span class="m">21</span>:04:04 +04
+           Universal time: Sun <span class="m">2020</span>-06-14 <span class="m">17</span>:04:04 UTC
+                 RTC time: Sun <span class="m">2020</span>-06-14 <span class="m">17</span>:04:05    
+                Time zone: Asia/Dubai <span class="o">(</span>+04, +0400<span class="o">)</span>    
+System clock synchronized: no                         
+              NTP service: inactive 
+</code></pre></div>
+
+<p>Although, this issue was time-related, you may face the same kind of error for various other reasons. Try reading more on how to <a href="https://support.mozilla.org/en-US/kb/troubleshoot-time-errors-secure-websites">troubleshoot</a> errors like these from Mozilla's official documentation.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>June 14th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/ssl/">
+					SSL
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+				
+					<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/transfer-files-remotely-using-scp">Transfer files remotely using SCP</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Do you want to transfer files remotely from one UNIX-based system to another? Try using the <code>scp</code> tool, which is a shorthand for <strong>Secure Copy Protocol</strong>. It's based off the SSH protocol using it as a means to securely transfer files from a local machine to one or more remote machines.</p>
+
+<p>Here's a code snippet that can help you out to transfer from computer A to computer B:</p>
+
+<div class="codehilite"><pre><span></span><code>scp your_local_file user@ipaddress:/directory_to_store
+</code></pre></div>
+
+<p>And transfer from computer B to computer A:</p>
+
+<div class="codehilite"><pre><span></span><code>scp user@ipaddress:/directory/file_name your_local_directory
+</code></pre></div>
+
+<p>Oh, before you transfer files to another computer, make sure that you have permissions to access it first. If you don't have one, then create a new account using <code>useradd</code> on your remote system.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>June 13th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+				
+					<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-manually-configure-your-wifi-on-arch-linux">How to manually configure your WiFi on Arch Linux?</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Recently, I thought of playing around with Arch Linux to learn more about Linux under-the-hood and to see if it can become my new daily driver.</p>
+
+<p>As I booted from live USB, I tried connecting to my WiFi using <code>wifi-menu</code> but it never worked after selecting my network name and entering the credentials.</p>
+
+<p>So, I did a little bit of research in <a href="https://wiki.archlinux.org">ArchWiki</a> and forums and I figured a way to set it up manually using <code>netctl</code> by myself.</p>
+
+<p><code>netctl</code> is a network profile manager and it's apparently an Arch Linux project.</p>
+
+<h2>1. Select your interface</h2>
+
+<p>Before you begin to set up your WiFi connection from your computer, check if your network interface is being detected:</p>
+
+<div class="codehilite"><pre><span></span><code>iwconfig
+</code></pre></div>
+
+<p>Since it's a WiFi connection, your interface most probably must be <code>wlan0</code>. If you see it, then set the interface up:</p>
+
+<div class="codehilite"><pre><span></span><code>ip link <span class="nb">set</span> wlan0 up
+</code></pre></div>
+
+<h2>2. Scan for networks</h2>
+
+<p>Now, that your interface, use it to scan for your WiFi network:</p>
+
+<div class="codehilite"><pre><span></span><code>iwlist wlan0 scan <span class="p">|</span> less
+</code></pre></div>
+
+<p>Once, you execute this command, you must be able to see your WiFi's SSID (or network name).</p>
+
+<p>Now, put your interface down for a while:</p>
+
+<div class="codehilite"><pre><span></span><code>ip link <span class="nb">set</span> wlan0 down
+</code></pre></div>
+
+<h2>3. Create a network profile</h2>
+
+<p>Alright, go to <code>/etc/netctl/examples/</code> directory and make a copy of the <code>wireless-wpa</code> file to the <code>/etc/netctl</code> directory:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="nb">cd</span> /etc/netctl/examples
+cp /etc/netctl/examples/wireless-wpa /etc/netctl/your-wifi-name
+</code></pre></div>
+
+<p>Now, go back to <code>/etc/netctl/</code> directory and open the <code>your-wifi-name</code> file with your preferred text editor and edit the following only:</p>
+
+<div class="codehilite"><pre><span></span><code>ESSID: your-wifi-name
+key: your-wifi-password
+</code></pre></div>
+
+<p>After you're done editing, save the file.</p>
+
+<h2>4. Test network profile</h2>
+
+<p>To test if your profile is working, do the following:</p>
+
+<div class="codehilite"><pre><span></span><code>netctl start your-wifi-name
+ping -c <span class="m">3</span> www.google.com
+</code></pre></div>
+
+<p>In case, you get an error, try doing this:</p>
+
+<div class="codehilite"><pre><span></span><code>ip link <span class="nb">set</span> dev wlan0 down
+netctl start your-wifi-name
+ping -c <span class="m">3</span> www.google.com
+</code></pre></div>
+
+<p>If you're able to ping, then it works. Else, edit your network profile and try connecting to it again.</p>
+
+<h2>5. Enable network profile</h2>
+
+<p>If you've reached this stage that means your network profile must be working fine. Just do the following to enable the network profile to run the internet throughout the setup:</p>
+
+<div class="codehilite"><pre><span></span><code>netctl <span class="nb">enable</span> your-wifi-name
+</code></pre></div>
+
+<p>Try reading more about using <a href="https://wiki.archlinux.org/index.php/Netctl">netctl</a> in Arch Linux's official wikipage.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>June 9th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+				
+					<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/add-search-functionality-to-your-static-site">Add search functionality to your static site</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>If you have a static site or a blog generated using a static-site generator but want to add a simple search functionality? This could be of your interest.</p>
+
+<p>I'll take you through an example on how to build a simple search engine using a JSON file and AJAX requests.</p>
+
+<h2>1. Generate a JSON dump of your site</h2>
+
+<p>Although, it's not a database but it can act as an alternative to having one. Your JSON dump can contain any metadata that you wanted your users to search in your site. In my case, I thought of allowing the user to search <code>title</code> and <code>category</code>. </p>
+
+<p>Is your site generated using Python and want to create a JSON dump? <a href="til/posts/read-and-write-json-to-a-file-in-python">Read this article</a> for more information.</p>
+
+<h2>2. Build search functionality</h2>
+
+<p>I won't go through the aspects of UI design in this article as I feel that it's subjective and depends on one's preferences but let's keep it simple enough for this tutorial.</p>
+
+<p>Before you begin writing the function, place this component in your HTML template:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="p">&lt;</span><span class="nt">div</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;searchbox&quot;</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">input</span> <span class="na">id</span><span class="o">=</span><span class="s">&quot;searchinput&quot;</span> <span class="na">type</span><span class="o">=</span><span class="s">&quot;text&quot;</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">div</span> <span class="na">id</span><span class="o">=</span><span class="s">&quot;searchresults&quot;</span><span class="p">&gt;</span>
+        <span class="p">&lt;</span><span class="nt">ul</span><span class="p">&gt;&lt;/</span><span class="nt">ul</span><span class="p">&gt;</span>
+    <span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+</code></pre></div>
+
+<p>Anyway, here's the function and you can place it directly on your template or in a separate <code>.js</code> file:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="kd">var</span> <span class="nx">_url</span> <span class="o">=</span> <span class="s2">&quot;path-of-your-file.json&quot;</span><span class="p">;</span>
+
+<span class="nx">$</span><span class="p">(</span><span class="nb">document</span><span class="p">).</span><span class="nx">ready</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
+    <span class="nx">$</span><span class="p">(</span><span class="s1">&#39;#searchinput&#39;</span><span class="p">).</span><span class="nx">keyup</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">){</span>
+        <span class="kd">var</span> <span class="nx">keyword</span> <span class="o">=</span> <span class="nx">$</span><span class="p">(</span><span class="k">this</span><span class="p">).</span><span class="nx">val</span><span class="p">();</span>
+        <span class="kd">var</span> <span class="nx">code</span> <span class="o">=</span> <span class="nx">e</span><span class="p">.</span><span class="nx">keyCode</span> <span class="o">?</span> <span class="nx">e</span><span class="p">.</span><span class="nx">keyCode</span> <span class="o">:</span> <span class="nx">e</span><span class="p">.</span><span class="nx">which</span><span class="p">;</span>
+
+        <span class="k">if</span><span class="p">(</span><span class="nx">code</span> <span class="o">==</span> <span class="mf">13</span><span class="p">){</span>
+            <span class="nx">$</span><span class="p">.</span><span class="nx">ajax</span><span class="p">({</span>
+                <span class="nx">url</span><span class="o">:</span> <span class="nx">_url</span><span class="p">,</span>
+                <span class="nx">type</span><span class="o">:</span> <span class="s2">&quot;GET&quot;</span><span class="p">,</span>
+                <span class="k">async</span><span class="o">:</span> <span class="kc">false</span><span class="p">,</span>
+            <span class="p">}).</span><span class="nx">done</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">){</span>
+                <span class="kd">var</span> <span class="nx">results</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">;</span>
+                <span class="k">if</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">articles</span><span class="p">.</span><span class="nx">length</span> <span class="o">&gt;</span> <span class="mf">0</span><span class="p">){</span>
+                    <span class="nx">$</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">articles</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">key</span><span class="p">,</span> <span class="nx">value</span><span class="p">){</span>
+                        <span class="k">if</span><span class="p">(</span><span class="nx">v</span><span class="p">.</span><span class="nx">title</span><span class="p">.</span><span class="nx">search</span><span class="p">(</span><span class="nx">pattern</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mf">1</span> <span class="o">||</span> <span class="nx">v</span><span class="p">.</span><span class="nx">category</span><span class="p">.</span><span class="nx">search</span><span class="p">(</span><span class="nx">pattern</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mf">1</span><span class="p">){</span>
+                            <span class="nx">results</span> <span class="o">+=</span> <span class="sb">`&lt;li&gt;&lt;a href=&quot;</span><span class="si">${</span><span class="nx">v</span><span class="p">.</span><span class="nx">slug</span><span class="si">}</span><span class="sb">&quot;&gt;</span><span class="si">${</span><span class="nx">v</span><span class="p">.</span><span class="nx">title</span><span class="si">}</span><span class="sb">&lt;/a&gt;&lt;/li&gt;`</span><span class="p">;</span>
+                        <span class="p">}</span>
+                    <span class="p">});</span>
+                    <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#searchresults ul&quot;</span><span class="p">).</span><span class="nx">html</span><span class="p">(</span><span class="nx">results</span><span class="p">);</span>
+                <span class="p">}</span>
+            <span class="p">});</span>
+        <span class="p">}</span>
+    <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div>
+
+<p>That's it! Now, when you execute your script, you should be able to view your search results just like as if it were using a database.</p>
+
+<p>If you want to make it similar to mine, please feel free to inspect the code on the browser or go to my <a href="https://github.com/megacolorboy/personal-blog/blob/master/static/js/search.js">repository</a> to see how it works.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>June 6th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/javascript/">
+					JavaScript
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+				
+			</div>
+			
+<div class="pagination">
+	
+		
+		<a href="/til/pages/10">&laquo;</a>
+			
+	
+
+	
+		
+			<a class="" href="/til/">1</a>
+		
+	
+		
+			<a class="" href="/til/pages/8">...</a>
+		
+	
+		
+			<a class="" href="/til/pages/9">9</a>
+		
+	
+		
+			<a class="" href="/til/pages/10">10</a>
+		
+	
+		
+			<a class="active" href="/til/pages/11">11</a>
+		
+	
+		
+			<a class="" href="/til/pages/12">12</a>
+		
+	
+		
+			<a class="" href="/til/pages/13">13</a>
+		
+	
+		
+			<a class="" href="/til/pages/3">...</a>
+		
+	
+		
+			<a class="" href="/til/pages/16">16</a>
+		
+	
+
+	
+		<a href="/til/pages/12">&raquo;</a>
+	
+</div>
+
+		</section>
+		<section id="secondary">
+			<div class="sidebar">
+				<div class="author-intro">
+	<h3>Today I Learned</h3>
+	<p>A collection of short write-ups on the things that I learn on a day-to-day basis.</p>
+	<ul class="sitemap">
+		<li><a class="back" href="/"><span>👈</span> Check out more articles!</a></li>
+	</ul>
+</div>
+				<!-- Tags -->
+<div>
+	<h3>Categories</h3>
+	<ul class="tags">
+		
+		<li>
+			<a href="/category/laravel/">
+				Laravel
+				<span class="count">16</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/linux/">
+				Linux
+				<span class="count">14</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/terminal/">
+				Terminal
+				<span class="count">11</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/algorithms/">
+				Algorithms
+				<span class="count">11</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/cryptography/">
+				Cryptography
+				<span class="count">11</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/git/">
+				Git
+				<span class="count">10</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/php/">
+				PHP
+				<span class="count">10</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/javascript/">
+				JavaScript
+				<span class="count">9</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/vim/">
+				VIM
+				<span class="count">8</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/programming/">
+				Programming
+				<span class="count">8</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/unix/">
+				Unix
+				<span class="count">7</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/mysql/">
+				MySQL
+				<span class="count">6</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/essay/">
+				Essay
+				<span class="count">6</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/update/">
+				Update
+				<span class="count">5</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/devops/">
+				DevOps
+				<span class="count">5</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/tutorial/">
+				Tutorial
+				<span class="count">5</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/personal-challenge/">
+				Personal Challenge
+				<span class="count">5</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/apache/">
+				Apache
+				<span class="count">4</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/arcade-challenge/">
+				Arcade Challenge
+				<span class="count">4</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/productivity/">
+				Productivity
+				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/regular-expressions/">
+				Regular Expressions
+				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/data-structures/">
+				Data Structures
+				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/user-interface/">
+				User Interface
+				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/user-experience/">
+				User Experience
+				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/general/">
+				General
+				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/vscode/">
+				VSCode
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/email/">
+				Email
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/bash/">
+				Bash
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/wamp/">
+				WAMP
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/python/">
+				Python
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/databases/">
+				Databases
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/tooling/">
+				Tooling
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/graphics/">
+				Graphics
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/selfreflection/">
+				Self-reflection
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/security/">
+				Security
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/cpanel/">
+				cPanel
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/generative-art/">
+				Generative Art
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/introduction/">
+				Introduction
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/refactoring/">
+				Refactoring
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/css/">
+				CSS
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/scss/">
+				SCSS
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/xfce/">
+				XFCE
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/unix/">
+				UNIX
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/chrome-devtools/">
+				Chrome DevTools
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/go/">
+				Go
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/ssl/">
+				SSL
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/jquery/">
+				jQuery
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/art/">
+				Art
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/tips/">
+				Tips
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/review/">
+				Review
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/artificial-intelligence/">
+				Artificial Intelligence
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/mathematics/">
+				Mathematics
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+	</ul>
+</div>
+<!-- Tags -->
+			</div>
+		</section>
+	</div>
+</main>
+
+<footer>
+    <span class="copyright">&copy; Abdush Shakoor</span>
+</footer>
+
+<script src="/static/vendor/jquery/jquery-3.5.1.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+<!-- <script src="/static/vendor/hljs/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script> -->
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-98290003-2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-98290003-2');
+</script>
+
+<!-- <script>
+    const darkModeButton = document.createElement('button');
+    const syntaxHighlightSource = document.getElementById('syntaxHighlight');
+    const menuList = document.querySelector('.menu');
+    const themeSettings = {
+        "dark": {
+            "icon": '<i class="ph-moon-fill"></i>',
+            "hljs": "/static/vendor/hljs/css/github-dark.css",
+        },
+        "light": {
+            "icon": '<i class="ph-sun-fill"></i>',
+            "hljs": "/static/vendor/hljs/css/github.min.css",
+        },
+    }
+
+    function highlightMenuLink() {
+        var currentURI = window.location.href;
+        currentURI = currentURI.replace(window.location.protocol + "//", "");
+        var currentPage	 = currentURI.split('/')[1];
+
+        if(currentPage) {
+            $('a[href="/' + currentPage + '"').parent().addClass('active');
+        }
+    }
+    
+    function initThemeSwitcher() {
+        darkModeButton.innerHTML = themeSettings.light.icon;
+        darkModeButton.classList.add('darkModeButton');
+        
+        darkModeButton.addEventListener('click', function(){
+            switch(document.documentElement.getAttribute('data-theme')) {
+                case 'dark':
+                    lightMode();
+                    break;
+
+                case 'light':
+                default:
+                    darkMode();
+                    break;
+            }
+        });
+        
+        var newItem = document.createElement('li');
+        newItem.appendChild(darkModeButton);
+        menuList.insertBefore(newItem, menuList.childNodes[menuList.childNodes - 1]);
+    }
+    
+
+    // Settings for dark mode
+    function darkMode() {
+        darkModeButton.innerHTML = themeSettings.dark.icon;
+        document.documentElement.setAttribute('data-theme', 'dark');
+        syntaxHighlightSource.setAttribute('href', themeSettings.dark.hljs);
+        localStorage.setItem("theme", "dark");
+    }
+
+    // Settings for light mode
+    function lightMode() {
+        darkModeButton.innerHTML = themeSettings.light.icon;
+        document.documentElement.setAttribute('data-theme', '');
+        syntaxHighlightSource.setAttribute('href', themeSettings.light.hljs);
+        localStorage.setItem("theme", "");
+    }
+
+    function checkTheme() {
+        const localStorageTheme = localStorage.getItem("theme");
+        switch(localStorageTheme) {
+            case "dark":
+                darkMode();
+                break;
+            
+            default:
+                lightMode();
+                break;
+        }
+    }
+
+    // Check if the theme is stored in session
+    window.onload = function() {
+        initThemeSwitcher();
+        checkTheme();
+        highlightMenuLink();
+    }
+
+    //  open and close nav 
+    $('#navbar-toggle').click(function() {
+      $('nav ul').slideToggle();
+    });
+
+    // Hamburger toggle
+    $('#navbar-toggle').on('click', function() {
+      this.classList.toggle('active');
+    });
+
+    // Click outside the dropdown will remove the dropdown class
+    $('html').click(function() {
+      $('.navbar-dropdown').hide();
+    });
+</script> -->
+</body>
+</html>

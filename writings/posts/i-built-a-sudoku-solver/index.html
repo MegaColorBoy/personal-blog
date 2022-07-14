@@ -4,19 +4,12 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta name="author" content="Abdush Shakoor">
-	<title>I built a Sudoku Solver! | megacolorboy</title>
+	<title>I built a Sudoku Solver! | Abdush Shakoor's Weblog </title>
 
-	
-	<meta name="description" content="I built a sudoku solver using Javascript by implementing the Exhaustive Recursion and Backtracking algorithms..">
-	<meta name="og:title" content="I built a Sudoku Solver! | megacolorboy" />
-	<meta name="og:type" content="article" />
-	<meta name="og:url" content="https://www.megacolorboy.com/posts/i-built-a-sudoku-solver/" />
-	<meta name="og:description" content="I built a sudoku solver using Javascript by implementing the Exhaustive Recursion and Backtracking algorithms." />
-	<meta name="og:site_name" content="Abdush Shakoor's Blog | megacolorboy" />
 	
 	
 	<link rel="stylesheet" href="/static/css/main.css" type="text/css">
-	<link id="syntaxHighlight" rel="stylesheet" href="/static/vendor/hljs/css/github.min.css">
+	<link rel="stylesheet" href="/static/css/pygments.css" type="text/css">
 	<link href="/static/favicon.ico" rel="shortcut icon" type="image/x-icon"/>
 	
 	<script src="https://unpkg.com/phosphor-icons"></script>
@@ -29,46 +22,41 @@
 	</script>
 
 </head>
-<body class="details-page writings">
+<body class="">
 	<!-- Navbar -->
 	<header class="header">
+	<!-- Logo with Author Name -->
 	<div class="author">
 		<a href="/">
-			<div class="logo" style="background-image: url('https://megacolorboy.com/static/logo.gif');"></div>
-			<p>megacolorboy</p>
+			<img src="/static/logo.png" alt="megacolorboy">
+			<div class="name">
+				<h1>Abdush Shakoor's Weblog</h1>
+				<p>Writings, experiments & ideas.</p>
+			</div>
 		</a>
 	</div>
-	<div class="nav-mobile"><a id="navbar-toggle" href="#!"><span></span></a></div>
+	<!-- Logo with Author Name -->
 	<nav>
 		<ul class="menu">
 			
 				<li><a href="/about">About</a></li>
 			
-				<li><a href="/writings">Writings</a></li>
-			
-				<li><a href="/til">Today I Learned</a></li>
-			
-				<li><a href="/resume">Resume</a></li>
+				<li><a href="/archive">Archive</a></li>
 			
 		</ul>
-	</nav>
+	</nav>	
 </header>
 
-<div class="article-top">
-	<a class="back" href="/writings"><span>&larr;</span> Back</a>
-	<p class="date">Published on April 29th, 2017</p>	
-</div>
-
 <main>
-	<section class="article-head">
-		<p class="cat">Algorithms + Data Structures</p>
-		<h1>I built a Sudoku Solver!</h1>
-		
-			<p class="desc">I built a sudoku solver using Javascript by implementing the Exhaustive Recursion and Backtracking algorithms.</p>
-		
-		<p class="date">4 minutes read</p>
-	</section>
-	<article>
+	<div class="two-col-grid">
+		<section id="primary">
+			<div class="articles">
+				<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/writings/posts/i-built-a-sudoku-solver">I built a Sudoku Solver!</a></h1>
+		<p class="description">I built a sudoku solver using Javascript by implementing the Exhaustive Recursion and Backtracking algorithms.</p>
+	</div>
+	<div class="article-body">
 		<p><link rel="stylesheet" href="/static/projects/sudoku/css/style.css" type="text/css"/></p>
 
 <script defer type="text/javascript" src="/static/projects/sudoku/js/script.js"></script>
@@ -118,9 +106,7 @@
 
 <p><strong>Here's a pseudocode on how this strategy would work:</strong></p>
 
-<pre>
-    <code class="plaintext">
-    Find [row,col] of an unassigned cell
+<pre><code>    Find [row,col] of an unassigned cell
     If there is none, then return true
 
     For digits from 1 to 9
@@ -130,109 +116,104 @@
             Otherwise, remove this digit and try another one
         If all digits have been tried for this cell and nothing worked out
             return false, trigger backtracking and try again
-    </code>
-</pre>
+</code></pre>
 
-<p><strong>Javascript implementation:</strong></p>
-
-<pre>
-    <code class="js">
-    //Sudoku solver 
-    function solveSudoku(grid, row, col) {
-        var cell = findUnassignedLocation(grid, row, col);
-        row = cell[0];
-        col = cell[1];
-
-        // base case: if there's no empty cell  
-        if (row == -1) {
-            return true;
-        }
-
-        for (var num = 1; num <= 9; num++) {
-
-            if (noConflicts(grid, row, col, num)) {   
-                grid[row][col] = num;
-
-                if (solveSudoku(grid, row, col)) {                
-                    return true;
-                }
-
-                // mark cell as empty (with 0)    
-                grid[row][col] = 0;
-            }
-        }
-
-        // trigger back tracking
-        return false;
-    }
-
-    //Find an empty cell
-    function findUnassignedLocation(grid, row, col) {
-        var done = false;
-        var res = [-1, -1];
-
-        while (!done) {
-            if (row == 9) {
-                done = true;
-            }
-            else {
-                if (grid[row][col] == 0) {
-                    res[0] = row;
-                    res[1] = col;
-                    done = true;
-                }
-                else {
-                    if (col < 8) {
-                        col++;
-                    }
-                    else {
-                        row++;
-                        col = 0;
-                    }
-                }
-            }
-        }
-
-        return res;
-    }
-
-    //Check if there are any conflicts in row, column or 3x3 subgrid
-    function noConflicts(grid, row, col, num) {
-        return isRowOk(grid, row, num) && isColOk(grid, col, num) && isBoxOk(grid, row, col, num);
-    }
-
-    //Check if this number is valid in this row
-    function isRowOk(grid, row, num) {
-        for (var col = 0; col < 9; col++)
-            if (grid[row][col] == num)
-                return false;
-
-        return true;
-    }
-
-    //Check if this number is valid in this column
-    function isColOk(grid, col, num) {
-        for (var row = 0; row < 9; row++)
-        if (grid[row][col] == num)
-            return false;
-
-        return true;    
-    }
-
-    //check if this number is valid in 3x3 subgrid
-    function isBoxOk(grid, row, col, num) {
-        row = Math.floor(row / 3) * 3;
-        col = Math.floor(col / 3) * 3;
-
-        for (var r = 0; r < 3; r++)
-            for (var c = 0; c < 3; c++)
-                if (grid[row + r][col + c] == num)
-                    return false;
-
-        return true;
-    }
-    </code>
-</pre>
+<p><strong>Javascript implementation:</strong>
+    <div class="codehilite"><pre><span></span><code><span class="c1">//Sudoku solver </span>
+    <span class="kd">function</span> <span class="nx">solveSudoku</span><span class="p">(</span><span class="nx">grid</span><span class="p">,</span> <span class="nx">row</span><span class="p">,</span> <span class="nx">col</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">cell</span> <span class="o">=</span> <span class="nx">findUnassignedLocation</span><span class="p">(</span><span class="nx">grid</span><span class="p">,</span> <span class="nx">row</span><span class="p">,</span> <span class="nx">col</span><span class="p">);</span>
+        <span class="nx">row</span> <span class="o">=</span> <span class="nx">cell</span><span class="p">[</span><span class="mf">0</span><span class="p">];</span>
+        <span class="nx">col</span> <span class="o">=</span> <span class="nx">cell</span><span class="p">[</span><span class="mf">1</span><span class="p">];</span>
+ <br />
+        <span class="c1">// base case: if there&#39;s no empty cell  </span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">row</span> <span class="o">==</span> <span class="o">-</span><span class="mf">1</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
+        <span class="p">}</span>
+ <br />
+        <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">num</span> <span class="o">=</span> <span class="mf">1</span><span class="p">;</span> <span class="nx">num</span> <span class="o">&lt;=</span> <span class="mf">9</span><span class="p">;</span> <span class="nx">num</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+ <br />
+            <span class="k">if</span> <span class="p">(</span><span class="nx">noConflicts</span><span class="p">(</span><span class="nx">grid</span><span class="p">,</span> <span class="nx">row</span><span class="p">,</span> <span class="nx">col</span><span class="p">,</span> <span class="nx">num</span><span class="p">))</span> <span class="p">{</span> <br />
+                <span class="nx">grid</span><span class="p">[</span><span class="nx">row</span><span class="p">][</span><span class="nx">col</span><span class="p">]</span> <span class="o">=</span> <span class="nx">num</span><span class="p">;</span>
+ <br />
+                <span class="k">if</span> <span class="p">(</span><span class="nx">solveSudoku</span><span class="p">(</span><span class="nx">grid</span><span class="p">,</span> <span class="nx">row</span><span class="p">,</span> <span class="nx">col</span><span class="p">))</span> <span class="p">{</span> <br />
+                    <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
+                <span class="p">}</span>
+ <br />
+                <span class="c1">// mark cell as empty (with 0)    </span>
+                <span class="nx">grid</span><span class="p">[</span><span class="nx">row</span><span class="p">][</span><span class="nx">col</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0</span><span class="p">;</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+ <br />
+        <span class="c1">// trigger back tracking</span>
+        <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>
+    <span class="p">}</span>
+ <br />
+    <span class="c1">//Find an empty cell</span>
+    <span class="kd">function</span> <span class="nx">findUnassignedLocation</span><span class="p">(</span><span class="nx">grid</span><span class="p">,</span> <span class="nx">row</span><span class="p">,</span> <span class="nx">col</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">done</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+        <span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="mf">1</span><span class="p">,</span> <span class="o">-</span><span class="mf">1</span><span class="p">];</span>
+ <br />
+        <span class="k">while</span> <span class="p">(</span><span class="o">!</span><span class="nx">done</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">row</span> <span class="o">==</span> <span class="mf">9</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">done</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+            <span class="p">}</span>
+            <span class="k">else</span> <span class="p">{</span>
+                <span class="k">if</span> <span class="p">(</span><span class="nx">grid</span><span class="p">[</span><span class="nx">row</span><span class="p">][</span><span class="nx">col</span><span class="p">]</span> <span class="o">==</span> <span class="mf">0</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="nx">res</span><span class="p">[</span><span class="mf">0</span><span class="p">]</span> <span class="o">=</span> <span class="nx">row</span><span class="p">;</span>
+                    <span class="nx">res</span><span class="p">[</span><span class="mf">1</span><span class="p">]</span> <span class="o">=</span> <span class="nx">col</span><span class="p">;</span>
+                    <span class="nx">done</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+                <span class="p">}</span>
+                <span class="k">else</span> <span class="p">{</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="nx">col</span> <span class="o">&lt;</span> <span class="mf">8</span><span class="p">)</span> <span class="p">{</span>
+                        <span class="nx">col</span><span class="o">++</span><span class="p">;</span>
+                    <span class="p">}</span>
+                    <span class="k">else</span> <span class="p">{</span>
+                        <span class="nx">row</span><span class="o">++</span><span class="p">;</span>
+                        <span class="nx">col</span> <span class="o">=</span> <span class="mf">0</span><span class="p">;</span>
+                    <span class="p">}</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+ <br />
+        <span class="k">return</span> <span class="nx">res</span><span class="p">;</span>
+    <span class="p">}</span>
+ <br />
+    <span class="c1">//Check if there are any conflicts in row, column or 3x3 subgrid</span>
+    <span class="kd">function</span> <span class="nx">noConflicts</span><span class="p">(</span><span class="nx">grid</span><span class="p">,</span> <span class="nx">row</span><span class="p">,</span> <span class="nx">col</span><span class="p">,</span> <span class="nx">num</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">isRowOk</span><span class="p">(</span><span class="nx">grid</span><span class="p">,</span> <span class="nx">row</span><span class="p">,</span> <span class="nx">num</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="nx">isColOk</span><span class="p">(</span><span class="nx">grid</span><span class="p">,</span> <span class="nx">col</span><span class="p">,</span> <span class="nx">num</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="nx">isBoxOk</span><span class="p">(</span><span class="nx">grid</span><span class="p">,</span> <span class="nx">row</span><span class="p">,</span> <span class="nx">col</span><span class="p">,</span> <span class="nx">num</span><span class="p">);</span>
+    <span class="p">}</span>
+ <br />
+    <span class="c1">//Check if this number is valid in this row</span>
+    <span class="kd">function</span> <span class="nx">isRowOk</span><span class="p">(</span><span class="nx">grid</span><span class="p">,</span> <span class="nx">row</span><span class="p">,</span> <span class="nx">num</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">col</span> <span class="o">=</span> <span class="mf">0</span><span class="p">;</span> <span class="nx">col</span> <span class="o">&lt;</span> <span class="mf">9</span><span class="p">;</span> <span class="nx">col</span><span class="o">++</span><span class="p">)</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">grid</span><span class="p">[</span><span class="nx">row</span><span class="p">][</span><span class="nx">col</span><span class="p">]</span> <span class="o">==</span> <span class="nx">num</span><span class="p">)</span>
+                <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>
+ <br />
+        <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
+    <span class="p">}</span>
+ <br />
+    <span class="c1">//Check if this number is valid in this column</span>
+    <span class="kd">function</span> <span class="nx">isColOk</span><span class="p">(</span><span class="nx">grid</span><span class="p">,</span> <span class="nx">col</span><span class="p">,</span> <span class="nx">num</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">row</span> <span class="o">=</span> <span class="mf">0</span><span class="p">;</span> <span class="nx">row</span> <span class="o">&lt;</span> <span class="mf">9</span><span class="p">;</span> <span class="nx">row</span><span class="o">++</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">grid</span><span class="p">[</span><span class="nx">row</span><span class="p">][</span><span class="nx">col</span><span class="p">]</span> <span class="o">==</span> <span class="nx">num</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>
+ <br />
+        <span class="k">return</span> <span class="kc">true</span><span class="p">;</span> <br />
+    <span class="p">}</span>
+ <br />
+    <span class="c1">//check if this number is valid in 3x3 subgrid</span>
+    <span class="kd">function</span> <span class="nx">isBoxOk</span><span class="p">(</span><span class="nx">grid</span><span class="p">,</span> <span class="nx">row</span><span class="p">,</span> <span class="nx">col</span><span class="p">,</span> <span class="nx">num</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">row</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nx">row</span> <span class="o">/</span> <span class="mf">3</span><span class="p">)</span> <span class="o"><em></span> <span class="mf">3</span><span class="p">;</span>
+        <span class="nx">col</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nx">col</span> <span class="o">/</span> <span class="mf">3</span><span class="p">)</span> <span class="o"></em></span> <span class="mf">3</span><span class="p">;</span>
+ <br />
+        <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">r</span> <span class="o">=</span> <span class="mf">0</span><span class="p">;</span> <span class="nx">r</span> <span class="o">&lt;</span> <span class="mf">3</span><span class="p">;</span> <span class="nx">r</span><span class="o">++</span><span class="p">)</span>
+            <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">c</span> <span class="o">=</span> <span class="mf">0</span><span class="p">;</span> <span class="nx">c</span> <span class="o">&lt;</span> <span class="mf">3</span><span class="p">;</span> <span class="nx">c</span><span class="o">++</span><span class="p">)</span>
+                <span class="k">if</span> <span class="p">(</span><span class="nx">grid</span><span class="p">[</span><span class="nx">row</span> <span class="o">+</span> <span class="nx">r</span><span class="p">][</span><span class="nx">col</span> <span class="o">+</span> <span class="nx">c</span><span class="p">]</span> <span class="o">==</span> <span class="nx">num</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>
+ <br />
+        <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
+    <span class="p">}</span>
+    </code></pre></div></p>
 
 <h2>What's next?</h2>
 
@@ -247,12 +228,51 @@
 <li><a href="http://norvig.com/sudoku.html">Solving Every Sudoku Puzzle</a></li>
 </ul>
 
-	</article>
+	</div>
+	<div class="article-footer">
+		<time>April 29th, 2017</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/algorithms/">
+					Algorithms
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/data-structures/">
+					Data Structures
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+			</div>
+		</section>
+		<section id="secondary">
+			<div class="sidebar">
+				<div class="author-intro">
+	<h3>Hello, I'm Abdush Shakoor! &#x1F44B;</h3>
+	<p>I'm a programmer & designer based in Dubai, United Arab Emirates. I love tinkering with code and writing about what I learn.</p>
+	<p>Like this article? Please share it with your friends and colleagues or else, <a href="mailto:megacolorboy@gmail.com">send me</a> a private message about your feedback.</p>
+
+	<ul class="sitemap">
+		<li><a class="back" href="/"><span>👈</span> Check out more articles!</a></li>
+	</ul>
+</div>
+			</div>
+		</section>
+	</div>
 </main>
 
+<footer>
+    <span class="copyright">&copy; Abdush Shakoor</span>
+</footer>
+
 <script src="/static/vendor/jquery/jquery-3.5.1.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
-<script src="/static/vendor/hljs/js/highlight.min.js"></script>
-<script>hljs.initHighlightingOnLoad();</script>
+<!-- <script src="/static/vendor/hljs/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script> -->
 
 <!-- Global site tag (gtag.js) - Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=UA-98290003-2"></script>
@@ -264,7 +284,7 @@
   gtag('config', 'UA-98290003-2');
 </script>
 
-<script>
+<!-- <script>
     const darkModeButton = document.createElement('button');
     const syntaxHighlightSource = document.getElementById('syntaxHighlight');
     const menuList = document.querySelector('.menu');
@@ -362,6 +382,6 @@
     $('html').click(function() {
       $('.navbar-dropdown').hide();
     });
-</script>
+</script> -->
 </body>
 </html>
