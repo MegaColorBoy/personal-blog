@@ -54,7 +54,7 @@ function init()
 	var button = document.createElement('button');
 	button.id = "convert-webconfig";
 	button.innerText = "Convert";
-	button.className = "reaction_btn";
+	button.className = "simple-button";
 
 	//Add textarea
 	var textarea = document.createElement("textarea");
