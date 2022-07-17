@@ -73,7 +73,117 @@
 		<section id="primary">
 			<div class="articles">
 				
-					<div class="article">
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/check-ram-disk-space">Check RAM and disk space</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<h2>RAM space</h2>
+
+<p>Type the following command to view available memory in your system:</p>
+
+<div class="codehilite"><pre><span></span><code>free -h
+</code></pre></div>
+
+<h2>Disk space</h2>
+
+<p>Type the following command to view available disk space in your system:</p>
+
+<div class="codehilite"><pre><span></span><code>df -h
+</code></pre></div>
+
+	</div>
+	<div class="article-footer">
+		<time>May 25th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/terminal/">
+					Terminal
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/symlink-shared-hosting">Symbolic storage link in shared hosting</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>If you're hosting a laravel project via cPanel, chances are that it could be a shared hosting server and that means you can't really use <code>php artisan storage:link</code> for this.
+But don't worry, there's another way to this. Just follow the steps below:</p>
+
+<h2>1. Create a symlink</h2>
+
+<p>In your <code>public_html/public</code> directory, remove the <code>storage</code> folder. Next, create a <code>symlink.php</code> file in your <code>public_html</code> directory and add the following code:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="nv">$targetFolder</span> <span class="o">=</span> <span class="nv">$_SERVER</span><span class="p">[</span><span class="s1">&#39;DOCUMENT_ROOT&#39;</span><span class="p">]</span><span class="o">.</span><span class="s1">&#39;/storage/app/public&#39;</span><span class="p">;</span>
+<span class="nv">$linkedFolder</span> <span class="o">=</span> <span class="nv">$_SERVER</span><span class="p">[</span><span class="s1">&#39;DOCUMENT_ROOT&#39;</span><span class="p">]</span><span class="o">.</span><span class="s1">&#39;/public/storage&#39;</span><span class="p">;</span>
+<span class="nb">symlink</span><span class="p">(</span><span class="nv">$targetFolder</span><span class="p">,</span> <span class="nv">$linkedFolder</span><span class="p">);</span>
+<span class="k">echo</span> <span class="s2">&quot;done&quot;</span><span class="p">;</span>
+<span class="cp">?&gt;</span><span class="x"></span>
+</code></pre></div>
+
+<h2>2. Create a custom route to access storage</h2>
+
+<p>Alright, this is kind of a hack but it works extremely fine. Just add the following route in your <code>routes/web.php</code> file:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="nx">Route</span><span class="o">::</span><span class="na">get</span><span class="p">(</span><span class="s1">&#39;/storage/anyfolder/{filename}&#39;</span><span class="p">,</span> <span class="k">function</span><span class="p">(</span><span class="nv">$filename</span><span class="p">){</span>
+    <span class="c1">// Your folder path</span>
+    <span class="nv">$folder_path</span> <span class="o">=</span> <span class="nx">storage_path</span><span class="p">(</span><span class="s1">&#39;app/public/anyfolder/&#39;</span><span class="o">.</span><span class="nv">$filename</span><span class="p">);</span>
+
+    <span class="c1">// check if the file exists</span>
+    <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">File</span><span class="o">::</span><span class="na">exists</span><span class="p">(</span><span class="nv">$folder_path</span><span class="p">))</span> <span class="p">{</span>
+        <span class="nx">abort</span><span class="p">(</span><span class="mi">404</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="nv">$file</span> <span class="o">=</span> <span class="nx">File</span><span class="o">::</span><span class="na">get</span><span class="p">(</span><span class="nv">$folder_path</span><span class="p">);</span>
+    <span class="nv">$type</span> <span class="o">=</span> <span class="nx">File</span><span class="o">::</span><span class="na">mimeType</span><span class="p">(</span><span class="nv">$folder_path</span><span class="p">);</span>
+
+    <span class="nv">$response</span> <span class="o">=</span> <span class="nx">Response</span><span class="o">::</span><span class="na">make</span><span class="p">(</span><span class="nv">$file</span><span class="p">,</span> <span class="mi">200</span><span class="p">);</span>
+    <span class="nv">$response</span><span class="o">-&gt;</span><span class="na">header</span><span class="p">(</span><span class="s2">&quot;Content-Type&quot;</span><span class="p">,</span> <span class="nv">$type</span><span class="p">);</span>
+
+    <span class="k">return</span> <span class="nv">$response</span><span class="p">;</span>
+<span class="p">})</span>
+<span class="cp">?&gt;</span><span class="x"></span>
+</code></pre></div>
+
+<p>Now, you can access your images or any other assets easily using: </p>
+
+<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="nx">asset</span><span class="p">(</span><span class="s1">&#39;storage/anyfolder/&#39;</span><span class="o">.</span><span class="nv">$filename</span><span class="p">)</span>
+<span class="cp">?&gt;</span><span class="x"></span>
+</code></pre></div>
+
+<p>Hope this helps you out!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>May 25th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/laravel/">
+					Laravel
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
 	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/integrate-excel-into-your-laravel-project">Integrate Excel into your Laravel project</a></h1>
 		<p class="description"></p>
@@ -138,8 +248,10 @@
 		</ul>
 	</div>
 </div>
+
 				
-					<div class="article">
+					
+<div class="article">
 	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/view-battery-status">View battery status</a></h1>
 		<p class="description"></p>
@@ -164,8 +276,10 @@
 		</ul>
 	</div>
 </div>
+
 				
-					<div class="article">
+					
+<div class="article">
 	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/set-up-repo">Set up a new repository</a></h1>
 		<p class="description"></p>
@@ -239,8 +353,10 @@
 		</ul>
 	</div>
 </div>
+
 				
-					<div class="article">
+					
+<div class="article">
 	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/checkout-branch">Checkout branch</a></h1>
 		<p class="description"></p>
@@ -276,8 +392,10 @@
 		</ul>
 	</div>
 </div>
+
 				
-					<div class="article">
+					
+<div class="article">
 	<div class="article-header">
 		<h1 class="heading"><a href="/writings/posts/writing-a-book-on-how-to-build-reactjs-applications">Writing a book on how to build ReactJS applications</a></h1>
 		<p class="description">I'm challenging myself to write a book on how to build simple applications using ReactJS</p>
@@ -323,8 +441,10 @@
 		</ul>
 	</div>
 </div>
+
 				
-					<div class="article">
+					
+<div class="article">
 	<div class="article-header">
 		<h1 class="heading"><a href="/writings/posts/using-laravel-events-and-listeners-in-your-application">Using Laravel events and listeners in your application</a></h1>
 		<p class="description">Sharing my experiences of using events and listeners in my Laravel application.</p>
@@ -546,337 +666,7 @@ Senior: Hmm, that&#39;s okay but I&#39;m talking using events in Laravel.
 		</ul>
 	</div>
 </div>
-				
-					<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/the-circle-packing-algorithm">The Circle Packing Algorithm</a></h1>
-		<p class="description">Implemented a mathematically beautiful generative pattern that looks deceivingly complex to the human.</p>
-	</div>
-	<div class="article-body">
-		<iframe width="100%" height="485" src="/static/projects/circle-packing"></iframe>
 
-<p>Beautiful, isn't it? It might look complex but it's mathematically quite impressive. Making this pattern wasn't hard but it definitely took a lot of trial and error to get it right and honestly, I don't really know if it's this is the most efficient way to generate this pattern.</p>
-
-<p>This article isn't a tutorial but rather, I'll be talking about the algorithm itself. However, you can check out the source code in my <a href="https://github.com/megacolorboy/BlogProjects">GitHub repository</a>.</p>
-
-<h2>How it works?</h2>
-
-<p>In order to achieve that "stacked" effect, there are two things to keep in mind:</p>
-
-<ol>
-<li>Generate circles with a random radius</li>
-<li>Look for collisions with other circles</li>
-</ol>
-
-<p>The logic is quite similar to the <a href="https://stackoverflow.com/questions/306316/determine-if-two-rectangles-overlap-each-other">Overlapping Rectangles</a> problem except this is done with circles.</p>
-
-<h2>Generate circles with dynamic radius</h2>
-
-<p>This method will help generate valid circles with a random radius. Circles that don't overlap or collide with other circles are considered to be valid.</p>
-
-<div class="codehilite"><pre><span></span><code><span class="c1">// Generate a valid circle</span>
-<span class="kd">const</span> <span class="nx">generateCircle</span> <span class="o">=</span> <span class="p">()</span> <span class="p">=&gt;</span> <span class="p">{</span>
-    <span class="kd">let</span> <span class="nx">newCircle</span><span class="p">;</span>
-    <span class="kd">let</span> <span class="nx">isValidCircle</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
-
-    <span class="k">for</span><span class="p">(</span><span class="kd">let</span> <span class="nx">i</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span> <span class="nx">i</span><span class="o">&lt;</span><span class="nx">attempts</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-        <span class="nx">newCircle</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="nx">x</span><span class="o">:</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="nx">width</span><span class="p">),</span>
-            <span class="nx">y</span><span class="o">:</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="nx">width</span><span class="p">),</span>
-            <span class="nx">radius</span><span class="o">:</span> <span class="nx">minRadius</span>
-        <span class="p">};</span>
-
-        <span class="k">if</span><span class="p">(</span><span class="nx">checkForCollision</span><span class="p">(</span><span class="nx">newCircle</span><span class="p">))</span> <span class="p">{</span>
-            <span class="k">continue</span><span class="p">;</span>
-        <span class="p">}</span>
-        <span class="k">else</span> <span class="p">{</span>
-            <span class="nx">isValidCircle</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
-            <span class="k">break</span><span class="p">;</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-
-    <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">isValidCircle</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span><span class="p">;</span> <span class="p">}</span>
-
-    <span class="k">for</span><span class="p">(</span><span class="kd">let</span> <span class="nx">i</span><span class="o">=</span><span class="nx">minRadius</span><span class="p">;</span> <span class="nx">i</span><span class="o">&lt;=</span><span class="nx">maxRadius</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-        <span class="nx">newCircle</span><span class="p">.</span><span class="nx">radius</span> <span class="o">=</span> <span class="nx">i</span><span class="p">;</span>
-        <span class="k">if</span><span class="p">(</span><span class="nx">checkForCollision</span><span class="p">(</span><span class="nx">newCircle</span><span class="p">))</span> <span class="p">{</span>
-            <span class="nx">newCircle</span><span class="p">.</span><span class="nx">radius</span><span class="o">--</span><span class="p">;</span>
-            <span class="k">break</span><span class="p">;</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-
-    <span class="nx">circles</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">newCircle</span><span class="p">);</span>
-    <span class="nx">drawCircleOnCanvas</span><span class="p">(</span><span class="nx">context</span><span class="p">,</span> <span class="nx">newCircle</span><span class="p">,</span> <span class="nx">colors</span><span class="p">[</span><span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="nx">colors</span><span class="p">.</span><span class="nx">length</span><span class="p">)]);</span>
-<span class="p">}</span>
-</code></pre></div>
-
-<h2>Look for collision with other circles</h2>
-
-<p>Thanks to some online research, I was able implement the <a href="https://en.wikipedia.org/wiki/Euclidean_distance">Euclidean Distance</a> equation that helped with calculating the distances between each circle and detect for collisions. Along with that, I also found another article on <a href="http://www.mathsmutt.co.uk/files/tcirc.htm">Touching Circles</a> that was quite useful.</p>
-
-<p>These are the formulas used to detect the collision:</p>
-
-<ol>
-<li><p>Find the distance between two centres
-\[ AB = \sqrt{ (x2 - x1)^2 - (y2 - y1)^2} \]</p></li>
-<li><p>Calculate the radii of both circles.
-\[R = r1 + r2\]</p></li>
-</ol>
-
-<p>If the radii is greater than or equal to the euclidean distance of both circles, then it's a valid circle with no collisions.</p>
-
-<div class="codehilite"><pre><span></span><code><span class="c1">// Check for collision in a canvas</span>
-<span class="kd">const</span> <span class="nx">checkForCollision</span> <span class="o">=</span> <span class="p">(</span><span class="nx">newCircle</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="p">{</span>
-
-    <span class="kd">let</span> <span class="nx">x2</span> <span class="o">=</span> <span class="nx">newCircle</span><span class="p">.</span><span class="nx">x</span><span class="p">;</span>
-    <span class="kd">let</span> <span class="nx">y2</span> <span class="o">=</span> <span class="nx">newCircle</span><span class="p">.</span><span class="nx">y</span><span class="p">;</span>
-    <span class="kd">let</span> <span class="nx">r2</span> <span class="o">=</span> <span class="nx">newCircle</span><span class="p">.</span><span class="nx">radius</span><span class="p">;</span>
-
-
-    <span class="c1">// Determine the euclidean distance between two circle</span>
-    <span class="c1">// using Pythagorean Theorem.</span>
-
-    <span class="c1">// Refer to: </span>
-    <span class="c1">// https://en.wikipedia.org/wiki/Euclidean_distance</span>
-
-    <span class="k">for</span><span class="p">(</span><span class="kd">let</span> <span class="nx">i</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span> <span class="nx">i</span><span class="o">&lt;</span><span class="nx">circles</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-
-        <span class="kd">let</span> <span class="nx">otherCircle</span> <span class="o">=</span> <span class="nx">circles</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
-        <span class="kd">let</span> <span class="nx">r1</span> <span class="o">=</span> <span class="nx">otherCircle</span><span class="p">.</span><span class="nx">radius</span><span class="p">;</span>
-        <span class="kd">let</span> <span class="nx">x1</span> <span class="o">=</span> <span class="nx">otherCircle</span><span class="p">.</span><span class="nx">x</span><span class="p">;</span>
-        <span class="kd">let</span> <span class="nx">y1</span> <span class="o">=</span> <span class="nx">otherCircle</span><span class="p">.</span><span class="nx">y</span><span class="p">;</span>
-        <span class="kd">let</span> <span class="nx">xx</span> <span class="o">=</span> <span class="p">((</span><span class="nx">x2</span> <span class="o">-</span> <span class="nx">x1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="nx">x2</span> <span class="o">-</span> <span class="nx">x1</span><span class="p">));</span>
-        <span class="kd">let</span> <span class="nx">yy</span> <span class="o">=</span> <span class="p">((</span><span class="nx">y2</span> <span class="o">-</span> <span class="nx">y1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="nx">y2</span> <span class="o">-</span> <span class="nx">y1</span><span class="p">));</span>
-        <span class="kd">let</span> <span class="nx">radii</span> <span class="o">=</span> <span class="nx">r2</span> <span class="o">+</span> <span class="nx">r1</span><span class="p">;</span>
-        <span class="kd">let</span> <span class="nx">euclidDistance</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">sqrt</span><span class="p">(</span><span class="nx">xx</span> <span class="o">+</span> <span class="nx">yy</span><span class="p">);</span>
-
-        <span class="k">if</span><span class="p">(</span><span class="nx">radii</span> <span class="o">&gt;=</span> <span class="nx">euclidDistance</span><span class="p">)</span> <span class="p">{</span>
-            <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-
-    <span class="c1">// Check collision on top</span>
-    <span class="k">if</span><span class="p">(</span><span class="nx">x2</span> <span class="o">+</span> <span class="nx">r2</span> <span class="o">&gt;=</span> <span class="nx">width</span> <span class="o">||</span> 
-        <span class="nx">x2</span> <span class="o">-</span> <span class="nx">r2</span> <span class="o">&lt;=</span> <span class="mf">0</span><span class="p">)</span> <span class="p">{</span>
-        <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
-    <span class="p">}</span>
-
-    <span class="c1">// Check collision on bottom</span>
-    <span class="k">if</span><span class="p">(</span><span class="nx">y2</span> <span class="o">+</span> <span class="nx">r2</span> <span class="o">&gt;=</span> <span class="nx">width</span> <span class="o">||</span> 
-        <span class="nx">y2</span> <span class="o">-</span> <span class="nx">r2</span> <span class="o">&lt;=</span> <span class="mf">0</span><span class="p">)</span> <span class="p">{</span>
-        <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
-    <span class="p">}</span>
-
-    <span class="c1">//else return false</span>
-    <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>
-<span class="p">}</span>
-</code></pre></div>
-
-<h2>Conclusion</h2>
-
-<p>I'm thinking of implementing more generative patterns like <a href="https://en.wikipedia.org/wiki/Triangle_mesh">Triangular Mesh</a> and Piet Mondrian's <a href="https://en.wikipedia.org/wiki/Composition_with_Red_Blue_and_Yellow">Red, Blue and Yellow composition</a>.</p>
-
-<p>Hope you liked reading this article.</p>
-
-<p>Stay tuned for more!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>December 8th, 2019</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/algorithms/">
-					Algorithms
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/art/">
-					Art
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-				
-					<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/deploy-your-laravel-app-on-heroku">Deploy your Laravel app on Heroku</a></h1>
-		<p class="description">Learn how to deploy your Laravel application along with a database on Heroku.</p>
-	</div>
-	<div class="article-body">
-		<p>In my <a href="/posts/getting-started-with-laravel-homestead">previous article</a>, I talked about how to setup your environment for developing your Laravel applications. Today, I'll be talking about deploying your application along with a database on Heroku.</p>
-
-<p>I wrote a simple CRUD application using Laravel but didn't understand on how to host it. I tried to host it on free shared hosting service but apparently, most of them don't support PHP system calls like <mark>proc_open()</mark>. However, if it was a VPS hosting service, it's supported but ain't nobody got time for shelling out cash for a test drive.</p>
-
-<p>As an alternative, I went on google and discovered that Heroku does support my requirements and it worked flawlessly, which is why I thought of sharing this information to others as well.</p>
-
-<p>If you're a developer who's at the early stages of learning Laravel (like me &#x1f606;), then this article is for you.</p>
-
-<h2>Prerequisites</h2>
-
-<p>You'll be doing some minor configurations, so you should be fine as long as you have a stable internet connection, familiar with using the CLI (Command Line Interface) and have some PHP knowledge.</p>
-
-<p>If you're a Windows user, please <a href="https://gitforwindows.org">Git for Windows</a>. Else, if you're a Linux or macOS user, you should be fine.</p>
-
-<h2>How to deploy?</h2>
-
-<p>You can ignore the first two steps if you already know about Heroku and how to work with it but please follow the rest of the steps:</p>
-
-<ol>
-<li><a href="#step-1">Install Heroku</a></li>
-<li><a href="#step-2">Create a Heroku repository</a></li>
-<li><a href="#step-3">Define Procfile</a></li>
-<li><a href="#step-4">Push Laravel app to repository</a></li>
-<li><a href="#step-5">Add configuration variables</a></li>
-<li><a href="#step-6">Setup your database</a></li>
-</ol>
-
-<h3><a id="step-1"></a> Install Heroku CLI</h3>
-
-<p>You can install this directly from the command line by typing the following:</p>
-
-<div class="codehilite"><pre><span></span><code>sudo snap install heroku --classic
-</code></pre></div>
-
-<h3><a id="step-2"></a> Create a Heroku repository</h3>
-
-<p>If you don't have a Heroku account yet, <a href="https://heroku.com">create an account</a> now and once you're done with that, type the following:</p>
-
-<div class="codehilite"><pre><span></span><code>heroku login
-</code></pre></div>
-
-<p>Follow the login instructions from the command line prompt, fill in your login credentials and you'll be in!</p>
-
-<p>Once, you're done with that, create a repository by doing the following:</p>
-
-<div class="codehilite"><pre><span></span><code>heroku create
-</code></pre></div>
-
-<p>In a few seconds, you'll get a randomly generated domain address, which is the link to your Heroku repository. If you can't remember the link, it's fine, you can make changes to it in your Heroku account.</p>
-
-<h3><a id="step-3"></a> Define Procfile</h3>
-
-<p>In case, you don't know what's a Procfile, it's a file that specifies the commands that needs to be executed by the application on startup. You can declare a variety of process types, <a href="https://devcenter.heroku.com/articles/procfile">click here</a> to learn more.</p>
-
-<p>Since our application is PHP based, we need to add some specific command that selects the server on boot, I chose Apache server for this project:</p>
-
-<div class="codehilite"><pre><span></span><code><span class="nb">cd</span> your_laravel_project
-touch Procfile
-<span class="nb">echo</span> <span class="s2">&quot;web: vendor/bin/heroku-php-apache2 web/&quot;</span> &gt; Procfile
-</code></pre></div>
-
-<h3><a id="step-4"></a> Push Laravel app to repository</h3>
-
-<p>It's similar to pushing your code into your GitHub, except this time, it's your Heroku repository. Type the following in your command line:</p>
-
-<div class="codehilite"><pre><span></span><code>git add .
-git commit -m <span class="s2">&quot;pushing application to repo&quot;</span>
-git push heroku master
-</code></pre></div>
-
-<p>To check if your application is launched, type the following:</p>
-
-<div class="codehilite"><pre><span></span><code>heroku open
-</code></pre></div>
-
-<p>At this stage, you might face <mark>Error 500</mark>, that's normal because we'll take care of that in the next step.</p>
-
-<h3><a id="step-5"></a> Configure your Heroku environment</h3>
-
-<p>We need to add some config variables that changes the way your app behaves. So, let's start adding it:</p>
-
-<div class="codehilite"><pre><span></span><code>heroku config:set <span class="nv">APP_DEBUG</span><span class="o">=</span><span class="nb">true</span>
-heroku config:set <span class="nv">APP_KEY</span><span class="o">=</span>yourlaravelapplicationkey
-heroku config:set <span class="nv">APP_URL</span><span class="o">=</span>https://yourwebsite.herokuapp.com
-heroku config:set <span class="nv">REDIRECT_HTTPS</span><span class="o">=</span><span class="nb">true</span>
-</code></pre></div>
-
-<p>In this configuration, you have done the following:
-- Enabled debug mode
-- Set your Laravel application's base64 encrypted key
-- The website's URL
-- Force HTTPS redirect (Useful, when you're calling external assets that uses HTTPS protocol)</p>
-
-<p><strong>Note:</strong> You can find your <mark>APP_KEY</mark> in your <mark>.env</mark> file that's found in your project directory.</p>
-
-<h3><a id="step-6"></a> Setup your database</h3>
-
-<p>Initially, I built the database on MySQL but I later learnt that Heroku gives a free PostgreSQL starter database. I've never tried PostgreSQL before but it's quite similar to MySQL, so you shouldn't worry about your schema as Laravel supports PostgreSQL and MySQL databases by default.</p>
-
-<p>Type the following in the command line:</p>
-
-<div class="codehilite"><pre><span></span><code>heroku addons:create heroku-postgresql:hobby-dev
-</code></pre></div>
-
-<p>This will create a PostgreSQL database and sets a <mark>DATABASE_URL</mark>, which contains the username and password to the database. To check it, type the following:</p>
-
-<div class="codehilite"><pre><span></span><code>heroku config
-</code></pre></div>
-
-<p>Now, go to your project directory and open the <mark>config/database.php</mark>  file and add the following:</p>
-
-<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="c1">// Place these variables above</span>
-<span class="nv">$url</span> <span class="o">=</span> <span class="nb">parse_url</span><span class="p">(</span><span class="nb">getenv</span><span class="p">(</span><span class="s2">&quot;DATABASE_URL&quot;</span><span class="p">));</span>
-<span class="nv">$host</span> <span class="o">=</span> <span class="nv">$url</span><span class="p">[</span><span class="s2">&quot;host&quot;</span><span class="p">]</span><span class="o">??</span><span class="k">null</span><span class="p">;</span>
-<span class="nv">$username</span> <span class="o">=</span> <span class="nv">$url</span><span class="p">[</span><span class="s2">&quot;user&quot;</span><span class="p">]</span><span class="o">??</span><span class="k">null</span><span class="p">;</span>
-<span class="nv">$password</span> <span class="o">=</span> <span class="nv">$url</span><span class="p">[</span><span class="s2">&quot;pass&quot;</span><span class="p">]</span><span class="o">??</span><span class="k">null</span><span class="p">;</span>
-<span class="nv">$database</span> <span class="o">=</span> <span class="nb">substr</span><span class="p">(</span><span class="nv">$url</span><span class="p">[</span><span class="s2">&quot;path&quot;</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span><span class="o">??</span><span class="k">null</span><span class="p">;</span>
-
-<span class="c1">// Replace the default connection</span>
-<span class="s1">&#39;default&#39;</span> <span class="o">=&gt;</span> <span class="nx">env</span><span class="p">(</span><span class="s1">&#39;DB_CONNECTION&#39;</span><span class="p">,</span> <span class="s1">&#39;pgsql_prod&#39;</span><span class="p">),</span>
-
-<span class="c1">// Under the connections attribute, create a new connection called &#39;pgsql_prod&#39;</span>
-<span class="s1">&#39;pgsql_production&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span>
-    <span class="s1">&#39;driver&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;pgsql&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;host&#39;</span> <span class="o">=&gt;</span> <span class="nv">$host</span><span class="p">,</span>
-    <span class="s1">&#39;database&#39;</span> <span class="o">=&gt;</span> <span class="nv">$database</span><span class="p">,</span>
-    <span class="s1">&#39;username&#39;</span> <span class="o">=&gt;</span> <span class="nv">$username</span><span class="p">,</span>
-    <span class="s1">&#39;password&#39;</span> <span class="o">=&gt;</span> <span class="nv">$password</span><span class="p">,</span>
-    <span class="s1">&#39;charset&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;utf-8&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;prefix&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;schema&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;public&#39;</span><span class="p">,</span>
-<span class="p">],</span>
-<span class="cp">?&gt;</span><span class="x"></span>
-</code></pre></div>
-
-<p>Push the new changes to your repository:</p>
-
-<div class="codehilite"><pre><span></span><code>git add .
-git commit -m <span class="s2">&quot;configured database&quot;</span>
-git push heroku master
-</code></pre></div>
-
-<p>One last step, we need to create the tables from your schema, so type the following:</p>
-
-<div class="codehilite"><pre><span></span><code>heroku run php /app/artisan migrate --seed
-</code></pre></div>
-
-<p>Follow the command line prompt and voila, you have successfully deployed your Laravel application with a database on Heroku.</p>
-
-<h2>Conclusion</h2>
-
-<p>Well, I hope you found this article really useful especially if you're a beginner. If you do find this useful, please share it with others too!</p>
-
-<p>Stay tuned for more!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>November 29th, 2019</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/tutorial/">
-					Tutorial
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
 				
 			</div>
 			
@@ -965,7 +755,7 @@ git push heroku master
 		<li>
 			<a href="/category/linux/">
 				Linux
-				<span class="count">14</span>
+				<span class="count">15</span>
 			</a>
 		</li>
 		
@@ -1019,16 +809,16 @@ git push heroku master
 		</li>
 		
 		<li>
-			<a href="/category/programming/">
-				Programming
+			<a href="/category/unix/">
+				UNIX
 				<span class="count">8</span>
 			</a>
 		</li>
 		
 		<li>
-			<a href="/category/unix/">
-				Unix
-				<span class="count">7</span>
+			<a href="/category/programming/">
+				Programming
+				<span class="count">8</span>
 			</a>
 		</li>
 		
@@ -1131,6 +921,13 @@ git push heroku master
 		</li>
 		
 		<li>
+			<a href="/category/wget/">
+				wget
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/vscode/">
 				VSCode
 				<span class="count">2</span>
@@ -1162,6 +959,13 @@ git push heroku master
 			<a href="/category/python/">
 				Python
 				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/blogmarks/">
+				Blogmarks
+				<span class="count">1</span>
 			</a>
 		</li>
 		
@@ -1245,13 +1049,6 @@ git push heroku master
 		<li>
 			<a href="/category/xfce/">
 				XFCE
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/unix/">
-				UNIX
 				<span class="count">1</span>
 			</a>
 		</li>

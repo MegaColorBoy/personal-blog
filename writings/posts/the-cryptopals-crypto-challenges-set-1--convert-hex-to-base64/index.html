@@ -71,207 +71,196 @@
 	<div class="two-col-grid">
 		<section id="primary">
 			<div class="articles">
-				<div class="article">
+				
+<div class="article">
 	<div class="article-header">
 		<h1 class="heading"><a href="/writings/posts/the-cryptopals-crypto-challenges-set-1--convert-hex-to-base64">The Cryptopals Crypto Challenges: Set 1 - Convert Hex to Base64</a></h1>
 		<p class="description">Convert Hexadecimal strings to encoded Base64 strings.</p>
 	</div>
 	<div class="article-body">
-		<p>This is the <a href="http://cryptopals.com/sets/1/challenges/1">first challenge</a>
-of Set 1 in The Cryptopals Crypto Challenges website. If you want to
-know more about these challenges, look at my <a href="/posts/the-cryptopals-crypto-challenges">previous
-post</a>.</p>
+		<p>This is the <a href="http://cryptopals.com/sets/1/challenges/1">first challenge</a> of Set 1 in The Cryptopals Crypto Challenges website. If you want to know more about these challenges, look at my <a href="/posts/the-cryptopals-crypto-challenges">previous post</a>.</p>
 
-<p>For this challenge, you need to be able to convert Hexadecimal strings
-to encoded Base64 strings:</p>
+<p>For this challenge, you need to be able to convert Hexadecimal strings to encoded Base64 strings:</p>
 
 <p>The string:</p>
 
-<pre><code>    49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d
-</code></pre>
+<div class="codehilite"><pre><span></span><code>49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d
+</code></pre></div>
 
 <p>Should produce:</p>
 
-<pre><code>    SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t
-</code></pre>
+<div class="codehilite"><pre><span></span><code>SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t
+</code></pre></div>
 
-<p>Not only is this challenge just a warmup but it is also designed to make
-you feel comfortable in dealing with raw bytes as Base64 is used to
-encode binary information and Hexadecimal is used to view the raw bytes.</p>
+<p>Not only is this challenge just a warmup but it is also designed to make you feel comfortable in dealing with raw bytes as Base64 is used to encode binary information and Hexadecimal is used to view the raw bytes.</p>
 
 <h2>How to convert from Hexadecimal to Base64?</h2>
 
-<p>Well, it's simpler than you think! You will have to go through the
-following steps:</p>
+<p>Well, it's simpler than you think! You will have to go through the following steps:</p>
 
 <ol>
 <li><a href="#step-1">Convert hexadecimal string to binary string</a></li>
 <li><a href="#step-2">Split the binary string into 4 pieces of 6 bits each</a></li>
 <li><a href="#step-3">Convert the binary string to decimal</a></li>
-<li><a href="#step-4">Compare each decimal against each character in a reference string of
-64 characters</a></li>
+<li><a href="#step-4">Compare each decimal against each character in a reference string of 64 characters</a></li>
 </ol>
 
 <h3><a id="step-1"></a> Convert hexadecimal string to binary string</h3>
 
-<p>Before converting to binary, you should compare each character against a
-hashmap table of hardcoded hexadecimal keys and binary values.
-    <div class="codehilite"><pre><span></span><code><span class="c1">//Hashmap that contain hex key and binary values</span>
-    <span class="n">map</span><span class="o">&lt;</span><span class="kt">char</span><span class="p">,</span><span class="w"> </span><span class="n">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">CryptoLib</span><span class="o">::</span><span class="n">gen_hex_table</span><span class="p">()</span><span class="w"></span>
-    <span class="p">{</span><span class="w"></span>
-    <span class="w">    </span><span class="n">map</span><span class="o">&lt;</span><span class="kt">char</span><span class="p">,</span><span class="w"> </span><span class="n">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">map</span><span class="p">;</span><span class="w"></span>
- <br />
-    <span class="w">    </span><span class="n">map</span><span class="p">[</span><span class="sc">&#39;0&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;0000&quot;</span><span class="p">;</span><span class="w"></span>
-    <span class="w">    </span><span class="n">map</span><span class="p">[</span><span class="sc">&#39;1&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;0001&quot;</span><span class="p">;</span><span class="w"></span>
-    <span class="w">    </span><span class="n">map</span><span class="p">[</span><span class="sc">&#39;2&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;0010&quot;</span><span class="p">;</span><span class="w"></span>
-    <span class="w">    </span><span class="n">map</span><span class="p">[</span><span class="sc">&#39;3&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;0011&quot;</span><span class="p">;</span><span class="w"></span>
-    <span class="w">    </span><span class="n">map</span><span class="p">[</span><span class="sc">&#39;4&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;0100&quot;</span><span class="p">;</span><span class="w"></span>
-    <span class="w">    </span><span class="n">map</span><span class="p">[</span><span class="sc">&#39;5&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;0101&quot;</span><span class="p">;</span><span class="w"></span>
-    <span class="w">    </span><span class="n">map</span><span class="p">[</span><span class="sc">&#39;6&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;0110&quot;</span><span class="p">;</span><span class="w"></span>
-    <span class="w">    </span><span class="n">map</span><span class="p">[</span><span class="sc">&#39;7&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;0111&quot;</span><span class="p">;</span><span class="w"></span>
-    <span class="w">    </span><span class="n">map</span><span class="p">[</span><span class="sc">&#39;8&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1000&quot;</span><span class="p">;</span><span class="w"></span>
-    <span class="w">    </span><span class="n">map</span><span class="p">[</span><span class="sc">&#39;9&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1001&quot;</span><span class="p">;</span><span class="w"></span>
-    <span class="w">    </span><span class="n">map</span><span class="p">[</span><span class="sc">&#39;a&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1010&quot;</span><span class="p">;</span><span class="w"></span>
-    <span class="w">    </span><span class="n">map</span><span class="p">[</span><span class="sc">&#39;b&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1011&quot;</span><span class="p">;</span><span class="w"></span>
-    <span class="w">    </span><span class="n">map</span><span class="p">[</span><span class="sc">&#39;c&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1100&quot;</span><span class="p">;</span><span class="w"></span>
-    <span class="w">    </span><span class="n">map</span><span class="p">[</span><span class="sc">&#39;d&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1101&quot;</span><span class="p">;</span><span class="w"></span>
-    <span class="w">    </span><span class="n">map</span><span class="p">[</span><span class="sc">&#39;e&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1110&quot;</span><span class="p">;</span><span class="w"></span>
-    <span class="w">    </span><span class="n">map</span><span class="p">[</span><span class="sc">&#39;f&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1111&quot;</span><span class="p">;</span><span class="w"></span>
- <br />
-    <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">map</span><span class="p">;</span><span class="w"></span>
-    <span class="p">}</span><span class="w"></span>
- <br />
-    <span class="c1">//Convert hex to string</span>
-    <span class="n">string</span><span class="w"> </span><span class="n">CryptoLib</span><span class="o">::</span><span class="n">con_hex_2_bin</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="n">hexStr</span><span class="p">)</span><span class="w"></span>
-    <span class="p">{</span><span class="w"></span>
-    <span class="w">    </span><span class="n">map</span><span class="o">&lt;</span><span class="kt">char</span><span class="p">,</span><span class="n">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">m</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">gen_hex_table</span><span class="p">();</span><span class="w"></span>
- <br />
-    <span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">newStr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">;</span><span class="w"></span>
-    <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="n">hexStr</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"></span>
-    <span class="w">    </span><span class="p">{</span><span class="w"></span>
-    <span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">isdigit</span><span class="p">(</span><span class="n">hexStr</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span><span class="w"></span>
-    <span class="w">        </span><span class="p">{</span><span class="w"></span>
-    <span class="w">            </span><span class="n">newStr</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">m</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="n">hexStr</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">-&gt;</span><span class="n">second</span><span class="p">;</span><span class="w"></span>
-    <span class="w">        </span><span class="p">}</span><span class="w"></span>
-    <span class="w">        </span><span class="k">else</span><span class="w"></span>
-    <span class="w">        </span><span class="p">{</span><span class="w"></span>
-    <span class="w">            </span><span class="n">newStr</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">m</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="n">hexStr</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">-&gt;</span><span class="n">second</span><span class="p">;</span><span class="w"></span>
-    <span class="w">        </span><span class="p">}</span><span class="w"></span>
-    <span class="w">        </span><span class="c1">// newStr += m.find(hexStr[i])-&gt;second;</span>
-    <span class="w">    </span><span class="p">}</span><span class="w"></span>
-    <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">newStr</span><span class="p">;</span><span class="w"></span>
-    <span class="p">}</span><span class="w"></span>
-    </code></pre></div></p>
+<p>Before converting to binary, you should compare each character against a hashmap table of hardcoded hexadecimal keys and binary values.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="c1">//Hashmap that contain hex key and binary values</span>
+<span class="n">map</span><span class="o">&lt;</span><span class="kt">char</span><span class="p">,</span><span class="w"> </span><span class="n">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">CryptoLib</span><span class="o">::</span><span class="n">gen_hex_table</span><span class="p">()</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">map</span><span class="o">&lt;</span><span class="kt">char</span><span class="p">,</span><span class="w"> </span><span class="n">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">map</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">    </span><span class="n">map</span><span class="p">[</span><span class="sc">&#39;0&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;0000&quot;</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">map</span><span class="p">[</span><span class="sc">&#39;1&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;0001&quot;</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">map</span><span class="p">[</span><span class="sc">&#39;2&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;0010&quot;</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">map</span><span class="p">[</span><span class="sc">&#39;3&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;0011&quot;</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">map</span><span class="p">[</span><span class="sc">&#39;4&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;0100&quot;</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">map</span><span class="p">[</span><span class="sc">&#39;5&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;0101&quot;</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">map</span><span class="p">[</span><span class="sc">&#39;6&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;0110&quot;</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">map</span><span class="p">[</span><span class="sc">&#39;7&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;0111&quot;</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">map</span><span class="p">[</span><span class="sc">&#39;8&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1000&quot;</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">map</span><span class="p">[</span><span class="sc">&#39;9&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1001&quot;</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">map</span><span class="p">[</span><span class="sc">&#39;a&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1010&quot;</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">map</span><span class="p">[</span><span class="sc">&#39;b&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1011&quot;</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">map</span><span class="p">[</span><span class="sc">&#39;c&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1100&quot;</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">map</span><span class="p">[</span><span class="sc">&#39;d&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1101&quot;</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">map</span><span class="p">[</span><span class="sc">&#39;e&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1110&quot;</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">map</span><span class="p">[</span><span class="sc">&#39;f&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1111&quot;</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">map</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+
+<span class="c1">//Convert hex to string</span>
+<span class="n">string</span><span class="w"> </span><span class="n">CryptoLib</span><span class="o">::</span><span class="n">con_hex_2_bin</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="n">hexStr</span><span class="p">)</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">map</span><span class="o">&lt;</span><span class="kt">char</span><span class="p">,</span><span class="n">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">m</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">gen_hex_table</span><span class="p">();</span><span class="w"></span>
+
+<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">newStr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="n">hexStr</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">isdigit</span><span class="p">(</span><span class="n">hexStr</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span><span class="w"></span>
+<span class="w">        </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="n">newStr</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">m</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="n">hexStr</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">-&gt;</span><span class="n">second</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+<span class="w">        </span><span class="k">else</span><span class="w"></span>
+<span class="w">        </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="n">newStr</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">m</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="n">hexStr</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">-&gt;</span><span class="n">second</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+<span class="w">        </span><span class="c1">// newStr += m.find(hexStr[i])-&gt;second;</span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">newStr</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
 
 <h3><a id="step-2"></a> Split the binary string into 4 pieces of 6 bits each</h3>
 
-<p>Base64 represents data in the form of ASCII format that follows a
-Radix-64 representation. Each character is picked from a set of 64
-characters, which means that I'll only need 6 bits represent each
-character because <strong>2<sup>6</sup> = 64 characters</strong>.
-    <div class="codehilite"><pre><span></span><code><span class="c1">//Add spaces between strings</span>
-    <span class="n">string</span><span class="w"> </span><span class="nf">CryptoLib::add_spaces</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="n">str</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">spaces</span><span class="p">)</span><span class="w"></span>
-    <span class="p">{</span><span class="w"></span>
-    <span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">newStr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">;</span><span class="w"></span>
-    <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
- <br />
-    <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">str</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"></span>
-    <span class="w">    </span><span class="p">{</span><span class="w"></span>
- <br />
-    <span class="w">        </span><span class="c1">// newStr += str[i];</span>
-    <span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">count</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">spaces</span><span class="p">)</span><span class="w"></span>
-    <span class="w">        </span><span class="p">{</span><span class="w"></span>
-    <span class="w">            </span><span class="n">newStr</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">;</span><span class="w"></span>
-    <span class="w">            </span><span class="n">i</span><span class="o">--</span><span class="p">;</span><span class="w"></span>
-    <span class="w">            </span><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
-    <span class="w">        </span><span class="p">}</span><span class="w"></span>
-    <span class="w">        </span><span class="k">else</span><span class="w"></span>
-    <span class="w">        </span><span class="p">{</span><span class="w"></span>
-    <span class="w">            </span><span class="n">newStr</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">str</span><span class="p">[</span><span class="n">i</span><span class="p">];</span><span class="w"></span>
-    <span class="w">            </span><span class="n">count</span><span class="o">++</span><span class="p">;</span><span class="w"></span>
-    <span class="w">        </span><span class="p">}</span><span class="w"></span>
-    <span class="w">    </span><span class="p">}</span><span class="w"></span>
- <br />
-    <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">newStr</span><span class="p">;</span><span class="w"></span>
-    <span class="p">}</span><span class="w"></span>
-    </code></pre></div></p>
+<p>Base64 represents data in the form of ASCII format that follows a Radix-64 representation. Each character is picked from a set of 64 characters, which means that I'll only need 6 bits represent each character because <strong>2<sup>6</sup> = 64 characters</strong>.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="c1">//Add spaces between strings</span>
+<span class="n">string</span><span class="w"> </span><span class="nf">CryptoLib::add_spaces</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="n">str</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">spaces</span><span class="p">)</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">newStr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">str</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="p">{</span><span class="w"></span>
+
+<span class="w">        </span><span class="c1">// newStr += str[i];</span>
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">count</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">spaces</span><span class="p">)</span><span class="w"></span>
+<span class="w">        </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="n">newStr</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">;</span><span class="w"></span>
+<span class="w">            </span><span class="n">i</span><span class="o">--</span><span class="p">;</span><span class="w"></span>
+<span class="w">            </span><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+<span class="w">        </span><span class="k">else</span><span class="w"></span>
+<span class="w">        </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="n">newStr</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">str</span><span class="p">[</span><span class="n">i</span><span class="p">];</span><span class="w"></span>
+<span class="w">            </span><span class="n">count</span><span class="o">++</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">newStr</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
 
 <h3><a id="step-3"></a> Convert the binary string to decimal</h3>
 
-<p>Before converting, you should know that a decimal number is equal to the
-sum of binary digits (d~n~) times their power of 2 (2<sup>n</sup>).</p>
+<p>Before converting, you should know that a decimal number is equal to the sum of binary digits (d~n~) times their power of 2 (2<sup>n</sup>).</p>
 
 <p>Let's say you have a binary string of <mark>111001</mark>, it's decimal
 would be <mark>1x2<sup>5</sup> + 1x2<sup>4</sup> + 1x2<sup>3</sup> + 0x2<sup>2</sup> + 0x2<sup>1</sup> + 1x2<sup>0</sup> =
-57</mark>
-    <div class="codehilite"><pre><span></span><code><span class="c1">//Convert binary to decimal</span>
-    <span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">CryptoLib</span><span class="o">::</span><span class="n">con_bin_2_dec</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="n">str</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">power</span><span class="p">)</span><span class="w"></span>
-    <span class="p">{</span><span class="w"></span>
-    <span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">v</span><span class="p">;</span><span class="w"></span>
-    <span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">newStr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">;</span><span class="w"></span>
-    <span class="w">    </span><span class="n">istringstream</span><span class="w"> </span><span class="nf">iss</span><span class="p">(</span><span class="n">str</span><span class="p">);</span><span class="w"></span>
-    <span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">x</span><span class="p">;</span><span class="w"></span>
- <br />
-    <span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">iss</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">x</span><span class="p">)</span><span class="w"></span>
-    <span class="w">    </span><span class="p">{</span><span class="w"></span>
-    <span class="w">        </span><span class="kt">double</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">power</span><span class="p">;</span><span class="w"></span>
-    <span class="w">        </span><span class="kt">double</span><span class="w"> </span><span class="n">decimal</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span><span class="w"></span>
- <br />
-    <span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">x</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"></span>
-    <span class="w">        </span><span class="p">{</span><span class="w"></span>
-    <span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">&#39;1&#39;</span><span class="p">)</span><span class="w"></span>
-    <span class="w">            </span><span class="p">{</span><span class="w"></span>
-    <span class="w">                </span><span class="n">decimal</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">pow</span><span class="p">(</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="n">p</span><span class="p">);</span><span class="w"></span>
-    <span class="w">            </span><span class="p">}</span><span class="w"></span>
-    <span class="w">            </span><span class="n">p</span><span class="o">--</span><span class="p">;</span><span class="w"></span>
-    <span class="w">        </span><span class="p">}</span><span class="w"></span>
-    <span class="w">        </span><span class="n">v</span><span class="p">.</span><span class="n">push_back</span><span class="p">((</span><span class="kt">int</span><span class="p">)</span><span class="n">decimal</span><span class="p">);</span><span class="w"></span>
-    <span class="w">    </span><span class="p">}</span><span class="w"></span>
-    <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">v</span><span class="p">;</span><span class="w"></span>
-    <span class="p">}</span><span class="w"></span>
-    </code></pre></div></p>
+57</mark></p>
+
+<div class="codehilite"><pre><span></span><code><span class="c1">//Convert binary to decimal</span>
+<span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">CryptoLib</span><span class="o">::</span><span class="n">con_bin_2_dec</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="n">str</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">power</span><span class="p">)</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">v</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">newStr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">istringstream</span><span class="w"> </span><span class="nf">iss</span><span class="p">(</span><span class="n">str</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">x</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">iss</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">x</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="kt">double</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">power</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="kt">double</span><span class="w"> </span><span class="n">decimal</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">x</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"></span>
+<span class="w">        </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">&#39;1&#39;</span><span class="p">)</span><span class="w"></span>
+<span class="w">            </span><span class="p">{</span><span class="w"></span>
+<span class="w">                </span><span class="n">decimal</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">pow</span><span class="p">(</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="n">p</span><span class="p">);</span><span class="w"></span>
+<span class="w">            </span><span class="p">}</span><span class="w"></span>
+<span class="w">            </span><span class="n">p</span><span class="o">--</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+<span class="w">        </span><span class="n">v</span><span class="p">.</span><span class="n">push_back</span><span class="p">((</span><span class="kt">int</span><span class="p">)</span><span class="n">decimal</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">v</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
 
 <h3><a id="step-4"></a> Compare each decimal against each character in a reference string of 64 characters</h3>
 
-<p>At this stage, all you have to do is find and concatenate each character
-(using the reference string) based on each decimal and return your
-encoded Base64 string as the final output.
-    <div class="codehilite"><pre><span></span><code><span class="c1">//Convert HEX to Base 64</span>
-    <span class="n">string</span><span class="w"> </span><span class="nf">CryptoLib::con_hex_2_b64</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="n">str</span><span class="p">)</span><span class="w"></span>
-    <span class="p">{</span><span class="w"></span>
-    <span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">b64</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">;</span><span class="w"></span>
-    <span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">ref</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/&quot;</span><span class="p">;</span><span class="w"></span>
-    <span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">newStr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">add_spaces</span><span class="p">(</span><span class="n">con_hex_2_bin</span><span class="p">(</span><span class="n">str</span><span class="p">),</span><span class="w"> </span><span class="mi">6</span><span class="p">);</span><span class="w"></span>
- <br />
-    <span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">con_bin_2_dec</span><span class="p">(</span><span class="n">newStr</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">);</span><span class="w"></span>
- <br />
-    <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">v</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"></span>
-    <span class="w">    </span><span class="p">{</span><span class="w"></span>
-    <span class="w">        </span><span class="n">b64</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">ref</span><span class="p">[</span><span class="n">v</span><span class="p">[</span><span class="n">i</span><span class="p">]];</span><span class="w"></span>
-    <span class="w">    </span><span class="p">}</span><span class="w"></span>
- <br />
-    <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">b64</span><span class="p">;</span><span class="w"></span>
-    <span class="p">}</span><span class="w"></span>
-    </code></pre></div></p>
+<p>At this stage, all you have to do is find and concatenate each character (using the reference string) based on each decimal and return your encoded Base64 string as the final output.</p>
 
-<p>Here's the final section of the code:
-    <div class="codehilite"><pre><span></span><code><span class="c1">//CryptoPals Set 1 Challenge 1</span>
-    <span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;crypto.h&quot;</span><span class="cp"></span>
- <br />
-    <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"></span>
-    <span class="p">{</span><span class="w"></span>
-    <span class="w">    </span><span class="n">CryptoLib</span><span class="w"> </span><span class="n">crypt</span><span class="p">;</span><span class="w"></span>
- <br />
-    <span class="w">    </span><span class="c1">//Test case provided from the site</span>
-    <span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">str</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d&quot;</span><span class="p">;</span><span class="w"></span>
-    <span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">crypt</span><span class="p">.</span><span class="n">con_hex_2_b64</span><span class="p">(</span><span class="n">str</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span><span class="w"></span>
-    <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
-    <span class="p">}</span><span class="w"></span>
-    </code></pre></div></p>
+<div class="codehilite"><pre><span></span><code><span class="c1">//Convert HEX to Base 64</span>
+<span class="n">string</span><span class="w"> </span><span class="nf">CryptoLib::con_hex_2_b64</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="n">str</span><span class="p">)</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">b64</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">ref</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/&quot;</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">newStr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">add_spaces</span><span class="p">(</span><span class="n">con_hex_2_bin</span><span class="p">(</span><span class="n">str</span><span class="p">),</span><span class="w"> </span><span class="mi">6</span><span class="p">);</span><span class="w"></span>
 
-<p><strong><em>Note: This solution and the library named <mark>crypto.h</mark> was
-built using the C++ programming language. The source code for this
-solution can be found on Github.</em></strong></p>
+<span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">con_bin_2_dec</span><span class="p">(</span><span class="n">newStr</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">);</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">v</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="n">b64</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">ref</span><span class="p">[</span><span class="n">v</span><span class="p">[</span><span class="n">i</span><span class="p">]];</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">b64</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+
+<p>Here's the final section of the code:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="c1">//CryptoPals Set 1 Challenge 1</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;crypto.h&quot;</span><span class="cp"></span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">CryptoLib</span><span class="w"> </span><span class="n">crypt</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">    </span><span class="c1">//Test case provided from the site</span>
+<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">str</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d&quot;</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">crypt</span><span class="p">.</span><span class="n">con_hex_2_b64</span><span class="p">(</span><span class="n">str</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+
+<p><strong><em>Note: This solution and the library named <code>crypto.h</code> was built using the C++ programming language. The source code for this solution can be found on Github.</em></strong></p>
 
 <p>Stay tuned for the next challenge.</p>
 
@@ -289,6 +278,7 @@ solution can be found on Github.</em></strong></p>
 		</ul>
 	</div>
 </div>
+
 			</div>
 		</section>
 		<section id="secondary">

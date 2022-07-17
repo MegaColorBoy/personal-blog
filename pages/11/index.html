@@ -73,7 +73,206 @@
 		<section id="primary">
 			<div class="articles">
 				
-					<div class="article">
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/writings/posts/do-we-really-need-to-use-pointers">Do we really need to use pointers?</a></h1>
+		<p class="description">Did a little digging on whether it's useful to make use of pointers in your application</p>
+	</div>
+	<div class="article-body">
+		<p>The topic about pointers isn't new as you're probably introduced to this concept in your first computer science class. I started learning Go and once again, I came across the concept of using Pointers and wanted to finally understand, why are they used and do we really need to use it?</p>
+
+<p>Frankly, I don't really remember using pointers when I was developing web applications in PHP and JavaScript but it was quite a refresher to get back on track again.</p>
+
+<h2>Well, what is a pointer?</h2>
+
+<p>In it's basic form, a pointer is a variable that contains the memory address of another variable.</p>
+
+<p>For example, you have a variable named <mark>x</mark> that contains some data, in this case, we'll store an integer:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="kn">package</span><span class="w"> </span><span class="nx">main</span><span class="w"></span>
+
+<span class="kn">import</span><span class="w"> </span><span class="s">&quot;fmt&quot;</span><span class="w"></span>
+
+<span class="kd">func</span><span class="w"> </span><span class="nx">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="nx">x</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="mi">10</span><span class="w"></span>
+<span class="w">    </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="nx">x</span><span class="p">)</span><span class="w"> </span><span class="c1">// prints 10</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+
+<p>The code above prints the variable <mark>x</mark> by referring to it's name. We can do the same using pointers by referring to it's memory address via another variable that points to variable <mark>x</mark>.</p>
+
+<p>To do this, we must use <mark>&amp;</mark> operator to get the address and <code>*</code> to return the value stored in the address of variable <mark>x</mark> like this:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="kn">package</span><span class="w"> </span><span class="nx">main</span><span class="w"></span>
+
+<span class="kn">import</span><span class="w"> </span><span class="s">&quot;fmt&quot;</span><span class="w"></span>
+
+<span class="kd">func</span><span class="w"> </span><span class="nx">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="nx">x</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="mi">10</span><span class="w"></span>
+<span class="w">    </span><span class="nx">p</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">x</span><span class="w"></span>
+<span class="w">    </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="nx">x</span><span class="p">)</span><span class="w">   </span><span class="c1">// prints 10</span><span class="w"></span>
+<span class="w">    </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="o">*</span><span class="nx">p</span><span class="p">)</span><span class="w">  </span><span class="c1">// also, prints 10</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+
+<p>Hmm, that was pretty straight forward.</p>
+
+<h2>So, why was it created?</h2>
+
+<p>In the modern era, most high-level programming languages are capable of handling memory allocation (like <strong>Java</strong> or <strong>C#</strong>), automatically.</p>
+
+<p>But when <strong>C</strong> was developed, computers weren't as powerful as today but that also meant the programmers must create systems that made use of memory and speed, efficiently. Which is why some tasks do require it when programming low-level embedded systems or microcontrollers.</p>
+
+<h2>Why use them?</h2>
+
+<p>Whenever you pass a variable to a function, you're basically creating a copy of the variable. But if you're using pointers, you just have to pass the address of the variable and in most cases, a pointer is much smaller in size than the value being pointed at.</p>
+
+<p>It allows you share data and it's quite appropriate when it comes to modifying the data being passed to it.</p>
+
+<p>To some extent, it might seem efficient but there are some tradeoffs, when you're going to talk about optimization.</p>
+
+<h2>Do pointers really optimize your application?</h2>
+
+<p>I was thinking if pointers are used to optimize applications, I mean, you don't have to duplicate data and it saves memory, so why not?</p>
+
+<p>Turns out that there are a few points that I came across:</p>
+
+<ol>
+<li>Accessing values can use up memory though not so much but it can add up.</li>
+<li>Data will be placed on top of heap stack which increases the memory overhead and can be cleaned up the garbage collector.</li>
+</ol>
+
+<p>Most programmers tend to avoid using it in order to make their codebase less complex and reduce the increased work for the garbage collector.</p>
+
+<p>Apart from that, there are some concerns when it comes to the security of the application implying that it could be unsafe when using pointers.</p>
+
+<h2>Takeaway</h2>
+
+<p>Pointers are useful but don't think of using it, blindly, by assuming that it might give you a boost in performance.</p>
+
+<p>Hope you found this article useful!</p>
+
+<h2>Readings</h2>
+
+<ul>
+<li><a href="http://duramecho.com/ComputerInformation/WhyCPointers.html">Why C has pointers?</a></li>
+<li><a href="https://www.quora.com/Why-dont-we-use-pointers-in-Java-but-we-use-them-in-C-and-C++">Why do we use pointers in Java but we use them in C and C++</a></li>
+</ul>
+
+	</div>
+	<div class="article-footer">
+		<time>August 21st, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/programming/">
+					Programming
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/hello-go">Hello, Go!</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>After reading a lot of articles about using Go as a programming language to write high-performing concurrent web applications and services yet maintain a clean codebase, I thought of starting to learn it to see what's it about and so far, it's been great!</p>
+
+<p>This mini-tutorial will show you how to install Go on your system and write a simple "Hello, World" program.</p>
+
+<p><strong>Note: This tutorial will go through installing Go on Linux.</strong></p>
+
+<h2>Install Go</h2>
+
+<p>Make sure you have the latest updates and upgrades on your Linux system before installing Go.</p>
+
+<p>You need to download the binary file from their <a href="https://golang.org/dl/">official package</a>. Find the version that suits your OS and architecture.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="nb">cd</span> /tmp
+wget https://golang.org/dl/go1.14.6.linux-amd64.tar.gz
+</code></pre></div>
+
+<p>Extract the downloaded archive and install it in the <code>/usr/local</code> directory (as per the standards):</p>
+
+<div class="codehilite"><pre><span></span><code>sudo tar -xvf go1.14.6.linux-amd64.tar.gz
+sudo mv go /usr/local
+</code></pre></div>
+
+<h2>Set up environment</h2>
+
+<p>Now, we need to set up three variables:</p>
+
+<ul>
+<li><code>GOROOT</code>: Location of where your Go package is installed.</li>
+<li><code>GOPATH</code>: Location of your work directory.'</li>
+<li><code>PATH</code>: Tells bash on where to look for programs that are being executed.</li>
+</ul>
+
+<p>Open up your <code>.bashrc</code> file and add these lines at the end of the file:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="nb">export</span> <span class="nv">GOROOT</span><span class="o">=</span>/usr/local/go
+<span class="nb">export</span> <span class="nv">GOPATH</span><span class="o">=</span><span class="nv">$HOME</span>/go
+<span class="nb">export</span> <span class="nv">PATH</span><span class="o">=</span><span class="nv">$GOPATH</span>/bin:<span class="nv">$GOROOT</span>/bin:<span class="nv">$PATH</span>
+</code></pre></div>
+
+<p>Save your <code>.bashrc</code> file and update the current shell session:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="nb">source</span> ~/.bashrc
+</code></pre></div>
+
+<h2>Verify your installation</h2>
+
+<p>Type the following command to ensure that your Go installation is successful:</p>
+
+<div class="codehilite"><pre><span></span><code>go version go1.14.6 linux/amd64
+</code></pre></div>
+
+<h2>Hello, world!</h2>
+
+<p>As per traditions, whenever you learn a programming language, you start off with a "Hello, world!" program, so here it is:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="kn">package</span><span class="w"> </span><span class="nx">main</span><span class="w"></span>
+
+<span class="kn">import</span><span class="w"> </span><span class="s">&quot;fmt&quot;</span><span class="w"></span>
+
+<span class="kd">func</span><span class="w"> </span><span class="nx">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;Hello, world!\n&quot;</span><span class="p">)</span><span class="w"></span>
+<span class="p">}</span><span class="w"> </span>
+</code></pre></div>
+
+<h2>Conclusion</h2>
+
+<p>I just started learning it today and at first, you might have the tendency to write code in Go the same way you write in any other language but beware, it doesn't work that way. It forces you to write good code including the way it formats the code using the <code>gofmt</code> tool.</p>
+
+<p>Lots of cool things are coming!</p>
+
+<p>Stay tuned for more.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>August 1st, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/go/">
+					Go
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
 	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/how-to-delete-files-inside-a-zip-file">How to delete files inside a zip file?</a></h1>
 		<p class="description"></p>
@@ -109,8 +308,10 @@
 		</ul>
 	</div>
 </div>
+
 				
-					<div class="article">
+					
+<div class="article">
 	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/find-the-difference-between-two-arrays">Find the difference between two arrays</a></h1>
 		<p class="description"></p>
@@ -163,8 +364,10 @@
 		</ul>
 	</div>
 </div>
+
 				
-					<div class="article">
+					
+<div class="article">
 	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/how-to-duplicate-tables-in-mysql">How to duplicate tables in MySQL?</a></h1>
 		<p class="description"></p>
@@ -199,8 +402,10 @@
 		</ul>
 	</div>
 </div>
+
 				
-					<div class="article">
+					
+<div class="article">
 	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/find-the-number-of-uppercase-and-lowercase-letters-in-a-string">Find the number of uppercase and lowercase letters in a string</a></h1>
 		<p class="description"></p>
@@ -246,8 +451,10 @@
 		</ul>
 	</div>
 </div>
+
 				
-					<div class="article">
+					
+<div class="article">
 	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/replace-all-occurrences-found-on-a-string-using-regular-expressions">Replace all occurrences found on a string using Regular Expressions</a></h1>
 		<p class="description"></p>
@@ -298,8 +505,10 @@
 		</ul>
 	</div>
 </div>
+
 				
-					<div class="article">
+					
+<div class="article">
 	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/create-a-unique-multidimensional-array-using-a-key-index">Create a unique multidimensional array using a key index</a></h1>
 		<p class="description"></p>
@@ -403,95 +612,7 @@
 		</ul>
 	</div>
 </div>
-				
-					<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/extract-youtube-channel-id-from-url">Extract YouTube Channel ID from URL</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Using PHP's in-built function, <code>parse_url</code>, you can write a helper method to pull the channel ID off a YouTube URL especially if you're pulling videos using YouTube's Data API. Here's the code:</p>
 
-<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="k">public</span> <span class="k">function</span> <span class="nf">extractChannelID</span><span class="p">(</span><span class="nv">$url</span><span class="p">){</span>
-    <span class="c1">// Parse the link and trim any whitespaces</span>
-    <span class="nv">$parsed_link</span> <span class="o">=</span> <span class="nb">parse_url</span><span class="p">(</span><span class="nb">rtrim</span><span class="p">(</span><span class="nv">$url</span><span class="p">,</span> <span class="s1">&#39;/&#39;</span><span class="p">));</span>
-
-    <span class="c1">// Return the channel ID if it matches the pattern</span>
-    <span class="k">if</span> <span class="p">(</span><span class="nb">isset</span><span class="p">(</span><span class="nv">$parsed_link</span><span class="p">[</span><span class="s1">&#39;path&#39;</span><span class="p">])</span> <span class="o">&amp;&amp;</span> <span class="nb">preg_match</span><span class="p">(</span><span class="s1">&#39;/^\/channel\/(([^\/])+?)$/&#39;</span><span class="p">,</span> <span class="nv">$parsed_link</span><span class="p">[</span><span class="s1">&#39;path&#39;</span><span class="p">],</span> <span class="nv">$matches</span><span class="p">))</span> <span class="p">{</span>
-        <span class="k">return</span> <span class="nv">$matches</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
-    <span class="p">}</span>
-
-    <span class="k">throw</span> <span class="k">new</span> <span class="nx">Exception</span><span class="p">(</span><span class="s2">&quot;This </span><span class="si">{</span><span class="nv">$url</span><span class="si">}</span><span class="s2"> is not a valid YouTube channel URL&quot;</span><span class="p">);</span>
-    <span class="k">return</span> <span class="k">null</span><span class="p">;</span>
-<span class="p">}</span>
-<span class="cp">?&gt;</span><span class="x"></span>
-</code></pre></div>
-
-<p>Writing tiny methods like these can help save time and be reusable in more than one context. </p>
-
-<p>Hope you find this tip useful! &#x1F601;</p>
-
-	</div>
-	<div class="article-footer">
-		<time>July 13th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/php/">
-					PHP
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-				
-					<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/using-zipcloak-to-encrypt-files-within-an-archive">Using zipcloak to encrypt files within an archive</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Whenever you're sending a bunch of files or an archive that contains sensitive or confidential information, it's wise to encrypt before you send it to the person that you intend to.</p>
-
-<p>Using <code>zipcloak</code>, you'll be able to encrypt files within your existing archive.</p>
-
-<p>Do the following after you've <a href="til/posts/zip-a-file">created a zip archive</a>:</p>
-
-<div class="codehilite"><pre><span></span><code>zipcloak files.zip    
-</code></pre></div>
-
-<p>Now, you'll be prompted twice to enter a new password and verify your entered password. If they match, your archive will get encrypted. So whenever, you try to unzip or open using an Archive Manager, you'll be prompted to enter the password or else, you won't be able to access it.</p>
-
-<p>You also have the choice of not encrypting the original archive and creating a new one instead, just like this:</p>
-
-<div class="codehilite"><pre><span></span><code>zipcloak files.zip -O encrypted.zip    
-</code></pre></div>
-
-<p>On the other hand, if you do wish to remove the encryption from your archive, just type the following:</p>
-
-<div class="codehilite"><pre><span></span><code>zipcloak -d files.zip
-</code></pre></div>
-
-<p>And you'll be prompted again to enter your password before it removes it's encryption.</p>
-
-<p>Hope this helps you out! &#x1F601;</p>
-
-	</div>
-	<div class="article-footer">
-		<time>July 7th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/linux/">
-					Linux
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
 				
 			</div>
 			
@@ -580,7 +701,7 @@
 		<li>
 			<a href="/category/linux/">
 				Linux
-				<span class="count">14</span>
+				<span class="count">15</span>
 			</a>
 		</li>
 		
@@ -634,16 +755,16 @@
 		</li>
 		
 		<li>
-			<a href="/category/programming/">
-				Programming
+			<a href="/category/unix/">
+				UNIX
 				<span class="count">8</span>
 			</a>
 		</li>
 		
 		<li>
-			<a href="/category/unix/">
-				Unix
-				<span class="count">7</span>
+			<a href="/category/programming/">
+				Programming
+				<span class="count">8</span>
 			</a>
 		</li>
 		
@@ -746,6 +867,13 @@
 		</li>
 		
 		<li>
+			<a href="/category/wget/">
+				wget
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/vscode/">
 				VSCode
 				<span class="count">2</span>
@@ -777,6 +905,13 @@
 			<a href="/category/python/">
 				Python
 				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/blogmarks/">
+				Blogmarks
+				<span class="count">1</span>
 			</a>
 		</li>
 		
@@ -860,13 +995,6 @@
 		<li>
 			<a href="/category/xfce/">
 				XFCE
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/unix/">
-				UNIX
 				<span class="count">1</span>
 			</a>
 		</li>

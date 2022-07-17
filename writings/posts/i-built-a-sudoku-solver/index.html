@@ -71,7 +71,8 @@
 	<div class="two-col-grid">
 		<section id="primary">
 			<div class="articles">
-				<div class="article">
+				
+<div class="article">
 	<div class="article-header">
 		<h1 class="heading"><a href="/writings/posts/i-built-a-sudoku-solver">I built a Sudoku Solver!</a></h1>
 		<p class="description">I built a sudoku solver using Javascript by implementing the Exhaustive Recursion and Backtracking algorithms.</p>
@@ -85,11 +86,9 @@
     <div id="sudokusolver"></div>
 </figure>
 
-<p>Before you read about this article, try playing the Sudoku Solver above. You can only insert numbers ranging from 1 to 9 in any empty cell. Press <strong><em>"Random Level"</em></strong> to generate a random sudoku puzzle. Made a mistake? Press <strong><em>"Reset"</em></strong> to clear the board. To test the algorithm, Press <strong><em>"Solve"</em></strong> to complete the entire puzzle.</p>
+<p>Before you read about this article, try playing the Sudoku Solver above. You can only insert numbers ranging from 1 to 9 in any empty cell. Press <kbd>Random Level</kbd> to generate a random sudoku puzzle. Made a mistake? Press <kbd>Reset</kbd> to clear the board. To test the algorithm, Press <kbd>Solve</kbd> to complete the entire puzzle.</p>
 
 <p>As for the source code, you can view it in my <a href="https://www.github.com/megacolorboy">GitHub repository</a> or can be found near the end of this article.</p>
-
-<hr />
 
 <h2>What is Sudoku?</h2>
 
@@ -126,114 +125,115 @@
 
 <p><strong>Here's a pseudocode on how this strategy would work:</strong></p>
 
-<pre><code>    Find [row,col] of an unassigned cell
-    If there is none, then return true
+<div class="codehilite"><pre><span></span><code>Find [row,col] of an unassigned cell
+If there is none, then return true
 
-    For digits from 1 to 9
-        If there is no conflict for digit at [row,col]
-            Assign digit to [row,col] and recursively try to fill in the rest of the grid
-            If this recursion is successful, return true
-            Otherwise, remove this digit and try another one
-        If all digits have been tried for this cell and nothing worked out
-            return false, trigger backtracking and try again
-</code></pre>
+For digits from 1 to 9
+    If there is no conflict for digit at [row,col]
+        Assign digit to [row,col] and recursively try to fill in the rest of the grid
+        If this recursion is successful, return true
+        Otherwise, remove this digit and try another one
+    If all digits have been tried for this cell and nothing worked out
+        return false, trigger backtracking and try again
+</code></pre></div>
 
-<p><strong>Javascript implementation:</strong>
-    <div class="codehilite"><pre><span></span><code><span class="c1">//Sudoku solver </span>
-    <span class="kd">function</span> <span class="nx">solveSudoku</span><span class="p">(</span><span class="nx">grid</span><span class="p">,</span> <span class="nx">row</span><span class="p">,</span> <span class="nx">col</span><span class="p">)</span> <span class="p">{</span>
-        <span class="kd">var</span> <span class="nx">cell</span> <span class="o">=</span> <span class="nx">findUnassignedLocation</span><span class="p">(</span><span class="nx">grid</span><span class="p">,</span> <span class="nx">row</span><span class="p">,</span> <span class="nx">col</span><span class="p">);</span>
-        <span class="nx">row</span> <span class="o">=</span> <span class="nx">cell</span><span class="p">[</span><span class="mf">0</span><span class="p">];</span>
-        <span class="nx">col</span> <span class="o">=</span> <span class="nx">cell</span><span class="p">[</span><span class="mf">1</span><span class="p">];</span>
- <br />
-        <span class="c1">// base case: if there&#39;s no empty cell  </span>
-        <span class="k">if</span> <span class="p">(</span><span class="nx">row</span> <span class="o">==</span> <span class="o">-</span><span class="mf">1</span><span class="p">)</span> <span class="p">{</span>
-            <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
-        <span class="p">}</span>
- <br />
-        <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">num</span> <span class="o">=</span> <span class="mf">1</span><span class="p">;</span> <span class="nx">num</span> <span class="o">&lt;=</span> <span class="mf">9</span><span class="p">;</span> <span class="nx">num</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
- <br />
-            <span class="k">if</span> <span class="p">(</span><span class="nx">noConflicts</span><span class="p">(</span><span class="nx">grid</span><span class="p">,</span> <span class="nx">row</span><span class="p">,</span> <span class="nx">col</span><span class="p">,</span> <span class="nx">num</span><span class="p">))</span> <span class="p">{</span> <br />
-                <span class="nx">grid</span><span class="p">[</span><span class="nx">row</span><span class="p">][</span><span class="nx">col</span><span class="p">]</span> <span class="o">=</span> <span class="nx">num</span><span class="p">;</span>
- <br />
-                <span class="k">if</span> <span class="p">(</span><span class="nx">solveSudoku</span><span class="p">(</span><span class="nx">grid</span><span class="p">,</span> <span class="nx">row</span><span class="p">,</span> <span class="nx">col</span><span class="p">))</span> <span class="p">{</span> <br />
-                    <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
-                <span class="p">}</span>
- <br />
-                <span class="c1">// mark cell as empty (with 0)    </span>
-                <span class="nx">grid</span><span class="p">[</span><span class="nx">row</span><span class="p">][</span><span class="nx">col</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0</span><span class="p">;</span>
-            <span class="p">}</span>
-        <span class="p">}</span>
- <br />
-        <span class="c1">// trigger back tracking</span>
-        <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>
+<p><strong>Javascript implementation:</strong></p>
+
+<div class="codehilite"><pre><span></span><code><span class="c1">//Sudoku solver </span>
+<span class="kd">function</span> <span class="nx">solveSudoku</span><span class="p">(</span><span class="nx">grid</span><span class="p">,</span> <span class="nx">row</span><span class="p">,</span> <span class="nx">col</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">cell</span> <span class="o">=</span> <span class="nx">findUnassignedLocation</span><span class="p">(</span><span class="nx">grid</span><span class="p">,</span> <span class="nx">row</span><span class="p">,</span> <span class="nx">col</span><span class="p">);</span>
+    <span class="nx">row</span> <span class="o">=</span> <span class="nx">cell</span><span class="p">[</span><span class="mf">0</span><span class="p">];</span>
+    <span class="nx">col</span> <span class="o">=</span> <span class="nx">cell</span><span class="p">[</span><span class="mf">1</span><span class="p">];</span>
+
+    <span class="c1">// base case: if there&#39;s no empty cell  </span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">row</span> <span class="o">==</span> <span class="o">-</span><span class="mf">1</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
     <span class="p">}</span>
- <br />
-    <span class="c1">//Find an empty cell</span>
-    <span class="kd">function</span> <span class="nx">findUnassignedLocation</span><span class="p">(</span><span class="nx">grid</span><span class="p">,</span> <span class="nx">row</span><span class="p">,</span> <span class="nx">col</span><span class="p">)</span> <span class="p">{</span>
-        <span class="kd">var</span> <span class="nx">done</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
-        <span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="mf">1</span><span class="p">,</span> <span class="o">-</span><span class="mf">1</span><span class="p">];</span>
- <br />
-        <span class="k">while</span> <span class="p">(</span><span class="o">!</span><span class="nx">done</span><span class="p">)</span> <span class="p">{</span>
-            <span class="k">if</span> <span class="p">(</span><span class="nx">row</span> <span class="o">==</span> <span class="mf">9</span><span class="p">)</span> <span class="p">{</span>
+
+    <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">num</span> <span class="o">=</span> <span class="mf">1</span><span class="p">;</span> <span class="nx">num</span> <span class="o">&lt;=</span> <span class="mf">9</span><span class="p">;</span> <span class="nx">num</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">noConflicts</span><span class="p">(</span><span class="nx">grid</span><span class="p">,</span> <span class="nx">row</span><span class="p">,</span> <span class="nx">col</span><span class="p">,</span> <span class="nx">num</span><span class="p">))</span> <span class="p">{</span>   
+            <span class="nx">grid</span><span class="p">[</span><span class="nx">row</span><span class="p">][</span><span class="nx">col</span><span class="p">]</span> <span class="o">=</span> <span class="nx">num</span><span class="p">;</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="nx">solveSudoku</span><span class="p">(</span><span class="nx">grid</span><span class="p">,</span> <span class="nx">row</span><span class="p">,</span> <span class="nx">col</span><span class="p">))</span> <span class="p">{</span>                
+                <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
+            <span class="p">}</span>
+
+            <span class="c1">// mark cell as empty (with 0)    </span>
+            <span class="nx">grid</span><span class="p">[</span><span class="nx">row</span><span class="p">][</span><span class="nx">col</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="c1">// trigger back tracking</span>
+    <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="c1">//Find an empty cell</span>
+<span class="kd">function</span> <span class="nx">findUnassignedLocation</span><span class="p">(</span><span class="nx">grid</span><span class="p">,</span> <span class="nx">row</span><span class="p">,</span> <span class="nx">col</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">done</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+    <span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="mf">1</span><span class="p">,</span> <span class="o">-</span><span class="mf">1</span><span class="p">];</span>
+
+    <span class="k">while</span> <span class="p">(</span><span class="o">!</span><span class="nx">done</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">row</span> <span class="o">==</span> <span class="mf">9</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">done</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="k">else</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">grid</span><span class="p">[</span><span class="nx">row</span><span class="p">][</span><span class="nx">col</span><span class="p">]</span> <span class="o">==</span> <span class="mf">0</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">res</span><span class="p">[</span><span class="mf">0</span><span class="p">]</span> <span class="o">=</span> <span class="nx">row</span><span class="p">;</span>
+                <span class="nx">res</span><span class="p">[</span><span class="mf">1</span><span class="p">]</span> <span class="o">=</span> <span class="nx">col</span><span class="p">;</span>
                 <span class="nx">done</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
             <span class="p">}</span>
             <span class="k">else</span> <span class="p">{</span>
-                <span class="k">if</span> <span class="p">(</span><span class="nx">grid</span><span class="p">[</span><span class="nx">row</span><span class="p">][</span><span class="nx">col</span><span class="p">]</span> <span class="o">==</span> <span class="mf">0</span><span class="p">)</span> <span class="p">{</span>
-                    <span class="nx">res</span><span class="p">[</span><span class="mf">0</span><span class="p">]</span> <span class="o">=</span> <span class="nx">row</span><span class="p">;</span>
-                    <span class="nx">res</span><span class="p">[</span><span class="mf">1</span><span class="p">]</span> <span class="o">=</span> <span class="nx">col</span><span class="p">;</span>
-                    <span class="nx">done</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+                <span class="k">if</span> <span class="p">(</span><span class="nx">col</span> <span class="o">&lt;</span> <span class="mf">8</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="nx">col</span><span class="o">++</span><span class="p">;</span>
                 <span class="p">}</span>
                 <span class="k">else</span> <span class="p">{</span>
-                    <span class="k">if</span> <span class="p">(</span><span class="nx">col</span> <span class="o">&lt;</span> <span class="mf">8</span><span class="p">)</span> <span class="p">{</span>
-                        <span class="nx">col</span><span class="o">++</span><span class="p">;</span>
-                    <span class="p">}</span>
-                    <span class="k">else</span> <span class="p">{</span>
-                        <span class="nx">row</span><span class="o">++</span><span class="p">;</span>
-                        <span class="nx">col</span> <span class="o">=</span> <span class="mf">0</span><span class="p">;</span>
-                    <span class="p">}</span>
+                    <span class="nx">row</span><span class="o">++</span><span class="p">;</span>
+                    <span class="nx">col</span> <span class="o">=</span> <span class="mf">0</span><span class="p">;</span>
                 <span class="p">}</span>
             <span class="p">}</span>
         <span class="p">}</span>
- <br />
-        <span class="k">return</span> <span class="nx">res</span><span class="p">;</span>
     <span class="p">}</span>
- <br />
-    <span class="c1">//Check if there are any conflicts in row, column or 3x3 subgrid</span>
-    <span class="kd">function</span> <span class="nx">noConflicts</span><span class="p">(</span><span class="nx">grid</span><span class="p">,</span> <span class="nx">row</span><span class="p">,</span> <span class="nx">col</span><span class="p">,</span> <span class="nx">num</span><span class="p">)</span> <span class="p">{</span>
-        <span class="k">return</span> <span class="nx">isRowOk</span><span class="p">(</span><span class="nx">grid</span><span class="p">,</span> <span class="nx">row</span><span class="p">,</span> <span class="nx">num</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="nx">isColOk</span><span class="p">(</span><span class="nx">grid</span><span class="p">,</span> <span class="nx">col</span><span class="p">,</span> <span class="nx">num</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="nx">isBoxOk</span><span class="p">(</span><span class="nx">grid</span><span class="p">,</span> <span class="nx">row</span><span class="p">,</span> <span class="nx">col</span><span class="p">,</span> <span class="nx">num</span><span class="p">);</span>
-    <span class="p">}</span>
- <br />
-    <span class="c1">//Check if this number is valid in this row</span>
-    <span class="kd">function</span> <span class="nx">isRowOk</span><span class="p">(</span><span class="nx">grid</span><span class="p">,</span> <span class="nx">row</span><span class="p">,</span> <span class="nx">num</span><span class="p">)</span> <span class="p">{</span>
-        <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">col</span> <span class="o">=</span> <span class="mf">0</span><span class="p">;</span> <span class="nx">col</span> <span class="o">&lt;</span> <span class="mf">9</span><span class="p">;</span> <span class="nx">col</span><span class="o">++</span><span class="p">)</span>
-            <span class="k">if</span> <span class="p">(</span><span class="nx">grid</span><span class="p">[</span><span class="nx">row</span><span class="p">][</span><span class="nx">col</span><span class="p">]</span> <span class="o">==</span> <span class="nx">num</span><span class="p">)</span>
-                <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>
- <br />
-        <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
-    <span class="p">}</span>
- <br />
-    <span class="c1">//Check if this number is valid in this column</span>
-    <span class="kd">function</span> <span class="nx">isColOk</span><span class="p">(</span><span class="nx">grid</span><span class="p">,</span> <span class="nx">col</span><span class="p">,</span> <span class="nx">num</span><span class="p">)</span> <span class="p">{</span>
-        <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">row</span> <span class="o">=</span> <span class="mf">0</span><span class="p">;</span> <span class="nx">row</span> <span class="o">&lt;</span> <span class="mf">9</span><span class="p">;</span> <span class="nx">row</span><span class="o">++</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="nx">res</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="c1">//Check if there are any conflicts in row, column or 3x3 subgrid</span>
+<span class="kd">function</span> <span class="nx">noConflicts</span><span class="p">(</span><span class="nx">grid</span><span class="p">,</span> <span class="nx">row</span><span class="p">,</span> <span class="nx">col</span><span class="p">,</span> <span class="nx">num</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">isRowOk</span><span class="p">(</span><span class="nx">grid</span><span class="p">,</span> <span class="nx">row</span><span class="p">,</span> <span class="nx">num</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="nx">isColOk</span><span class="p">(</span><span class="nx">grid</span><span class="p">,</span> <span class="nx">col</span><span class="p">,</span> <span class="nx">num</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="nx">isBoxOk</span><span class="p">(</span><span class="nx">grid</span><span class="p">,</span> <span class="nx">row</span><span class="p">,</span> <span class="nx">col</span><span class="p">,</span> <span class="nx">num</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="c1">//Check if this number is valid in this row</span>
+<span class="kd">function</span> <span class="nx">isRowOk</span><span class="p">(</span><span class="nx">grid</span><span class="p">,</span> <span class="nx">row</span><span class="p">,</span> <span class="nx">num</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">col</span> <span class="o">=</span> <span class="mf">0</span><span class="p">;</span> <span class="nx">col</span> <span class="o">&lt;</span> <span class="mf">9</span><span class="p">;</span> <span class="nx">col</span><span class="o">++</span><span class="p">)</span>
         <span class="k">if</span> <span class="p">(</span><span class="nx">grid</span><span class="p">[</span><span class="nx">row</span><span class="p">][</span><span class="nx">col</span><span class="p">]</span> <span class="o">==</span> <span class="nx">num</span><span class="p">)</span>
             <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>
- <br />
-        <span class="k">return</span> <span class="kc">true</span><span class="p">;</span> <br />
-    <span class="p">}</span>
- <br />
-    <span class="c1">//check if this number is valid in 3x3 subgrid</span>
-    <span class="kd">function</span> <span class="nx">isBoxOk</span><span class="p">(</span><span class="nx">grid</span><span class="p">,</span> <span class="nx">row</span><span class="p">,</span> <span class="nx">col</span><span class="p">,</span> <span class="nx">num</span><span class="p">)</span> <span class="p">{</span>
-        <span class="nx">row</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nx">row</span> <span class="o">/</span> <span class="mf">3</span><span class="p">)</span> <span class="o"><em></span> <span class="mf">3</span><span class="p">;</span>
-        <span class="nx">col</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nx">col</span> <span class="o">/</span> <span class="mf">3</span><span class="p">)</span> <span class="o"></em></span> <span class="mf">3</span><span class="p">;</span>
- <br />
-        <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">r</span> <span class="o">=</span> <span class="mf">0</span><span class="p">;</span> <span class="nx">r</span> <span class="o">&lt;</span> <span class="mf">3</span><span class="p">;</span> <span class="nx">r</span><span class="o">++</span><span class="p">)</span>
-            <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">c</span> <span class="o">=</span> <span class="mf">0</span><span class="p">;</span> <span class="nx">c</span> <span class="o">&lt;</span> <span class="mf">3</span><span class="p">;</span> <span class="nx">c</span><span class="o">++</span><span class="p">)</span>
-                <span class="k">if</span> <span class="p">(</span><span class="nx">grid</span><span class="p">[</span><span class="nx">row</span> <span class="o">+</span> <span class="nx">r</span><span class="p">][</span><span class="nx">col</span> <span class="o">+</span> <span class="nx">c</span><span class="p">]</span> <span class="o">==</span> <span class="nx">num</span><span class="p">)</span>
-                    <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>
- <br />
-        <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
-    <span class="p">}</span>
-    </code></pre></div></p>
+
+    <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="c1">//Check if this number is valid in this column</span>
+<span class="kd">function</span> <span class="nx">isColOk</span><span class="p">(</span><span class="nx">grid</span><span class="p">,</span> <span class="nx">col</span><span class="p">,</span> <span class="nx">num</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">row</span> <span class="o">=</span> <span class="mf">0</span><span class="p">;</span> <span class="nx">row</span> <span class="o">&lt;</span> <span class="mf">9</span><span class="p">;</span> <span class="nx">row</span><span class="o">++</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">grid</span><span class="p">[</span><span class="nx">row</span><span class="p">][</span><span class="nx">col</span><span class="p">]</span> <span class="o">==</span> <span class="nx">num</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>
+
+    <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>    
+<span class="p">}</span>
+
+<span class="c1">//check if this number is valid in 3x3 subgrid</span>
+<span class="kd">function</span> <span class="nx">isBoxOk</span><span class="p">(</span><span class="nx">grid</span><span class="p">,</span> <span class="nx">row</span><span class="p">,</span> <span class="nx">col</span><span class="p">,</span> <span class="nx">num</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">row</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nx">row</span> <span class="o">/</span> <span class="mf">3</span><span class="p">)</span> <span class="o">*</span> <span class="mf">3</span><span class="p">;</span>
+    <span class="nx">col</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nx">col</span> <span class="o">/</span> <span class="mf">3</span><span class="p">)</span> <span class="o">*</span> <span class="mf">3</span><span class="p">;</span>
+
+    <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">r</span> <span class="o">=</span> <span class="mf">0</span><span class="p">;</span> <span class="nx">r</span> <span class="o">&lt;</span> <span class="mf">3</span><span class="p">;</span> <span class="nx">r</span><span class="o">++</span><span class="p">)</span>
+        <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">c</span> <span class="o">=</span> <span class="mf">0</span><span class="p">;</span> <span class="nx">c</span> <span class="o">&lt;</span> <span class="mf">3</span><span class="p">;</span> <span class="nx">c</span><span class="o">++</span><span class="p">)</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">grid</span><span class="p">[</span><span class="nx">row</span> <span class="o">+</span> <span class="nx">r</span><span class="p">][</span><span class="nx">col</span> <span class="o">+</span> <span class="nx">c</span><span class="p">]</span> <span class="o">==</span> <span class="nx">num</span><span class="p">)</span>
+                <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>
+
+    <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
 
 <h2>What's next?</h2>
 
@@ -268,6 +268,7 @@
 		</ul>
 	</div>
 </div>
+
 			</div>
 		</section>
 		<section id="secondary">
