@@ -43,7 +43,7 @@ let generativeArt = (() => {
 				.tiles-wall {
 				    border-radius: 4px;
 				    display: grid;
-				    width: 500px;
+				    width: 100%;
 				    grid-template-columns: repeat(10, 50px);
 				    grid-template-rows: repeat(4, 50px);
 				    margin: 20px 0px 0px;
