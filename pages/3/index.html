@@ -76,6 +76,146 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/writings/posts/darklight-mode-with-css-and-javascript">Dark/Light mode with CSS and JavaScript</a></h1>
+		<p class="description">A simple guide on how to implement a dark/light theme switcher with CSS and JavaScript</p>
+	</div>
+	<div class="article-body">
+		<p>It's quite common these days that many websites let their users to decide their preferred color scheme(s). Giving this sort of customizability offers good user experience.</p>
+
+<p>In this article, I'll provide a simple step-by-step guide on how to implement a dark/light theme switcher with HTML, CSS and JavaScript.</p>
+
+<div class="post-notification warning">
+    <h3>Prerequisites</h3>
+    <p>This article assumes that the reader has a basic know-how on HTML, CSS, JavaScript and basic knowledge on using the command-line.</p>
+</div>
+
+<h2>Using CSS variables</h2>
+
+<p>I always wanted to implement one for this website too and I thought of making use of CSS variables as I found it to be quite straight forward and I don't have to worry too much about browser support.</p>
+
+<p>Try adding the below CSS to your stylesheet:
+    <div class="codehilite"><pre><span></span><code><span class="p">:</span><span class="nd">root</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+    <span class="w">    </span><span class="nv">--background-color</span><span class="p">:</span><span class="w"> </span><span class="kc">white</span><span class="p">;</span><span class="w"></span>
+    <span class="w">    </span><span class="nv">--font-color</span><span class="p">:</span><span class="w"> </span><span class="kc">black</span><span class="p">;</span><span class="w"></span>
+    <span class="w">    </span><span class="nv">--accent-color</span><span class="p">:</span><span class="w"> </span><span class="kc">red</span><span class="p">;</span><span class="w"></span>
+    <span class="w">    </span><span class="nv">--alt-background-color</span><span class="p">:</span><span class="w"> </span><span class="kc">black</span><span class="p">;</span><span class="w"></span>
+    <span class="w">    </span><span class="nv">--alt-font-color</span><span class="p">:</span><span class="w"> </span><span class="kc">white</span><span class="p">;</span><span class="w"></span>
+    <span class="w">    </span><span class="nv">--alt-accent-color</span><span class="p">:</span><span class="w"> </span><span class="kc">yellow</span><span class="p">;</span><span class="w"></span>
+    <span class="p">}</span><span class="w"></span>
+ <br />
+    <span class="nt">html</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+    <span class="w">    </span><span class="k">background-color</span><span class="p">:</span><span class="w"> </span><span class="nf">var</span><span class="p">(</span><span class="nv">--background-color</span><span class="p">);</span><span class="w"></span>
+    <span class="w">    </span><span class="k">color</span><span class="p">:</span><span class="w"> </span><span class="nf">var</span><span class="p">(</span><span class="nv">--font-color</span><span class="p">);</span><span class="w"></span>
+    <span class="p">}</span><span class="w"></span>
+ <br />
+    <span class="nt">a</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+    <span class="w">    </span><span class="k">color</span><span class="p">:</span><span class="w"> </span><span class="nf">var</span><span class="p">(</span><span class="nv">--accent-color</span><span class="p">);</span><span class="w"></span>
+    <span class="p">}</span><span class="w"></span>
+ <br />
+    <span class="nt">html</span><span class="o">[</span><span class="nt">data-theme</span><span class="o">=</span><span class="s2">&quot;dark&quot;</span><span class="o">]</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+    <span class="w">    </span><span class="k">background-color</span><span class="p">:</span><span class="w"> </span><span class="nf">var</span><span class="p">(</span><span class="nv">--alt-background-color</span><span class="p">);</span><span class="w"></span>
+    <span class="w">    </span><span class="k">color</span><span class="p">:</span><span class="w"> </span><span class="nf">var</span><span class="p">(</span><span class="nv">--alt-font-color</span><span class="p">);</span><span class="w"></span>
+    <span class="p">}</span><span class="w"></span>
+ <br />
+    <span class="nt">html</span><span class="o">[</span><span class="nt">data-theme</span><span class="o">=</span><span class="s2">&quot;dark&quot;</span><span class="o">]</span><span class="w"> </span><span class="nt">a</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+    <span class="w">    </span><span class="k">color</span><span class="p">:</span><span class="w"> </span><span class="nf">var</span><span class="p">(</span><span class="nv">--alt-accent-color</span><span class="p">);</span><span class="w"></span>
+    <span class="p">}</span><span class="w"></span>
+    <span class="w">   </span>
+    </code></pre></div></p>
+
+<p>The <code>:root</code> selector contains a set of default values and in this case, these are just different colors, kind of like how we initialize variables in other programming languages.</p>
+
+<p>For example, whenever the <code>data-theme</code> attribute is set to <code>dark</code>, the default values will be overidden by the <code>html[data-theme="dark"]</code> CSS rule for the theme to take effect.</p>
+
+<p>Really, it's that simple!</p>
+
+<h2>Add some markup</h2>
+
+<p>That depends on what you really want to have in your website but for this tutorial, you can just place a simple button somewhere in your navigation bar or anywhere you like:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="p">&lt;</span><span class="nt">button</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;themeSwitcher&quot;</span><span class="p">&gt;</span>Dark/Light<span class="p">&lt;/</span><span class="nt">button</span><span class="p">&gt;</span>
+</code></pre></div>
+
+<h2>Toggle between light and dark themes</h2>
+
+<p>Yes, we are getting there and you just have to write a simple logic that checks if whether the current theme is dark or light based on the class used on the <code>&lt;body&gt;</code> element.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="nx">$</span><span class="p">(</span><span class="s1">&#39;.themeSwitcher&#39;</span><span class="p">).</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;click&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(){</span>
+    <span class="k">switch</span><span class="p">(</span><span class="nx">$</span><span class="p">(</span><span class="s1">&#39;body&#39;</span><span class="p">).</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;data-theme&#39;</span><span class="p">)){</span>
+        <span class="k">case</span> <span class="s2">&quot;dark&quot;</span><span class="o">:</span>
+            <span class="nx">$</span><span class="p">(</span><span class="s1">&#39;body&#39;</span><span class="p">).</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;data-theme&#39;</span><span class="p">,</span> <span class="s1">&#39;dark&#39;</span><span class="p">);</span>
+            <span class="k">break</span><span class="p">;</span>
+
+        <span class="k">case</span> <span class="s2">&quot;light&quot;</span><span class="o">:</span>
+        <span class="k">default</span><span class="o">:</span>
+            <span class="nx">$</span><span class="p">(</span><span class="s1">&#39;body&#39;</span><span class="p">).</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;data-theme&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">);</span>
+            <span class="k">break</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">});</span>
+</code></pre></div>
+
+<h3>Save user's preference in their browser</h3>
+
+<p>If your button works as expected, good! Now, once you refresh the page, the background would return to it's default mode but that's not what we wanted, right?</p>
+
+<p>But why does it return instead of staying dark? Because your "preference" is not stored in your browser.</p>
+
+<p>Modify your code to store your preferences in your browser:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="p">&lt;</span><span class="nt">script</span><span class="p">&gt;</span>
+<span class="nx">$</span><span class="p">(</span><span class="s1">&#39;.themeSwitcher&#39;</span><span class="p">).</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;click&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(){</span>
+    <span class="k">switch</span><span class="p">(</span><span class="nx">$</span><span class="p">(</span><span class="s1">&#39;body&#39;</span><span class="p">).</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;data-theme&#39;</span><span class="p">)){</span>
+        <span class="k">case</span> <span class="s2">&quot;dark&quot;</span><span class="o">:</span>
+            <span class="nx">$</span><span class="p">(</span><span class="s1">&#39;body&#39;</span><span class="p">).</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;data-theme&#39;</span><span class="p">,</span> <span class="s1">&#39;dark&#39;</span><span class="p">);</span>
+            <span class="nx">localStorage</span><span class="p">.</span><span class="nx">setItem</span><span class="p">(</span><span class="s2">&quot;theme&quot;</span><span class="p">,</span> <span class="s2">&quot;dark&quot;</span><span class="p">);</span>
+            <span class="k">break</span><span class="p">;</span>
+
+        <span class="k">case</span> <span class="s2">&quot;light&quot;</span><span class="o">:</span>
+        <span class="k">default</span><span class="o">:</span>
+            <span class="nx">$</span><span class="p">(</span><span class="s1">&#39;body&#39;</span><span class="p">).</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;data-theme&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">);</span>
+            <span class="nx">localStorage</span><span class="p">.</span><span class="nx">setItem</span><span class="p">(</span><span class="s2">&quot;theme&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">);</span>
+            <span class="k">break</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">});</span>
+<span class="p">&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+</code></pre></div>
+
+<p>This should work fine but you'll want to avoid the "flickering" issue while changing themes or refreshing the page, in order to do that, make sure that you check the user preference before the page is completely loaded:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="p">&lt;</span><span class="nt">script</span><span class="p">&gt;</span>
+    <span class="k">if</span><span class="p">(</span><span class="nx">localStorage</span><span class="p">.</span><span class="nx">theme</span><span class="p">){</span>
+        <span class="nb">document</span><span class="p">.</span><span class="nx">documentElement</span><span class="p">.</span><span class="nx">setAttribute</span><span class="p">(</span><span class="s1">&#39;data-theme&#39;</span><span class="p">,</span> <span class="nx">localStorage</span><span class="p">.</span><span class="nx">getItem</span><span class="p">(</span><span class="s2">&quot;theme&quot;</span><span class="p">));</span>
+    <span class="p">}</span>
+<span class="p">&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+</code></pre></div>
+
+<h2>Conclusion</h2>
+
+<p>Well, if you've noticed, I wrote a simple theme switcher for my blog too. Try it out and you can inspect the code to see how it works.</p>
+
+<p>Hope you enjoyed this article!</p>
+
+<p>Stay tuned for more!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>September 9th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/tutorial/">
+					Tutorial
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/view-your-wget-progress-even-after-closing-your-ssh-session">View your wget progress even after closing your SSH session</a></h1>
 		<p class="description"></p>
 	</div>
@@ -385,53 +525,6 @@
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-install-composer-manually">How to install Composer manually?</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>You may wonder <strong>"why not install Composer via apt or yum package manager?"</strong> and yes, it can be installed that way too.</p>
-
-<p>But what if you are using old composer packages or you wanted to skip the checks done during the interactive installation routine, this could be the way for you.</p>
-
-<p>I wouldn't really call it an advanced technique or something but if you know what you're doing, then you should be in the right direction.</p>
-
-<p>The below snippet will show you how to install it manually:</p>
-
-<div class="codehilite"><pre><span></span><code>wget <span class="s2">&quot;https://getcomposer.org/download/VERSION_X.X.X/composer.phar&quot;</span>
-sudo mv composer.phar /usr/local/bin/composer
-sudo chmod a+x /usr/local/bin/composer
-</code></pre></div>
-
-<h2>Yes, that's it!</h2>
-
-<p>By placing Composer in the <code>/usr/local/bin</code> directory, it will be accessible from any directory within the system and you can run it globally.</p>
-
-<p>To check if you've installed it correctly, just do the following:</p>
-
-<div class="codehilite"><pre><span></span><code>composer -V
-</code></pre></div>
-
-<p>Hope you found this tip useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>July 3rd, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/tooling/">
-					Tooling
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -537,6 +630,13 @@ sudo chmod a+x /usr/local/bin/composer
 		</li>
 		
 		<li>
+			<a href="/category/javascript/">
+				JavaScript
+				<span class="count">10</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/git/">
 				Git
 				<span class="count">10</span>
@@ -547,13 +647,6 @@ sudo chmod a+x /usr/local/bin/composer
 			<a href="/category/php/">
 				PHP
 				<span class="count">10</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/javascript/">
-				JavaScript
-				<span class="count">9</span>
 			</a>
 		</li>
 		
@@ -579,6 +672,13 @@ sudo chmod a+x /usr/local/bin/composer
 		</li>
 		
 		<li>
+			<a href="/category/update/">
+				Update
+				<span class="count">6</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/mysql/">
 				MySQL
 				<span class="count">6</span>
@@ -589,13 +689,6 @@ sudo chmod a+x /usr/local/bin/composer
 			<a href="/category/essay/">
 				Essay
 				<span class="count">6</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/update/">
-				Update
-				<span class="count">5</span>
 			</a>
 		</li>
 		
@@ -673,6 +766,20 @@ sudo chmod a+x /usr/local/bin/composer
 			<a href="/category/general/">
 				General
 				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/generative-art/">
+				Generative Art
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/css/">
+				CSS
+				<span class="count">2</span>
 			</a>
 		</li>
 		
@@ -768,13 +875,6 @@ sudo chmod a+x /usr/local/bin/composer
 		</li>
 		
 		<li>
-			<a href="/category/generative-art/">
-				Generative Art
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/introduction/">
 				Introduction
 				<span class="count">1</span>
@@ -784,13 +884,6 @@ sudo chmod a+x /usr/local/bin/composer
 		<li>
 			<a href="/category/refactoring/">
 				Refactoring
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/css/">
-				CSS
 				<span class="count">1</span>
 			</a>
 		</li>

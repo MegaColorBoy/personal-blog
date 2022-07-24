@@ -76,6 +76,231 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/writings/posts/using-laravel-events-and-listeners-in-your-application">Using Laravel events and listeners in your application</a></h1>
+		<p class="description">Sharing my experiences of using events and listeners in my Laravel application.</p>
+	</div>
+	<div class="article-body">
+		<p>Recently, I have started learning Laravel and now, I'm building an application for my new company using this amazing framework.</p>
+
+<p>My senior developer was curious and thought of having a conversation with me that went like this:</p>
+
+<div class="codehilite"><pre><span></span><code>Senior dev: Hmm, can I have a look at your code?
+
+Me: Oh sure, here take a look.
+
+Senior: (Goes through project file structure)
+
+Senior: So, have you ever thought of using events in your application?
+
+Me: Yeah, I wrote a custom JavaScript file to handle and fire events on the client-side like validating the forms and passing async requests to the server.
+
+Senior: Hmm, that&#39;s okay but I&#39;m talking using events in Laravel.
+</code></pre></div>
+
+<p>At this point, I was pretty clueless and I didn't know what the heck was going on. Events in PHP? I mean, I know about it in JavaScript because of it's event-driven architecture that we are all familiar with. But in PHP? I didn't know that.</p>
+
+<p>Still confused, he proceeds to explain about it's concepts in an abstract manner and thanks to him, it induced my curiosity by asking myself: <strong><em>What's the deal in between using events over function calls using a route on a standard controller?</em></strong></p>
+
+<p>In today's article, I'll be talking about why and when to use events over function calls using Laravel in your application.</p>
+
+<h2>What's an event?</h2>
+
+<p>An event is a piece of reusable logic stored somewhere in your application that has a set of listeners waiting to be executed, if triggered.</p>
+
+<p>Let's say, you have a simple CRUD application that involves user registration. Whenever a user registers, you may want to perform certain actions, such as:</p>
+
+<ul>
+<li>Adding them into your mailing list</li>
+<li>Confirmation of account</li>
+</ul>
+
+<p>You can add more but this is just to give you an idea. Let's see take a look at two different approaches:</p>
+
+<ol>
+<li><a href="#approach-1">Functional</a></li>
+<li><a href="#approach-2">Events and Listeners</a></li>
+</ol>
+
+<h3><a id="approach-1"></a> Functional</h3>
+
+<p>If you're using an MVC framework (Laravel, in our case), you'd do this in a controller with a bunch of methods like so:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="k">namespace</span> <span class="nx">App\Http\Controllers</span><span class="p">;</span>
+
+<span class="k">use</span> <span class="nx">App\Http\Controllers\Controller</span><span class="p">;</span>
+<span class="k">use</span> <span class="nx">App\User</span><span class="p">;</span>
+
+<span class="k">class</span> <span class="nc">UserController</span> <span class="k">extends</span> <span class="nx">Controller</span> <span class="p">{</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">index</span><span class="p">()</span> <span class="p">{</span>
+        <span class="c1">// insert code to view users page</span>
+    <span class="p">}</span>
+
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">create</span><span class="p">(</span><span class="nx">Request</span> <span class="nv">$request</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nv">$arr</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s1">&#39;username&#39;</span> <span class="o">=&gt;</span> <span class="nv">$request</span><span class="o">-&gt;</span><span class="na">username</span><span class="p">,</span>
+            <span class="s1">&#39;email&#39;</span> <span class="o">=&gt;</span> <span class="nv">$request</span><span class="o">-&gt;</span><span class="na">email</span><span class="p">,</span>
+            <span class="s1">&#39;password&#39;</span> <span class="o">=&gt;</span> <span class="nx">bcrypt</span><span class="p">(</span><span class="s1">&#39;something&#39;</span><span class="p">)</span>
+        <span class="p">];</span>
+
+        <span class="nv">$user</span> <span class="o">=</span> <span class="nx">User</span><span class="o">::</span><span class="na">create</span><span class="p">(</span><span class="nv">$arr</span><span class="p">);</span>
+
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">sendConfirmationEmail</span><span class="p">(</span><span class="nv">$user</span><span class="p">);</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">subscribeToMailingList</span><span class="p">(</span><span class="nv">$user</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="c1">// Send confirmation email to user</span>
+    <span class="k">private</span> <span class="k">function</span> <span class="nf">sendConfirmationEmail</span><span class="p">(</span><span class="nv">$user</span><span class="p">)</span> <span class="p">{</span>
+        <span class="c1">// insert code</span>
+    <span class="p">}</span>
+
+    <span class="c1">// Subscribe user to mailing list</span>
+    <span class="k">private</span> <span class="k">function</span> <span class="nf">subscribeToMailingList</span><span class="p">(</span><span class="nv">$user</span><span class="p">)</span> <span class="p">{</span>
+        <span class="c1">// insert code</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+<span class="cp">?&gt;</span><span class="x"></span>
+</code></pre></div>
+
+<p>This is approach is self-contained and simple to follow but you're also adding in a lot of responsibility to your controller.</p>
+
+<p>Not only that, what if the user wants to register from another place in your application, in that case, you'll have to duplicate your logic in multiple places.</p>
+
+<h3><a id="approach-2"></a> Events and Listeners</h3>
+
+<p>Using this approach, you can split this into <mark>Event</mark> and <mark>Listener</mark> files in your application.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="k">namespace</span> <span class="nx">App\Http\Controllers</span><span class="p">;</span>
+
+<span class="k">use</span> <span class="nx">App\Http\Controllers\Controller</span><span class="p">;</span>
+<span class="k">use</span> <span class="nx">App\User</span><span class="p">;</span>
+
+<span class="k">class</span> <span class="nc">UserController</span> <span class="k">extends</span> <span class="nx">Controller</span> <span class="p">{</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">index</span><span class="p">()</span> <span class="p">{</span>
+        <span class="c1">// insert code to view users page</span>
+    <span class="p">}</span>
+
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">create</span><span class="p">(</span><span class="nx">Request</span> <span class="nv">$request</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nv">$arr</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s1">&#39;username&#39;</span> <span class="o">=&gt;</span> <span class="nv">$request</span><span class="o">-&gt;</span><span class="na">username</span><span class="p">,</span>
+            <span class="s1">&#39;email&#39;</span> <span class="o">=&gt;</span> <span class="nv">$request</span><span class="o">-&gt;</span><span class="na">email</span><span class="p">,</span>
+            <span class="s1">&#39;password&#39;</span> <span class="o">=&gt;</span> <span class="nx">bcrypt</span><span class="p">(</span><span class="s1">&#39;something&#39;</span><span class="p">)</span>
+        <span class="p">];</span>
+
+        <span class="nv">$user</span> <span class="o">=</span> <span class="nx">User</span><span class="o">::</span><span class="na">create</span><span class="p">(</span><span class="nv">$arr</span><span class="p">);</span>
+
+        <span class="c1">// Emit event</span>
+        <span class="nx">event</span><span class="p">(</span><span class="k">new</span> <span class="nx">UserRegistered</span><span class="p">(</span><span class="nv">$user</span><span class="p">));</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+<span class="cp">?&gt;</span><span class="x"></span>
+</code></pre></div>
+
+<p>This is how your <mark>UserRegistered</mark> event would look like:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="k">namespace</span> <span class="nx">App\Events</span><span class="p">;</span>
+
+<span class="k">use</span> <span class="nx">Illuminate\Queue\SerializeModels</span><span class="p">;</span>
+<span class="k">use</span> <span class="nx">App\User</span><span class="p">;</span>
+
+<span class="k">class</span> <span class="nc">UserRegistered</span> <span class="p">{</span>
+    <span class="k">use</span> <span class="nx">SerializesModels</span><span class="p">;</span>
+
+    <span class="k">public</span> <span class="nv">$user</span><span class="p">;</span>
+
+    <span class="k">public</span> <span class="k">function</span> <span class="fm">__construct</span><span class="p">(</span><span class="nx">User</span> <span class="nv">$user</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">user</span> <span class="o">=</span> <span class="nv">$user</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+<span class="cp">?&gt;</span><span class="x"></span>
+</code></pre></div>
+
+<p>And this is how your <mark>SendConfirmationEmail</mark> listener would look like:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="k">namespace</span> <span class="nx">App\Listeners</span><span class="p">;</span>
+
+<span class="k">use</span> <span class="nx">App\Events\UserRegistered</span><span class="p">;</span>
+
+<span class="k">class</span> <span class="nc">SendConfirmationEmail</span> <span class="p">{</span>
+
+    <span class="k">public</span> <span class="k">function</span> <span class="fm">__construct</span><span class="p">(</span><span class="nx">User</span> <span class="nv">$user</span><span class="p">)</span> <span class="p">{</span>
+        <span class="c1">// insert code</span>
+    <span class="p">}</span>
+
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">handle</span><span class="p">(</span><span class="nx">UserRegister</span> <span class="nv">$event</span><span class="p">)</span> <span class="p">{</span>
+        <span class="c1">// insert code</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+<span class="cp">?&gt;</span><span class="x"></span>
+</code></pre></div>
+
+<p>Using this approach, you can use the <mark>UserRegistered</mark> event anywhere you wanted in your application. No matter what happens, it will trigger the same actions as it was intended to do so. If you want to add a new functionality, create a new listener and register it with the event in your <mark>EventServiceProvider</mark> file like this:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="k">protected</span> <span class="nv">$listen</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s1">&#39;App\Events\UserRegistered&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span>
+    <span class="s1">&#39;App\Listeners\SendConfirmationEmail&#39;</span><span class="p">,</span>
+    <span class="p">],</span>
+<span class="p">];</span>
+<span class="cp">?&gt;</span><span class="x"></span>
+</code></pre></div>
+
+<p>If you follow this approach, your logic complexity is toned down and the controller will have less responsibility.</p>
+
+<h2>Why use events and listeners over function calls?</h2>
+
+<p>Just like this answer that I found on <a href="https://stackoverflow.com/questions/4503723/why-use-event-listeners-over-function-calls">StackOverflow</a> question regarding events and listeners over calling functions:</p>
+
+<blockquote>
+  <p>You might not be in control of the code that's doing the calling. Or even if you are, you don't want to introduce dependencies into that code.</p>
+</blockquote>
+
+<p>Think about it, what if you built an API or library that you want people to use but don't want them to modify the source code. Instead, you could provide a documentation that states specific events are raised under specific circumstances, in turn, they can write code that responds to such events.</p>
+
+<p>I'm sure that there are more examples as to where this methodology might be applied.</p>
+
+<h2>When to use it?</h2>
+
+<p>Truth be told, it depends. If you have a simple application, then a functional approach is all you need but it's a larger and more complicated application, using Events and Listeners can be a better option.</p>
+
+<h2>Conclusion</h2>
+
+<p>Please note, I'm not an expert at this topic as I'm still learning and I thought of sharing what I had learnt. If you have any suggestions or thoughts, please share it with me on <a href="https://twitter.com/megacolorboy">Twitter</a> or <a href="mailto:megacolorboy@gmail.com">send me</a> a message to my inbox.</p>
+
+<p>Hope you liked reading this article.</p>
+
+<p>Stay tuned for more.</p>
+
+<h2>Extras</h2>
+
+<ul>
+<li><a href="https://stackoverflow.com/questions/4503723/why-use-event-listeners-over-function-calls">Why use event listeners over function calls</a></li>
+<li><a href="https://stackoverflow.com/questions/17377442/meaning-of-event-in-php">The meaning of events in PHP</a></li>
+<li><a href="https://laravel.com/docs/6.x/events">Laravel Events</a></li>
+</ul>
+
+	</div>
+	<div class="article-footer">
+		<time>February 7th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/programming/">
+					Programming
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/writings/posts/the-circle-packing-algorithm">The Circle Packing Algorithm</a></h1>
 		<p class="description">Implemented a mathematically beautiful generative pattern that looks deceivingly complex to the human.</p>
 	</div>
@@ -1757,270 +1982,6 @@ pip install jinja2
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/build-your-own-toy-spellchecker">Build your own toy spellchecker</a></h1>
-		<p class="description">Wrote a simple toy spellchecker using C++ by taking inspiration from Peter Norvig's article.</p>
-	</div>
-	<div class="article-body">
-		<p>Spellcheckers and autocorrect, aren't they magical? They do feel like magic to me. I mean, how is it able to predict what word do you want to type?</p>
-
-<p>According to <a href="https://norvig.com">Norvig</a>, some of the most talented engineers at Google don't have a complete understanding of how a spellchecker works.</p>
-
-<p>Peter Norvig's <a href="https://norvig.com/spell-correct.html">solution in Python</a> is so elegant and simple, I don't think anyone can write better than that. However, I wanted to know how it works, so I thought of building it to understand it's functionality. Also, an excuse to exercise my C++ skills.</p>
-
-<p>So, are you as curious as I am? If you are, I think you're in the right spot.</p>
-
-<h2>How it works?</h2>
-
-<p>Okay, so think about it? What does a spellchecker do? You type in a misspelled word and it returns a word with the highest probability, right? </p>
-
-<p>Well, there's a little bit more to it.</p>
-
-<h3>Create a word dictionary</h3>
-
-<p>First, we must create a dictionary, in order to do that, you need to extract words from a large piece of text and store it in a Hashmap in which each word will have a word count. In this example, I've used a Sherlock Holmes novel (which is around 6MB). The words are extracted from a novel instead of an actual dictionary because it can be used to create a simple Language Model.</p>
-
-<p><strong>Source code to create a dictionary:</strong></p>
-
-<div class="codehilite"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">SpellChecker::extractWords</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="o">&amp;</span><span class="n">filename</span><span class="p">)</span><span class="w"></span>
-<span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="n">ifstream</span><span class="w"> </span><span class="n">infile</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="n">infile</span><span class="p">.</span><span class="n">open</span><span class="p">(</span><span class="n">filename</span><span class="p">);</span><span class="w"></span>
-<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">x</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">infile</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">x</span><span class="p">)</span><span class="w"></span>
-<span class="w">    </span><span class="p">{</span><span class="w"></span>
-<span class="w">        </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">filterAlpha</span><span class="p">(</span><span class="n">x</span><span class="p">);</span><span class="w"></span>
-<span class="w">        </span><span class="n">dictionary</span><span class="p">[</span><span class="n">x</span><span class="p">]</span><span class="o">++</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="p">}</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
-
-<span class="n">string</span><span class="w"> </span><span class="nf">SpellChecker::filterAlpha</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="o">&amp;</span><span class="n">word</span><span class="p">)</span><span class="w"></span>
-<span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">word</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"></span>
-<span class="w">    </span><span class="p">{</span><span class="w"></span>
-<span class="w">        </span><span class="kt">char</span><span class="w"> </span><span class="n">ch</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">word</span><span class="p">[</span><span class="n">i</span><span class="p">];</span><span class="w"></span>
-
-<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">ch</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"></span>
-<span class="w">        </span><span class="p">{</span><span class="w"></span>
-<span class="w">            </span><span class="n">word</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sc">&#39;-&#39;</span><span class="p">;</span><span class="w"></span>
-<span class="w">        </span><span class="p">}</span><span class="w"></span>
-
-<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">isalpha</span><span class="p">(</span><span class="n">ch</span><span class="p">))</span><span class="w"></span>
-<span class="w">        </span><span class="p">{</span><span class="w"></span>
-<span class="w">            </span><span class="n">word</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tolower</span><span class="p">(</span><span class="n">ch</span><span class="p">);</span><span class="w"></span>
-<span class="w">        </span><span class="p">}</span><span class="w"></span>
-<span class="w">    </span><span class="p">}</span><span class="w"></span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">word</span><span class="p">;</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
-</code></pre></div>
-
-<h3>Create a list of candidates</h3>
-
-<p>Second, we must able to predict/hypothesize the ways of editing text when the user types. It could be one of the following types of editing:</p>
-
-<ul>
-<li><a href="#inserts">Adding a letter</a></li>
-<li><a href="#replaces">Replacing a letter</a></li>
-<li><a href="#transposes">Switching two adjacent letters</a></li>
-<li><a href="#deletes">Removing a letter</a></li>
-</ul>
-
-<p>Based on the types of edits a user could make, we can generate a list of possible candidates by creating permutations using these edit methods mentioned above.</p>
-
-<h4><a id="inserts"></a> Adding a letter</h4>
-
-<p>In this method, you generate a list of candidates by inserting a letter in every iteration.</p>
-
-<div class="codehilite"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">SpellChecker::inserts</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="o">&amp;</span><span class="n">word</span><span class="p">,</span><span class="w"> </span><span class="n">Vector</span><span class="w"> </span><span class="o">&amp;</span><span class="n">result</span><span class="p">)</span><span class="w"></span>
-<span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">word</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="o">+</span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"></span>
-<span class="w">    </span><span class="p">{</span><span class="w"></span>
-<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="n">alphabets</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">)</span><span class="w"></span>
-<span class="w">        </span><span class="p">{</span><span class="w"></span>
-<span class="w">            </span><span class="kt">char</span><span class="w"> </span><span class="n">ch</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">alphabets</span><span class="p">[</span><span class="n">j</span><span class="p">];</span><span class="w"></span>
-<span class="w">            </span><span class="n">result</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">word</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">ch</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">word</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="n">i</span><span class="p">));</span><span class="w"></span>
-<span class="w">        </span><span class="p">}</span><span class="w"></span>
-<span class="w">    </span><span class="p">}</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
-</code></pre></div>
-
-<h4><a id="replaces"></a> Replacing a letter</h4>
-
-<p>In this method, you generate a list of candidates by replacing each character with a letter from a list of alphabets in every iteration.</p>
-
-<div class="codehilite"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">SpellChecker::replaces</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="o">&amp;</span><span class="n">word</span><span class="p">,</span><span class="w"> </span><span class="n">Vector</span><span class="w"> </span><span class="o">&amp;</span><span class="n">result</span><span class="p">)</span><span class="w"></span>
-<span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">word</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"></span>
-<span class="w">    </span><span class="p">{</span><span class="w"></span>
-<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="n">alphabets</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">)</span><span class="w"></span>
-<span class="w">        </span><span class="p">{</span><span class="w"></span>
-<span class="w">            </span><span class="kt">char</span><span class="w"> </span><span class="n">ch</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">alphabets</span><span class="p">[</span><span class="n">j</span><span class="p">];</span><span class="w"></span>
-<span class="w">            </span><span class="n">result</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">word</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">ch</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">word</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">));</span><span class="w"></span>
-<span class="w">        </span><span class="p">}</span><span class="w"></span>
-<span class="w">    </span><span class="p">}</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
-</code></pre></div>
-
-<h4><a id="transposes"></a> Switching two adjacent letters</h4>
-
-<p>In this method, you generate a list of candidates by switcing two adjacent letters in every iteration. For example: the word "ornage" would look like this: "orange", when the letters "n" and "a" are swapped.</p>
-
-<div class="codehilite"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">SpellChecker::transposes</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="o">&amp;</span><span class="n">word</span><span class="p">,</span><span class="w"> </span><span class="n">Vector</span><span class="w"> </span><span class="o">&amp;</span><span class="n">result</span><span class="p">)</span><span class="w"></span>
-<span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">word</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="mi">-1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"></span>
-<span class="w">    </span><span class="p">{</span><span class="w"></span>
-<span class="w">        </span><span class="n">result</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">word</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">word</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">word</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">word</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">2</span><span class="p">));</span><span class="w"></span>
-<span class="w">    </span><span class="p">}</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
-</code></pre></div>
-
-<h4><a id="deletes"></a> Removing a letter</h4>
-
-<p>In this method, you generate a list of candidates by removing a letter in every iteration.</p>
-
-<div class="codehilite"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">SpellChecker::deletes</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="o">&amp;</span><span class="n">word</span><span class="p">,</span><span class="w"> </span><span class="n">Vector</span><span class="w"> </span><span class="o">&amp;</span><span class="n">result</span><span class="p">)</span><span class="w"></span>
-<span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">word</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"></span>
-<span class="w">    </span><span class="p">{</span><span class="w"></span>
-<span class="w">        </span><span class="n">result</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">word</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">word</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">));</span><span class="w"></span>
-<span class="w">    </span><span class="p">}</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
-</code></pre></div>
-
-<p>All of these methods are called in one wrapper method:</p>
-
-<div class="codehilite"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">SpellChecker::edits</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="o">&amp;</span><span class="n">word</span><span class="p">,</span><span class="w"> </span><span class="n">Vector</span><span class="w"> </span><span class="o">&amp;</span><span class="n">result</span><span class="p">)</span><span class="w"></span>
-<span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="c1">//Deletion</span>
-<span class="w">    </span><span class="n">deletes</span><span class="p">(</span><span class="n">word</span><span class="p">,</span><span class="w"> </span><span class="n">result</span><span class="p">);</span><span class="w"></span>
-
-<span class="w">    </span><span class="c1">//Transposition</span>
-<span class="w">    </span><span class="n">transposes</span><span class="p">(</span><span class="n">word</span><span class="p">,</span><span class="w"> </span><span class="n">result</span><span class="p">);</span><span class="w"></span>
-
-<span class="w">    </span><span class="c1">//Replacement</span>
-<span class="w">    </span><span class="n">replaces</span><span class="p">(</span><span class="n">word</span><span class="p">,</span><span class="w"> </span><span class="n">result</span><span class="p">);</span><span class="w"></span>
-
-<span class="w">    </span><span class="c1">//Insertion</span>
-<span class="w">    </span><span class="n">inserts</span><span class="p">(</span><span class="n">word</span><span class="p">,</span><span class="w"> </span><span class="n">result</span><span class="p">);</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
-</code></pre></div>
-
-<h3>Extract the known words</h3>
-
-<p>Third, at this stage, the above step would've generated a huge list of words but 90% of them would be gibberish, so we need to "clean" the list and extract the known words using the dictionary we've created.</p>
-
-<div class="codehilite"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">SpellChecker::known_words</span><span class="p">(</span><span class="n">Vector</span><span class="o">&amp;</span><span class="w"> </span><span class="n">results</span><span class="p">,</span><span class="w"> </span><span class="n">Dictionary</span><span class="w"> </span><span class="o">&amp;</span><span class="n">candidates</span><span class="p">)</span><span class="w"></span>
-<span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="n">Dictionary</span><span class="o">::</span><span class="n">iterator</span><span class="w"> </span><span class="n">end</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dictionary</span><span class="p">.</span><span class="n">end</span><span class="p">();</span><span class="w"></span>
-
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">results</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"></span>
-<span class="w">    </span><span class="p">{</span><span class="w"></span>
-<span class="w">        </span><span class="n">Dictionary</span><span class="o">::</span><span class="n">iterator</span><span class="w"> </span><span class="n">val</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dictionary</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span><span class="w"></span>
-
-<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">val</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">end</span><span class="p">)</span><span class="w"></span>
-<span class="w">        </span><span class="p">{</span><span class="w"></span>
-<span class="w">            </span><span class="n">candidates</span><span class="p">[</span><span class="n">val</span><span class="o">-&gt;</span><span class="n">first</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">val</span><span class="o">-&gt;</span><span class="n">second</span><span class="p">;</span><span class="w"></span>
-<span class="w">        </span><span class="p">}</span><span class="w"></span>
-<span class="w">    </span><span class="p">}</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
-</code></pre></div>
-
-<p>The <mark>edits()</mark> method apply to words that have a edit distance of 1, what if it was 2 or more? Like if the user typed "the", it could've been "then" or "they". So, all you have to do is create a method that generates a new set of permutations based on the already generated list of edited words and extract the known words.</p>
-
-<div class="codehilite"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">SpellChecker::edits2</span><span class="p">(</span><span class="n">Vector</span><span class="w"> </span><span class="o">&amp;</span><span class="n">result</span><span class="p">,</span><span class="w"> </span><span class="n">Dictionary</span><span class="w"> </span><span class="o">&amp;</span><span class="n">candidates</span><span class="p">)</span><span class="w"></span>
-<span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">result</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"></span>
-<span class="w">    </span><span class="p">{</span><span class="w"></span>
-<span class="w">        </span><span class="n">Vector</span><span class="w"> </span><span class="n">edit2</span><span class="p">;</span><span class="w"></span>
-
-<span class="w">        </span><span class="n">edits</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="w"> </span><span class="n">edit2</span><span class="p">);</span><span class="w"></span>
-<span class="w">        </span><span class="n">known_words</span><span class="p">(</span><span class="n">edit2</span><span class="p">,</span><span class="w"> </span><span class="n">candidates</span><span class="p">);</span><span class="w"></span>
-<span class="w">    </span><span class="p">}</span><span class="w">   </span>
-<span class="p">}</span><span class="w"></span>
-</code></pre></div>
-
-<h3>Display the correct word</h3>
-
-<p>In order to determine the correct word, the following possibilities are considered:</p>
-
-<ol>
-<li>Check if this word is in the dictionary, if it does, display it.</li>
-<li>Generate known words that have an edit distance of 1 and check in the dictionary, if it does, display it.</li>
-<li>Generate known words that have an edit distance of 2 and check in the dictionary, if it does, display it.</li>
-<li>If all else fails, this word is unique or not a known word.</li>
-</ol>
-
-<p></p>
-
-<div class="codehilite"><pre><span></span><code><span class="n">string</span><span class="w"> </span><span class="nf">SpellChecker::correct</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="o">&amp;</span><span class="n">word</span><span class="p">)</span><span class="w"></span>
-<span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="n">Vector</span><span class="w"> </span><span class="n">result</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="n">Dictionary</span><span class="w"> </span><span class="n">candidates</span><span class="p">;</span><span class="w"></span>
-
-<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;big.txt&quot;</span><span class="p">;</span><span class="w"></span>
-
-<span class="w">    </span><span class="c1">//1. if it&#39;s in the dictionary, display it</span>
-<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">dictionary</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="n">word</span><span class="p">)</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">dictionary</span><span class="p">.</span><span class="n">end</span><span class="p">())</span><span class="w"></span>
-<span class="w">    </span><span class="p">{</span><span class="w"></span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">word</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="p">}</span><span class="w"></span>
-
-<span class="w">    </span><span class="n">extractWords</span><span class="p">(</span><span class="n">file</span><span class="p">);</span><span class="w"></span>
-
-<span class="w">    </span><span class="n">edits</span><span class="p">(</span><span class="n">word</span><span class="p">,</span><span class="w"> </span><span class="n">result</span><span class="p">);</span><span class="w"></span>
-<span class="w">    </span><span class="n">known_words</span><span class="p">(</span><span class="n">result</span><span class="p">,</span><span class="w"> </span><span class="n">candidates</span><span class="p">);</span><span class="w"></span>
-
-<span class="w">    </span><span class="c1">//2. if it&#39;s a known word but one edit away</span>
-<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">candidates</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"></span>
-<span class="w">    </span><span class="p">{</span><span class="w"></span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">max_element</span><span class="p">(</span><span class="n">candidates</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span><span class="w"> </span><span class="n">candidates</span><span class="p">.</span><span class="n">end</span><span class="p">())</span><span class="o">-&gt;</span><span class="n">first</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="p">}</span><span class="w"></span>
-
-<span class="w">    </span><span class="c1">//3. if it&#39;s a known word but two edits away</span>
-<span class="w">    </span><span class="n">edits2</span><span class="p">(</span><span class="n">result</span><span class="p">,</span><span class="w"> </span><span class="n">candidates</span><span class="p">);</span><span class="w"></span>
-
-<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">candidates</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"></span>
-<span class="w">    </span><span class="p">{</span><span class="w"></span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">max_element</span><span class="p">(</span><span class="n">candidates</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span><span class="w"> </span><span class="n">candidates</span><span class="p">.</span><span class="n">end</span><span class="p">())</span><span class="o">-&gt;</span><span class="n">first</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="p">}</span><span class="w"></span>
-
-<span class="w">    </span><span class="c1">//4. Display nothing if it doesn&#39;t exist</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="s">&quot;This word doesn&#39;t exist!&quot;</span><span class="p">;</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
-</code></pre></div>
-
-<p>However, for conditions 2 and 3, the word displayed would most likely have the highest word frequency in the dictionary.</p>
-
-<h2>Conclusion</h2>
-
-<p>Phew! I hope that wasn't a long read. Although, I've written this on C++, I plan to rewrite this on Javascript for some of my future projects.</p>
-
-<p>To be honest, I don't think it's completely accurate, although, I got most of the words correct when tested.</p>
-
-<p>The source code can be found on my <a href="https://www.github.com/megacolorboy/ToySpellChecker">GitHub</a> repository.</p>
-
-<p>Hope you liked reading this article!</p>
-
-<p>Stay tuned for more!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>July 19th, 2019</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/algorithms/">
-					Algorithms
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -2134,6 +2095,13 @@ pip install jinja2
 		</li>
 		
 		<li>
+			<a href="/category/javascript/">
+				JavaScript
+				<span class="count">10</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/git/">
 				Git
 				<span class="count">10</span>
@@ -2144,13 +2112,6 @@ pip install jinja2
 			<a href="/category/php/">
 				PHP
 				<span class="count">10</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/javascript/">
-				JavaScript
-				<span class="count">9</span>
 			</a>
 		</li>
 		
@@ -2176,6 +2137,13 @@ pip install jinja2
 		</li>
 		
 		<li>
+			<a href="/category/update/">
+				Update
+				<span class="count">6</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/mysql/">
 				MySQL
 				<span class="count">6</span>
@@ -2186,13 +2154,6 @@ pip install jinja2
 			<a href="/category/essay/">
 				Essay
 				<span class="count">6</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/update/">
-				Update
-				<span class="count">5</span>
 			</a>
 		</li>
 		
@@ -2270,6 +2231,20 @@ pip install jinja2
 			<a href="/category/general/">
 				General
 				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/generative-art/">
+				Generative Art
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/css/">
+				CSS
+				<span class="count">2</span>
 			</a>
 		</li>
 		
@@ -2365,13 +2340,6 @@ pip install jinja2
 		</li>
 		
 		<li>
-			<a href="/category/generative-art/">
-				Generative Art
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/introduction/">
 				Introduction
 				<span class="count">1</span>
@@ -2381,13 +2349,6 @@ pip install jinja2
 		<li>
 			<a href="/category/refactoring/">
 				Refactoring
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/css/">
-				CSS
 				<span class="count">1</span>
 			</a>
 		</li>

@@ -76,6 +76,270 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/writings/posts/build-your-own-toy-spellchecker">Build your own toy spellchecker</a></h1>
+		<p class="description">Wrote a simple toy spellchecker using C++ by taking inspiration from Peter Norvig's article.</p>
+	</div>
+	<div class="article-body">
+		<p>Spellcheckers and autocorrect, aren't they magical? They do feel like magic to me. I mean, how is it able to predict what word do you want to type?</p>
+
+<p>According to <a href="https://norvig.com">Norvig</a>, some of the most talented engineers at Google don't have a complete understanding of how a spellchecker works.</p>
+
+<p>Peter Norvig's <a href="https://norvig.com/spell-correct.html">solution in Python</a> is so elegant and simple, I don't think anyone can write better than that. However, I wanted to know how it works, so I thought of building it to understand it's functionality. Also, an excuse to exercise my C++ skills.</p>
+
+<p>So, are you as curious as I am? If you are, I think you're in the right spot.</p>
+
+<h2>How it works?</h2>
+
+<p>Okay, so think about it? What does a spellchecker do? You type in a misspelled word and it returns a word with the highest probability, right? </p>
+
+<p>Well, there's a little bit more to it.</p>
+
+<h3>Create a word dictionary</h3>
+
+<p>First, we must create a dictionary, in order to do that, you need to extract words from a large piece of text and store it in a Hashmap in which each word will have a word count. In this example, I've used a Sherlock Holmes novel (which is around 6MB). The words are extracted from a novel instead of an actual dictionary because it can be used to create a simple Language Model.</p>
+
+<p><strong>Source code to create a dictionary:</strong></p>
+
+<div class="codehilite"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">SpellChecker::extractWords</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="o">&amp;</span><span class="n">filename</span><span class="p">)</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">ifstream</span><span class="w"> </span><span class="n">infile</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">infile</span><span class="p">.</span><span class="n">open</span><span class="p">(</span><span class="n">filename</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">x</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">infile</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">x</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">filterAlpha</span><span class="p">(</span><span class="n">x</span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="n">dictionary</span><span class="p">[</span><span class="n">x</span><span class="p">]</span><span class="o">++</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+
+<span class="n">string</span><span class="w"> </span><span class="nf">SpellChecker::filterAlpha</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="o">&amp;</span><span class="n">word</span><span class="p">)</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">word</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="kt">char</span><span class="w"> </span><span class="n">ch</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">word</span><span class="p">[</span><span class="n">i</span><span class="p">];</span><span class="w"></span>
+
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">ch</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"></span>
+<span class="w">        </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="n">word</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sc">&#39;-&#39;</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">isalpha</span><span class="p">(</span><span class="n">ch</span><span class="p">))</span><span class="w"></span>
+<span class="w">        </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="n">word</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tolower</span><span class="p">(</span><span class="n">ch</span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">word</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+
+<h3>Create a list of candidates</h3>
+
+<p>Second, we must able to predict/hypothesize the ways of editing text when the user types. It could be one of the following types of editing:</p>
+
+<ul>
+<li><a href="#inserts">Adding a letter</a></li>
+<li><a href="#replaces">Replacing a letter</a></li>
+<li><a href="#transposes">Switching two adjacent letters</a></li>
+<li><a href="#deletes">Removing a letter</a></li>
+</ul>
+
+<p>Based on the types of edits a user could make, we can generate a list of possible candidates by creating permutations using these edit methods mentioned above.</p>
+
+<h4><a id="inserts"></a> Adding a letter</h4>
+
+<p>In this method, you generate a list of candidates by inserting a letter in every iteration.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">SpellChecker::inserts</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="o">&amp;</span><span class="n">word</span><span class="p">,</span><span class="w"> </span><span class="n">Vector</span><span class="w"> </span><span class="o">&amp;</span><span class="n">result</span><span class="p">)</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">word</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="o">+</span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="n">alphabets</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">)</span><span class="w"></span>
+<span class="w">        </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="kt">char</span><span class="w"> </span><span class="n">ch</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">alphabets</span><span class="p">[</span><span class="n">j</span><span class="p">];</span><span class="w"></span>
+<span class="w">            </span><span class="n">result</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">word</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">ch</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">word</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="n">i</span><span class="p">));</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+
+<h4><a id="replaces"></a> Replacing a letter</h4>
+
+<p>In this method, you generate a list of candidates by replacing each character with a letter from a list of alphabets in every iteration.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">SpellChecker::replaces</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="o">&amp;</span><span class="n">word</span><span class="p">,</span><span class="w"> </span><span class="n">Vector</span><span class="w"> </span><span class="o">&amp;</span><span class="n">result</span><span class="p">)</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">word</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="n">alphabets</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">)</span><span class="w"></span>
+<span class="w">        </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="kt">char</span><span class="w"> </span><span class="n">ch</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">alphabets</span><span class="p">[</span><span class="n">j</span><span class="p">];</span><span class="w"></span>
+<span class="w">            </span><span class="n">result</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">word</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">ch</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">word</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">));</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+
+<h4><a id="transposes"></a> Switching two adjacent letters</h4>
+
+<p>In this method, you generate a list of candidates by switcing two adjacent letters in every iteration. For example: the word "ornage" would look like this: "orange", when the letters "n" and "a" are swapped.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">SpellChecker::transposes</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="o">&amp;</span><span class="n">word</span><span class="p">,</span><span class="w"> </span><span class="n">Vector</span><span class="w"> </span><span class="o">&amp;</span><span class="n">result</span><span class="p">)</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">word</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="mi">-1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="n">result</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">word</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">word</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">word</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">word</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">2</span><span class="p">));</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+
+<h4><a id="deletes"></a> Removing a letter</h4>
+
+<p>In this method, you generate a list of candidates by removing a letter in every iteration.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">SpellChecker::deletes</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="o">&amp;</span><span class="n">word</span><span class="p">,</span><span class="w"> </span><span class="n">Vector</span><span class="w"> </span><span class="o">&amp;</span><span class="n">result</span><span class="p">)</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">word</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="n">result</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">word</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">word</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">));</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+
+<p>All of these methods are called in one wrapper method:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">SpellChecker::edits</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="o">&amp;</span><span class="n">word</span><span class="p">,</span><span class="w"> </span><span class="n">Vector</span><span class="w"> </span><span class="o">&amp;</span><span class="n">result</span><span class="p">)</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="c1">//Deletion</span>
+<span class="w">    </span><span class="n">deletes</span><span class="p">(</span><span class="n">word</span><span class="p">,</span><span class="w"> </span><span class="n">result</span><span class="p">);</span><span class="w"></span>
+
+<span class="w">    </span><span class="c1">//Transposition</span>
+<span class="w">    </span><span class="n">transposes</span><span class="p">(</span><span class="n">word</span><span class="p">,</span><span class="w"> </span><span class="n">result</span><span class="p">);</span><span class="w"></span>
+
+<span class="w">    </span><span class="c1">//Replacement</span>
+<span class="w">    </span><span class="n">replaces</span><span class="p">(</span><span class="n">word</span><span class="p">,</span><span class="w"> </span><span class="n">result</span><span class="p">);</span><span class="w"></span>
+
+<span class="w">    </span><span class="c1">//Insertion</span>
+<span class="w">    </span><span class="n">inserts</span><span class="p">(</span><span class="n">word</span><span class="p">,</span><span class="w"> </span><span class="n">result</span><span class="p">);</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+
+<h3>Extract the known words</h3>
+
+<p>Third, at this stage, the above step would've generated a huge list of words but 90% of them would be gibberish, so we need to "clean" the list and extract the known words using the dictionary we've created.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">SpellChecker::known_words</span><span class="p">(</span><span class="n">Vector</span><span class="o">&amp;</span><span class="w"> </span><span class="n">results</span><span class="p">,</span><span class="w"> </span><span class="n">Dictionary</span><span class="w"> </span><span class="o">&amp;</span><span class="n">candidates</span><span class="p">)</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">Dictionary</span><span class="o">::</span><span class="n">iterator</span><span class="w"> </span><span class="n">end</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dictionary</span><span class="p">.</span><span class="n">end</span><span class="p">();</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">results</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="n">Dictionary</span><span class="o">::</span><span class="n">iterator</span><span class="w"> </span><span class="n">val</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dictionary</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span><span class="w"></span>
+
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">val</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">end</span><span class="p">)</span><span class="w"></span>
+<span class="w">        </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="n">candidates</span><span class="p">[</span><span class="n">val</span><span class="o">-&gt;</span><span class="n">first</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">val</span><span class="o">-&gt;</span><span class="n">second</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+
+<p>The <mark>edits()</mark> method apply to words that have a edit distance of 1, what if it was 2 or more? Like if the user typed "the", it could've been "then" or "they". So, all you have to do is create a method that generates a new set of permutations based on the already generated list of edited words and extract the known words.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">SpellChecker::edits2</span><span class="p">(</span><span class="n">Vector</span><span class="w"> </span><span class="o">&amp;</span><span class="n">result</span><span class="p">,</span><span class="w"> </span><span class="n">Dictionary</span><span class="w"> </span><span class="o">&amp;</span><span class="n">candidates</span><span class="p">)</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">result</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="n">Vector</span><span class="w"> </span><span class="n">edit2</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">        </span><span class="n">edits</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="w"> </span><span class="n">edit2</span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="n">known_words</span><span class="p">(</span><span class="n">edit2</span><span class="p">,</span><span class="w"> </span><span class="n">candidates</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w">   </span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+
+<h3>Display the correct word</h3>
+
+<p>In order to determine the correct word, the following possibilities are considered:</p>
+
+<ol>
+<li>Check if this word is in the dictionary, if it does, display it.</li>
+<li>Generate known words that have an edit distance of 1 and check in the dictionary, if it does, display it.</li>
+<li>Generate known words that have an edit distance of 2 and check in the dictionary, if it does, display it.</li>
+<li>If all else fails, this word is unique or not a known word.</li>
+</ol>
+
+<p></p>
+
+<div class="codehilite"><pre><span></span><code><span class="n">string</span><span class="w"> </span><span class="nf">SpellChecker::correct</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="o">&amp;</span><span class="n">word</span><span class="p">)</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">Vector</span><span class="w"> </span><span class="n">result</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">Dictionary</span><span class="w"> </span><span class="n">candidates</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;big.txt&quot;</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">    </span><span class="c1">//1. if it&#39;s in the dictionary, display it</span>
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">dictionary</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="n">word</span><span class="p">)</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">dictionary</span><span class="p">.</span><span class="n">end</span><span class="p">())</span><span class="w"></span>
+<span class="w">    </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">word</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">    </span><span class="n">extractWords</span><span class="p">(</span><span class="n">file</span><span class="p">);</span><span class="w"></span>
+
+<span class="w">    </span><span class="n">edits</span><span class="p">(</span><span class="n">word</span><span class="p">,</span><span class="w"> </span><span class="n">result</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="n">known_words</span><span class="p">(</span><span class="n">result</span><span class="p">,</span><span class="w"> </span><span class="n">candidates</span><span class="p">);</span><span class="w"></span>
+
+<span class="w">    </span><span class="c1">//2. if it&#39;s a known word but one edit away</span>
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">candidates</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">max_element</span><span class="p">(</span><span class="n">candidates</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span><span class="w"> </span><span class="n">candidates</span><span class="p">.</span><span class="n">end</span><span class="p">())</span><span class="o">-&gt;</span><span class="n">first</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">    </span><span class="c1">//3. if it&#39;s a known word but two edits away</span>
+<span class="w">    </span><span class="n">edits2</span><span class="p">(</span><span class="n">result</span><span class="p">,</span><span class="w"> </span><span class="n">candidates</span><span class="p">);</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">candidates</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">max_element</span><span class="p">(</span><span class="n">candidates</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span><span class="w"> </span><span class="n">candidates</span><span class="p">.</span><span class="n">end</span><span class="p">())</span><span class="o">-&gt;</span><span class="n">first</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">    </span><span class="c1">//4. Display nothing if it doesn&#39;t exist</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="s">&quot;This word doesn&#39;t exist!&quot;</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+
+<p>However, for conditions 2 and 3, the word displayed would most likely have the highest word frequency in the dictionary.</p>
+
+<h2>Conclusion</h2>
+
+<p>Phew! I hope that wasn't a long read. Although, I've written this on C++, I plan to rewrite this on Javascript for some of my future projects.</p>
+
+<p>To be honest, I don't think it's completely accurate, although, I got most of the words correct when tested.</p>
+
+<p>The source code can be found on my <a href="https://www.github.com/megacolorboy/ToySpellChecker">GitHub</a> repository.</p>
+
+<p>Hope you liked reading this article!</p>
+
+<p>Stay tuned for more!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>July 19th, 2019</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/algorithms/">
+					Algorithms
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/writings/posts/the-15-puzzle-game">The 15 Puzzle Game</a></h1>
 		<p class="description">A classical numbered puzzle that requires the player to place all the tiles in an ordered sequence.</p>
 	</div>
@@ -1398,142 +1662,6 @@ hi User1 <span class="nv">ctermbg</span><span class="o">=</span>black <span clas
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/say-hello-new-blog">Say Hello, New Blog</a></h1>
-		<p class="description">Everything from new updates to shifting to a static site generator.</p>
-	</div>
-	<div class="article-body">
-		<p>Hello, 2019!</p>
-
-<p>Uhh, I guess it's a bit too late, but better late than never!</p>
-
-<p>Lately, the concept of using a static site generator has become the new rage. This blog that you are seeing now is powered by a custom-built static site generator written on Python and trust me, I love it!</p>
-
-<h2>Why shift from a dynamic to static website?</h2>
-
-<p>It took me some time to make a decision on why I would need to make a shift from a dynamic website to a website that serves static files, here are some of my reasons:</p>
-
-<ul>
-<li>Edit posts using Markdown</li>
-<li>Increased speed</li>
-<li>Eliminates the use of CMS and Databases</li>
-<li>Pre-generated and will be served on request without any delay</li>
-<li>Lightweight</li>
-<li>Ease of Maintenance</li>
-<li>More secure</li>
-</ul>
-
-<p>Apart from that, I wanted to understand the concept of Static Site Generators, so I thought of writing a static site generator using Python.</p>
-
-<p>Sure, there are many static site generators available online but I always like to be the curious cat!</p>
-
-<h2>How it works</h2>
-
-<p>Nothing complicated, the concept is pretty simple. All you have to do is write down your articles in Markdown and when you execute your static site generator, it will compile all your posts from your directory into individual static files using a template, which can then be served to your visitors.</p>
-
-<p>For example, let's say you have a markdown file named <mark>hello-world.md</mark> and you wrote your content:</p>
-
-<div class="codehilite"><pre><span></span><code>title: Hello World
-date: 2019-03-01 20:00
-
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed ut sollicitudin dui, 
-pulvinar vulputate nibh. Cras eu nunc mauris. Vestibulum quis diam at diam feugiat semper vitae at sem. 
-Mauris in orci iaculis mauris semper gravida at nec augue. Phasellus luctus accumsan velit, 
-in molestie odio luctus at. Curabitur neque erat, pretium vitae condimentum placerat, sodales eu 
-nisi. Cras pretium nulla ac est interdum, vitae tempor mauris ornare. 
-Nullam tortor nisi, scelerisque vel purus id, dictum finibus erat. Nulla tincidunt egestas 
-sodales. Sed sit amet elit placerat, pellentesque est in, bibendum enim. Nam dolor lorem, venenatis sit 
-amet sem at, sagittis feugiat risus. Fusce turpis felis, sodales a tortor vitae, volutpat semper 
-justo. Donec porta id mi non porttitor. Fusce id est sit amet leo consectetur consequat.
-</code></pre></div>
-
-<p>Also, this is your template:</p>
-
-<div class="codehilite"><pre><span></span><code><span class="p">&lt;</span><span class="nt">html</span><span class="p">&gt;</span>
-    <span class="p">&lt;</span><span class="nt">head</span><span class="p">&gt;</span>
-        <span class="p">&lt;</span><span class="nt">title</span><span class="p">&gt;</span>{{ title }}<span class="p">&lt;/</span><span class="nt">title</span><span class="p">&gt;</span>
-    <span class="p">&lt;/</span><span class="nt">head</span><span class="p">&gt;</span>
-    <span class="p">&lt;</span><span class="nt">body</span><span class="p">&gt;</span>
-    <span class="p">&lt;</span><span class="nt">div</span><span class="p">&gt;</span>Published on: {{ date }}<span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
-    {{ content }}
-    <span class="p">&lt;/</span><span class="nt">body</span><span class="p">&gt;</span>
-<span class="p">&lt;/</span><span class="nt">html</span><span class="p">&gt;</span>
-</code></pre></div>
-
-<p>And when you execute the application, this is what happens:</p>
-
-<div class="codehilite"><pre><span></span><code><span class="p">&lt;</span><span class="nt">html</span><span class="p">&gt;</span>
-    <span class="p">&lt;</span><span class="nt">head</span><span class="p">&gt;</span>
-        <span class="p">&lt;</span><span class="nt">title</span><span class="p">&gt;</span>Hello World<span class="p">&lt;/</span><span class="nt">title</span><span class="p">&gt;</span>
-    <span class="p">&lt;/</span><span class="nt">head</span><span class="p">&gt;</span>
-    <span class="p">&lt;</span><span class="nt">body</span><span class="p">&gt;</span>
-    <span class="p">&lt;</span><span class="nt">div</span><span class="p">&gt;</span>Published on: 2019-03-01 20:00<span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
-    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed ut sollicitudin dui, 
-    pulvinar vulputate nibh. Cras eu nunc mauris. Vestibulum quis diam at diam feugiat semper vitae at sem. 
-    Mauris in orci iaculis mauris semper gravida at nec augue. Phasellus luctus accumsan velit, 
-    in molestie odio luctus at. Curabitur neque erat, pretium vitae condimentum placerat, sodales eu 
-    nisi. Cras pretium nulla ac est interdum, vitae tempor mauris ornare. 
-    Nullam tortor nisi, scelerisque vel purus id, dictum finibus erat. Nulla tincidunt egestas 
-    sodales. Sed sit amet elit placerat, pellentesque est in, bibendum enim. Nam dolor lorem, venenatis sit 
-    amet sem at, sagittis feugiat risus. Fusce turpis felis, sodales a tortor vitae, volutpat semper 
-    justo. Donec porta id mi non porttitor. Fusce id est sit amet leo consectetur consequat.
-    <span class="p">&lt;/</span><span class="nt">body</span><span class="p">&gt;</span>
-<span class="p">&lt;/</span><span class="nt">html</span><span class="p">&gt;</span>
-</code></pre></div>
-
-<p>The generator just parsed your article on Markdown and put the details on the template and tada, the article is generated. Easy peasy!</p>
-
-<p>The next step is to deploy it, I wrote a bash script to deploy all static files via FTP onto my server.</p>
-
-<p>It's a simple but powerful idea and gives me a lot of flexibility to create my future blog posts with each having a different look (not always, but sometimes).</p>
-
-<h2>Refreshed look, Creative energy</h2>
-
-<p>Although, the old one was good and minimal, something felt empty about it and I decided to change it.</p>
-
-<p>I experimented with different fonts and chose Fira Sans as the blog's primary font. As for colors, I took inspiration from Dropbox's recent change in branding and they combined various colors to create dynamic elements to their brand.</p>
-
-<p>So, I wrote a pattern generator on Javascript that would create a background image for every blog post and make it look colorful (See above).</p>
-
-<figure>
-    <img src="https://cdn-images-1.medium.com/max/2600/1*-egs-meZ08WEmAhlwa481Q.png"/>
-    <figcaption>“Floating Lines in the DeepSpace”. A generative artwork by Miguel Neto & Rodrigo Carvalho.</figcaption>
-</figure>
-
-<p>Also, I have been exploring the concept of Generative Art, I found it really interesting especially it's creative and mathematical aspect. I have plans on replacing these colorful patterns with the random generative artworks, after all, I don't aim to make it look boring.</p>
-
-<h2>Discovery and Experimentation</h2>
-
-<p>I have been working on some side projects like Pac-Man clone, a text-editor based on C and a terminal-based to-do list application on Linux, learning and customizing VIM, tinkering with Vagrant boxes, Capture-The-Flags challenges, experiments with UI frameworks like ReactJS and so much more.</p>
-
-<h2>Hang in there, it's not over!</h2>
-
-<p>It's a work-in-progress and I'm trying to make my blog to be more creative, interactive and colorful.</p>
-
-<p>I will be hosting a separate section called <strong><em>"Projects"</em></strong>, which is currently under the works, it will contain all of my projects, UI/UX components to play around with, games and much more. I hope it will be the coolest section of this blog.</p>
-
-<p>Hope you liked reading this article and the new changes!</p>
-
-<p>Peace Out!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>March 1st, 2019</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/update/">
-					Update
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -1647,6 +1775,13 @@ justo. Donec porta id mi non porttitor. Fusce id est sit amet leo consectetur co
 		</li>
 		
 		<li>
+			<a href="/category/javascript/">
+				JavaScript
+				<span class="count">10</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/git/">
 				Git
 				<span class="count">10</span>
@@ -1657,13 +1792,6 @@ justo. Donec porta id mi non porttitor. Fusce id est sit amet leo consectetur co
 			<a href="/category/php/">
 				PHP
 				<span class="count">10</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/javascript/">
-				JavaScript
-				<span class="count">9</span>
 			</a>
 		</li>
 		
@@ -1689,6 +1817,13 @@ justo. Donec porta id mi non porttitor. Fusce id est sit amet leo consectetur co
 		</li>
 		
 		<li>
+			<a href="/category/update/">
+				Update
+				<span class="count">6</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/mysql/">
 				MySQL
 				<span class="count">6</span>
@@ -1699,13 +1834,6 @@ justo. Donec porta id mi non porttitor. Fusce id est sit amet leo consectetur co
 			<a href="/category/essay/">
 				Essay
 				<span class="count">6</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/update/">
-				Update
-				<span class="count">5</span>
 			</a>
 		</li>
 		
@@ -1783,6 +1911,20 @@ justo. Donec porta id mi non porttitor. Fusce id est sit amet leo consectetur co
 			<a href="/category/general/">
 				General
 				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/generative-art/">
+				Generative Art
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/css/">
+				CSS
+				<span class="count">2</span>
 			</a>
 		</li>
 		
@@ -1878,13 +2020,6 @@ justo. Donec porta id mi non porttitor. Fusce id est sit amet leo consectetur co
 		</li>
 		
 		<li>
-			<a href="/category/generative-art/">
-				Generative Art
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/introduction/">
 				Introduction
 				<span class="count">1</span>
@@ -1894,13 +2029,6 @@ justo. Donec porta id mi non porttitor. Fusce id est sit amet leo consectetur co
 		<li>
 			<a href="/category/refactoring/">
 				Refactoring
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/css/">
-				CSS
 				<span class="count">1</span>
 			</a>
 		</li>
