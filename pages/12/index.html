@@ -76,6 +76,60 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/replace-all-occurrences-found-on-a-string-using-regular-expressions">Replace all occurrences found on a string using Regular Expressions</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Let's say you have the following string and you must replace all occurrences of <strong>"Hello"</strong> with <strong>"Bye"</strong>:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="kd">var</span> <span class="nx">str</span> <span class="o">=</span> <span class="s2">&quot;Hello Hello Hello World&quot;</span><span class="p">;</span>
+</code></pre></div>
+
+<p>You may think of using the <code>.replace()</code> method to solve this problem:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="kd">var</span> <span class="nx">newStr</span> <span class="o">=</span> <span class="nx">str</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="s2">&quot;Hello&quot;</span><span class="p">,</span> <span class="s2">&quot;Bye&quot;</span><span class="p">)</span>
+</code></pre></div>
+
+<p>But unfortunately, it only replaces the first occurrence in the string:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">newStr</span><span class="p">);</span> <span class="c1">// returns &quot;Bye Hello Hello World&quot; as the output.</span>
+</code></pre></div>
+
+<p>Using the power of Regular Expressions, you can replace all occurrences in one go:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="kd">function</span> <span class="nx">replaceAll</span><span class="p">(</span><span class="nx">str</span><span class="p">,</span> <span class="nx">search</span><span class="p">,</span> <span class="nx">replace</span><span class="p">){</span>
+    <span class="kd">var</span> <span class="nx">re</span> <span class="o">=</span> <span class="ow">new</span> <span class="nb">RegExp</span><span class="p">(</span><span class="nx">search</span><span class="p">,</span> <span class="s2">&quot;g&quot;</span><span class="p">);</span>
+    <span class="k">return</span> <span class="nx">str</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="nx">re</span><span class="p">,</span> <span class="nx">replace</span><span class="p">);</span>
+<span class="p">}</span>    
+</code></pre></div>
+
+<p>Now, when you execute the following, you'll get a string that replaced all occurrences:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="kd">var</span> <span class="nx">newStr</span> <span class="o">=</span> <span class="nx">replaceAll</span><span class="p">(</span><span class="nx">str</span><span class="p">,</span> <span class="s2">&quot;Hello&quot;</span><span class="p">,</span> <span class="s2">&quot;Bye&quot;</span><span class="p">);</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">newStr</span><span class="p">);</span> <span class="c1">// returns &quot;Bye Bye Bye World&quot; as the output.</span>
+</code></pre></div>
+
+<p>Until next time, then!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>July 18th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/regular-expressions/">
+					Regular Expressions
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/create-a-unique-multidimensional-array-using-a-key-index">Create a unique multidimensional array using a key index</a></h1>
 		<p class="description"></p>
 	</div>
@@ -457,80 +511,6 @@ RewriteRule .* https://%<span class="o">{</span>HTTP_HOST<span class="o">}</span
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/enable-copy-paste-clipboard-in-urxvt-terminal-emulator">Enable copy-paste clipboard in URxvt Terminal Emulator</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>In my current Arch Linux installation, I decided to use a window manager called i3. It's really awesome and it comes with a really lightweight terminal emulator called <strong>urxvt</strong>. It's very minimal and I lked it but when I tried to copy-paste text from one terminal to another, I wasn't able to.</p>
-
-<p>However, thanks to the internet, I did some research and figured a way out.</p>
-
-<h2>1. Install xClip</h2>
-
-<p>First, you need to ensure that you have installed the <code>xclip</code> package, which will be used to copy-paste text in the emulator.</p>
-
-<p>Type the following command to install the package:</p>
-
-<div class="codehilite"><pre><span></span><code>pacman -S xclip
-</code></pre></div>
-
-<h2>2. Activate Clipboard using Perl</h2>
-
-<p>Now, you have to paste these custom commands into your <code>clipboard</code> file, which is found in <code>/usr/lib/urxvt/perl</code> directory:</p>
-
-<div class="codehilite"><pre><span></span><code><span class="c1"># paste selection from clipboard</span>
-<span class="k">sub</span> <span class="nf">paste</span> <span class="p">{</span>
-     <span class="k">my</span> <span class="p">(</span><span class="nv">$self</span><span class="p">)</span> <span class="o">=</span> <span class="nv">@_</span><span class="p">;</span>
-     <span class="k">my</span> <span class="nv">$content</span> <span class="o">=</span> <span class="sb">`/usr/bin/xclip -loop 1 -out -selection clipboard`</span> <span class="p">;</span>
-     <span class="nv">$self</span><span class="o">-&gt;</span><span class="n">tt_write</span> <span class="p">(</span><span class="nv">$content</span><span class="p">);</span>
-<span class="p">}</span>
-
-<span class="c1"># copy text to clipbard on selection</span>
-<span class="k">sub</span> <span class="nf">on_sel_grab</span> <span class="p">{</span>
-     <span class="k">my</span> <span class="nv">$query</span> <span class="o">=</span> <span class="nv">$_</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">selection</span><span class="p">;</span>
-     <span class="nb">open</span> <span class="p">(</span><span class="k">my</span> <span class="nv">$pipe</span><span class="p">,</span> <span class="s">&#39;| /usr/bin/xclip -in -selection clipboard&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">die</span><span class="p">;</span>
-     <span class="k">print</span> <span class="nv">$pipe</span> <span class="nv">$query</span><span class="p">;</span>
-     <span class="nb">close</span> <span class="nv">$pipe</span><span class="p">;</span>
- <span class="p">}</span>
-</code></pre></div>
-
-<h2>3. Modify your .Xresources</h2>
-
-<p>Add these keybindings to your <code>.Xresources</code> file:</p>
-
-<div class="codehilite"><pre><span></span><code>URxvt.keysym.Shift-Control-V: perl:clipboard:paste
-URxvt.iso14755: False
-URxvt.perl-ext-common: default,clipboard
-</code></pre></div>
-
-<p>After adding it, refresh your <code>.Xresources</code> settings:</p>
-
-<div class="codehilite"><pre><span></span><code>xrdb -merge .Xresources
-</code></pre></div>
-
-<p>Reboot your terminal and try selecting some text from your terminal using your mouse and paste it using <code>Ctrl</code>+<code>Shift</code>+<code>V</code> and it should work! </p>
-
-<p>That's it! Enjoy &#x1F603;</p>
-
-	</div>
-	<div class="article-footer">
-		<time>June 20th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/linux/">
-					Linux
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -784,6 +764,13 @@ URxvt.perl-ext-common: default,clipboard
 		</li>
 		
 		<li>
+			<a href="/category/blogmarks/">
+				Blogmarks
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/generative-art/">
 				Generative Art
 				<span class="count">2</span>
@@ -836,13 +823,6 @@ URxvt.perl-ext-common: default,clipboard
 			<a href="/category/python/">
 				Python
 				<span class="count">2</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/blogmarks/">
-				Blogmarks
-				<span class="count">1</span>
 			</a>
 		</li>
 		
