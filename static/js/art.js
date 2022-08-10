@@ -23,7 +23,7 @@ let generativeArt = (() => {
 		},
 		injectArtPlaceholderIntoArticles: (className, elementTag) => {
 			_articles.forEach((el, idx) => {
-				isElementExist = el.querySelector('iframe') || el.querySelector('canvas') || el.querySelector('p:first-of-type img');
+				isElementExist = el.querySelector('iframe') || el.querySelector('canvas') || el.querySelector('p:first-of-type img') || el.querySelector('.article-body figure:first-of-type');
 				// Inject .tiles-wall class after the article's description
 				if(!isElementExist) {
 					container = document.createElement(elementTag);

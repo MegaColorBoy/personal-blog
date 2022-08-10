@@ -78,6 +78,518 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/writings/posts/arcade-challenge-4-tetris">Arcade Challenge 4: Tetris</a></h1>
+		<p class="description">This is the fourth article of the Arcade Challenge series. In this article, I'll be talking about Tetris, it's history and game mechanics, in short.</p>
+	</div>
+	<div class="article-body">
+		<script defer type="text/javascript" src="/static/projects/tetris/js/tetris.js"></script>
+
+<script defer type="text/javascript" src="/static/projects/tetris/js/render.js"></script>
+
+<script defer type="text/javascript" src="/static/projects/tetris/js/controller.js"></script>
+
+<figure>
+    <canvas style="border-radius: 0px;background-color:#333;" id="tetris_canvas" width="300" height="600"></canvas>
+</figure>
+
+<p>Before you read more about this article, play with the above game. It's simple, control each block using <strong><em>WASD</em></strong> keys to rotate and move the block to the left, right and down of the canvas.</p>
+
+<p>This is part of the <a href="/posts/i-challenged-myself-to-build-4-arcade-games">Arcade Challenge</a> series. If you haven't read the previous articles, here you go:</p>
+
+<ul>
+<li><a href="/posts/arcade-challenge-1-snake-game/">Snake Game</a></li>
+<li><a href="/posts/arcade-challenge-2-breakout/">Breakout</a></li>
+<li><a href="/posts/arcade-challenge-3-pong/">Pong</a></li>
+</ul>
+
+<h2>Background</h2>
+
+<p>Tetris is a tile-matching puzzle game in which you have shapes called "Tetrominoes" (I'll be talking about it more in detail below.) falling down vertically from above into a matrix or "the well". The game's objective is to set a high score by manipulating the seven shapes (but I didn't set a scoring system for this implementation) by moving left, right, down or rotating the shape by 90 degree units. As the game progresses, the tetrominoes would fall faster in every level, thus, making it challenging to play.</p>
+
+<h2>History</h2>
+
+<p>In 1984, the game was invented, designed and programmed by an AI researcher named <a href="https://en.wikipedia.org/wiki/Alexey_Pajitnov">Alexey Pajitnov</a>, who at the time worked for the <strong><em>Soviet Academy of Sciences</em></strong> in Moscow.</p>
+
+<figure>
+    <img src="https://upload.wikimedia.org/wikipedia/en/8/8d/NES_Tetris_Box_Front.jpg"/>
+    <figcaption>Tetris cover art</figcaption>
+</figure>
+
+<p>Alexey Pajitnov was inspired by the classic Roman puzzle game called <a href="https://en.wikipedia.org/wiki/Pentomino">Pentomino</a>. In 1985, the game was published for various game consoles.</p>
+
+<h2>Game mechanics</h2>
+
+<p>This game has quite some interesting mechanics, for those who don't know, here it is:</p>
+
+<ul>
+<li><a href="#generating-shapes">Generating Shapes</a></li>
+<li><a href="#collision">Collision</a></li>
+<li><a href="#freeze-the-line">Freeze the Line</a></li>
+<li><a href="#rotating-shapes">Rotating Shapes</a></li>
+<li><a href="#clearing-the-line">Clearing the Line</a></li>
+</ul>
+
+<h3><a id="generating-shapes"></a> Generating Shapes</h3>
+
+<p>These shapes are called <strong><em>"tetrominoes"</em></strong> i.e. a unique arrangement of 4 cells in a 4x4 grid. Mathematically, it is proven that there can only be seven tetrominoes on a <strong><em>two-dimensional space</em></strong>, which also means seven different ways to arrange 4 cells.</p>
+
+<figure>
+    <img src="http://oopsilon.com/06/texts/tetris-shapes.gif"/>
+    <figcaption>The Seven Tetrominoes</figcaption>
+</figure>
+
+<p>I'm sure a lot of you know that Javascript doesn't have a special way of creating multi-dimensional arrays. So in order to draw a random shape, I had to convert a two-dimensional array index to a one-dimensional array index to fill each cell i.e. if it was a '1', it would be filled with color and if it's a '0', it would be empty.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="c1">//Generate new random shape</span>
+<span class="kd">function</span> <span class="nx">newShape</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="nx">current</span> <span class="o">=</span> <span class="p">[];</span>
+
+    <span class="kd">var</span> <span class="nx">rand</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="nx">shapes</span><span class="p">.</span><span class="nx">length</span><span class="p">);</span>
+    <span class="kd">var</span> <span class="nx">shape</span> <span class="o">=</span> <span class="nx">shapes</span><span class="p">[</span><span class="nx">rand</span><span class="p">];</span>
+
+    <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">y</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span> <span class="nx">y</span><span class="o">&lt;</span><span class="mf">4</span><span class="p">;</span> <span class="nx">y</span><span class="o">++</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="nx">current</span><span class="p">[</span><span class="nx">y</span><span class="p">]</span> <span class="o">=</span> <span class="p">[];</span>
+        <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">x</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span> <span class="nx">x</span><span class="o">&lt;</span><span class="mf">4</span><span class="p">;</span> <span class="nx">x</span><span class="o">++</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="c1">//convert 2D index to 1D index</span>
+            <span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mf">4</span> <span class="o">*</span> <span class="nx">y</span> <span class="o">+</span> <span class="nx">x</span><span class="p">;</span>
+            <span class="k">if</span><span class="p">(</span><span class="nx">shape</span><span class="p">[</span><span class="nx">i</span><span class="p">])</span>
+            <span class="p">{</span>
+                <span class="nx">current</span><span class="p">[</span><span class="nx">y</span><span class="p">][</span><span class="nx">x</span><span class="p">]</span> <span class="o">=</span> <span class="nx">rand</span> <span class="o">+</span> <span class="mf">1</span><span class="p">;</span>
+            <span class="p">}</span>
+            <span class="k">else</span>
+            <span class="p">{</span>
+                <span class="nx">current</span><span class="p">[</span><span class="nx">y</span><span class="p">][</span><span class="nx">x</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0</span><span class="p">;</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="nx">currentX</span> <span class="o">=</span> <span class="mf">5</span><span class="p">;</span>
+    <span class="nx">currentY</span> <span class="o">=</span> <span class="mf">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<h3><a id="collision"></a> Collision</h3>
+
+<p>As I had mentioned in my <a href="/posts/arcade-challenge-3-pong/">previous post</a>, I was inspired to use the <a href="https://en.wikipedia.org/wiki/Minimum_bounding_box#Axis-aligned_minimum_bounding_box">AABB collision</a> algorithm to prevent the tetrominoes from going away from the canvas. Well, we all know that simple physics says that if an object is dropped from above, it should break the ones below but in this case, that doesn't happen. Instead, the tetrominoes are stacked on top of each other, which unlike real gravity, that contributes to the actual gameplay.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="c1">//Check if this shape&#39;s position is valid in the board</span>
+<span class="kd">function</span> <span class="nx">isValid</span><span class="p">(</span><span class="nx">offsetX</span><span class="p">,</span> <span class="nx">offsetY</span><span class="p">,</span> <span class="nx">newCurrent</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="c1">//if offsetX is not set, set it to 0</span>
+    <span class="nx">offsetX</span> <span class="o">=</span> <span class="nx">offsetX</span> <span class="o">||</span> <span class="mf">0</span><span class="p">;</span>
+    <span class="c1">//if offsetY is not set, set it to 0</span>
+    <span class="nx">offsetY</span> <span class="o">=</span> <span class="nx">offsetY</span> <span class="o">||</span> <span class="mf">0</span><span class="p">;</span>
+
+    <span class="nx">offsetX</span> <span class="o">=</span> <span class="nx">currentX</span> <span class="o">+</span> <span class="nx">offsetX</span><span class="p">;</span>
+    <span class="nx">offsetY</span> <span class="o">=</span> <span class="nx">currentY</span> <span class="o">+</span> <span class="nx">offsetY</span><span class="p">;</span>
+
+    <span class="nx">newCurrent</span> <span class="o">=</span> <span class="nx">newCurrent</span> <span class="o">||</span> <span class="nx">current</span><span class="p">;</span>
+
+    <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">y</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span> <span class="nx">y</span><span class="o">&lt;</span><span class="mf">4</span><span class="p">;</span> <span class="nx">y</span><span class="o">++</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">x</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span> <span class="nx">x</span><span class="o">&lt;</span><span class="mf">4</span><span class="p">;</span> <span class="nx">x</span><span class="o">++</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="k">if</span><span class="p">(</span><span class="nx">newCurrent</span><span class="p">[</span><span class="nx">y</span><span class="p">][</span><span class="nx">x</span><span class="p">])</span>
+            <span class="p">{</span>
+                <span class="k">if</span><span class="p">(</span><span class="ow">typeof</span> <span class="nx">board</span><span class="p">[</span><span class="nx">y</span> <span class="o">+</span> <span class="nx">offsetY</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;undefined&#39;</span> <span class="o">||</span>
+                <span class="ow">typeof</span> <span class="nx">board</span><span class="p">[</span><span class="nx">y</span> <span class="o">+</span> <span class="nx">offsetY</span><span class="p">][</span><span class="nx">x</span> <span class="o">+</span> <span class="nx">offsetX</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;undefined&#39;</span> <span class="o">||</span>
+                <span class="nx">board</span><span class="p">[</span><span class="nx">y</span> <span class="o">+</span> <span class="nx">offsetY</span><span class="p">][</span><span class="nx">x</span> <span class="o">+</span> <span class="nx">offsetX</span><span class="p">]</span> <span class="o">||</span>
+                <span class="nx">x</span> <span class="o">+</span> <span class="nx">offsetX</span> <span class="o">&lt;</span> <span class="mf">0</span> <span class="o">||</span>
+                <span class="nx">y</span> <span class="o">+</span> <span class="nx">offsetY</span> <span class="o">&gt;=</span> <span class="nx">rows</span> <span class="o">||</span>
+                <span class="nx">x</span> <span class="o">+</span> <span class="nx">offsetX</span> <span class="o">&gt;=</span> <span class="nx">cols</span><span class="p">)</span>
+                <span class="p">{</span>
+                    <span class="k">if</span><span class="p">(</span><span class="nx">offsetY</span> <span class="o">==</span> <span class="mf">1</span><span class="p">){</span><span class="nx">lose</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;}</span>
+                    <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
+<span class="p">}</span> 
+</code></pre></div>
+
+<h3><a id="freeze-the-line"></a> Freeze the Line</h3>
+
+<p>Honestly, I could have come up with a better name but the method freeze() stops the shape at it's current position (i.e. after a collision has occurred) and saves it to the 2D canvas.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="kd">function</span> <span class="nx">freeze</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">y</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span> <span class="nx">y</span><span class="o">&lt;</span><span class="mf">4</span><span class="p">;</span> <span class="nx">y</span><span class="o">++</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">x</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span> <span class="nx">x</span><span class="o">&lt;</span><span class="mf">4</span><span class="p">;</span> <span class="nx">x</span><span class="o">++</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="k">if</span><span class="p">(</span><span class="nx">current</span><span class="p">[</span><span class="nx">y</span><span class="p">][</span><span class="nx">x</span><span class="p">])</span>
+            <span class="p">{</span>
+                <span class="nx">board</span><span class="p">[</span><span class="nx">y</span><span class="o">+</span><span class="nx">currentY</span><span class="p">][</span><span class="nx">x</span><span class="o">+</span><span class="nx">currentX</span><span class="p">]</span> <span class="o">=</span> <span class="nx">current</span><span class="p">[</span><span class="nx">y</span><span class="p">][</span><span class="nx">x</span><span class="p">];</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<h3><a id="rotating-shapes"></a> Rotating Shapes</h3>
+
+<p>In order to rotate a shape perpendicularly anticlockwise, you have to perform an operation that flips the indices from bottom to top of the matrix, this operation is called <a href="https://en.wikipedia.org/wiki/Transpose">Matrix Transpose</a>. Although I learnt this in my math classes, I implemented this operation in a Computer Graphics course that I took, as an elective, in my university on Spring 2016 for the first time.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="c1">//Rotate the current moving shape</span>
+<span class="kd">function</span> <span class="nx">rotate</span><span class="p">(</span><span class="nx">current</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">newCurrent</span> <span class="o">=</span> <span class="p">[];</span>
+    <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">y</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span> <span class="nx">y</span><span class="o">&lt;</span><span class="mf">4</span><span class="p">;</span> <span class="nx">y</span><span class="o">++</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="nx">newCurrent</span><span class="p">[</span><span class="nx">y</span><span class="p">]</span> <span class="o">=</span> <span class="p">[];</span>
+        <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">x</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span> <span class="nx">x</span><span class="o">&lt;</span><span class="mf">4</span><span class="p">;</span> <span class="nx">x</span><span class="o">++</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="nx">newCurrent</span><span class="p">[</span><span class="nx">y</span><span class="p">][</span><span class="nx">x</span><span class="p">]</span> <span class="o">=</span> <span class="nx">current</span><span class="p">[</span><span class="mf">3</span><span class="o">-</span><span class="nx">x</span><span class="p">][</span><span class="nx">y</span><span class="p">];</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="nx">newCurrent</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<h3><a id="clearing-the-line"></a> Clearing the Line</h3>
+
+<p>At every update, the method named <strong><em>clearLines()</em></strong> has to scan for any complete row(s), if it's complete, the cells in those rows must be replaced with the ones above it. This gives a sort of <strong><em>"falling gravity"</em></strong> effect, when the remaining cells are replaced with the row that has been cleared.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="kd">function</span> <span class="nx">clearLines</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="c1">//Bottom up approach</span>
+    <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">y</span> <span class="o">=</span> <span class="nx">rows</span> <span class="o">-</span> <span class="mf">1</span><span class="p">;</span> <span class="nx">y</span><span class="o">&gt;=</span><span class="mf">0</span><span class="p">;</span> <span class="nx">y</span><span class="o">--</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">isComplete</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+        <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">x</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span> <span class="nx">x</span> <span class="o">&lt;</span> <span class="nx">cols</span><span class="p">;</span> <span class="nx">x</span><span class="o">++</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="c1">//if there&#39;s any empty cell in the row</span>
+            <span class="k">if</span><span class="p">(</span><span class="nx">board</span><span class="p">[</span><span class="nx">y</span><span class="p">][</span><span class="nx">x</span><span class="p">]</span> <span class="o">==</span> <span class="mf">0</span><span class="p">)</span>
+            <span class="p">{</span>
+                <span class="c1">//Then the row isn&#39;t complete</span>
+                <span class="nx">isComplete</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+                <span class="k">break</span><span class="p">;</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+
+        <span class="c1">//This code is to remove the current completed line,</span>
+        <span class="c1">//and replace it with the line above it.</span>
+        <span class="k">if</span><span class="p">(</span><span class="nx">isComplete</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">=</span><span class="nx">y</span><span class="p">;</span> <span class="nx">i</span><span class="o">&gt;</span><span class="mf">0</span><span class="p">;</span> <span class="nx">i</span><span class="o">--</span><span class="p">)</span>
+            <span class="p">{</span>
+                <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">j</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span> <span class="nx">j</span> <span class="o">&lt;</span> <span class="nx">cols</span><span class="p">;</span> <span class="nx">j</span><span class="o">++</span><span class="p">)</span>
+                <span class="p">{</span>
+                    <span class="nx">board</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="nx">j</span><span class="p">]</span> <span class="o">=</span> <span class="nx">board</span><span class="p">[</span><span class="nx">i</span><span class="o">-</span><span class="mf">1</span><span class="p">][</span><span class="nx">j</span><span class="p">];</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+            <span class="nx">y</span><span class="o">++</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>The game was built using HTML5 Canvas and Javascript, so please feel free to read the source code to understand the logic of the game. </p>
+
+<h2>What's next?</h2>
+
+<p>I know that in my <a href="/posts/i-challenged-myself-to-build-4-arcade-games/">first post</a>, I had mentioned that I'll do this whole challenge for a month but then I wasn't able to do everything in a month. So, I decided that I will be trying my best to remake more arcade games in the future and keep posting them on this blog. Hope you guys liked reading these articles!</p>
+
+<p>Sayonara!</p>
+
+<h2>References</h2>
+
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Tetris">Tetris (1984)</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Alexey_Pajitnov">Alexey Pajitnov</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Transpose">Matrix Transpose</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Minimum_bounding_box#Axis-aligned_minimum_bounding_box">Axis Aligned Bounding Collision</a></li>
+</ul>
+
+	</div>
+	<div class="article-footer">
+		<time>August 12th, 2017</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/arcade-challenge/">
+					Arcade Challenge
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/writings/posts/arcade-challenge-3-pong">Arcade Challenge 3: Pong</a></h1>
+		<p class="description">This is the third article of the Arcade Challenge series. In this article, I'll be talking about Pong, it's history and game mechanics, in short.</p>
+	</div>
+	<div class="article-body">
+		<script defer type="text/javascript" src="/static/projects/pong/js/pong.js"></script>
+
+<figure>
+    <canvas style="border-radius: 0px;" id="pong_canvas" width="500" height="500"></canvas>
+</figure>
+
+<p>Before you read more about this article, play with the above game. The rules are simple, control the paddle using <kbd>W</kbd> and <kbd>S</kbd> keys.</p>
+
+<p>This is part of the <a href="/posts/i-challenged-myself-to-build-4-arcade-games/">Arcade Challenge</a> series. If you haven't read the previous articles, here you go:</p>
+
+<ul>
+<li><a href="/posts/arcade-challenge-1-snake-game/">Snake Game</a></li>
+<li><a href="/posts/arcade-challenge-2-breakout/">Breakout</a></li>
+</ul>
+
+<h2>Background</h2>
+
+<p>It's a 2D <a href="https://en.wikipedia.org/wiki/Table_tennis">table tennis</a> simulation game. The player controls a paddle that moves vertically up and down on the side of the screen and can compete against AI or a second player, who controls the second paddle on the opposite side. The aim of the game is to hit the ball back and forth and reach 11 points before the opponent (although, I didn't build a scoring system for my implementation as I felt it wasn't necessary).</p>
+
+<h2>History</h2>
+
+<p>Pong is one of the most popular and commercially successful arcade game built by <strong><em>Atari, Inc</em></strong> in 1972. It was the company's first game and was created by <a href="https://en.wikipedia.org/wiki/Allan_Alcorn">Allan Alcorn</a>, who got it as a warm-up exercise from the founder of the company, <a href="https://en.wikipedia.org/wiki/Nolan_Bushnell">Nolan Bushnell</a>.</p>
+
+<h2>Game mechanics</h2>
+
+<p>There are two important mechanics that made it challenging to build this game:</p>
+
+<ul>
+<li><a href="#gameai">Game AI</a></li>
+<li><a href="#ballcollision">Ball Collision</a></li>
+</ul>
+
+<h2><a id="gameai"></a> Game AI</h2>
+
+<p>While I was building Pong, I thought of making it a 2 player game but later I decided to build a simple AI to make things interesting. Building the AI logic for this was simple, <strong><em>"When the player paddle hits the ball, the AI should try it's best to position itself by tracking the ball's destination to hit the it's center"</em></strong>.</p>
+
+<p><strong>Code snippet of the AI object:</strong></p>
+
+<div class="codehilite"><pre><span></span><code><span class="kd">var</span> <span class="nx">ai</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="nx">x</span><span class="o">:</span> <span class="kc">null</span><span class="p">,</span>
+    <span class="nx">y</span><span class="o">:</span> <span class="kc">null</span><span class="p">,</span>
+    <span class="nx">width</span><span class="o">:</span> <span class="mf">10</span><span class="p">,</span>
+    <span class="nx">height</span><span class="o">:</span><span class="mf">100</span><span class="p">,</span>
+
+    <span class="c1">//Update the AI paddle position based on the ball&#39;s direction</span>
+    <span class="nx">update</span><span class="o">:</span> <span class="kd">function</span><span class="p">(){</span>
+        <span class="kd">var</span> <span class="nx">dest_y</span> <span class="o">=</span> <span class="nx">ball</span><span class="p">.</span><span class="nx">y</span> <span class="o">-</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">height</span> <span class="o">-</span> <span class="nx">ball</span><span class="p">.</span><span class="nx">side</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.5</span><span class="p">;</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">y</span> <span class="o">+=</span> <span class="p">(</span><span class="nx">dest_y</span> <span class="o">-</span> <span class="k">this</span><span class="p">.</span><span class="nx">y</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.1</span><span class="p">;</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">y</span><span class="p">,</span> <span class="nx">height</span><span class="o">-</span><span class="k">this</span><span class="p">.</span><span class="nx">height</span><span class="p">),</span> <span class="mf">0</span><span class="p">);</span>
+    <span class="p">},</span>
+    <span class="nx">draw</span><span class="o">:</span> <span class="kd">function</span><span class="p">(){</span>
+        <span class="nx">ctx</span><span class="p">.</span><span class="nx">fillRect</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">y</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">width</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">height</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">};</span>  
+</code></pre></div>
+
+<h2>Ball Collision</h2>
+
+<p>In this game, the collision works a little different than <a href="#">Breakout</a>'s version. I came across an algorithm called <a href="https://en.wikipedia.org/wiki/Minimum_bounding_box#Axis-aligned_minimum_bounding_box">Axis Aligned Bounding Box</a>, which is one of the simpler forms of detecting a collision between a set of objects that are axis aligned that means no rotation. This algorithm also inspired me to use it in my next game, Tetris. </p>
+
+<p><strong>Code snippet of the Axis Aligned Bounding Boxes collision:</strong></p>
+
+<div class="codehilite"><pre><span></span><code><span class="c1">//AABB Collision function</span>
+<span class="kd">var</span> <span class="nx">AABBCollision</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">px</span><span class="p">,</span> <span class="nx">py</span><span class="p">,</span> <span class="nx">pw</span><span class="p">,</span> <span class="nx">ph</span><span class="p">,</span> <span class="nx">bx</span><span class="p">,</span> <span class="nx">by</span><span class="p">,</span> <span class="nx">bw</span><span class="p">,</span> <span class="nx">bh</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">return</span> <span class="nx">px</span> <span class="o">&lt;</span> <span class="nx">bx</span><span class="o">+</span><span class="nx">bw</span> <span class="o">&amp;&amp;</span> <span class="nx">py</span> <span class="o">&lt;</span> <span class="nx">by</span><span class="o">+</span><span class="nx">bh</span> <span class="o">&amp;&amp;</span> <span class="nx">bx</span> <span class="o">&lt;</span> <span class="nx">px</span><span class="o">+</span><span class="nx">pw</span> <span class="o">&amp;&amp;</span> <span class="nx">by</span> <span class="o">&lt;</span> <span class="nx">py</span><span class="o">+</span><span class="nx">ph</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="c1">//if the ball has -ve velocity, it&#39;s hit by AI paddle and it&#39;s the player&#39;s turn</span>
+<span class="c1">//if the ball has +ve velocity, it&#39;s hit by player paddle and it&#39;s the AI&#39;s turn</span>
+<span class="kd">var</span> <span class="nx">paddle</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">velocity</span><span class="p">.</span><span class="nx">x</span> <span class="o">&lt;</span> <span class="mf">0</span> <span class="o">?</span> <span class="nx">player</span> <span class="o">:</span> <span class="nx">ai</span><span class="p">;</span>
+
+<span class="k">if</span><span class="p">(</span><span class="nx">AABBCollision</span><span class="p">(</span><span class="nx">paddle</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">paddle</span><span class="p">.</span><span class="nx">y</span><span class="p">,</span> <span class="nx">paddle</span><span class="p">.</span><span class="nx">width</span><span class="p">,</span> <span class="nx">paddle</span><span class="p">.</span><span class="nx">height</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">y</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">side</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">side</span><span class="p">))</span>
+<span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="p">(</span><span class="nx">paddle</span> <span class="o">==</span> <span class="nx">player</span> <span class="o">?</span> <span class="nx">player</span><span class="p">.</span><span class="nx">x</span><span class="o">+</span><span class="nx">player</span><span class="p">.</span><span class="nx">width</span> <span class="o">:</span> <span class="nx">ai</span><span class="p">.</span><span class="nx">x</span> <span class="o">-</span> <span class="k">this</span><span class="p">.</span><span class="nx">side</span><span class="p">);</span>
+    <span class="kd">var</span> <span class="nx">n</span> <span class="o">=</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">y</span><span class="o">+</span><span class="k">this</span><span class="p">.</span><span class="nx">side</span> <span class="o">-</span> <span class="nx">paddle</span><span class="p">.</span><span class="nx">y</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="nx">paddle</span><span class="p">.</span><span class="nx">height</span><span class="o">+</span><span class="k">this</span><span class="p">.</span><span class="nx">side</span><span class="p">);</span>
+    <span class="kd">var</span> <span class="nx">phi</span> <span class="o">=</span> <span class="mf">0.25</span> <span class="o">*</span> <span class="nx">pi</span> <span class="o">*</span> <span class="p">(</span><span class="mf">2</span> <span class="o">*</span> <span class="nx">n</span> <span class="o">-</span> <span class="mf">1</span><span class="p">);</span>
+    <span class="kd">var</span> <span class="nx">dir</span> <span class="o">=</span> <span class="p">(</span><span class="nx">paddle</span> <span class="o">==</span> <span class="nx">player</span> <span class="o">?</span> <span class="mf">1</span> <span class="o">:</span> <span class="o">-</span><span class="mf">1</span><span class="p">);</span>
+
+    <span class="kd">var</span> <span class="nx">impact</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">abs</span><span class="p">(</span><span class="nx">phi</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">0.2</span> <span class="o">*</span> <span class="nx">pi</span> <span class="o">?</span> <span class="mf">1.5</span> <span class="o">:</span> <span class="mf">1</span><span class="p">;</span>
+
+    <span class="k">this</span><span class="p">.</span><span class="nx">velocity</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="nx">impact</span> <span class="o">*</span> <span class="nx">dir</span> <span class="o">*</span> <span class="k">this</span><span class="p">.</span><span class="nx">speed</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">cos</span><span class="p">(</span><span class="nx">phi</span><span class="p">);</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">velocity</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="nx">impact</span> <span class="o">*</span> <span class="k">this</span><span class="p">.</span><span class="nx">speed</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">sin</span><span class="p">(</span><span class="nx">phi</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>The game was built using HTML5 Canvas and Javascript, so please feel free to read the source code to understand the logic of the game.</p>
+
+<h2>What's next?</h2>
+
+<p>Building this game was fun as I built a simple AI and implemented a better collision detection algorithm. In my first post of this series, I had mentioned that I was working on Tetris and honestly, I finished building that game today as I didn't find the time to work on it. Now that it's ready, hence, my next post will be about <strong><em>Tetris</em></strong>. </p>
+
+<p>Stay Tuned! </p>
+
+<h2>References</h2>
+
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Pong">Pong (1972)</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Minimum_bounding_box#Axis-aligned_minimum_bounding_box">Axis Aligned Bounding Collision</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Allan_Alcorn">Allan Alcorn</a></li>
+</ul>
+
+	</div>
+	<div class="article-footer">
+		<time>August 11th, 2017</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/arcade-challenge/">
+					Arcade Challenge
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/writings/posts/arcade-challenge-2-breakout">Arcade Challenge 2: Breakout</a></h1>
+		<p class="description">This is the second post of this month's personal challenge. I'll be talking about Breakout, it's history and game mechanics, in short.</p>
+	</div>
+	<div class="article-body">
+		<script defer type="text/javascript" src="/static/projects/breakout/js/breakout.js"></script>
+
+<script defer type="text/javascript" src="/static/projects/breakout/js/ball_collision.js"></script>
+
+<figure>
+    <canvas style="border-radius: 0px;" id="breakout_canvas" width="500" height="500"></canvas>
+</figure>
+
+<p>Before you read more about this article, play with the above game. You can control the paddle using the mouse or left-right arrow keys. Press <kbd>P</kbd> to pause the game. Press <kbd>S</kbd> to resume and <kbd>R</kbd> to restart the game.</p>
+
+<p>This is part of the <a href="/posts/i-challenged-myself-to-build-4-arcade-games/">Arcade Challenge</a> series. In the previous post, I built a snake game, <a href="/posts/arcade-challenge-1-snake-game/">click here</a> if you've not read the article.</p>
+
+<h2>Background</h2>
+
+<p>Breakout is a single player game where you have to break a layer of bricks with a ball that travels across the screen (in this case, it's a canvas) that bounces off the walls of the screen. When the ball hits a brick, the ball bounces back and of course, the brick gets destroyed or disappears. If the ball touches the bottom of the screen, the game is over. In order to prevent this from happening, the player is given a movable paddle to bounce the ball upwards, which ensures the game continues.</p>
+
+<h2>History</h2>
+
+<p>Breakout was one of the most popular arcade games developed by <strong><em>Atari, Inc.</em></strong> Inspired by the 1972's Pong, the game was developed and designed by <a href="https://en.wikipedia.org/wiki/Nolan_Bushnell">Nolan Bushnell</a>, <a href="https://en.wikipedia.org/wiki/Steve_Wozniak">Steve Wozniak</a>, Steve Bristow using the hardware built for Pong against it's competitors who built clones of Pong.</p>
+
+<figure>
+    <img src="http://68.media.tumblr.com/15f5cfe691599a10ad9ca9cf33f89ff9/tumblr_ntykhyjQXI1qjotzlo1_1280.jpg"/>
+    <figcaption>Atari's Video Pinball console system</figcaption>
+</figure>
+
+<p>Most notably, the late <strong><em>Steve Jobs</em></strong> was also involved with the development of Breakout as he was approached by Nolan Bushnell to design a prototype that required 150 to 170 computer chips. Jobs brought in Wozniak to work with along with him on building the prototype, who built a version of Pong using 30 computer chips and they both had spent days and nights working on it and finally built the prototype that had 44 computer chips.</p>
+
+<p>However, Wozniak's design wasn't approved by Atari, Inc as they found the design to be complicated and infeasible to manufacture, so they ended up making their own version of the hardware which contained around 100 computer chips.</p>
+
+<h2>Game mechanics</h2>
+
+<p>Unlike the previous post, the game mechanics of this game are quite simple to understand and it makes use of <a href="https://en.wikipedia.org/wiki/Two-dimensional_space">2D Mathematics</a>.</p>
+
+<p>Using 2D Mathematics, I was able to program the ball-brick collision, movement and bounciness of the ball and the movement of the paddle (which can only move on the x-axis).</p>
+
+<h3>Collision Detection</h3>
+
+<p>To check for ball collision, the program must check if the ball has touched / collided with the wall, if so, then the ball's direction will be changed accordingly. The ball can only bounce off from the top, left and right side of the walls and the paddle, if it touches the bottom of the canvas, it's game over.</p>
+
+<p><strong>Ball Movement and Collision Detection:</strong></p>
+
+<p>If the distance between the ball radius and the wall's edge is the same, it will change the ball direction. This would allow a proper ball collision to bounce off the walls.</p>
+
+<figure>
+    <canvas style="border-radius: 0px;" id="ball_collision_canvas" width="500" height="300"></canvas>
+</figure>
+
+<p><strong>Code for Ball Movement and Collision Detection:</strong></p>
+
+<div class="codehilite"><pre><span></span><code><span class="nx">$</span><span class="p">(</span><span class="nb">document</span><span class="p">).</span><span class="nx">ready</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
+    <span class="c1">//Canvas stuff</span>
+    <span class="kd">var</span> <span class="nx">canvas</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s2">&quot;ball_collision_canvas&quot;</span><span class="p">);</span>
+    <span class="kd">var</span> <span class="nx">height</span> <span class="o">=</span> <span class="nx">canvas</span><span class="p">.</span><span class="nx">height</span><span class="p">;</span>
+    <span class="kd">var</span> <span class="nx">width</span> <span class="o">=</span> <span class="nx">canvas</span><span class="p">.</span><span class="nx">width</span><span class="p">;</span>
+    <span class="kd">var</span> <span class="nx">ctx</span> <span class="o">=</span> <span class="nx">canvas</span><span class="p">.</span><span class="nx">getContext</span><span class="p">(</span><span class="s2">&quot;2d&quot;</span><span class="p">);</span>
+
+    <span class="c1">//coordinates of the ball</span>
+    <span class="kd">var</span> <span class="nx">x</span> <span class="o">=</span> <span class="nx">canvas</span><span class="p">.</span><span class="nx">width</span> <span class="o">/</span> <span class="mf">2</span><span class="p">;</span>
+    <span class="kd">var</span> <span class="nx">y</span> <span class="o">=</span> <span class="nx">canvas</span><span class="p">.</span><span class="nx">height</span> <span class="o">-</span> <span class="mf">30</span><span class="p">;</span>
+    <span class="kd">var</span> <span class="nx">dir_x</span> <span class="o">=</span> <span class="mf">2</span><span class="p">;</span>
+    <span class="kd">var</span> <span class="nx">dir_y</span> <span class="o">=</span> <span class="mf">4</span><span class="p">;</span>
+    <span class="kd">var</span> <span class="nx">ball_r</span> <span class="o">=</span> <span class="mf">10</span><span class="p">;</span>
+
+    <span class="c1">//Draw a circle</span>
+    <span class="kd">function</span> <span class="nx">circle</span><span class="p">(</span><span class="nx">x</span><span class="p">,</span><span class="nx">y</span><span class="p">,</span><span class="nx">r</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="nx">ctx</span><span class="p">.</span><span class="nx">fillStyle</span> <span class="o">=</span> <span class="s2">&quot;#FF6D6D&quot;</span><span class="p">;</span>
+        <span class="nx">ctx</span><span class="p">.</span><span class="nx">beginPath</span><span class="p">();</span>
+        <span class="nx">ctx</span><span class="p">.</span><span class="nx">arc</span><span class="p">(</span><span class="nx">x</span><span class="p">,</span><span class="nx">y</span><span class="p">,</span><span class="nx">r</span><span class="p">,</span><span class="mf">0</span><span class="p">,</span><span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span><span class="o">*</span><span class="mf">2</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
+        <span class="nx">ctx</span><span class="p">.</span><span class="nx">closePath</span><span class="p">();</span>
+        <span class="nx">ctx</span><span class="p">.</span><span class="nx">fill</span><span class="p">();</span>
+    <span class="p">}</span>
+
+    <span class="c1">//Draw canvas</span>
+    <span class="kd">function</span> <span class="nx">draw</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="nx">ctx</span><span class="p">.</span><span class="nx">clearRect</span><span class="p">(</span><span class="mf">0</span><span class="p">,</span> <span class="mf">0</span><span class="p">,</span> <span class="nx">width</span><span class="p">,</span> <span class="nx">height</span><span class="p">);</span>
+        <span class="nx">circle</span><span class="p">(</span><span class="nx">x</span><span class="p">,</span><span class="nx">y</span><span class="p">,</span><span class="nx">ball_r</span><span class="p">);</span>
+
+        <span class="cm">/*</span>
+<span class="cm">            If the distance between the ball radius and the wall&#39;s edge is the same,</span>
+<span class="cm">            it will change the ball direction. This would allow a proper ball collision</span>
+<span class="cm">            to bounce off the walls.</span>
+<span class="cm">        */</span>
+        <span class="k">if</span><span class="p">(</span><span class="nx">x</span> <span class="o">+</span> <span class="nx">dir_x</span> <span class="o">&gt;</span> <span class="nx">width</span> <span class="o">-</span> <span class="nx">ball_r</span> <span class="o">||</span> <span class="nx">x</span> <span class="o">+</span> <span class="nx">dir_x</span> <span class="o">&lt;</span> <span class="nx">ball_r</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="nx">dir_x</span> <span class="o">=</span> <span class="o">-</span><span class="nx">dir_x</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="k">if</span><span class="p">(</span><span class="nx">y</span> <span class="o">+</span> <span class="nx">dir_y</span> <span class="o">&gt;</span> <span class="nx">height</span> <span class="o">-</span> <span class="nx">ball_r</span> <span class="o">||</span> <span class="nx">y</span> <span class="o">+</span> <span class="nx">dir_y</span> <span class="o">&lt;</span> <span class="nx">ball_r</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="nx">dir_y</span> <span class="o">=</span> <span class="o">-</span><span class="nx">dir_y</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="nx">x</span> <span class="o">+=</span> <span class="nx">dir_x</span><span class="p">;</span>
+        <span class="nx">y</span> <span class="o">+=</span> <span class="nx">dir_y</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="nx">setInterval</span><span class="p">(</span><span class="nx">draw</span><span class="p">,</span> <span class="mf">10</span><span class="p">);</span>
+<span class="p">});</span>
+</code></pre></div>
+
+<p>The game was built using HTML5 Canvas and Javascript, so please feel free to read the source code to understand the logic of the game.</p>
+
+<h2>What's next?</h2>
+
+<p>In my next post, I'll be talking about the third game that I built in this challenge, Pong. Well, that's it for today, hope you guys have found this post interesting and yes, have fun playing the game!</p>
+
+<p>Peace Out!</p>
+
+<h2>References</h2>
+
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Pong">Pong</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Two-dimensional_space">2D Dimensional Space</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Atari">Atari, Inc</a></li>
+</ul>
+
+	</div>
+	<div class="article-footer">
+		<time>July 22nd, 2017</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/arcade-challenge/">
+					Arcade Challenge
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/writings/posts/arcade-challenge-1-snake-game">Arcade Challenge 1: Snake Game</a></h1>
 		<p class="description">This is the first post of this month's personal challenge. I'll be talking about Snake Game, it's history and game mechanics, in short.</p>
 	</div>
@@ -699,248 +1211,6 @@ plaintext:               H  E  L  L  O  W  O  R  L  D
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/i-built-a-sudoku-solver">I built a Sudoku Solver!</a></h1>
-		<p class="description">I built a sudoku solver using Javascript by implementing the Exhaustive Recursion and Backtracking algorithms.</p>
-	</div>
-	<div class="article-body">
-		<p><link rel="stylesheet" href="/static/projects/sudoku/css/style.css" type="text/css"/></p>
-
-<script defer type="text/javascript" src="/static/projects/sudoku/js/script.js"></script>
-
-<figure>
-    <div id="sudokusolver"></div>
-</figure>
-
-<p>Before you read about this article, try playing the Sudoku Solver above. You can only insert numbers ranging from 1 to 9 in any empty cell. Press <kbd>Random Level</kbd> to generate a random sudoku puzzle. Made a mistake? Press <kbd>Reset</kbd> to clear the board. To test the algorithm, Press <kbd>Solve</kbd> to complete the entire puzzle.</p>
-
-<p>As for the source code, you can view it in my <a href="https://www.github.com/megacolorboy">GitHub repository</a> or can be found near the end of this article.</p>
-
-<h2>What is Sudoku?</h2>
-
-<p>Sudoku stems from the two Japanese words: "Su" and "doku", when translated to English, it means "single numbers only". Although, many people feel that Sudoku was invented by the Japanese, it was actually invented by an American named <a href="https://en.wikipedia.org/wiki/Howard_Garns">Howard Garns</a> in 1979 under the name "Number Place" but died in 1989 before a Japanese publisher named <a href="https://en.wikipedia.org/wiki/Nikoli_(publisher)">Nikoli</a> made it popular, renamed it as "Sudoku" and which of course, became mainstream in 1986.</p>
-
-<h2>What is it about?</h2>
-
-<p>Sudoku is a logic-based, combinatorial, 9x9 number grid puzzle. The puzzles are usually a partially completed grid, thus allows the puzzle solver to come up with a single solution to the puzzle. The objective of this game is to fill the empty spaces in the partially completed 9x9 grid in such a way that each row, column and 3x3 subgrids (that compose the grid) contains all digits from 1 to 9.</p>
-
-<h2>Why did I build it?</h2>
-
-<p>Well, one day, I downloaded a Sudoku game on my iPhone and I got hooked to it instantly. I would play the game, usually, during metro rides to my university or any long trips to not make myself feel bored. So one day, I thought <strong><em>"What if I built a sudoku solver and see if it could solve all the puzzles from the game?"</em></strong>, which made me even more curious to see how a computer would do it.</p>
-
-<h2>Implementation</h2>
-
-<p>Okay, I know this is the part that you must be waiting for: <strong><em>"How to implement this?"</em></strong>. As I was doing my research on how to implement it, I came across two algorithmic techniques:</p>
-
-<ul>
-<li><a href="https://en.wikipedia.org/wiki/Recursion_(computer_science)">Recursion</a></li>
-<li><a href="https://en.wikipedia.org/wiki/Backtracking">Backtracking</a></li>
-</ul>
-
-<h3>Recursion</h3>
-
-<p>Recursion is an algorithmic technique used for breaking down larger problems into smaller instances of the same problem. This is also known as <a href="https://en.wikipedia.org/wiki/Divide_and_conquer_algorithm">Divide-and-Conquer</a> method. This is usually used in binary search, reversing a file, generating large Fibonacci numbers and the list could go on.</p>
-
-<h3>Backtracking</h3>
-
-<p>Backtracking is an algorithmic technique used for searching every possible combination in order to solve a problem in an optimized way. You could be familiar with this technique in popular problems like Chess, the 8 Queen Puzzle or Crossword solvers.</p>
-
-<h3>Explanation</h3>
-
-<p>Imagine, you're playing chess with a friend and you've made a silly move, which prompts you to ask your friend: <em>"Hey, I made a mistake! Can I go back to my old move?"</em>, your friend (hopefully, a merciful one) would allow you to return back to your old move. So in this case, you'll return back to your old position and begin to restrategize your plans on how to take down the next pawn or maybe finally hatch your plot to trap your opponent's King (you evil person). If it fails, you can ask again but I don't think your friend would be dumb enough to give you another chance!</p>
-
-<p><strong>Here's a pseudocode on how this strategy would work:</strong></p>
-
-<div class="codehilite"><pre><span></span><code>Find [row,col] of an unassigned cell
-If there is none, then return true
-
-For digits from 1 to 9
-    If there is no conflict for digit at [row,col]
-        Assign digit to [row,col] and recursively try to fill in the rest of the grid
-        If this recursion is successful, return true
-        Otherwise, remove this digit and try another one
-    If all digits have been tried for this cell and nothing worked out
-        return false, trigger backtracking and try again
-</code></pre></div>
-
-<p><strong>Javascript implementation:</strong></p>
-
-<div class="codehilite"><pre><span></span><code><span class="c1">//Sudoku solver </span>
-<span class="kd">function</span> <span class="nx">solveSudoku</span><span class="p">(</span><span class="nx">grid</span><span class="p">,</span> <span class="nx">row</span><span class="p">,</span> <span class="nx">col</span><span class="p">)</span> <span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">cell</span> <span class="o">=</span> <span class="nx">findUnassignedLocation</span><span class="p">(</span><span class="nx">grid</span><span class="p">,</span> <span class="nx">row</span><span class="p">,</span> <span class="nx">col</span><span class="p">);</span>
-    <span class="nx">row</span> <span class="o">=</span> <span class="nx">cell</span><span class="p">[</span><span class="mf">0</span><span class="p">];</span>
-    <span class="nx">col</span> <span class="o">=</span> <span class="nx">cell</span><span class="p">[</span><span class="mf">1</span><span class="p">];</span>
-
-    <span class="c1">// base case: if there&#39;s no empty cell  </span>
-    <span class="k">if</span> <span class="p">(</span><span class="nx">row</span> <span class="o">==</span> <span class="o">-</span><span class="mf">1</span><span class="p">)</span> <span class="p">{</span>
-        <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
-    <span class="p">}</span>
-
-    <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">num</span> <span class="o">=</span> <span class="mf">1</span><span class="p">;</span> <span class="nx">num</span> <span class="o">&lt;=</span> <span class="mf">9</span><span class="p">;</span> <span class="nx">num</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-
-        <span class="k">if</span> <span class="p">(</span><span class="nx">noConflicts</span><span class="p">(</span><span class="nx">grid</span><span class="p">,</span> <span class="nx">row</span><span class="p">,</span> <span class="nx">col</span><span class="p">,</span> <span class="nx">num</span><span class="p">))</span> <span class="p">{</span>   
-            <span class="nx">grid</span><span class="p">[</span><span class="nx">row</span><span class="p">][</span><span class="nx">col</span><span class="p">]</span> <span class="o">=</span> <span class="nx">num</span><span class="p">;</span>
-
-            <span class="k">if</span> <span class="p">(</span><span class="nx">solveSudoku</span><span class="p">(</span><span class="nx">grid</span><span class="p">,</span> <span class="nx">row</span><span class="p">,</span> <span class="nx">col</span><span class="p">))</span> <span class="p">{</span>                
-                <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
-            <span class="p">}</span>
-
-            <span class="c1">// mark cell as empty (with 0)    </span>
-            <span class="nx">grid</span><span class="p">[</span><span class="nx">row</span><span class="p">][</span><span class="nx">col</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0</span><span class="p">;</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-
-    <span class="c1">// trigger back tracking</span>
-    <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>
-<span class="p">}</span>
-
-<span class="c1">//Find an empty cell</span>
-<span class="kd">function</span> <span class="nx">findUnassignedLocation</span><span class="p">(</span><span class="nx">grid</span><span class="p">,</span> <span class="nx">row</span><span class="p">,</span> <span class="nx">col</span><span class="p">)</span> <span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">done</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
-    <span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="mf">1</span><span class="p">,</span> <span class="o">-</span><span class="mf">1</span><span class="p">];</span>
-
-    <span class="k">while</span> <span class="p">(</span><span class="o">!</span><span class="nx">done</span><span class="p">)</span> <span class="p">{</span>
-        <span class="k">if</span> <span class="p">(</span><span class="nx">row</span> <span class="o">==</span> <span class="mf">9</span><span class="p">)</span> <span class="p">{</span>
-            <span class="nx">done</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
-        <span class="p">}</span>
-        <span class="k">else</span> <span class="p">{</span>
-            <span class="k">if</span> <span class="p">(</span><span class="nx">grid</span><span class="p">[</span><span class="nx">row</span><span class="p">][</span><span class="nx">col</span><span class="p">]</span> <span class="o">==</span> <span class="mf">0</span><span class="p">)</span> <span class="p">{</span>
-                <span class="nx">res</span><span class="p">[</span><span class="mf">0</span><span class="p">]</span> <span class="o">=</span> <span class="nx">row</span><span class="p">;</span>
-                <span class="nx">res</span><span class="p">[</span><span class="mf">1</span><span class="p">]</span> <span class="o">=</span> <span class="nx">col</span><span class="p">;</span>
-                <span class="nx">done</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
-            <span class="p">}</span>
-            <span class="k">else</span> <span class="p">{</span>
-                <span class="k">if</span> <span class="p">(</span><span class="nx">col</span> <span class="o">&lt;</span> <span class="mf">8</span><span class="p">)</span> <span class="p">{</span>
-                    <span class="nx">col</span><span class="o">++</span><span class="p">;</span>
-                <span class="p">}</span>
-                <span class="k">else</span> <span class="p">{</span>
-                    <span class="nx">row</span><span class="o">++</span><span class="p">;</span>
-                    <span class="nx">col</span> <span class="o">=</span> <span class="mf">0</span><span class="p">;</span>
-                <span class="p">}</span>
-            <span class="p">}</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-
-    <span class="k">return</span> <span class="nx">res</span><span class="p">;</span>
-<span class="p">}</span>
-
-<span class="c1">//Check if there are any conflicts in row, column or 3x3 subgrid</span>
-<span class="kd">function</span> <span class="nx">noConflicts</span><span class="p">(</span><span class="nx">grid</span><span class="p">,</span> <span class="nx">row</span><span class="p">,</span> <span class="nx">col</span><span class="p">,</span> <span class="nx">num</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="nx">isRowOk</span><span class="p">(</span><span class="nx">grid</span><span class="p">,</span> <span class="nx">row</span><span class="p">,</span> <span class="nx">num</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="nx">isColOk</span><span class="p">(</span><span class="nx">grid</span><span class="p">,</span> <span class="nx">col</span><span class="p">,</span> <span class="nx">num</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="nx">isBoxOk</span><span class="p">(</span><span class="nx">grid</span><span class="p">,</span> <span class="nx">row</span><span class="p">,</span> <span class="nx">col</span><span class="p">,</span> <span class="nx">num</span><span class="p">);</span>
-<span class="p">}</span>
-
-<span class="c1">//Check if this number is valid in this row</span>
-<span class="kd">function</span> <span class="nx">isRowOk</span><span class="p">(</span><span class="nx">grid</span><span class="p">,</span> <span class="nx">row</span><span class="p">,</span> <span class="nx">num</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">col</span> <span class="o">=</span> <span class="mf">0</span><span class="p">;</span> <span class="nx">col</span> <span class="o">&lt;</span> <span class="mf">9</span><span class="p">;</span> <span class="nx">col</span><span class="o">++</span><span class="p">)</span>
-        <span class="k">if</span> <span class="p">(</span><span class="nx">grid</span><span class="p">[</span><span class="nx">row</span><span class="p">][</span><span class="nx">col</span><span class="p">]</span> <span class="o">==</span> <span class="nx">num</span><span class="p">)</span>
-            <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>
-
-    <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
-<span class="p">}</span>
-
-<span class="c1">//Check if this number is valid in this column</span>
-<span class="kd">function</span> <span class="nx">isColOk</span><span class="p">(</span><span class="nx">grid</span><span class="p">,</span> <span class="nx">col</span><span class="p">,</span> <span class="nx">num</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">row</span> <span class="o">=</span> <span class="mf">0</span><span class="p">;</span> <span class="nx">row</span> <span class="o">&lt;</span> <span class="mf">9</span><span class="p">;</span> <span class="nx">row</span><span class="o">++</span><span class="p">)</span>
-    <span class="k">if</span> <span class="p">(</span><span class="nx">grid</span><span class="p">[</span><span class="nx">row</span><span class="p">][</span><span class="nx">col</span><span class="p">]</span> <span class="o">==</span> <span class="nx">num</span><span class="p">)</span>
-        <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>
-
-    <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>    
-<span class="p">}</span>
-
-<span class="c1">//check if this number is valid in 3x3 subgrid</span>
-<span class="kd">function</span> <span class="nx">isBoxOk</span><span class="p">(</span><span class="nx">grid</span><span class="p">,</span> <span class="nx">row</span><span class="p">,</span> <span class="nx">col</span><span class="p">,</span> <span class="nx">num</span><span class="p">)</span> <span class="p">{</span>
-    <span class="nx">row</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nx">row</span> <span class="o">/</span> <span class="mf">3</span><span class="p">)</span> <span class="o">*</span> <span class="mf">3</span><span class="p">;</span>
-    <span class="nx">col</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nx">col</span> <span class="o">/</span> <span class="mf">3</span><span class="p">)</span> <span class="o">*</span> <span class="mf">3</span><span class="p">;</span>
-
-    <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">r</span> <span class="o">=</span> <span class="mf">0</span><span class="p">;</span> <span class="nx">r</span> <span class="o">&lt;</span> <span class="mf">3</span><span class="p">;</span> <span class="nx">r</span><span class="o">++</span><span class="p">)</span>
-        <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">c</span> <span class="o">=</span> <span class="mf">0</span><span class="p">;</span> <span class="nx">c</span> <span class="o">&lt;</span> <span class="mf">3</span><span class="p">;</span> <span class="nx">c</span><span class="o">++</span><span class="p">)</span>
-            <span class="k">if</span> <span class="p">(</span><span class="nx">grid</span><span class="p">[</span><span class="nx">row</span> <span class="o">+</span> <span class="nx">r</span><span class="p">][</span><span class="nx">col</span> <span class="o">+</span> <span class="nx">c</span><span class="p">]</span> <span class="o">==</span> <span class="nx">num</span><span class="p">)</span>
-                <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>
-
-    <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
-<span class="p">}</span>
-</code></pre></div>
-
-<h2>What's next?</h2>
-
-<p>So now that you have understood the rough concept of how it works, combining and applying these two techniques in a Sudoku puzzle i.e. trying out every possible number to fill an empty square in the 9x9 grid would allow the computer to solve Sudoku puzzles more efficiently and quickly than using a plain <a href="https://en.wikipedia.org/wiki/Brute-force_search">Brute Force</a> technique on puzzle that has around 4 x 1038 possibilities (which means, you'll probably require next-gen hardware to compute one puzzle that could take billions of years!)</p>
-
-<p>Oh, you can play around with the Sudoku Solver above by trying out a Sudoku puzzle or generate a random one and solve it. Or best, if you'd like to challenge yourself, you could try to implement this solution on Project Euler's <a href="https://projecteuler.net/problem=96">Problem 96</a> by solving all 50 sudoku puzzles in a row!</p>
-
-<h2>References</h2>
-
-<ul>
-<li><a href="https://see.stanford.edu/materials/icspacs106b/H19-RecBacktrackExamples.pdf">Stanford's Exhaustive Recursion and Backtracking</a></li>
-<li><a href="http://norvig.com/sudoku.html">Solving Every Sudoku Puzzle</a></li>
-</ul>
-
-	</div>
-	<div class="article-footer">
-		<time>April 29th, 2017</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/algorithms/">
-					Algorithms
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/data-structures/">
-					Data Structures
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/hello-world">Hello World</a></h1>
-		<p class="description">Hello World. This is my first blog post. Hope you'll like my future blog posts!</p>
-	</div>
-	<div class="article-body">
-		<p>Hello World! This is my first blog post.</p>
-
-<div class="codehilite"><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span><span class="cp"></span>
-<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"></span>
-<span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Hello World&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
-</code></pre></div>
-
-<p>I'm not a huge fan of open source CMS projects like Wordpress and Drupal, I decided to build my own custom blog engine for talking and discussing about my favorite topics.</p>
-
-<p>For this blog, I aimed for a minimalistic look, hence I decided not to use any templates or CSS frameworks to make it look bloated or fancy.</p>
-
-<p>On using this blogspace of mine, I intend to talk about technology, math, computer science, design, programming experience and a lot of positive stuff.</p>
-
-<p>Hopefully, I will try my best to update this blog as frequently as possible.</p>
-
-<p>Hope you guys will enjoy reading my future blog posts!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>April 28th, 2017</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/general/">
-					General
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -971,7 +1241,13 @@ For digits from 1 to 9
 			<a class="active" href="/pages/24">24</a>
 		
 	
+		
+			<a class="" href="/pages/25">25</a>
+		
+	
 
+	
+		<a href="/pages/25">&raquo;</a>
 	
 </div>
 
@@ -1015,6 +1291,13 @@ For digits from 1 to 9
 		</li>
 		
 		<li>
+			<a href="/category/javascript/">
+				JavaScript
+				<span class="count">11</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/terminal/">
 				Terminal
 				<span class="count">11</span>
@@ -1032,13 +1315,6 @@ For digits from 1 to 9
 			<a href="/category/cryptography/">
 				Cryptography
 				<span class="count">11</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/javascript/">
-				JavaScript
-				<span class="count">10</span>
 			</a>
 		</li>
 		
@@ -1120,6 +1396,13 @@ For digits from 1 to 9
 		</li>
 		
 		<li>
+			<a href="/category/blogmarks/">
+				Blogmarks
+				<span class="count">4</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/apache/">
 				Apache
 				<span class="count">4</span>
@@ -1172,13 +1455,6 @@ For digits from 1 to 9
 			<a href="/category/general/">
 				General
 				<span class="count">3</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/blogmarks/">
-				Blogmarks
-				<span class="count">2</span>
 			</a>
 		</li>
 		

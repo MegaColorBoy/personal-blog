@@ -78,6 +78,159 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/show-git-branch-in-your-bash-prompt-with-colors">Show Git branch in your Bash prompt (with colors)</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Do you work on a project with multiple Git branches but don't know which one you're in? Open your <code>.bashrc</code> file and add this:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="nv">force_color_prompt</span><span class="o">=</span>yes
+<span class="nv">color_prompt</span><span class="o">=</span>yes
+
+parse_git_branch<span class="o">()</span> <span class="o">{</span>
+ git branch <span class="m">2</span>&gt; /dev/null <span class="p">|</span> sed -e <span class="s1">&#39;/^[^*]/d&#39;</span> -e <span class="s1">&#39;s/* \(.*\)/(\1)/&#39;</span>
+<span class="o">}</span>
+
+<span class="k">if</span> <span class="o">[</span> <span class="s2">&quot;</span><span class="nv">$color_prompt</span><span class="s2">&quot;</span> <span class="o">=</span> yes <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
+ <span class="nv">PS1</span><span class="o">=</span><span class="s1">&#39;${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[01;31m\]$(parse_git_branch)\[\033[00m\]\$ &#39;</span>
+<span class="k">else</span>
+ <span class="nv">PS1</span><span class="o">=</span><span class="s1">&#39;${debian_chroot:+($debian_chroot)}\u@\h:\w$(parse_git_branch)\$ &#39;</span>
+<span class="k">fi</span>
+
+<span class="nb">unset</span> color_prompt force_color_prompt
+</code></pre></div>
+
+<p>Save the file and execute this command for your changes to take effect:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="nb">source</span> ~/.bashrc
+</code></pre></div>
+
+<p>Now, you should see your colors in your Bash prompt along with the Git branch that you're working on (<strong>Note: this will be shown if you're in a project that uses a Git repository</strong>).</p>
+
+<p>Hope this helps you out!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>March 12th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/bash/">
+					Bash
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/check-if-trait-is-being-used-in-your-class">Check if trait is being used in your class</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Want to know if a trait is being used in your current class? Try this:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="nb">in_array</span><span class="p">(</span><span class="nx">Foo</span><span class="o">::</span><span class="na">class</span><span class="p">,</span> <span class="nb">class_uses</span><span class="p">(</span><span class="nv">$this</span><span class="p">))</span>
+<span class="cp">?&gt;</span><span class="x"></span>
+</code></pre></div>
+
+<p>By any chance, if the current class is inherited, please note that the <code>class_uses()</code> method will only return the list of traits used by the current class and won't include any traits of it's parent class.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>March 12th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/php/">
+					PHP
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-resolve-the-issue-of-not-receiving-emails-on-the-same-domain">How to resolve the issue of not receiving emails on the same domain?</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Recently, we hosted our company's redesigned website on GoDaddy, which offers cPanel to manage your website. I was dealing with an annoying email bug in which I was able to send/receive emails to any account except the ones that share the company domain.</p>
+
+<p>The company's current email setup makes use of Google Workspace and since we're using a Shared Hosting account, GoDaddy allows you to use their SMTP relay and prohibits the use of third-party SMTP services such as Google Workspace, Outlook, etc.</p>
+
+<p>After configuring it with Google's MX records in the DNS settings, I wasn't receiving any email on my own company email yet I was able to receive on other email accounts that didn't share the company's domain.</p>
+
+<p>I did a little R&amp;D and ran into this documentation about <a href="https://docs.cpanel.net/cpanel/email/email-routing/">email routing</a> and figured out that there could be an issue with it's configuration.</p>
+
+<p>Here's what I did:</p>
+
+<ol>
+<li>Open cPanel </li>
+<li>Search or look for <strong>Email Routing</strong></li>
+<li>Click on <strong>Email Routing</strong></li>
+<li>If your MX records are not pointing to the IP address of the hosting server, then select <strong>Remote Mail Exchanger</strong></li>
+<li>Save changes</li>
+</ol>
+
+<p>After following these steps, I was able to receive mails on the same domain!</p>
+
+<h2>So what really caused the issue?</h2>
+
+<p>Since, we didn't have a default email address set up in cPanel, the current mode to send all unrouted emails was set to <code>:blackhole:</code>, by default. I guess, it's set up that way to prevent the server from sending/receiving spam mails from the domain.</p>
+
+<p>This makes sense because:</p>
+
+<ol>
+<li>The MX records are not pointing to the current server</li>
+<li>There are no email accounts created for the domain on cPanel</li>
+<li>By setting the mode to <code>:blackhole</code>, all emails with the same domain are being discarded or rejected</li>
+</ol>
+
+<p>Not really sure if this is what caused the issue but judging from the facts, I was able to reach to this conclusion.</p>
+
+<p>Hope you found this tip useful.</p>
+
+<h2>Reference</h2>
+
+<ul>
+<li><a href="https://stackoverflow.com/questions/1107730/cant-send-email-to-addresses-at-my-own-domain">Can't send email to addresses at my own domain</a></li>
+</ul>
+
+	</div>
+	<div class="article-footer">
+		<time>March 12th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/cpanel/">
+					cPanel
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/email/">
+					Email
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/convert-string-to-variable-in-php">Convert string to variable in PHP</a></h1>
 		<p class="description"></p>
 	</div>
@@ -254,144 +407,6 @@
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/clearing-cache-on-a-shared-hosting-server">Clearing cache on a Shared Hosting Server</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Hosted your website on a Shared Hosting Server and got limited access to clear the cache on your project?</p>
-
-<p>Open up <code>routes/web.php</code> and create this route:</p>
-
-<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="nx">Route</span><span class="o">::</span><span class="na">get</span><span class="p">(</span><span class="s1">&#39;/clearcache&#39;</span><span class="p">,</span> <span class="k">function</span><span class="p">(){</span>
-    <span class="nx">\Artisan</span><span class="o">::</span><span class="na">run</span><span class="p">(</span><span class="s1">&#39;config:clear&#39;</span><span class="p">);</span>
-    <span class="nx">\Artisan</span><span class="o">::</span><span class="na">run</span><span class="p">(</span><span class="s1">&#39;cache:clear&#39;</span><span class="p">);</span>
-    <span class="nx">\Artisan</span><span class="o">::</span><span class="na">run</span><span class="p">(</span><span class="s1">&#39;view:clear&#39;</span><span class="p">);</span>
-    <span class="nx">\Artisan</span><span class="o">::</span><span class="na">run</span><span class="p">(</span><span class="s1">&#39;route:clear&#39;</span><span class="p">);</span>
-    <span class="nx">\Artisan</span><span class="o">::</span><span class="na">run</span><span class="p">(</span><span class="s1">&#39;config:cache&#39;</span><span class="p">);</span>
-<span class="p">});</span>
-<span class="cp">?&gt;</span><span class="x"></span>
-</code></pre></div>
-
-<p>Just type the URL and it will clear all existing cache from the project.</p>
-
-<p>Hope this helps you out!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>March 12th, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/laravel/">
-					Laravel
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/convert-string-to-date-using-mysql">Convert string to date using MySQL</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Today, I was debugging a piece of code that is supposed to return a list of data based on the year, the funny thing is that the data was being returned on the development server but not on the production one.</p>
-
-<p>Weird, so I opened up <strong>MySQL Workbench</strong> and wrote a simple query to see if the dates were being returned because who knows maybe they weren't stored at all.</p>
-
-<div class="codehilite"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="kt">YEAR</span><span class="p">(</span><span class="n">date_posted</span><span class="p">)</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">posts</span><span class="p">;</span><span class="w"></span>
-</code></pre></div>
-
-<p>The values returned were <code>null</code>. Now, that's strange because the dates were present in the column. So, I took a deep look and figured out that the dates were stored in <code>VARCHAR</code> instead of <code>DATETIME</code> data type! &#x1F614;</p>
-
-<p>Luckily, I figured that there's a way to resolve this by <code>STR_TO_DATE()</code> function:</p>
-
-<div class="codehilite"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="kt">YEAR</span><span class="p">(</span><span class="nf">STR_TO_DATE</span><span class="p">(</span><span class="n">date_posted</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;%Y-%m-%d&#39;</span><span class="p">))</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">posts</span><span class="p">;</span><span class="w"></span>
-</code></pre></div>
-
-<p>Bam! The results were coming now! &#x1F60C;</p>
-
-<p>Hope this helps you out!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>March 12th, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/mysql/">
-					MySQL
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/use-mysql-80-with-native-password-authentication">Use MySQL 8.0 with Native Password Authentication</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Last month, I was configuring an Ubuntu Server to deploy a client's project that uses MySQL 8.0 and PHP 7.2.
-So, I installed the necessary dependencies and finally installed MySQL 8.0, created a new schema and imported the database tables required for the project.</p>
-
-<p>Next, I typed the project URL and ran into this error:</p>
-
-<div class="codehilite"><pre><span></span><code>Unable to load plugin &#39;caching_sha2_password&#39;
-</code></pre></div>
-
-<p>If you're running PHP 7.2 and facing this error, you should know that PHP 7.2 doesn't support native password authentication by default. But it's a simple fix, all you have to do is either one of the following:</p>
-
-<ol>
-<li><a href="#opt1">Alter the current user's authentication to native password</a></li>
-<li><a href="#opt2">Create a new user with native password authentication</a></li>
-</ol>
-
-<h2><a id="opt1"></a> Alter the current user's authentication to native password</h2>
-
-<div class="codehilite"><pre><span></span><code><span class="k">ALTER</span><span class="w"> </span><span class="k">USER</span><span class="w"> </span><span class="s1">&#39;your_user&#39;</span><span class="nv">@&#39;your_server_host&#39;</span><span class="w"> </span><span class="k">IDENTIFIED</span><span class="w"> </span><span class="k">WITH</span><span class="w"> </span><span class="n">mysql_native_password</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="s1">&#39;your_password&#39;</span><span class="p">;</span><span class="w"></span>
-</code></pre></div>
-
-<h2><a id="opt2"></a> Create a new user with native password authentication</h2>
-
-<div class="codehilite"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">USER</span><span class="w"> </span><span class="s1">&#39;your_user&#39;</span><span class="nv">@&#39;your_server_host &#39;</span><span class="w"> </span><span class="k">IDENTIFIED</span><span class="w"> </span><span class="k">WITH</span><span class="w"> </span><span class="n">mysql_native_password</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="s1">&#39;your_password&#39;</span><span class="w"></span>
-</code></pre></div>
-
-<p>For the changes to take effect, you need to reload the privileges by typing the following:</p>
-
-<div class="codehilite"><pre><span></span><code><span class="k">FLUSH</span><span class="w"> </span><span class="k">PRIVILEGES</span><span class="p">;</span><span class="w"></span>
-</code></pre></div>
-
-<p>Hope this helps you out!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>March 12th, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/mysql/">
-					MySQL
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -431,11 +446,11 @@ So, I installed the necessary dependencies and finally installed MySQL 8.0, crea
 		
 	
 		
-			<a class="" href="/pages/15">...</a>
+			<a class="" href="/pages/16">...</a>
 		
 	
 		
-			<a class="" href="/pages/24">24</a>
+			<a class="" href="/pages/25">25</a>
 		
 	
 
@@ -484,6 +499,13 @@ So, I installed the necessary dependencies and finally installed MySQL 8.0, crea
 		</li>
 		
 		<li>
+			<a href="/category/javascript/">
+				JavaScript
+				<span class="count">11</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/terminal/">
 				Terminal
 				<span class="count">11</span>
@@ -501,13 +523,6 @@ So, I installed the necessary dependencies and finally installed MySQL 8.0, crea
 			<a href="/category/cryptography/">
 				Cryptography
 				<span class="count">11</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/javascript/">
-				JavaScript
-				<span class="count">10</span>
 			</a>
 		</li>
 		
@@ -589,6 +604,13 @@ So, I installed the necessary dependencies and finally installed MySQL 8.0, crea
 		</li>
 		
 		<li>
+			<a href="/category/blogmarks/">
+				Blogmarks
+				<span class="count">4</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/apache/">
 				Apache
 				<span class="count">4</span>
@@ -641,13 +663,6 @@ So, I installed the necessary dependencies and finally installed MySQL 8.0, crea
 			<a href="/category/general/">
 				General
 				<span class="count">3</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/blogmarks/">
-				Blogmarks
-				<span class="count">2</span>
 			</a>
 		</li>
 		

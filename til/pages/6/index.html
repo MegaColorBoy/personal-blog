@@ -77,6 +77,53 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-resolve-the-filegetcontents-ssl-operation-failed-error">How to resolve the "file_get_contents(): SSL operation failed" error</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>If you're facing this error while trying to download a file from your server, it's most probably the SSL certificate that has been hosted on your server isn't correctly verified or maybe, you're using OpenSSL on a server running PHP 5.6.</p>
+
+<p>As per the <a href="http://php.net/manual/en/migration56.openssl.php">documentation</a>, there are some changes that can be made to resolve it, like the following method:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="k">public</span> <span class="k">function</span> <span class="nf">foo</span><span class="p">(</span><span class="nx">Request</span> <span class="nv">$request</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nv">$arrContextOptions</span> <span class="o">=</span> <span class="k">array</span><span class="p">(</span>
+        <span class="s2">&quot;ssl&quot;</span> <span class="o">=&gt;</span> <span class="k">array</span><span class="p">(</span>
+            <span class="s2">&quot;verify_peer&quot;</span> <span class="o">=&gt;</span> <span class="k">false</span><span class="p">,</span>
+            <span class="s2">&quot;verify_peer_name&quot;</span> <span class="o">=&gt;</span> <span class="k">false</span><span class="p">,</span>
+        <span class="p">),</span>
+    <span class="p">);</span>
+    <span class="k">return</span> <span class="nx">Response</span><span class="o">::</span><span class="na">make</span><span class="p">(</span><span class="nb">file_get_contents</span><span class="p">(</span><span class="nx">asset</span><span class="p">(</span><span class="s1">&#39;pdf/file.pdf&#39;</span><span class="p">),</span> <span class="k">false</span><span class="p">,</span> <span class="nb">stream_context_create</span><span class="p">(</span><span class="nv">$arrContextOptions</span><span class="p">)),</span> <span class="mi">200</span><span class="p">,</span> <span class="p">[</span>
+        <span class="s1">&#39;Content-Type&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;application/pdf&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;Content-Disposition&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;inline; filename=&quot;file.pdf&quot;&#39;</span><span class="p">,</span>
+    <span class="p">]);</span>
+<span class="p">}</span>
+<span class="cp">?&gt;</span><span class="x"></span>
+</code></pre></div>
+
+<p>Although, I won't recommend this unless you are testing it on a <code>localhost</code> environment as it's not secure and could have significant security implications because disabling verification can permit a <a href="https://en.wikipedia.org/wiki/Man-in-the-middle_attack">Man in the Middle attack</a> to take place.</p>
+
+<p>Use it at your own risk!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>March 12th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/php/">
+					PHP
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/how-to-resolve-the-failed-to-clear-cache-make-sure-you-have-the-appropriate-permissions-error">How to resolve the "Failed to clear cache. Make sure you have the appropriate permissions." error</a></h1>
 		<p class="description"></p>
 	</div>
@@ -371,38 +418,6 @@ composer require orangehill/iseed
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/resolve-the-general-error-1835-malformed-communication-packet-error">Resolve the "General error: 1835 Malformed communication packet" error</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>This happened like two days ago, when one of the client sites went down. Upon inspecting the error logs, I found this:</p>
-
-<div class="codehilite"><pre><span></span><code>SQLSTATE[HY000]: General error: 1835 Malformed communication packet
-</code></pre></div>
-
-<p>If you got the same error as the one above, don't worry, it's not your fault. According to this <a href="https://jira.mariadb.org/browse/MDEV-24121">forum</a>, <strong>a recent MariaDB update introduced a new bug for PHP versions &lt; 7.3</strong> that uses PDO and MySQL connectors. You can easily resolve this by simply upgrading it to PHP 7.3.</p>
-
-<p>Hope this tip helps you out!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>November 7th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/php/">
-					PHP
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -485,6 +500,13 @@ composer require orangehill/iseed
 		</li>
 		
 		<li>
+			<a href="/category/javascript/">
+				JavaScript
+				<span class="count">11</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/terminal/">
 				Terminal
 				<span class="count">11</span>
@@ -502,13 +524,6 @@ composer require orangehill/iseed
 			<a href="/category/cryptography/">
 				Cryptography
 				<span class="count">11</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/javascript/">
-				JavaScript
-				<span class="count">10</span>
 			</a>
 		</li>
 		
@@ -590,6 +605,13 @@ composer require orangehill/iseed
 		</li>
 		
 		<li>
+			<a href="/category/blogmarks/">
+				Blogmarks
+				<span class="count">4</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/apache/">
 				Apache
 				<span class="count">4</span>
@@ -642,13 +664,6 @@ composer require orangehill/iseed
 			<a href="/category/general/">
 				General
 				<span class="count">3</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/blogmarks/">
-				Blogmarks
-				<span class="count">2</span>
 			</a>
 		</li>
 		

@@ -78,6 +78,139 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-perform-mysqldump-without-a-password-prompt">How to perform mysqldump without a password prompt?</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>If you're performing a mass database backup using <code>mysqldump</code>, you'll pretty much find it annoying to type in the password every single time.</p>
+
+<p>To get rid of it, open <code>/etc/mysql/my.cnf</code> configuration file and add your database credentials:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="err">[</span><span class="n">mysqldump</span><span class="err">]</span><span class="w"></span>
+<span class="k">user</span><span class="o">=</span><span class="s2">&quot;your_username&quot;</span><span class="w"></span>
+<span class="k">password</span><span class="o">=</span><span class="s2">&quot;your_password&quot;</span><span class="w"></span>
+</code></pre></div>
+
+<p>Once done, save the <code>my.cnf</code> configuration file and now, you can try exporting your database without a hassle like this:</p>
+
+<div class="codehilite"><pre><span></span><code>mysqldump -u your_username database_name &gt; database.sql
+</code></pre></div>
+
+<p>Hope this trick helps you out!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>April 10th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/unix/">
+					UNIX
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-recover-from-an-errorneous-forced-git-commit">How to recover from an errorneous forced git commit?</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>If you're the type of person who types <code>git push -f origin master</code>, please don't do that as it might overwrite your entire branch. I'm saying this because I did this once and I thought I lost all the files.</p>
+
+<p>Luckily, I was a bit relieved as <code>git</code> is a VCS (Version Control Software), which means the files are most likely not <strong>deleted</strong>. This is when I came across <code>git reflog</code> command.</p>
+
+<p>According to the <a href="https://git-scm.com/docs/git-reflog">Git manual</a>, this is what it does:</p>
+
+<blockquote>
+  <p>Reference logs, or "reflogs", record when the tips of branches and other references were updated in the local repository.</p>
+</blockquote>
+
+<p>This is a life-saver especially if you wanted to return back to the previous point in time. Here's how I recovered my files back again:</p>
+
+<ol>
+<li>Type <code>git reflog show remotes/origin/master</code></li>
+<li>Find and make note of the previous commit hash.</li>
+<li>Create a new branch with using the previous commit hash like this: <code>git branch &lt;new_branch_name&gt; &lt;previous_commit_hash&gt;</code></li>
+<li>Then finally, push the files to the new branch: <code>git add . &amp;&amp; git commit -m "pushing recovered files" &amp;&amp; git push origin &lt;new_branch_name&gt;</code></li>
+<li>Checkout to the newly created branch: <code>git checkout &lt;new_branch_name&gt;</code></li>
+<li>Delete the corrupted branch and replace it with the newly created branch that contains your restored files.</li>
+</ol>
+
+<p>If I didn't discover this, I don't really know what I would have done to recover those files.</p>
+
+<h2>References</h2>
+
+<ul>
+<li><a href="https://git-scm.com/docs/git-reflog">Git reflog documentation</a></li>
+<li><a href="https://stackoverflow.com/questions/3973994/how-can-i-recover-from-an-erronous-git-push-f-origin-master">How can I recover from an erronous git push -f origin master?</a></li>
+</ul>
+
+<p>Hope this helps you out!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>April 10th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/git/">
+					Git
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-resolve-the-fatal-refusing-to-merge-unrelated-histories-git-error">How to resolve the "fatal: refusing to merge unrelated histories" Git error?</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>This error shows up when two different projects are merged (i.e. they both could be the same project but unaware of each other's existence and have different commit histories).</p>
+
+<p>If you are facing this, chances are that:</p>
+
+<ol>
+<li><p>You must have cloned a project and the <code>.git</code> directory must have corrupted or got deleted and at this point, Git is unaware of the changes being made and will throw this error when you try to <em>push to</em> or <em>pull from</em> the remote repository.</p></li>
+<li><p>You created a new repository, made some changes and added the commits and then you tried to pull from the remote repository.</p></li>
+</ol>
+
+<p>Well, you can easily resolve by passing the <code>--allow-unrelated-histories</code> flag when pulling the latest updates from the remote repository:</p>
+
+<div class="codehilite"><pre><span></span><code>git pull origin master --allow-unrelated-histories
+</code></pre></div>
+
+<p>Hope you found this useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>April 10th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/git/">
+					Git
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/zip-all-files-that-are-modified-on-a-specific-date">Zip all files that are modified on a specific date</a></h1>
 		<p class="description"></p>
 	</div>
@@ -274,159 +407,6 @@ find . -maxdepth <span class="m">30</span> -type f -newer startdate -not -newer 
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/show-git-branch-in-your-bash-prompt-with-colors">Show Git branch in your Bash prompt (with colors)</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Do you work on a project with multiple Git branches but don't know which one you're in? Open your <code>.bashrc</code> file and add this:</p>
-
-<div class="codehilite"><pre><span></span><code><span class="nv">force_color_prompt</span><span class="o">=</span>yes
-<span class="nv">color_prompt</span><span class="o">=</span>yes
-
-parse_git_branch<span class="o">()</span> <span class="o">{</span>
- git branch <span class="m">2</span>&gt; /dev/null <span class="p">|</span> sed -e <span class="s1">&#39;/^[^*]/d&#39;</span> -e <span class="s1">&#39;s/* \(.*\)/(\1)/&#39;</span>
-<span class="o">}</span>
-
-<span class="k">if</span> <span class="o">[</span> <span class="s2">&quot;</span><span class="nv">$color_prompt</span><span class="s2">&quot;</span> <span class="o">=</span> yes <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
- <span class="nv">PS1</span><span class="o">=</span><span class="s1">&#39;${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[01;31m\]$(parse_git_branch)\[\033[00m\]\$ &#39;</span>
-<span class="k">else</span>
- <span class="nv">PS1</span><span class="o">=</span><span class="s1">&#39;${debian_chroot:+($debian_chroot)}\u@\h:\w$(parse_git_branch)\$ &#39;</span>
-<span class="k">fi</span>
-
-<span class="nb">unset</span> color_prompt force_color_prompt
-</code></pre></div>
-
-<p>Save the file and execute this command for your changes to take effect:</p>
-
-<div class="codehilite"><pre><span></span><code><span class="nb">source</span> ~/.bashrc
-</code></pre></div>
-
-<p>Now, you should see your colors in your Bash prompt along with the Git branch that you're working on (<strong>Note: this will be shown if you're in a project that uses a Git repository</strong>).</p>
-
-<p>Hope this helps you out!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>March 12th, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/bash/">
-					Bash
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/check-if-trait-is-being-used-in-your-class">Check if trait is being used in your class</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Want to know if a trait is being used in your current class? Try this:</p>
-
-<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="nb">in_array</span><span class="p">(</span><span class="nx">Foo</span><span class="o">::</span><span class="na">class</span><span class="p">,</span> <span class="nb">class_uses</span><span class="p">(</span><span class="nv">$this</span><span class="p">))</span>
-<span class="cp">?&gt;</span><span class="x"></span>
-</code></pre></div>
-
-<p>By any chance, if the current class is inherited, please note that the <code>class_uses()</code> method will only return the list of traits used by the current class and won't include any traits of it's parent class.</p>
-
-	</div>
-	<div class="article-footer">
-		<time>March 12th, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/php/">
-					PHP
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-resolve-the-issue-of-not-receiving-emails-on-the-same-domain">How to resolve the issue of not receiving emails on the same domain?</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Recently, we hosted our company's redesigned website on GoDaddy, which offers cPanel to manage your website. I was dealing with an annoying email bug in which I was able to send/receive emails to any account except the ones that share the company domain.</p>
-
-<p>The company's current email setup makes use of Google Workspace and since we're using a Shared Hosting account, GoDaddy allows you to use their SMTP relay and prohibits the use of third-party SMTP services such as Google Workspace, Outlook, etc.</p>
-
-<p>After configuring it with Google's MX records in the DNS settings, I wasn't receiving any email on my own company email yet I was able to receive on other email accounts that didn't share the company's domain.</p>
-
-<p>I did a little R&amp;D and ran into this documentation about <a href="https://docs.cpanel.net/cpanel/email/email-routing/">email routing</a> and figured out that there could be an issue with it's configuration.</p>
-
-<p>Here's what I did:</p>
-
-<ol>
-<li>Open cPanel </li>
-<li>Search or look for <strong>Email Routing</strong></li>
-<li>Click on <strong>Email Routing</strong></li>
-<li>If your MX records are not pointing to the IP address of the hosting server, then select <strong>Remote Mail Exchanger</strong></li>
-<li>Save changes</li>
-</ol>
-
-<p>After following these steps, I was able to receive mails on the same domain!</p>
-
-<h2>So what really caused the issue?</h2>
-
-<p>Since, we didn't have a default email address set up in cPanel, the current mode to send all unrouted emails was set to <code>:blackhole:</code>, by default. I guess, it's set up that way to prevent the server from sending/receiving spam mails from the domain.</p>
-
-<p>This makes sense because:</p>
-
-<ol>
-<li>The MX records are not pointing to the current server</li>
-<li>There are no email accounts created for the domain on cPanel</li>
-<li>By setting the mode to <code>:blackhole</code>, all emails with the same domain are being discarded or rejected</li>
-</ol>
-
-<p>Not really sure if this is what caused the issue but judging from the facts, I was able to reach to this conclusion.</p>
-
-<p>Hope you found this tip useful.</p>
-
-<h2>Reference</h2>
-
-<ul>
-<li><a href="https://stackoverflow.com/questions/1107730/cant-send-email-to-addresses-at-my-own-domain">Can't send email to addresses at my own domain</a></li>
-</ul>
-
-	</div>
-	<div class="article-footer">
-		<time>March 12th, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/cpanel/">
-					cPanel
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/email/">
-					Email
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -466,11 +446,11 @@ parse_git_branch<span class="o">()</span> <span class="o">{</span>
 		
 	
 		
-			<a class="" href="/pages/16">...</a>
+			<a class="" href="/pages/17">...</a>
 		
 	
 		
-			<a class="" href="/pages/24">24</a>
+			<a class="" href="/pages/25">25</a>
 		
 	
 
@@ -519,6 +499,13 @@ parse_git_branch<span class="o">()</span> <span class="o">{</span>
 		</li>
 		
 		<li>
+			<a href="/category/javascript/">
+				JavaScript
+				<span class="count">11</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/terminal/">
 				Terminal
 				<span class="count">11</span>
@@ -536,13 +523,6 @@ parse_git_branch<span class="o">()</span> <span class="o">{</span>
 			<a href="/category/cryptography/">
 				Cryptography
 				<span class="count">11</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/javascript/">
-				JavaScript
-				<span class="count">10</span>
 			</a>
 		</li>
 		
@@ -624,6 +604,13 @@ parse_git_branch<span class="o">()</span> <span class="o">{</span>
 		</li>
 		
 		<li>
+			<a href="/category/blogmarks/">
+				Blogmarks
+				<span class="count">4</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/apache/">
 				Apache
 				<span class="count">4</span>
@@ -676,13 +663,6 @@ parse_git_branch<span class="o">()</span> <span class="o">{</span>
 			<a href="/category/general/">
 				General
 				<span class="count">3</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/blogmarks/">
-				Blogmarks
-				<span class="count">2</span>
 			</a>
 		</li>
 		

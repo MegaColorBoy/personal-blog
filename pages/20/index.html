@@ -78,6 +78,455 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/writings/posts/poker-hand-analyser-in-python">Poker Hand Analyser in Python</a></h1>
+		<p class="description">An algorithm that parses a five-card poker hand and determines it's rank.</p>
+	</div>
+	<div class="article-body">
+		<p><link href="/static/css/playing_cards.css" rel="stylesheet" type="text/css"/></p>
+
+<p>I've never played Poker and don't think I ever will because I'm not a fan of gambling and placing bets. However, I ran into an interesting problem on <a href="https://projecteuler.net/problem=54">Project Euler</a> that led me to write a poker hand analyser to determine the rank of each hand.</p>
+
+<p>Before writing this article, I didn't know anything about cards or Poker, I had to do some research on Wikipedia about it. So, forgive me if there's any information that's not accurate in the article.</p>
+
+<h2>Poker Hands</h2>
+
+<p>From what I had understood, a <strong><em>hand</em></strong> is a set of five cards and each card has a rank, which is in the order shown below:</p>
+
+<div class="codehilite"><pre><span></span><code>Cards are valued in the order of lowest to highest (Left to Right):
+2, 3, 4, 5, 6, 7, 8, 9, 10, Jack, Queen, King, Ace
+</code></pre></div>
+
+<p>Based on the card pattern formed in each hand, the ranking category is determined and it's ranked within it's category based on the ranks of it's cards.</p>
+
+<h2>Hand Ranking Categories</h2>
+
+<p>In Poker, there are about 10 ranking categories from lowest to highest:</p>
+
+<ul>
+<li><a href="#highcard">High Card</a></li>
+<li><a href="#onepair">One Pair</a></li>
+<li><a href="#twopairs">Two Pairs</a></li>
+<li><a href="#threeofakind">Three of a Kind</a></li>
+<li><a href="#straight">Straight</a></li>
+<li><a href="#flush">Flush</a></li>
+<li><a href="#fullhouse">Full House</a></li>
+<li><a href="#fourofakind">Four of a Kind</a></li>
+<li><a href="#straightflush">Straight Flush</a></li>
+<li><a href="#royalflush">Royal Flush</a></li>
+</ul>
+
+<p>Before diving into the code snippets, I wrote a library named <a href="https://github.com/megacolorboy/ProjectEuler/blob/master/poker_lib.py">poker_lib.py</a> which contains all the methods used in the code snippets.</p>
+
+<p>To make things simple, I created a class named <strong><em>Card</em></strong> that has two attributes, <strong><em>face</em></strong> and <strong><em>suit</em></strong>, with <strong><em>namedtuple()</em></strong> as it's datatype.</p>
+
+<h3><a id="highcard"></a> High Card</h3>
+
+<figure style="text-align: left;">
+    <div class="playing_card king_diamonds"></div>
+    <div class="playing_card queen_diamonds"></div>
+    <div class="playing_card seven_spades"></div>
+    <div class="playing_card four_spades"></div>
+    <div class="playing_card three_hearts"></div>
+</figure>
+
+<p>This hand contains no pairs and it doesn't fall into any other category.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">high_card</span><span class="p">(</span><span class="n">hand</span><span class="p">):</span>
+    <span class="c1"># collect all faces from each card</span>
+    <span class="n">allfaces</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span><span class="p">,</span><span class="n">s</span> <span class="ow">in</span> <span class="n">hand</span><span class="p">]</span>
+
+    <span class="c1">#sort the faces and show the highest card</span>
+    <span class="k">return</span> <span class="s2">&quot;high_card&quot;</span><span class="p">,</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">allfaces</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">f</span><span class="p">:</span> <span class="n">allfaces</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">f</span><span class="p">),</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+</code></pre></div>
+
+<h3><a id="onepair"></a> One Pair</h3>
+
+<figure style="text-align: left;">
+    <div class="playing_card ten_spades"></div>
+    <div class="playing_card ten_hearts"></div>
+    <div class="playing_card eight_spades"></div>
+    <div class="playing_card seven_hearts"></div>
+    <div class="playing_card four_clubs"></div>
+</figure>
+
+<p>This hand contains two cards of one rank and three cards of three other ranks.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">one_pair</span><span class="p">(</span><span class="n">hand</span><span class="p">):</span>
+    <span class="n">allfaces</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span><span class="p">,</span><span class="n">s</span> <span class="ow">in</span> <span class="n">hand</span><span class="p">]</span>
+    <span class="n">allftypes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">allfaces</span><span class="p">)</span>
+
+    <span class="c1"># collect pairs</span>
+    <span class="n">pairs</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">allftypes</span> <span class="k">if</span> <span class="n">allfaces</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">]</span>
+
+    <span class="c1"># if there&#39;s more than one pair</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">pairs</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="n">allftypes</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">pairs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">return</span> <span class="s1">&#39;one-pair&#39;</span><span class="p">,</span> <span class="n">pairs</span> <span class="o">+</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">allftypes</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">f</span><span class="p">:</span> <span class="n">face</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">f</span><span class="p">),</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</code></pre></div>
+
+<h3><a id="twopairs"></a> Two Pairs</h3>
+
+<figure style="text-align: left;">
+    <div class="playing_card jack_hearts"></div>
+    <div class="playing_card jack_spades"></div>
+    <div class="playing_card three_clubs"></div>
+    <div class="playing_card three_spades"></div>
+    <div class="playing_card two_hearts"></div>
+</figure>
+
+<p>This hand contains two cards of one rank, two cards of a second rank and one card of a third rank.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">two_pair</span><span class="p">(</span><span class="n">hand</span><span class="p">):</span>
+    <span class="n">allfaces</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span><span class="p">,</span><span class="n">s</span> <span class="ow">in</span> <span class="n">hand</span><span class="p">]</span>
+    <span class="n">allftypes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">allfaces</span><span class="p">)</span>
+
+    <span class="c1"># collect pairs</span>
+    <span class="n">pairs</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">allftypes</span> <span class="k">if</span> <span class="n">allfaces</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">]</span>
+
+    <span class="c1"># if there are more than two pairs</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">pairs</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="n">p1</span><span class="p">,</span> <span class="n">p2</span> <span class="o">=</span> <span class="n">pairs</span>
+    <span class="c1"># get the difference using sets</span>
+    <span class="n">other_cards</span> <span class="o">=</span> <span class="p">[(</span><span class="n">allftypes</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">pairs</span><span class="p">))</span><span class="o">.</span><span class="n">pop</span><span class="p">()]</span>
+    <span class="k">return</span> <span class="s1">&#39;two-pair&#39;</span><span class="p">,</span> <span class="n">pairs</span> <span class="o">+</span> <span class="n">other_cards</span> <span class="k">if</span><span class="p">(</span><span class="n">face</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">p1</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">face</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">p2</span><span class="p">))</span> <span class="k">else</span> <span class="n">pairs</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">other_cards</span>
+</code></pre></div>
+
+<h3><a id="threeofakind"></a> Three of a Kind</h3>
+
+<figure style="text-align: left;">
+    <div class="playing_card queen_clubs"></div>
+    <div class="playing_card queen_spades"></div>
+    <div class="playing_card queen_hearts"></div>
+    <div class="playing_card nine_hearts"></div>
+    <div class="playing_card two_spades"></div>
+</figure>
+
+<p>This hand, also known as trips or a set, contains three cards of one rank and two cards of two other ranks.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">three_of_a_kind</span><span class="p">(</span><span class="n">hand</span><span class="p">):</span>
+    <span class="n">allfaces</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span><span class="p">,</span><span class="n">s</span> <span class="ow">in</span> <span class="n">hand</span><span class="p">]</span>
+
+    <span class="n">uniqueRanks</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">allfaces</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">uniqueRanks</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">uniqueRanks</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">allfaces</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">uniqueRanks</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            <span class="k">return</span> <span class="s2">&quot;three-of-a-kind&quot;</span><span class="p">,</span> <span class="n">f</span>
+
+    <span class="k">return</span> <span class="kc">False</span><span class="p">;</span>
+</code></pre></div>
+
+<h3><a id="straight"></a> Straight</h3>
+
+<figure style="text-align: left;">
+    <div class="playing_card ten_diamonds"></div>
+    <div class="playing_card nine_spades"></div>
+    <div class="playing_card eight_hearts"></div>
+    <div class="playing_card seven_diamonds"></div>
+    <div class="playing_card six_clubs"></div>
+</figure>
+
+<p>This hand contains five cards arranged in a sequential order but not all of them have same suits.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">straight</span><span class="p">(</span><span class="n">hand</span><span class="p">):</span>
+    <span class="n">ordered</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">hand</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">card</span><span class="p">:</span> <span class="p">(</span><span class="n">faces</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">card</span><span class="o">.</span><span class="n">face</span><span class="p">),</span> <span class="n">card</span><span class="o">.</span><span class="n">suit</span><span class="p">))</span>
+    <span class="k">if</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">card</span><span class="o">.</span><span class="n">face</span> <span class="k">for</span> <span class="n">card</span> <span class="ow">in</span> <span class="n">ordered</span><span class="p">)</span> <span class="ow">in</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">face</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;straight&#39;</span><span class="p">,</span> <span class="n">ordered</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">face</span>
+    <span class="k">return</span> <span class="kc">False</span><span class="p">;</span>
+</code></pre></div>
+
+<h3><a id="flush"></a> Flush</h3>
+
+<figure style="text-align: left;">
+    <div class="playing_card jack_diamonds"></div>
+    <div class="playing_card nine_diamonds"></div>
+    <div class="playing_card eight_diamonds"></div>
+    <div class="playing_card four_diamonds"></div>
+    <div class="playing_card three_diamonds"></div>
+</figure>
+
+<p>This hand contains five cards of the same suit and not necessarily arranged in sequential order.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">flush</span><span class="p">(</span><span class="n">hand</span><span class="p">):</span>
+    <span class="n">allfaces</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span><span class="p">,</span><span class="n">s</span> <span class="ow">in</span> <span class="n">hand</span><span class="p">]</span>
+
+    <span class="n">first_card</span> <span class="o">=</span> <span class="n">hand</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">other_cards</span> <span class="o">=</span> <span class="n">hand</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+
+    <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">first_card</span><span class="o">.</span><span class="n">suit</span> <span class="o">==</span> <span class="n">card</span><span class="o">.</span><span class="n">suit</span> <span class="k">for</span> <span class="n">card</span> <span class="ow">in</span> <span class="n">other_cards</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;flush&#39;</span><span class="p">,</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">allfaces</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">f</span><span class="p">:</span> <span class="n">face</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">f</span><span class="p">),</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="kc">False</span>
+</code></pre></div>
+
+<h3><a id="fullhouse"></a> Full House</h3>
+
+<figure style="text-align: left;">
+    <div class="playing_card six_spades"></div>
+    <div class="playing_card six_hearts"></div>
+    <div class="playing_card six_diamonds"></div>
+    <div class="playing_card king_clubs"></div>
+    <div class="playing_card king_hearts"></div>
+</figure>
+
+<p>This hand, also known as full boat or a boat, contains three cards of one rank and two cards of another rank.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">full_house</span><span class="p">(</span><span class="n">hand</span><span class="p">):</span>
+    <span class="n">allfaces</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span><span class="p">,</span><span class="n">s</span> <span class="ow">in</span> <span class="n">hand</span><span class="p">]</span>
+
+    <span class="n">rankFrequency</span> <span class="o">=</span> <span class="n">pe_lib</span><span class="o">.</span><span class="n">character_frequency</span><span class="p">(</span><span class="n">allfaces</span><span class="p">)</span>
+
+    <span class="c1"># if there are 2 types of ranks and there&#39;s a card with 1 pair and 3 of a kind</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">rankFrequency</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="p">(</span><span class="n">rankFrequency</span><span class="o">.</span><span class="n">values</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">rankFrequency</span><span class="o">.</span><span class="n">values</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">3</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;full-house&#39;</span>
+
+    <span class="k">return</span> <span class="kc">False</span>
+</code></pre></div>
+
+<h3><a id="fourofakind"></a> Four of a Kind</h3>
+
+<figure style="text-align: left;">
+    <div class="playing_card five_clubs"></div>
+    <div class="playing_card five_spades"></div>
+    <div class="playing_card five_diamonds"></div>
+    <div class="playing_card five_hearts"></div>
+    <div class="playing_card two_diamonds"></div>
+</figure>
+
+<p>This hand, also known as quads, contains four cards of one rank and one card of another rank.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">four_of_a_kind</span><span class="p">(</span><span class="n">hand</span><span class="p">):</span>
+    <span class="n">allfaces</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span><span class="p">,</span><span class="n">s</span> <span class="ow">in</span> <span class="n">hand</span><span class="p">]</span>
+
+    <span class="c1"># create a unique set of ranks</span>
+    <span class="n">uniqueRanks</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">allfaces</span><span class="p">)</span>
+
+    <span class="c1"># if there are more than 2 ranks, it&#39;s not four of a kind</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">uniqueRanks</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">uniqueRanks</span><span class="p">:</span>
+        <span class="c1"># if there are 4 faces, it is four of a kind</span>
+        <span class="k">if</span> <span class="n">allfaces</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="n">uniqueRanks</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            <span class="k">return</span> <span class="s2">&quot;four-of-a-kind&quot;</span><span class="p">,</span> <span class="n">f</span>
+
+    <span class="k">return</span> <span class="kc">False</span>
+</code></pre></div>
+
+<h3><a id="straightflush"></a> Straight Flush</h3>
+
+<figure style="text-align: left;">
+    <div class="playing_card jack_clubs"></div>
+    <div class="playing_card ten_clubs"></div>
+    <div class="playing_card nine_clubs"></div>
+    <div class="playing_card eight_clubs"></div>
+    <div class="playing_card seven_clubs"></div>
+</figure>
+
+<p>This hand contains five cards arranged in a sequential order with all cards having the same suit.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">straight_flush</span><span class="p">(</span><span class="n">hand</span><span class="p">):</span>
+    <span class="c1"># sort the cards based on the face rank of each card</span>
+    <span class="n">ordered</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">hand</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">card</span><span class="p">:</span> <span class="p">(</span><span class="n">faces</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">card</span><span class="o">.</span><span class="n">face</span><span class="p">),</span> <span class="n">card</span><span class="o">.</span><span class="n">suit</span><span class="p">))</span>
+
+    <span class="n">first_card</span> <span class="o">=</span> <span class="n">ordered</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">other_cards</span> <span class="o">=</span> <span class="n">ordered</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+
+    <span class="c1"># check if all are of the same suit</span>
+    <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">first_card</span><span class="o">.</span><span class="n">suit</span> <span class="o">==</span> <span class="n">card</span><span class="o">.</span><span class="n">suit</span> <span class="k">for</span> <span class="n">card</span> <span class="ow">in</span> <span class="n">other_cards</span><span class="p">):</span>
+        <span class="c1"># check if they are in sequential order</span>
+        <span class="c1"># compare the ordered faces substring with the face list (which is converted to string)</span>
+        <span class="k">if</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">card</span><span class="o">.</span><span class="n">face</span> <span class="k">for</span> <span class="n">card</span> <span class="ow">in</span> <span class="n">ordered</span><span class="p">)</span> <span class="ow">in</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">face</span><span class="p">):</span>
+            <span class="k">return</span> <span class="s1">&#39;straight-flush&#39;</span><span class="p">,</span> <span class="n">ordered</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">face</span>
+    <span class="k">return</span> <span class="kc">False</span>
+</code></pre></div>
+
+<h3><a id="royalflush"></a> Royal Flush</h3>
+
+<figure style="text-align: left;">
+    <div class="playing_card ten_hearts"></div>
+    <div class="playing_card jack_hearts"></div>
+    <div class="playing_card queen_hearts"></div>
+    <div class="playing_card king_hearts"></div>
+    <div class="playing_card ace_hearts"></div>
+</figure>
+
+<p>This hand contains the <strong><em>royal</em></strong> ranks in sequential order in the same suit.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">royal_flush</span><span class="p">(</span><span class="n">hand</span><span class="p">):</span>
+    <span class="n">royalface</span> <span class="o">=</span> <span class="s2">&quot;TJQKA&quot;</span>
+    <span class="c1"># sort the cards based on the face rank of each card</span>
+    <span class="n">ordered</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">hand</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">card</span><span class="p">:</span> <span class="p">(</span><span class="n">faces</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">card</span><span class="o">.</span><span class="n">face</span><span class="p">),</span> <span class="n">card</span><span class="o">.</span><span class="n">suit</span><span class="p">))</span>
+
+    <span class="n">first_card</span> <span class="o">=</span> <span class="n">ordered</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">other_cards</span> <span class="o">=</span> <span class="n">ordered</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+
+    <span class="c1"># check if all are of the same suit</span>
+    <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">first_card</span><span class="o">.</span><span class="n">suit</span> <span class="o">==</span> <span class="n">card</span><span class="o">.</span><span class="n">suit</span> <span class="k">for</span> <span class="n">card</span> <span class="ow">in</span> <span class="n">other_cards</span><span class="p">):</span>
+        <span class="c1"># check if they are in sequential order</span>
+        <span class="c1"># compare the ordered faces substring with the face list (which is converted to string)</span>
+        <span class="k">if</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">card</span><span class="o">.</span><span class="n">face</span> <span class="k">for</span> <span class="n">card</span> <span class="ow">in</span> <span class="n">ordered</span><span class="p">)</span> <span class="ow">in</span> <span class="n">royalface</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;royal-flush&#39;</span><span class="p">,</span> <span class="n">ordered</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">face</span>
+    <span class="k">return</span> <span class="kc">False</span>
+</code></pre></div>
+
+<h2>Conclusion</h2>
+
+<p>It was a fun project to work on and I learnt new styles of array and string manipulation techniques using Python.</p>
+
+<p>Inspired by this, I'm planning to create an interactive version of this project using Javascript and talk about it on another article.</p>
+
+<p>The code for this program can be found in my <a href="https://github.com/MegaColorBoy/ProjectEuler">GitHub repository</a>.</p>
+
+<p>Hope you liked reading this article!</p>
+
+<p>Stay tuned for more!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>March 30th, 2019</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/algorithms/">
+					Algorithms
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/writings/posts/project-euler-solutions">Project Euler solutions</a></h1>
+		<p class="description">A collection of Project Euler solutions</p>
+	</div>
+	<div class="article-body">
+		<p>In order to get good at anything, not only at programming, it would require a good amount of practice. Three years ago, I started out solving <a href="https://www.projecteuler.net">Project Euler</a> problems on C++ and Java for fun, which taught me how to write good code in short of amount of time.</p>
+
+<p>However, you'll notice that I have written the solutions using Python as I wanted to improve my Python coding skills and yes, just to code for fun!</p>
+
+<p>This blog article will have all the links available to everyone to learn from and understand the solutions and you can access it on my <a href="https://www.github.com/MegaColorBoy/ProjectEuler">GitHub repository</a>.</p>
+
+<h2>Solution code</h2>
+
+<p>In addition, I have created a math library module named <a href="https://github.com/MegaColorBoy/ProjectEuler/blob/master/pe_lib.py">pe_lib.py</a>, which contains all the mathematical functions that are used in every problem. I find it pretty useful as it allows me to re-use some of the functions instead of re-writing it for each solution.</p>
+
+<script defer src="/static/js/pe_solutions.js" type="text/javascript"></script>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Problem Link</th>
+            <th>Solution Link</th>
+        </tr>
+    </thead>
+    <tbody id="pe_solutions"></tbody>
+</table>
+
+<p>Hope you'll find these solutions to be useful!</p>
+
+<p>Stay tuned for more!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>March 23rd, 2019</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/programming/">
+					Programming
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/writings/posts/the-alchemist-by-paulo-coelho">The Alchemist by Paulo Coelho</a></h1>
+		<p class="description">A story about a young shepherd who starts his journey to chase his Personal Legend.</p>
+	</div>
+	<div class="article-body">
+		<p>I don't really read fiction books a lot but this is one of my favorites. I finished reading this book last week and it had inspired me and made me feel positive towards the goals that I wanted to chase in my life.</p>
+
+<h2>Why did I choose to read it?</h2>
+
+<p>On one fine evening, I was going through my endless list of bookmarks and I stumbled upon a <a href="http://www.doradolist.com/facts/stackoverflow-influential-programming-books.html">link</a>, which had a collection of book recommendations on what are most influencial books for software engineers to read and I found this in the list of recommendations. So, I thought of trying it out on my new Amazon Kindle Paperwhite too.</p>
+
+<h2>About the story</h2>
+
+<figure>
+    <img src="https://dynamic.indigoimages.ca/books/0062315005.jpg?altimages=false&scaleup=true&maxheight=515&width=380&quality=85&sale=37&lang=en"/>
+</figure>
+
+<p>The book is written by Paulo Coelho. As mentioned in the description, it's about a young shepherd named Santiago who starts a journey after having dreams about finding treasure in the Pyramids of Egypt. Without spoiling a lot, he meets several people such as an old man who claims to be a king, a woman of the desert that he falls in love with and an alchemist who wants to learn the technique of converting lead to gold.</p>
+
+<p>In the first few pages, the quotes said by the characters really stuck into my head:</p>
+
+<blockquote>
+  <p>Whoever you are, or whatever it is that you do, when you really want 
+  something, it's because that desire originated in the soul of the universe.
+  It's your mission on earth.</p>
+</blockquote>
+
+<p>Funny but when I relate myself to the story, I'm currently on my own Personal Legend. Just like the shepherd himself, I started my journey with a vision and a willingness to pursue it. I didn't have the faintest clue on how to achieve my goals but I knew that I can and had to do it.</p>
+
+<h2>Everything is clear and everything is possible!</h2>
+
+<p>Santiago learns different lessons throughout his journey. One of the first lessons is when he had a conversation with a mysterious king. The king told the boy that everyone used to tell him, when everyone is young, they know what their Personal Legend is and as he quotes:</p>
+
+<blockquote>
+  <p>At that point in their lives, everything is clear and everything is possible. They are not afraid to dream, and to yearn for everything they would like to see happen to them in their lives. But as time passes, a mysterious force begins to convince them that it will be impossible for them to realize their Personal Legend.</p>
+</blockquote>
+
+<p>It relates a lot to the real world scenario because I see a lot of people who want to settle in their life. Safe place to live, marriage, kids, comfortable job, $401K plans and then off to retirement. But what happens after that? Settled in life? Yes, but did they achieve their dreams? Now, that's a question not everyone can answer, can they?</p>
+
+<h2>Listen to your heart and soul</h2>
+
+<p>In some parts of the book it states that once you stop listening to your heart and soul telling you to chase your dreams, it will, spontaneously, appear again for the next year or so and then, your heart and soul will stop talking to you and the dream fades away.</p>
+
+<h2>Conclusion</h2>
+
+<p>It's a simple story that has got elements of economy, love, war and pursuit of dreams. We all have our own highs and lows in life and I would recommend this book as a must-read for anyone who's currently trying to figure out their actual purpose in life. As you read the book, you'll relate yourself to Santiago and you'll start recommending this book to your friends too!</p>
+
+<p>Hope you liked reading this article!</p>
+
+<p>Stay tuned for more!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>March 15th, 2019</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/review/">
+					Review
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/writings/posts/tools-of-the-trade">Tools of the Trade</a></h1>
 		<p class="description">The tools that I use daily for work and personal uses.</p>
 	</div>
@@ -907,444 +1356,6 @@ as many times as you like!</p>
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/can-we-eliminate-traffic-congestion-with-the-help-of-computer-vision">Can we eliminate traffic congestion with the help of Computer Vision?</a></h1>
-		<p class="description">Writing out my thoughts on eradicating traffic congestion in highly populated cities.</p>
-	</div>
-	<div class="article-body">
-		<p>Whether it's being implemented or not, I have been thinking on how we
-could use <strong><em>Computer Vision</em></strong> to solve traffic congestion.</p>
-
-<p>Since, I live in the <strong><em>United Arab Emirates</em></strong>, I have always observed
-that people who commute from <strong><em>Sharjah</em></strong> to <strong><em>Dubai</em></strong> and vice-versa
-face a lot of traffic jams despite all the new roads and toll-gates
-(yes, I don't seem to understand how does that solve the problem).</p>
-
-<figure>
-    <img src="https://images.khaleejtimes.com/storyimage/KT/20160203/ARTICLE/302039854/AR/0/AR-302039854.jpg&MaxW=780&imageVersion=16by9&NCS_modified=20160203204300"/>
-    <figcaption>
-        Traffic in Al Ittihad Highway.
-    </figcaption>
-</figure>
-
-<p>Well, the problem is not only faced in this country but many countries
-such as China, Indonesia and so on.</p>
-
-<h2>What are the causes of traffic congestion?</h2>
-
-<p>Anyways, I jotted down some facts to consider what causes traffic
-congestion in the first place:</p>
-
-<ul>
-<li>Tail-gating</li>
-<li>Inconsistent travel speeds</li>
-<li>Uneven vehicular distances</li>
-<li>Spontaneous accidents and road rages</li>
-<li>Changing from one lane to another</li>
-<li>Increase in car population</li>
-<li>Peak hours i.e. people going to work and leaving from work</li>
-</ul>
-
-<p>I'm sure that there could be more but these are the facts that I can
-come up with for now.</p>
-
-<h2>How can Computer Vision solve this problem?</h2>
-
-<p><a href="https://en.wikipedia.org/wiki/Computer_vision">Computer Vision</a> is a
-field that intersects with multiple areas of technologies in which it
-aims to develop an understanding of objects by extracting information
-from various digital media sources like images and videos and automate
-those tasks that a normal human would do in their daily lives.</p>
-
-<figure>
-    <img src="https://www.onlinebooksreview.com/uploads/blog_images/2018/04/16_computer_vision.jpg"/>
-    <figcaption>
-        Visualization of Computer Vision.
-    </figcaption>
-</figure>
-
-<p>There are various types of problems that Computer Vision algorithms are
-able to solve but not limited to:</p>
-
-<ul>
-<li>Object Recognition or Object Classification</li>
-<li>Identification of Objects</li>
-<li>Object Detection</li>
-<li>Analysis of Motion</li>
-</ul>
-
-<p>Now, it's not only about implementing these <strong><em>CNN</em></strong>-based
-(<a href="https://en.wikipedia.org/wiki/Convolutional_neural_network">Convolutional Neural
-Network</a>)
-algorithms but you also need hardware to be able to compute and process
-data. </p>
-
-<h2>How would this work?</h2>
-
-<p>There are two scenarios that I had thought while writing this article
-and I hope that I'm able to translate my thoughts into accurate
-examples.</p>
-
-<p>Let's pretend we have four car drivers: Alex, Bob, Charlie and Dylan.</p>
-
-<h3>Speed-Distance equilibrium</h3>
-
-<p>Alex, Bob and Charlie are driving on the same lane. Alex hits the brake
-slowly to shift to another lane, the sensors of Bob's car detects a
-change in speed in Alex's car, Bob's car adjusts it's speed to match
-Alex's current speed based on the variables of distance and travel time,
-Charlie's car adapts the changes of Bob's car and thus, it's a chain
-reaction.</p>
-
-<h3>Shifting from one lane to another</h3>
-
-<p>Alex is driving in Lane A and Dylan is driving in Lane B. Alex wants to
-shift to Lane B, so he switches on the indicator and Dylan's car sensors
-identify that Alex's car wants to change lanes. So Dylan's car slows
-down and Alex is able to shift lanes with ease. I thought of it to be
-some sort of a <strong><em>"elastic"</em></strong> effect when this occurs.</p>
-
-<p>Well, you might argue that some cars have a system called <strong><em>"Cruise
-Control"</em></strong> but here's the part that I'm trying to pitch, as I had
-mentioned above, I just wanted to integrate sensors to the front and
-rear sides of a vehicle, which means that these sensors can be
-integrated in almost any vehicle.</p>
-
-<h2>How is this going to be helpful?</h2>
-
-<p>For starters, traffic congestion will gradually reduce, if not, be
-eliminated but there are other beneficial factors to it, such as:</p>
-
-<ul>
-<li>Less fuel consumption</li>
-<li>Less time is required to reach a destination</li>
-<li>No tail-gating</li>
-<li>Could prevent major road accidents</li>
-</ul>
-
-<p>However, if the sensors fail to work, the car driver will still be safe
-because it's surrounded by other cars that have the sensors. This made
-me think of another question, does that mean do all cars require sensors
-or only a few? I find it quite intriguing.</p>
-
-<h2>Conclusion</h2>
-
-<p>Although, these sensors might require a vehicle to have some intelligent
-capabilities, it may not require the type of network found in an
-autonomous vehicle.</p>
-
-<figure>
-    <img src="https://i.pinimg.com/originals/b4/7c/00/b47c00d89eb8527be3f47578958f691e.gif"/>
-</figure>
-
-<p>The idea of placing sensors in the front and rear of a vehicle can
-optimize the flow of traffic and thus, it might help eliminate traffic
-congestion.</p>
-
-<p>Hope you liked reading this article!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>August 19th, 2018</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/essay/">
-					Essay
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/meet-blog-engine-20">Meet Blog Engine 2.0</a></h1>
-		<p class="description">Basically, a minimal blog engine with a paper-like user interface with better enhancements.</p>
-	</div>
-	<div class="article-body">
-		<div class="post-notification">
-    <h3>Blog engine updated!</h3>
-    <p>As of March 1st 2019, I have changed my blog engine from a dynamic website to a custom-built static site generator. <a href="../writings/posts/say-hello-new-blog/">Read more &rarr;</a></p>
-</div>
-
-<p>Whenever I'm writing a new blog post, I would write it using HTML on my
-text editor i.e. using <strong><em>Sublime Text</em></strong> and copy-paste the source code
-into my blog engine and hit "Submit" and that was really annoying.</p>
-
-<p>You might be thinking to yourself as to why I'm putting myself through
-such a tedious process to write a blog article when there are several
-<strong><em>WYSIWYG</em></strong> text editor plugins.</p>
-
-<p>Truth is, I have to admit that I was lazy and I cared a lot about
-writing my blog articles but never cared about the tool I had built that
-to write my blog articles, so I decided to upgrade it and make it even
-better than what it was previously!</p>
-
-<h2>Why rewrite it?</h2>
-
-<p>For starters, the old one had a clunky and pretty much boring user
-interface. I used <strong><em>CKEditor</em></strong> text editor plugin but to be honest, I
-rarely used any of it's features as I was just directly copy-pasting my
-source code from Sublime Text to the text field box.</p>
-
-<p>Over time, it became slow due to spaghetti code and it required a lot of
-code refactoring as I wrote this code during my earlier days of
-programming by following various programming tutorials.</p>
-
-<p>Here's some screenshots of the old blog engine:</p>
-
-<figure>
-    <img src="/static/images/be-v1-1.png" />
-    <figcaption>
-        Fig.1: Index Page
-    </figcaption>
-</figure>
-
-<figure>
-    <img src="/static/images/be-v1-2.png" />
-    <figcaption>
-        Fig.2: List of blog posts
-    </figcaption>
-</figure>
-
-<figure>
-    <img src="/static/images/be-v1-3.png" />
-    <figcaption>
-    Fig.3: Edit page
-    </figcaption>
-</figure>
-
-<p>And, last but not the least, it didn't make me feel like I was writing a
-blog but rather felt like writing HTML code in a more tedious manner.</p>
-
-<h2>Time for a change!</h2>
-
-<p>For the past two weeks, I have been working on a new version of the blog
-engine and I had decided to give it some new features like:</p>
-
-<ul>
-<li>Clean and paper-like user interface by taking inspiration from Google's Material Theming Design guidelines</li>
-<li>Minimal text editor built from scratch that can be extensible in the future</li>
-<li>Auto-save article every minute</li>
-<li>Emojis, LaTeX syntax, JavaScript files and IFRAME windows</li>
-<li>Live search bar to filter articles by keywords or categories</li>
-</ul>
-
-<p>In case, you're wondering, I built this using vanilla JavaScript and a
-custom-built MVC PHP framework with a MySQL database.</p>
-
-<p>Here's some screenshots of the new blog engine:</p>
-
-<figure>
-    <img src="/static/images/be-v2-1.png" />
-    <figcaption>
-        Fig.4: Index page with a better UI
-    </figcaption>
-</figure>
-
-<figure>
-    <img src="/static/images/be-v2-2.png" />
-    <figcaption>
-        Fig.5: Minimal Text Editor
-    </figcaption>
-</figure>
-
-<p>What I really wanted to achieve with the new blog engine is that I want
-to give myself an enjoyable writing experience besides, this blog post
-was written from the new blog engine.</p>
-
-<p>Well, it's stable as of yet but I need to run a few tests and build more
-functionalities before deploying it on my production server and finally
-saying good-bye to the old version.</p>
-
-<p>Hope you liked reading this article!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>August 3rd, 2018</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/general/">
-					General
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/build-and-design-software-with-empathy">Build and Design software with Empathy</a></h1>
-		<p class="description">Can seeing things from another's perspective create empathy and help solve technical challenges?</p>
-	</div>
-	<div class="article-body">
-		<p>Recently, I've started reading this book named <a href="https://abookapart.com/products/designing-for-emotion">Designing For
-Emotion</a> by
-<a href="http://aarronwalter.com/">Aarron Walter</a> and I've made it a point to
-read it during my free time and so far I have completed three chapters
-of the book.</p>
-
-<p>In the first chapter of the book, I found a really interesting sentence,
-written by the author:</p>
-
-<blockquote>
-  <p>Keep in mind that ignoring human needs is not a history we are doomed
-  to repeat. Through our designs, we can see and connect with other
-  human beings.</p>
-</blockquote>
-
-<p>Do you think a good software builds strong connections with other human
-beings? Well, we have good examples like Facebook, Google, Netflix, and
-Microsoft are proof that they have a massive pool of audience who likes
-to use their products on a daily basis.</p>
-
-<p>In this article, I will share some of my thoughts on how empathy can be
-used to build and design powerful applications.</p>
-
-<h2>User Interface Matters</h2>
-
-<p>To any user, whatever is displayed on the application matters the most,
-in this case, it's the <strong><em>User Interface</em></strong> of an application. If it
-doesn't allow a user to perform their desired task, it will end up in
-their Recycle Bin.</p>
-
-<figure>
-    <img src="https://cdn.cultofmac.com/wp-content/uploads/2017/08/Ping-780x604.jpg"/>
-    <figcaption>
-        Fig. 1: Apple's Ping
-    </figcaption>
-</figure>
-
-<p>There are many examples in the book and one of the examples is about
-<strong><em>Apple's Ping</em></strong> (refer to Fig. 1), which was an attempt in creating a
-social network on <strong><em>iTunes</em></strong> but it turned out to be unsuccessful as
-users learned that they weren't able to share songs on Facebook or
-Twitter and it lacked basic features. As a result, users didn't come
-back to it again.</p>
-
-<p>In my opinion, a good user interface should be relatively easy to use
-and be more reliable in terms of pagespeed or simple and easy navigation
-for the user. I mean, think about it, if your user is able to complete
-their desired task and that puts a smile on their face, the user will
-share their experiences to their friends and you'll get more people to
-use your application, thus making your application more powerful.</p>
-
-<h2>A Universal Design</h2>
-
-<p>A door knob comes with multiple designs such as rotating knobs and
-levers but what matters the most to the people? The design or the
-functionality? I personally prefer a lever knob over a rotating knob as
-I find it quite annoying. Weird analogy but the point is, it should just
-open the door, nothing fancy.</p>
-
-<p>Similarly, when we build our software, by following proper techniques,
-we can choose to make it beautiful but also choose to make it accessible
-and functional for everybody, at all costs.</p>
-
-<h2>Listen to your users</h2>
-
-<p>When building and designing a piece of code, it should and always be for
-the people that uses or will use your product. By understanding what's
-important to the users, it can help you get to the core of the problem
-and surpass technical challenges easily.</p>
-
-<p>This can be achieved by gathering user requirements in the form of
-surveys, user feedback and A/B testing. Remember, software is just an
-expressive form of bringing your ideas to life and writing code is
-building on top of the idea to achieve a certain goal but empathy is the
-secret sauce to the success of your application.</p>
-
-<h2>UX is not UI</h2>
-
-<p>What's the first thing that comes to your mind when a friend of yours
-tells you: <em>"Hey, I'm working as a UX Designer at UberCoolCorp!"</em>? Does
-he build User Interfaces? Is he a Visual Graphics Designer? Neither,
-actually!</p>
-
-<p>User Experience is not about how your application looks but how it feels
-and makes it simple and easier to interact with your users. I'd like to
-share an interesting quote from Usabilla's UX Expert, Erik Flowers:</p>
-
-<blockquote>
-  <p>UX is the intangible design of a strategy that brings us to a
-  solution.</p>
-</blockquote>
-
-<p>User Experience encompasses a lot of elements such as Information
-Architecture, Interaction Design, Usability, Product Design and so on.
-Below is a picture for your reference about why User Experience is not
-User Interface:</p>
-
-<figure>
-    <img src="http://www.uxisnotui.com/downloads/with-title.png"/>
-    <figcaption>
-        Fig. 2: How UX wants to be seen.
-    </figcaption>
-</figure>
-
-<p>Although, it does have a lot of elements, UI is a huge part of the
-design process because strong visual aesthetics are still essential in
-UX, which is also one of the aspects of your user's interactions with
-the application.</p>
-
-<h2>Progressive Enhancement</h2>
-
-<p>A strategy that is known to take you on journey from simplicity to
-complexity. It's about starting off with a strong, practical foundation
-and then building on top of it. It's easier to maintain and make small
-yet incremental changes, renders the application to be more robust and
-it works for all users.</p>
-
-<h2>Conclusion</h2>
-
-<p>Well, I'm sure there a lot of elements to this topic but I thought of
-highlighting some of the most important parts of building and designing
-software with empathy. As engineers or developers, it is our job to
-ensure that our final product is usable and accessible to our end-user.</p>
-
-<p>Hope you liked reading this article!</p>
-
-<p>Stay tuned for more!</p>
-
-<h2>Extras</h2>
-
-<ul>
-<li><a href="https://medium.com/design-ibm/empathy-is-not-a-soft-skill-its-a-superpower-81f11e32201e">Empathy is not a soft skill. It's a superpower.</a></li>
-<li><a href="https://simpleprogrammer.com/empathy-software-developers/">How Empathy can be a Software Developer's superpower</a></li>
-</ul>
-
-	</div>
-	<div class="article-footer">
-		<time>July 6th, 2018</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/user-interface/">
-					User Interface
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/user-experience/">
-					User Experience
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -1384,11 +1395,11 @@ ensure that our final product is usable and accessible to our end-user.</p>
 		
 	
 		
-			<a class="" href="/pages/23">23</a>
+			<a class="" href="/pages/3">...</a>
 		
 	
 		
-			<a class="" href="/pages/24">24</a>
+			<a class="" href="/pages/25">25</a>
 		
 	
 
@@ -1437,6 +1448,13 @@ ensure that our final product is usable and accessible to our end-user.</p>
 		</li>
 		
 		<li>
+			<a href="/category/javascript/">
+				JavaScript
+				<span class="count">11</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/terminal/">
 				Terminal
 				<span class="count">11</span>
@@ -1454,13 +1472,6 @@ ensure that our final product is usable and accessible to our end-user.</p>
 			<a href="/category/cryptography/">
 				Cryptography
 				<span class="count">11</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/javascript/">
-				JavaScript
-				<span class="count">10</span>
 			</a>
 		</li>
 		
@@ -1542,6 +1553,13 @@ ensure that our final product is usable and accessible to our end-user.</p>
 		</li>
 		
 		<li>
+			<a href="/category/blogmarks/">
+				Blogmarks
+				<span class="count">4</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/apache/">
 				Apache
 				<span class="count">4</span>
@@ -1594,13 +1612,6 @@ ensure that our final product is usable and accessible to our end-user.</p>
 			<a href="/category/general/">
 				General
 				<span class="count">3</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/blogmarks/">
-				Blogmarks
-				<span class="count">2</span>
 			</a>
 		</li>
 		
