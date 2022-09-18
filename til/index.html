@@ -77,6 +77,155 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/install-microsoft-sql-server-driver-for-php-on-amazon-linux-2">Install Microsoft SQL Server Driver for PHP on Amazon Linux 2</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Recently, I tried to install Microsoft SQL Server driver for PHP on Amazon Linux and searching on how-to do was really annoying.
+I read a few articles on StackOverflow and found some samples on GitHub Gists and thought of sharing on how I installed it.</p>
+
+<h2>Prerequisites</h2>
+
+<ol>
+<li>Amazon Linux 2 installed.</li>
+<li>Ensure the ports 80 and 443 are open on your instance.</li>
+<li>PHP &gt;= v5.6 and the following extensions: <code>php-devel</code>, <code>php-pear</code>, <code>php-pdo</code>, and <code>php-xml</code>.</li>
+<li>Know-how on using the terminal.</li>
+</ol>
+
+<h2>Installation steps</h2>
+
+<p>These are the commands used to install the SQL Server driver:</p>
+
+<div class="codehilite"><pre><span></span><code>sudo su
+sudo yum-config-manager --add-repo https://packages.microsoft.com/config/rhel/7/prod.repo
+sudo yum update
+sudo <span class="nv">ACCEPT_EULA</span><span class="o">=</span>Y yum install -y msodbcsql mssql-tools unixODBC-devel re2c gcc-c++ gcc
+sudo pecl install sqlsrv
+sudo pecl install pdo_sqlsrv
+</code></pre></div>
+
+<h2>Modify php.ini</h2>
+
+<p>You can either to go to your <code>php.ini</code> file and add the <code>extension=sqlsrv</code> extension or add it like this:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="nb">echo</span> <span class="s2">&quot;extension=sqlsrv&quot;</span> &gt;&gt; <span class="sb">`</span>php --ini <span class="p">|</span> grep <span class="s2">&quot;Loaded Configuration&quot;</span> <span class="p">|</span> sed -e <span class="s2">&quot;s|.*:\s*||&quot;</span><span class="sb">`</span>
+<span class="nb">echo</span> <span class="s2">&quot;extension=pdo_sqlsrv&quot;</span> &gt;&gt; /etc/php.d/30-pdo_sqlsrv.ini
+</code></pre></div>
+
+<h2>Restart the service</h2>
+
+<p>Ensure that the server can connect and restart the service:</p>
+
+<div class="codehilite"><pre><span></span><code>sudo setsebool -P httpd_can_network_connect_db <span class="m">1</span>
+sudo systemctl restart httpd <span class="o">&amp;&amp;</span> sudo apachectl restart
+</code></pre></div>
+
+<p>Next, run the following the command to see that both <code>pdo_sqlsrv</code> and <code>sqlsrv</code> are installed:</p>
+
+<div class="codehilite"><pre><span></span><code>php -m <span class="p">|</span> grep <span class="s2">&quot;sqlsrv&quot;</span><span class="sb">`</span>
+</code></pre></div>
+
+<h2>Test if the driver works</h2>
+
+<p>Create a <code>test.php</code> file in your root directory and copy-paste this snippet to test if it works:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="nb">error_reporting</span><span class="p">(</span><span class="k">E_ALL</span><span class="p">);</span>
+<span class="nb">ini_set</span><span class="p">(</span><span class="s1">&#39;display_errors&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+
+<span class="nv">$serverName</span> <span class="o">=</span> <span class="s2">&quot;YOUR_DB_HOST&quot;</span><span class="p">;</span>
+<span class="nv">$connectionOptions</span> <span class="o">=</span> <span class="k">array</span><span class="p">(</span>
+    <span class="s2">&quot;Database&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;YOUR_DB_NAME&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Uid&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;YOUR_DB_USER&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;PWD&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;YOUR_DB_PASSWORD&quot;</span>
+<span class="p">);</span>
+
+<span class="nv">$conn</span> <span class="o">=</span> <span class="nb">sqlsrv_connect</span><span class="p">(</span><span class="nv">$serverName</span><span class="p">,</span> <span class="nv">$connectionOptions</span><span class="p">);</span>
+
+<span class="k">if</span><span class="p">(</span><span class="nv">$conn</span> <span class="o">===</span> <span class="k">false</span> <span class="p">)</span> <span class="p">{</span>
+    <span class="k">print</span> <span class="s2">&quot;Connected successfully.&quot;</span><span class="p">;</span> 
+<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="k">print</span> <span class="s2">&quot;Error while connecting to server.&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="cp">?&gt;</span><span class="x"></span>
+</code></pre></div>
+
+<p>Hope you found this tip useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>September 18th, 2022</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/php/">
+					PHP
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/aws/">
+					AWS
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/logging-client-ip-addresses-on-apache-server">Logging client IP addresses on Apache server</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>If you want to log the actual client IP address, you need to extract the <code>X-Forward-For</code> header from the request and in order to do that, you need to make a tiny edit in your <code>httpd.conf</code> file.</p>
+
+<ol>
+<li>Go to <code>/etc/apache2/conf</code> or <code>/etc/httpd/conf</code> and open <code>httpd.conf</code> file.</li>
+<li>Search for the string that starts with: <code>LogFormat "%h %l %u %t \"%r\" %&gt;s %b \"%{Referer}i\" \"%{User-Agent}i\"" combined</code>.</li>
+<li>Modify the <code>%h</code> to <code>%{X-Forwarded-For}i</code>. Now, it should look like this: <code>LogFormat "%{X-Forwarded-For}i %l %u %t \"%r\" %&gt;s %b \"%{Referer}i\" \"%{User-Agent}i\"" combined</code>.</li>
+<li>Test the config to ensure that there are no typos by typing: <code>apachectl configtest</code>.</li>
+<li>Save and restart the service by typing: <code>systemctl restart httpd</code> or <code>systemctl restart apache2</code>.</li>
+<li>In your terminal, type <code>tail -f /var/log/httpd/access.log</code> and you'll be seeing the client IP being logged in your logs.</li>
+</ol>
+
+<p>Hope you found this tip useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>August 18th, 2022</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/apache/">
+					Apache
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/using-iife-in-javascript">Using IIFE in JavaScript</a></h1>
 		<p class="description"></p>
 	</div>
@@ -496,150 +645,6 @@ nssm remove <span class="s2">&quot;servicename&quot;</span>
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/install-mariadb-103-on-void-linux">Install MariaDB 10.3 on Void Linux</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>I tried to find a proper guide on how to install MySQL 8.0 on Void Linux but I couldn't really find any. So, I thought of installing MariaDB 10.3 on my laptop instead.</p>
-
-<p>Don't worry about using MariaDB as it meets the same standard enterprised requirements as MySQL. The only difference is that MySQL belongs to Oracle and MariaDB is for people who wanted to get out of Oracle's hands.</p>
-
-<p>Anyway, let's get started.</p>
-
-<h2>Prerequisites</h2>
-
-<ul>
-<li>Need to have root privileges in order to install packages.</li>
-<li>Basic know-how of Void Linux and it's <code>xbps</code> package manager.</li>
-</ul>
-
-<p>Alright, go ahead and follow these steps one-by-one:</p>
-
-<h3>1. Install MariaDB</h3>
-
-<p>Type the following command to install the package:</p>
-
-<div class="codehilite"><pre><span></span><code>sudo xbps-install -S mariadb
-</code></pre></div>
-
-<h3>2. Initialize MySQL data directory</h3>
-
-<p>The following command will initialize a MariaDB data directory and create system tables in the MySQL database, if they are not present.</p>
-
-<div class="codehilite"><pre><span></span><code>mysql_install_db --user<span class="o">=</span>mysql --basedir<span class="o">=</span>/usr --datadir<span class="o">=</span>/var/lib/mysql
-</code></pre></div>
-
-<p>The options used:</p>
-
-<ul>
-<li><code>--user</code>: The login user name to use for running the <code>mysqld</code> process.</li>
-<li><code>--basedir</code> The path to the MariaDB installation directory.</li>
-<li><code>--datadir</code>: The path to the MariaDB directory.</li>
-</ul>
-
-<p>To know more about it, you can refer to <a href="https://mariadb.com/kb/en/mysql_install_db/">MariaDB's documentation</a>.</p>
-
-<h3>3. Enable MySQL service</h3>
-
-<p>If you are used to Ubuntu or CentOS, enabling services in Void Linux is a bit different but quite simple. Once a process is symlinked, it will start on boot and restarts if it stops unless you stop the service deliberately.</p>
-
-<p>Type the following command to enable the <code>mysqld</code> service:</p>
-
-<div class="codehilite"><pre><span></span><code>sudo ln -s /etc/sv/mysqld /var/service/mysqld
-</code></pre></div>
-
-<h3>4. Start MySQL service</h3>
-
-<p>Type the following command to start the <code>mysqld</code> service:</p>
-
-<div class="codehilite"><pre><span></span><code>sudo sv start mysqld
-</code></pre></div>
-
-<p>To confirm, if the service is running, type the following:</p>
-
-<div class="codehilite"><pre><span></span><code>sudo sv status mysqld
-</code></pre></div>
-
-<p>And you'll see something like this:</p>
-
-<div class="codehilite"><pre><span></span><code>run: mysqld: <span class="o">(</span>pid <span class="m">15136</span><span class="o">)</span> 1116s<span class="p">;</span> run: log: <span class="o">(</span>pid <span class="m">15025</span><span class="o">)</span> 1172s
-</code></pre></div>
-
-<h3><a id="secure-mysql-installation"></a> 5. Secure MySQL installation</h3>
-
-<p>It's recommended to secure your installation, so type the following command:</p>
-
-<div class="codehilite"><pre><span></span><code>sudo mysql_secure_installation
-</code></pre></div>
-
-<p>Once the command is executed, you'll be prompted with a few questions, respond according to your needs and you're done!</p>
-
-<h3>6. Test MariaDB connection</h3>
-
-<p>Now, all you have to do is, try to log in to your database by typing the following:</p>
-
-<div class="codehilite"><pre><span></span><code>mysql -u root -p
-</code></pre></div>
-
-<p>Once executed, it would prompt you for your password (which you must have set in the <a href="#secure-mysql-installation">previous step</a> and if you are able to log in, you are good to go!</p>
-
-<p>Hope this guide helps you out!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>January 16th, 2022</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/databases/">
-					Databases
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-create-an-iso-image-from-cdsdvds">How to create an ISO image from CDs/DVDs?</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>I used to create ISO images using DAEMON Tools but I wanted to try something different and see if there's a way to create it using the Linux CLI.</p>
-
-<p>Turns out, you can do in just a single line using the <code>dd</code> utility like so:</p>
-
-<div class="codehilite"><pre><span></span><code>dd <span class="k">if</span><span class="o">=</span>/dev/cdrom <span class="nv">of</span><span class="o">=</span>/path/to/your/directory/image.iso
-</code></pre></div>
-
-<p>The <code>if</code> stands for input file and <code>of</code> stands for output file.</p>
-
-<p>Looks like, I don't have to use DAEMON Tools for stuff like this, I guess.</p>
-
-<p>Hope you found this tip useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>October 23rd, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/linux/">
-					Linux
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -702,6 +707,13 @@ nssm remove <span class="s2">&quot;servicename&quot;</span>
 		</li>
 		
 		<li>
+			<a href="/category/php/">
+				PHP
+				<span class="count">11</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/javascript/">
 				JavaScript
 				<span class="count">11</span>
@@ -737,13 +749,6 @@ nssm remove <span class="s2">&quot;servicename&quot;</span>
 		</li>
 		
 		<li>
-			<a href="/category/php/">
-				PHP
-				<span class="count">10</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/vim/">
 				VIM
 				<span class="count">8</span>
@@ -761,6 +766,13 @@ nssm remove <span class="s2">&quot;servicename&quot;</span>
 			<a href="/category/programming/">
 				Programming
 				<span class="count">8</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/devops/">
+				DevOps
+				<span class="count">7</span>
 			</a>
 		</li>
 		
@@ -786,8 +798,8 @@ nssm remove <span class="s2">&quot;servicename&quot;</span>
 		</li>
 		
 		<li>
-			<a href="/category/devops/">
-				DevOps
+			<a href="/category/apache/">
+				Apache
 				<span class="count">5</span>
 			</a>
 		</li>
@@ -816,13 +828,6 @@ nssm remove <span class="s2">&quot;servicename&quot;</span>
 		<li>
 			<a href="/category/blogmarks/">
 				Blogmarks
-				<span class="count">4</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/apache/">
-				Apache
 				<span class="count">4</span>
 			</a>
 		</li>
@@ -922,6 +927,13 @@ nssm remove <span class="s2">&quot;servicename&quot;</span>
 			<a href="/category/python/">
 				Python
 				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/aws/">
+				AWS
+				<span class="count">1</span>
 			</a>
 		</li>
 		

@@ -78,6 +78,192 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/install-mariadb-103-on-void-linux">Install MariaDB 10.3 on Void Linux</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>I tried to find a proper guide on how to install MySQL 8.0 on Void Linux but I couldn't really find any. So, I thought of installing MariaDB 10.3 on my laptop instead.</p>
+
+<p>Don't worry about using MariaDB as it meets the same standard enterprised requirements as MySQL. The only difference is that MySQL belongs to Oracle and MariaDB is for people who wanted to get out of Oracle's hands.</p>
+
+<p>Anyway, let's get started.</p>
+
+<h2>Prerequisites</h2>
+
+<ul>
+<li>Need to have root privileges in order to install packages.</li>
+<li>Basic know-how of Void Linux and it's <code>xbps</code> package manager.</li>
+</ul>
+
+<p>Alright, go ahead and follow these steps one-by-one:</p>
+
+<h3>1. Install MariaDB</h3>
+
+<p>Type the following command to install the package:</p>
+
+<div class="codehilite"><pre><span></span><code>sudo xbps-install -S mariadb
+</code></pre></div>
+
+<h3>2. Initialize MySQL data directory</h3>
+
+<p>The following command will initialize a MariaDB data directory and create system tables in the MySQL database, if they are not present.</p>
+
+<div class="codehilite"><pre><span></span><code>mysql_install_db --user<span class="o">=</span>mysql --basedir<span class="o">=</span>/usr --datadir<span class="o">=</span>/var/lib/mysql
+</code></pre></div>
+
+<p>The options used:</p>
+
+<ul>
+<li><code>--user</code>: The login user name to use for running the <code>mysqld</code> process.</li>
+<li><code>--basedir</code> The path to the MariaDB installation directory.</li>
+<li><code>--datadir</code>: The path to the MariaDB directory.</li>
+</ul>
+
+<p>To know more about it, you can refer to <a href="https://mariadb.com/kb/en/mysql_install_db/">MariaDB's documentation</a>.</p>
+
+<h3>3. Enable MySQL service</h3>
+
+<p>If you are used to Ubuntu or CentOS, enabling services in Void Linux is a bit different but quite simple. Once a process is symlinked, it will start on boot and restarts if it stops unless you stop the service deliberately.</p>
+
+<p>Type the following command to enable the <code>mysqld</code> service:</p>
+
+<div class="codehilite"><pre><span></span><code>sudo ln -s /etc/sv/mysqld /var/service/mysqld
+</code></pre></div>
+
+<h3>4. Start MySQL service</h3>
+
+<p>Type the following command to start the <code>mysqld</code> service:</p>
+
+<div class="codehilite"><pre><span></span><code>sudo sv start mysqld
+</code></pre></div>
+
+<p>To confirm, if the service is running, type the following:</p>
+
+<div class="codehilite"><pre><span></span><code>sudo sv status mysqld
+</code></pre></div>
+
+<p>And you'll see something like this:</p>
+
+<div class="codehilite"><pre><span></span><code>run: mysqld: <span class="o">(</span>pid <span class="m">15136</span><span class="o">)</span> 1116s<span class="p">;</span> run: log: <span class="o">(</span>pid <span class="m">15025</span><span class="o">)</span> 1172s
+</code></pre></div>
+
+<h3><a id="secure-mysql-installation"></a> 5. Secure MySQL installation</h3>
+
+<p>It's recommended to secure your installation, so type the following command:</p>
+
+<div class="codehilite"><pre><span></span><code>sudo mysql_secure_installation
+</code></pre></div>
+
+<p>Once the command is executed, you'll be prompted with a few questions, respond according to your needs and you're done!</p>
+
+<h3>6. Test MariaDB connection</h3>
+
+<p>Now, all you have to do is, try to log in to your database by typing the following:</p>
+
+<div class="codehilite"><pre><span></span><code>mysql -u root -p
+</code></pre></div>
+
+<p>Once executed, it would prompt you for your password (which you must have set in the <a href="#secure-mysql-installation">previous step</a> and if you are able to log in, you are good to go!</p>
+
+<p>Hope this guide helps you out!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>January 16th, 2022</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/databases/">
+					Databases
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/writings/posts/is-selinux-complicated">Is SELinux complicated?</a></h1>
+		<p class="description">If you turn off SELinux for a living, try this.</p>
+	</div>
+	<div class="article-body">
+		<p>This might look a rant post but hear me out, okay?</p>
+
+<p>Ever deployed an application on CentOS and tried to figure out why it isn't working when it's caused due to some permission issue by SELinux enabled?</p>
+
+<p>Yeah, I know how annoying that is. So, whenever I go on StackOverflow, many people suggest to completely turn it off.</p>
+
+<p>Well, it might be tempting to type <code>sudo setenforce 0</code> (which sets SELinux to Permissive mode), I wouldn't really recommend you to edit the SELinux config and disable it completely.</p>
+
+<p>I recently read a blog post on CentOS's official blog and I'd like to quote them for asking this:</p>
+
+<blockquote>
+  <p>But why do articles feel the need to outright deactivate SELinux rather than help readers work through any problems they might have? Is SELinux that hard?</p>
+</blockquote>
+
+<p>Good question. Is it really that hard or is it because we don't really understand it? I think it's the latter.</p>
+
+<h2>But why so?</h2>
+
+<p>I guess, as users, we really need some sort of user interface to receive feedback because not everyone is really good at the terminal and most importantly, not good at memorizing options and flag combinations.</p>
+
+<p>Here's a sample error that I would face sometimes while deploying a Laravel web application on CentOS 7:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="o">[</span>Mon May <span class="m">16</span> <span class="m">11</span>:39:32.996441 <span class="m">2016</span><span class="o">]</span> <span class="o">[</span>:error<span class="o">]</span> <span class="o">[</span>pid <span class="m">2434</span><span class="o">]</span> <span class="o">[</span>client XXX.XXX.XXX.XXX:8080<span class="o">]</span> PHP Fatal error:  Uncaught UnexpectedValueException: The stream or file <span class="s2">&quot;/var/www/html/MYSITE/storage/logs/laravel.log&quot;</span> could not be opened: failed to open stream: Permission denied <span class="k">in</span> /var/www/html/MYSITE/bootstrap/cache/compiled.php:13701
+Stack trace:
+<span class="c1">#0 /var/www/html/MYSITE/bootstrap/cache/compiled.php(13635): Monolog\\Handler\\StreamHandler-&gt;write(Array)</span>
+<span class="c1">#1 /var/www/html/MYSITE/bootstrap/cache/compiled.php(13396): Monolog\\Handler\\AbstractProcessingHandler-&gt;handle(Array)</span>
+<span class="c1">#2 /var/www/html/MYSITE/bootstrap/cache/compiled.php(13494): Monolog\\Logger-&gt;addRecord(400, Object(Symfony\\Component\\Debug\\Exception\\FatalErrorException), Array)</span>
+<span class="c1">#3 /var/www/html/MYSITE/bootstrap/cache/compiled.php(13189): Monolog\\Logger-&gt;error(Object(Symfony\\Component\\Debug\\Exception\\FatalErrorException), Array)</span>
+<span class="c1">#4 /var/www/html/MYSITE/bootstrap/cache/compiled.php(13160): Illuminate\\Log\\Writer-&gt;writeLog(&#39;error&#39;, Object(Symfony\\Component\\Debug\\Exception\\FatalErrorException), Array)</span>
+<span class="c1"># in /var/www/html/MYSITE/bootstrap/cache/compiled.php on line 13701</span>
+</code></pre></div>
+
+<p>By looking at this error, you do understand it's permission-related but it doesn't really indicate that it's an SELinux problem because there could be thousands of reasons why there could be such an error. And of course, when I look it up on Google, I do find many people facing the same issue due to SELinux being enabled.</p>
+
+<p>Instead of disabling it completely, I would try doing this:</p>
+
+<div class="codehilite"><pre><span></span><code>chcon -R -t httpd_sys_rw_content_t storage
+</code></pre></div>
+
+<p>And off goes the error and the application didn't give any permission-related issues again.</p>
+
+<p>Is it worth disabling SELinux? No. </p>
+
+<p>But does SELinux have an issue of being user friendly? I guess, yes.</p>
+
+<p>I'm just like you, sometimes, I do switch off SELinux at times when it's critical to deploy the application so that I can leave home early but that's not really a good practice.</p>
+
+<h2>Conclusion</h2>
+
+<p>I do wish that the open source developers of SELinux could do something to make much more friendlier to use? Or maybe, some way that let's the user know what to do instead of letting the user <code>chmod</code>-ing and <code>chown</code>-ing files and directories endlessly. Or worse, completely disabling SELinux!</p>
+
+<p>Hope you found this article interesting!</p>
+
+<p>Stay tuned for more.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>December 25th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/writings/posts/on-learning-new-technologies">On learning new technologies</a></h1>
 		<p class="description">Sharing my tips on how I learn new technologies at work and home nowadays.</p>
 	</div>
@@ -460,105 +646,6 @@
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/view-your-wget-progress-even-after-closing-your-ssh-session">View your wget progress even after closing your SSH session</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Few days back, I ran a <code>wget</code> command to download a file and accidentally closed the SSH client.</p>
-
-<p>I logged in again and checked the list of active processes and thankfully, the <code>wget</code> process was still running except that I wasn't able to know the current progress of it.</p>
-
-<p>So, I did a little research and found a way to view the progress, so I tried the following command:</p>
-
-<div class="codehilite"><pre><span></span><code>tail -f wget_log
-</code></pre></div>
-
-<p>And, I was able to view it's current download progress again.</p>
-
-<p>Hope this helps you out!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>August 13th, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/devops/">
-					DevOps
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/wget/">
-					wget
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-use-github-personal-access-token-to-authenticate-your-git-commits">How to use GitHub Personal Access Token to authenticate your git commits?</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>On November 2020, GitHub had announced that they would no longer accept basic username/password to authenticate git commits and it would be deprecated by Mid 2021.</p>
-
-<p>Instead, they recommend you to authenticate your git commits using a Personal Access Token from your GitHub account.</p>
-
-<h2>Generate a personal access token</h2>
-
-<ol>
-<li>Unset your credentials from your remote repository: <code>git config --local --unset credential.helper</code></li>
-<li>Login to your GitHub account and go to <em>Settings</em> </li>
-<li>Then navigate to <em>Developer Settings -> Personal Access Tokens</em></li>
-<li>Click on <em>Generate new token</em></li>
-<li>Give a name to your Personal Access Token and the necessary permissions required.</li>
-<li>Once done, hit on <em>Generate token</em></li>
-<li>The token will be shown once, so make sure to copy it and store it somewhere that you can remember.</li>
-</ol>
-
-<h2>Update your remote repository</h2>
-
-<p>Once you've generated a token, you just have to update your remote repository by following the below steps:</p>
-
-<h3>1. Update remote repository URL</h3>
-
-<div class="codehilite"><pre><span></span><code>git remote set-url origin https://&lt;your_access_token&gt;@github.com/&lt;your_git_repo_url&gt;
-</code></pre></div>
-
-<h3>2. Just git pull once</h3>
-
-<p>Now, just perform <code>git pull</code> operation once and you should be good:</p>
-
-<div class="codehilite"><pre><span></span><code>git pull https://&lt;your_access_token&gt;@github.com/&lt;your_git_repo_url&gt;
-</code></pre></div>
-
-<p>Hope this helps you out!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>August 13th, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/git/">
-					Git
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -643,6 +730,13 @@
 		</li>
 		
 		<li>
+			<a href="/category/php/">
+				PHP
+				<span class="count">11</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/javascript/">
 				JavaScript
 				<span class="count">11</span>
@@ -678,13 +772,6 @@
 		</li>
 		
 		<li>
-			<a href="/category/php/">
-				PHP
-				<span class="count">10</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/vim/">
 				VIM
 				<span class="count">8</span>
@@ -702,6 +789,13 @@
 			<a href="/category/programming/">
 				Programming
 				<span class="count">8</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/devops/">
+				DevOps
+				<span class="count">7</span>
 			</a>
 		</li>
 		
@@ -727,8 +821,8 @@
 		</li>
 		
 		<li>
-			<a href="/category/devops/">
-				DevOps
+			<a href="/category/apache/">
+				Apache
 				<span class="count">5</span>
 			</a>
 		</li>
@@ -757,13 +851,6 @@
 		<li>
 			<a href="/category/blogmarks/">
 				Blogmarks
-				<span class="count">4</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/apache/">
-				Apache
 				<span class="count">4</span>
 			</a>
 		</li>
@@ -863,6 +950,13 @@
 			<a href="/category/python/">
 				Python
 				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/aws/">
+				AWS
+				<span class="count">1</span>
 			</a>
 		</li>
 		

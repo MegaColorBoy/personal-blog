@@ -77,6 +77,104 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-resolve-the-fatal-refusing-to-merge-unrelated-histories-git-error">How to resolve the "fatal: refusing to merge unrelated histories" Git error?</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>This error shows up when two different projects are merged (i.e. they both could be the same project but unaware of each other's existence and have different commit histories).</p>
+
+<p>If you are facing this, chances are that:</p>
+
+<ol>
+<li><p>You must have cloned a project and the <code>.git</code> directory must have corrupted or got deleted and at this point, Git is unaware of the changes being made and will throw this error when you try to <em>push to</em> or <em>pull from</em> the remote repository.</p></li>
+<li><p>You created a new repository, made some changes and added the commits and then you tried to pull from the remote repository.</p></li>
+</ol>
+
+<p>Well, you can easily resolve by passing the <code>--allow-unrelated-histories</code> flag when pulling the latest updates from the remote repository:</p>
+
+<div class="codehilite"><pre><span></span><code>git pull origin master --allow-unrelated-histories
+</code></pre></div>
+
+<p>Hope you found this useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>April 10th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/git/">
+					Git
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/zip-all-files-that-are-modified-on-a-specific-date">Zip all files that are modified on a specific date</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>I wrote a nifty command to make an archive of the files that I have modified on a particular date. By doing so, this script comes in handy during urgent deployments, so that I don't lose track of the files that I should be updating.</p>
+
+<p>Here's the command at your disposal:</p>
+
+<div class="codehilite"><pre><span></span><code>find . -maxdepth <span class="m">10</span> -type f -newermt <span class="s2">&quot;2021-04-10&quot;</span> <span class="p">|</span> zip -qur archive.zip -@
+</code></pre></div>
+
+<h2>How this works?</h2>
+
+<p>Let's see what this command does in pieces:</p>
+
+<p><code>find</code> is the utility tool used to return the filenames that match the specified parameters in the given directory.</p>
+
+<p><code>-maxdepth</code> is the flag that allows you to specify the depth of recursive searches it should perform.</p>
+
+<p><code>-type</code> is the flag that determines if you're looking for file or a directory.</p>
+
+<p><code>-newermt</code> is the flag that determines if the file has been modified on and/or after the given date.</p>
+
+<p>Once, the file has been found, the output is being <a href="https://www.geeksforgeeks.org/piping-in-unix-or-linux/">redirected</a> to the <code>zip</code> utility function, which would then add the files to the <code>.zip</code> file.
+The <code>-q</code> flag would perform the operation in silent mode, <code>-u</code> flag would update the files in the archive if modified or add it as a new file if it doesn't exist and <code>-@</code> takes the list of files from the standard input.</p>
+
+<p>If you want to ignore certain directories or file extensions, in that case, you can exclude them like so:</p>
+
+<div class="codehilite"><pre><span></span><code>find . -maxdepth <span class="m">30</span> -type f ! -path <span class="s2">&quot;./path/to/directory/*&quot;</span> !  -path <span class="s2">&quot;*.ext&quot;</span> -newermt <span class="s2">&quot;2021-04-10&quot;</span> <span class="p">|</span> zip -qur archive.zip -@
+</code></pre></div>
+
+<p>Or, you can even archive the modified files by specifying a date range:</p>
+
+<div class="codehilite"><pre><span></span><code>touch --date <span class="s2">&quot;2021-04-10&quot;</span> startdate
+touch --date <span class="s2">&quot;2021-04-15&quot;</span> enddate
+find . -maxdepth <span class="m">30</span> -type f -newer startdate -not -newer enddate <span class="p">|</span> zip -ur archive.zip -@
+</code></pre></div>
+
+<p>Hope you found this tip useful! &#x1F601;</p>
+
+	</div>
+	<div class="article-footer">
+		<time>April 10th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/unix/">
+					UNIX
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/get-a-list-of-directories-with-their-sizes-in-the-current-directory">Get a list of directories with their sizes in the current directory</a></h1>
 		<p class="description"></p>
 	</div>
@@ -296,114 +394,6 @@ parse_git_branch<span class="o">()</span> <span class="o">{</span>
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-resolve-the-issue-of-not-receiving-emails-on-the-same-domain">How to resolve the issue of not receiving emails on the same domain?</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Recently, we hosted our company's redesigned website on GoDaddy, which offers cPanel to manage your website. I was dealing with an annoying email bug in which I was able to send/receive emails to any account except the ones that share the company domain.</p>
-
-<p>The company's current email setup makes use of Google Workspace and since we're using a Shared Hosting account, GoDaddy allows you to use their SMTP relay and prohibits the use of third-party SMTP services such as Google Workspace, Outlook, etc.</p>
-
-<p>After configuring it with Google's MX records in the DNS settings, I wasn't receiving any email on my own company email yet I was able to receive on other email accounts that didn't share the company's domain.</p>
-
-<p>I did a little R&amp;D and ran into this documentation about <a href="https://docs.cpanel.net/cpanel/email/email-routing/">email routing</a> and figured out that there could be an issue with it's configuration.</p>
-
-<p>Here's what I did:</p>
-
-<ol>
-<li>Open cPanel </li>
-<li>Search or look for <strong>Email Routing</strong></li>
-<li>Click on <strong>Email Routing</strong></li>
-<li>If your MX records are not pointing to the IP address of the hosting server, then select <strong>Remote Mail Exchanger</strong></li>
-<li>Save changes</li>
-</ol>
-
-<p>After following these steps, I was able to receive mails on the same domain!</p>
-
-<h2>So what really caused the issue?</h2>
-
-<p>Since, we didn't have a default email address set up in cPanel, the current mode to send all unrouted emails was set to <code>:blackhole:</code>, by default. I guess, it's set up that way to prevent the server from sending/receiving spam mails from the domain.</p>
-
-<p>This makes sense because:</p>
-
-<ol>
-<li>The MX records are not pointing to the current server</li>
-<li>There are no email accounts created for the domain on cPanel</li>
-<li>By setting the mode to <code>:blackhole</code>, all emails with the same domain are being discarded or rejected</li>
-</ol>
-
-<p>Not really sure if this is what caused the issue but judging from the facts, I was able to reach to this conclusion.</p>
-
-<p>Hope you found this tip useful.</p>
-
-<h2>Reference</h2>
-
-<ul>
-<li><a href="https://stackoverflow.com/questions/1107730/cant-send-email-to-addresses-at-my-own-domain">Can't send email to addresses at my own domain</a></li>
-</ul>
-
-	</div>
-	<div class="article-footer">
-		<time>March 12th, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/cpanel/">
-					cPanel
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/email/">
-					Email
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/convert-string-to-variable-in-php">Convert string to variable in PHP</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>I read about <a href="https://www.php.net/language.variables.variable">variable variables</a> in PHP's official documentation.</p>
-
-<p>Here's a sample:</p>
-
-<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
-    <span class="nv">$a</span> <span class="o">=</span> <span class="s2">&quot;hello&quot;</span><span class="p">;</span>
-    <span class="c1">// Remove special characters and tags to prevent it from crashing.</span>
-    <span class="nv">$foo</span> <span class="o">=</span> <span class="nb">preg_replace</span><span class="p">(</span><span class="s1">&#39;/[^a-zA-Z0-9\s]/&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="nv">$$a</span><span class="p">);</span>
-    <span class="k">echo</span> <span class="nv">$foo</span><span class="p">;</span>
-<span class="cp">?&gt;</span><span class="x"></span>
-</code></pre></div>
-
-<p>Not sure if this is a good practice but it sure gets the job done!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>March 12th, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/php/">
-					PHP
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -486,6 +476,13 @@ parse_git_branch<span class="o">()</span> <span class="o">{</span>
 		</li>
 		
 		<li>
+			<a href="/category/php/">
+				PHP
+				<span class="count">11</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/javascript/">
 				JavaScript
 				<span class="count">11</span>
@@ -521,13 +518,6 @@ parse_git_branch<span class="o">()</span> <span class="o">{</span>
 		</li>
 		
 		<li>
-			<a href="/category/php/">
-				PHP
-				<span class="count">10</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/vim/">
 				VIM
 				<span class="count">8</span>
@@ -545,6 +535,13 @@ parse_git_branch<span class="o">()</span> <span class="o">{</span>
 			<a href="/category/programming/">
 				Programming
 				<span class="count">8</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/devops/">
+				DevOps
+				<span class="count">7</span>
 			</a>
 		</li>
 		
@@ -570,8 +567,8 @@ parse_git_branch<span class="o">()</span> <span class="o">{</span>
 		</li>
 		
 		<li>
-			<a href="/category/devops/">
-				DevOps
+			<a href="/category/apache/">
+				Apache
 				<span class="count">5</span>
 			</a>
 		</li>
@@ -600,13 +597,6 @@ parse_git_branch<span class="o">()</span> <span class="o">{</span>
 		<li>
 			<a href="/category/blogmarks/">
 				Blogmarks
-				<span class="count">4</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/apache/">
-				Apache
 				<span class="count">4</span>
 			</a>
 		</li>
@@ -706,6 +696,13 @@ parse_git_branch<span class="o">()</span> <span class="o">{</span>
 			<a href="/category/python/">
 				Python
 				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/aws/">
+				AWS
+				<span class="count">1</span>
 			</a>
 		</li>
 		

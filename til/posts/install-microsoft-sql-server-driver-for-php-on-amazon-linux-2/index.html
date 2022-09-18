@@ -5,8 +5,15 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta name="author" content="Abdush Shakoor">
 	
+	<meta name="description" content=".">
+	<meta name="og:title" content="Install Microsoft SQL Server Driver for PHP on Amazon Linux 2 | Abdush Shakoor's Weblog" />
+	<meta name="og:type" content="article" />
+	<meta name="og:url" content="til/posts/install-microsoft-sql-server-driver-for-php-on-amazon-linux-2" />
+	<meta name="og:description" content="" />
+	<meta name="og:site_name" content="Abdush Shakoor's Weblog | Abdush Shakoor's Weblog" />
+	
 	<meta name="robots" content="follow">
-	<title>Apache | Abdush Shakoor's Weblog </title>
+	<title>Install Microsoft SQL Server Driver for PHP on Amazon Linux 2 | Abdush Shakoor's Weblog </title>
 	<link rel="stylesheet" href="/static/css/main.css" type="text/css">
 	<link rel="stylesheet" href="/static/css/pygments.css" type="text/css">
 
@@ -67,52 +74,120 @@
 		<section id="primary">
 			<div class="articles">
 				
-				<div class="segment">
-					<div class="year"><h2>2022</h2></div>
-					<div class="posts">
-						
-						<div class="post">
-							<a href="/til/posts/logging-client-ip-addresses-on-apache-server">Logging client IP addresses on Apache server</a>
-							<time>18.08.2022</time>
-						</div>
-								
-					</div>
-				</div>
-				
-				<div class="segment">
-					<div class="year"><h2>2020</h2></div>
-					<div class="posts">
-						
-						<div class="post">
-							<a href="/til/posts/enable-httpsssl-on-wamp-server">Enable HTTPS/SSL on WAMP Server</a>
-							<time>13.09.2020</time>
-						</div>
-						
-						<div class="post">
-							<a href="/til/posts/accessing-wamp-server-from-other-computers-on-lan">Accessing WAMP Server from other computers on LAN</a>
-							<time>13.09.2020</time>
-						</div>
-						
-						<div class="post">
-							<a href="/til/posts/enable-http-strict-transport-security-hsts">Enable HTTP Strict Transport Security (HSTS)</a>
-							<time>22.06.2020</time>
-						</div>
-						
-						<div class="post">
-							<a href="/til/posts/forcing-http-to-https-redirect-after-enabling-ssl">Forcing HTTP to HTTPS redirect after enabling SSL</a>
-							<time>22.06.2020</time>
-						</div>
-								
-					</div>
-				</div>
-				
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/install-microsoft-sql-server-driver-for-php-on-amazon-linux-2">Install Microsoft SQL Server Driver for PHP on Amazon Linux 2</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Recently, I tried to install Microsoft SQL Server driver for PHP on Amazon Linux and searching on how-to do was really annoying.
+I read a few articles on StackOverflow and found some samples on GitHub Gists and thought of sharing on how I installed it.</p>
+
+<h2>Prerequisites</h2>
+
+<ol>
+<li>Amazon Linux 2 installed.</li>
+<li>Ensure the ports 80 and 443 are open on your instance.</li>
+<li>PHP &gt;= v5.6 and the following extensions: <code>php-devel</code>, <code>php-pear</code>, <code>php-pdo</code>, and <code>php-xml</code>.</li>
+<li>Know-how on using the terminal.</li>
+</ol>
+
+<h2>Installation steps</h2>
+
+<p>These are the commands used to install the SQL Server driver:</p>
+
+<div class="codehilite"><pre><span></span><code>sudo su
+sudo yum-config-manager --add-repo https://packages.microsoft.com/config/rhel/7/prod.repo
+sudo yum update
+sudo <span class="nv">ACCEPT_EULA</span><span class="o">=</span>Y yum install -y msodbcsql mssql-tools unixODBC-devel re2c gcc-c++ gcc
+sudo pecl install sqlsrv
+sudo pecl install pdo_sqlsrv
+</code></pre></div>
+
+<h2>Modify php.ini</h2>
+
+<p>You can either to go to your <code>php.ini</code> file and add the <code>extension=sqlsrv</code> extension or add it like this:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="nb">echo</span> <span class="s2">&quot;extension=sqlsrv&quot;</span> &gt;&gt; <span class="sb">`</span>php --ini <span class="p">|</span> grep <span class="s2">&quot;Loaded Configuration&quot;</span> <span class="p">|</span> sed -e <span class="s2">&quot;s|.*:\s*||&quot;</span><span class="sb">`</span>
+<span class="nb">echo</span> <span class="s2">&quot;extension=pdo_sqlsrv&quot;</span> &gt;&gt; /etc/php.d/30-pdo_sqlsrv.ini
+</code></pre></div>
+
+<h2>Restart the service</h2>
+
+<p>Ensure that the server can connect and restart the service:</p>
+
+<div class="codehilite"><pre><span></span><code>sudo setsebool -P httpd_can_network_connect_db <span class="m">1</span>
+sudo systemctl restart httpd <span class="o">&amp;&amp;</span> sudo apachectl restart
+</code></pre></div>
+
+<p>Next, run the following the command to see that both <code>pdo_sqlsrv</code> and <code>sqlsrv</code> are installed:</p>
+
+<div class="codehilite"><pre><span></span><code>php -m <span class="p">|</span> grep <span class="s2">&quot;sqlsrv&quot;</span><span class="sb">`</span>
+</code></pre></div>
+
+<h2>Test if the driver works</h2>
+
+<p>Create a <code>test.php</code> file in your root directory and copy-paste this snippet to test if it works:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="nb">error_reporting</span><span class="p">(</span><span class="k">E_ALL</span><span class="p">);</span>
+<span class="nb">ini_set</span><span class="p">(</span><span class="s1">&#39;display_errors&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+
+<span class="nv">$serverName</span> <span class="o">=</span> <span class="s2">&quot;YOUR_DB_HOST&quot;</span><span class="p">;</span>
+<span class="nv">$connectionOptions</span> <span class="o">=</span> <span class="k">array</span><span class="p">(</span>
+    <span class="s2">&quot;Database&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;YOUR_DB_NAME&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Uid&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;YOUR_DB_USER&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;PWD&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;YOUR_DB_PASSWORD&quot;</span>
+<span class="p">);</span>
+
+<span class="nv">$conn</span> <span class="o">=</span> <span class="nb">sqlsrv_connect</span><span class="p">(</span><span class="nv">$serverName</span><span class="p">,</span> <span class="nv">$connectionOptions</span><span class="p">);</span>
+
+<span class="k">if</span><span class="p">(</span><span class="nv">$conn</span> <span class="o">===</span> <span class="k">false</span> <span class="p">)</span> <span class="p">{</span>
+    <span class="k">print</span> <span class="s2">&quot;Connected successfully.&quot;</span><span class="p">;</span> 
+<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="k">print</span> <span class="s2">&quot;Error while connecting to server.&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="cp">?&gt;</span><span class="x"></span>
+</code></pre></div>
+
+<p>Hope you found this tip useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>September 18th, 2022</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/php/">
+					PHP
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/aws/">
+					AWS
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
 			</div>
 		</section>
 		<section id="secondary">
 			<div class="sidebar">
 				<div class="author-intro">
-	<h3>Apache</h3>
-	<p>There are <b>5</b> posts linked to this category.</p>
+	<h3>Hello, I'm Abdush Shakoor! &#x1F44B;</h3>
+	<p>I'm a programmer & designer based in Dubai, United Arab Emirates. I love tinkering with code and writing about what I learn.</p>
+	<p>Like this article? Please share it with your friends and colleagues or else, <a href="mailto:megacolorboy@gmail.com">send me</a> a private message about your feedback.</p>
+
 	<ul class="sitemap">
 		<li><a class="back" href="/"><span>👈</span> Check out more articles!</a></li>
 	</ul>

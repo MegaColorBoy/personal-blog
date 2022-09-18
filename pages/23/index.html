@@ -78,6 +78,415 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/writings/posts/the-cryptopals-crypto-challenges-set-1--break-repeatingkey-xor">The Cryptopals Crypto Challenges: Set 1 - Break Repeating-Key XOR</a></h1>
+		<p class="description">Write a method that decodes a message which is encrypted using the Repeating-Key XOR cipher.</p>
+	</div>
+	<div class="article-body">
+		<p>This is the <a href="http://cryptopals.com/sets/1/challenges/6">sixth challenge</a> of Set 1 in The Cryptopals Crypto Challenges website. Previously, I spoke about these challenges and provided walkthroughs for the previous challenges, if you haven't read them, here are the links:</p>
+
+<ul>
+<li><a href="/posts/the-cryptopals-crypto-challenges">The Cryptopals Crypto Challenges</a></li>
+<li><a href="/posts/the-cryptopals-crypto-challenges-set-1--convert-hex-to-base64">The Cryptopals Crypto Challenges: Set 1 - Convert Hex to Base64</a></li>
+<li><a href="/posts/base64-encodingdecoding-using-bitwise-manipulation-in-c">Base64 Encoding / Decoding using Bitwise Manipulation in C++</a></li>
+<li><a href="/posts/the-cryptopals-crypto-challenges-set-1--fixed-xor">The Cryptopals Crypto Challenges: Set 1 - Fixed XOR Cipher</a></li>
+<li><a href="/posts/the-cryptopals-crypto-challenges-set-1--singlebyte-xor-cipher">The Cryptopals Crypto Challenges: Set 1 - Single-Byte XOR Cipher</a></li>
+<li><a href="/posts/the-cryptopals-crypto-challenges-set-1--detect-singlecharacter-xor">The Cryptopals Crypto Challenges: Set 1 - Detect Single-Character XOR</a></li>
+<li><a href="/posts/the-cryptopals-crypto-challenges-set-1--implement-repeatingkey-xor">The Cryptopals Crypto Challenges: Set 1 - Implement Repeating-Key XOR</a></li>
+<li><a href="/posts/hamming-distance-algorithm-in-c">Hamming Distance Algorithm in C++</a></li>
+</ul>
+
+<p>For this challenge, you are given a <a href="http://cryptopals.com/static/challenge-data/6.txt">file</a>, which contains a ciphertext that has been encrypted using <a href="/posts/the-cryptopals-crypto-challenges-set-1--implement-repeatingkey-xor">Repeating-Key XOR</a> and then encoded using Base64. Decrypt it.</p>
+
+<p>According to the problem description on the website:</p>
+
+<blockquote>
+  <p>It is officially on, now.</p>
+  
+  <p>This challenge isn't conceptually hard, but it involves actual
+  error-prone coding. The other challenges in this set are there to
+  bring you up to speed. This one is there to qualify you. If you can do
+  this one, you're probably just fine up to Set 6.</p>
+</blockquote>
+
+<p>Well, conceptually, this may not be the hardest but practically, it is the first hardest challenge in this set and it really did take me a while to understand how to decrypt the ciphertext through <strong><em>trial-and-error</em></strong> despite the instructions given on the website. In this challenge, it's more like connecting all the puzzles and looking at the big picture, in this case, all of the previous code that I had written, is to break the Repeating-Key XOR cipher.</p>
+
+<h2>How to break it?</h2>
+
+<p>The challenge had given some steps to follow. Here's how:</p>
+
+<ol>
+<li>Let <strong><em>KEYSIZE</em></strong> be the guessed length of the key; try values from 2 to (say) 40</li>
+<li>Write a function to compute the edit distance/Hamming distance between two strings. To know more about it, <a href="/posts/hamming-distance-algorithm-in-c">click here</a> </li>
+<li>For each <strong><em>KEYSIZE</em></strong>, take the first <strong><em>KEYSIZE</em></strong> worth of bytes, and the second <strong><em>KEYSIZE</em></strong> worth of bytes, and find the edit distance between them. Normalize this result by dividing by <strong><em>KEYSIZE</em></strong></li>
+<li>The <strong><em>KEYSIZE</em></strong> with the smallest normalized edit distance is probably the key. You could proceed perhaps with the smallest 2-3 <strong><em>KEYSIZE</em></strong> values. Or take 4 <strong><em>KEYSIZE</em></strong> blocks instead of 2 and average the distances</li>
+<li>Now that you probably know the <strong><em>KEYSIZE</em></strong>: break the ciphertext into blocks of <strong><em>KEYSIZE</em></strong> length</li>
+<li>Now transpose the blocks: make a block that is the first byte of every block, and a block that is the second byte of every block, and so on</li>
+<li>Solve each block as if it was single-character XOR. You already have code to do this</li>
+<li>For each block, the single-byte XOR key that produces the best looking histogram is the repeating-key XOR key byte for that block. Put them together and you have the key</li>
+</ol>
+
+<p>Let's dive in to the code (I hope the comments, help you out!):</p>
+
+<p><strong>Implementation of the method(s):</strong></p>
+
+<div class="codehilite"><pre><span></span><code><span class="c1">//Single Byte XOR V2 - a better version</span>
+<span class="n">string</span><span class="w"> </span><span class="nf">CryptoLib::singleByteXOR_V2</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="n">str</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="n">key</span><span class="p">)</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="c1">//Don&#39;t forget to add a NULL character to the string, it broke when I didn&#39;t add it previously.</span>
+<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">newStr</span><span class="p">(</span><span class="n">str</span><span class="p">.</span><span class="n">size</span><span class="p">(),</span><span class="err">&#39;&#39;</span><span class="p">);</span><span class="w"> </span>
+
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">str</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">){</span><span class="w"></span>
+<span class="w">        </span><span class="n">newStr</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">str</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">^</span><span class="w"> </span><span class="n">key</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">newStr</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+
+<span class="c1">//Return the Single Byte XOR key via Bruteforce</span>
+<span class="kt">char</span><span class="w"> </span><span class="nf">CryptoLib::singleByteXOR_Bruteforce_key</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="n">cipherBlock</span><span class="p">)</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="n">key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">maxCount</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">decodedMessage</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">    </span><span class="c1">//Brute force all 256 possibilities</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;=</span><span class="mi">256</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="kt">char</span><span class="w"> </span><span class="n">ch</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="kt">char</span><span class="p">)</span><span class="w"> </span><span class="n">i</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">        </span><span class="c1">//Perform Single Byte XOR -- modified version</span>
+<span class="w">        </span><span class="n">string</span><span class="w"> </span><span class="n">attempt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">singleByteXOR_V2</span><span class="p">(</span><span class="n">cipherBlock</span><span class="p">,</span><span class="w"> </span><span class="n">ch</span><span class="p">);</span><span class="w"></span>
+
+<span class="w">        </span><span class="c1">// cout &lt;&lt; &quot;Message: &quot; &lt;&lt; attempt &lt;&lt; endl;</span>
+
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="cm">/*</span>
+<span class="cm">            Look for characters that are alphabetic and the space character,</span>
+<span class="cm">            if it finds, increment the counter</span>
+<span class="cm">        */</span><span class="w"></span>
+<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="n">attempt</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">)</span><span class="w"></span>
+<span class="w">        </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="k">if</span><span class="p">((</span><span class="n">attempt</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mi">65</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">attempt</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mi">122</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">attempt</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">&#39; &#39;</span><span class="p">)</span><span class="w"></span>
+<span class="w">            </span><span class="p">{</span><span class="w"></span>
+<span class="w">                </span><span class="n">count</span><span class="o">++</span><span class="p">;</span><span class="w"></span>
+<span class="w">            </span><span class="p">}</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">        </span><span class="c1">//The one with the highest count, has the predicted key</span>
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">count</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">maxCount</span><span class="p">)</span><span class="w"></span>
+<span class="w">        </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="n">maxCount</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">count</span><span class="p">;</span><span class="w"></span>
+<span class="w">            </span><span class="n">key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ch</span><span class="p">;</span><span class="w"></span>
+<span class="w">            </span><span class="c1">// decrypted = attempt;</span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">    </span><span class="c1">// cout &lt;&lt; &quot;KEY: &quot; &lt;&lt; key &lt;&lt; endl;</span>
+<span class="w">    </span><span class="c1">// cout &lt;&lt; &quot;MESSAGE: &quot; &lt;&lt; decrypted &lt;&lt; endl;</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">key</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+
+<span class="c1">//Guess Key length of the cipher</span>
+<span class="kt">int</span><span class="w"> </span><span class="nf">CryptoLib::guess_key_length</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="n">cipherText</span><span class="p">)</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">KEYSIZE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">leastNormalized</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">INT_MAX</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">    </span><span class="c1">//Guess a keysize from 2 to 40</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">2</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;=</span><span class="mi">40</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="kt">double</span><span class="w"> </span><span class="n">normalize</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0f</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">        </span><span class="c1">//Number of bytes per key size</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">bytes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cipherText</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="o">/</span><span class="n">i</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="n">bytes</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">)</span><span class="w"></span>
+<span class="w">        </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="n">string</span><span class="w"> </span><span class="n">blockA</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cipherText</span><span class="p">.</span><span class="n">substr</span><span class="p">((</span><span class="n">j</span><span class="o">*</span><span class="n">i</span><span class="p">),</span><span class="w"> </span><span class="n">i</span><span class="p">);</span><span class="w"></span>
+<span class="w">            </span><span class="n">string</span><span class="w"> </span><span class="n">blockB</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cipherText</span><span class="p">.</span><span class="n">substr</span><span class="p">(((</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">i</span><span class="p">),</span><span class="w"> </span><span class="n">i</span><span class="p">);</span><span class="w"></span>
+
+<span class="w">            </span><span class="c1">//Calculate Hamming Distance between 2 strings</span>
+<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">edit_distance</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">hamming_distance</span><span class="p">(</span><span class="n">blockA</span><span class="p">,</span><span class="w"> </span><span class="n">blockB</span><span class="p">);</span><span class="w"></span>
+
+<span class="w">            </span><span class="n">normalize</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="p">((</span><span class="kt">double</span><span class="p">)</span><span class="n">edit_distance</span><span class="p">)</span><span class="o">/</span><span class="p">((</span><span class="kt">double</span><span class="p">)</span><span class="n">blockA</span><span class="p">.</span><span class="n">size</span><span class="p">());</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">        </span><span class="c1">//Now, take an average </span>
+<span class="w">        </span><span class="n">normalize</span><span class="w"> </span><span class="o">/=</span><span class="w"> </span><span class="n">bytes</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">        </span><span class="c1">//The key size that has the least edit distance is the key size required</span>
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">normalize</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">normalize</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">leastNormalized</span><span class="p">)</span><span class="w"></span>
+<span class="w">        </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="n">leastNormalized</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">normalize</span><span class="p">;</span><span class="w"></span>
+<span class="w">            </span><span class="n">KEYSIZE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">    </span><span class="c1">//Return the key size</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">KEYSIZE</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+
+<p><strong>Final code:</strong></p>
+
+<div class="codehilite"><pre><span></span><code><span class="c1">//The Cryptopals Crypto Challenges - Set 1 Challenge 6</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;crypto.h&quot;</span><span class="cp"></span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">CryptoLib</span><span class="w"> </span><span class="n">crypt</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">message</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">binary</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">key</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">    </span><span class="c1">//if this returns 37, then the function is working correct!</span>
+<span class="w">    </span><span class="c1">// cout &lt;&lt; crypt.hamming_distance(&quot;this is a test&quot;, &quot;wokka wokka!!!&quot;) &lt;&lt; endl;</span>
+
+<span class="w">    </span><span class="c1">//Read the file content</span>
+<span class="w">    </span><span class="n">ifstream</span><span class="w"> </span><span class="n">infile</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">    </span><span class="c1">//Converted the B64 text to Hexadecimals through an online converter</span>
+<span class="w">    </span><span class="c1">//as it wasn&#39;t accurate with b64 decoder that I&#39;d built</span>
+<span class="w">    </span><span class="n">infile</span><span class="p">.</span><span class="n">open</span><span class="p">(</span><span class="s">&quot;message.txt&quot;</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="n">getline</span><span class="p">(</span><span class="n">infile</span><span class="p">,</span><span class="w"> </span><span class="n">message</span><span class="p">,</span><span class="w"> </span><span class="err">&#39;&#39;</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="n">infile</span><span class="p">.</span><span class="n">close</span><span class="p">();</span><span class="w"></span>
+
+<span class="w">    </span><span class="c1">//Convert the hexadecimal string to ASCII</span>
+<span class="w">    </span><span class="n">message</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">crypt</span><span class="p">.</span><span class="n">con_hex_2_ascii</span><span class="p">(</span><span class="n">message</span><span class="p">);</span><span class="w"></span>
+
+<span class="w">    </span><span class="c1">//Guess the length of the key</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">keyLength</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">crypt</span><span class="p">.</span><span class="n">guess_key_length</span><span class="p">(</span><span class="n">message</span><span class="p">);</span><span class="w"></span>
+
+<span class="w">    </span><span class="c1">//Transpose the message based on keysize length</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">blocks</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">message</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">keyLength</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">keyLength</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="n">string</span><span class="w"> </span><span class="n">block</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="kt">char</span><span class="w"> </span><span class="n">indexKey</span><span class="o">=</span><span class="err">&#39;&#39;</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">        </span><span class="cm">/*</span>
+<span class="cm">            Transpose the message into blocks </span>
+<span class="cm">            based on keysize and concatenate it </span>
+<span class="cm">            into one string</span>
+<span class="cm">        */</span><span class="w"></span>
+<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="n">blocks</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">){</span><span class="w"></span>
+<span class="w">            </span><span class="n">block</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">message</span><span class="p">.</span><span class="n">substr</span><span class="p">((</span><span class="n">j</span><span class="o">*</span><span class="n">keyLength</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="mi">1</span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">        </span><span class="c1">//Concatenate the selected characters, which will become the predicted key</span>
+<span class="w">        </span><span class="n">key</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">crypt</span><span class="p">.</span><span class="n">singleByteXOR_Bruteforce_key</span><span class="p">(</span><span class="n">block</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;KEY: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">key</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;DECODED: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">crypt</span><span class="p">.</span><span class="n">con_hex_2_ascii</span><span class="p">(</span><span class="n">crypt</span><span class="p">.</span><span class="n">repeatingKeyXOR</span><span class="p">(</span><span class="n">message</span><span class="p">,</span><span class="w"> </span><span class="n">key</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">   </span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+
+<p><strong><em>Note: This solution and the library named <code>crypto.h</code> was built using the C++ programming language. The source code for this solution can be found on Github.</em></strong></p>
+
+<p>When the following code is executed, the most probable <strong><em>KEYSIZE</em></strong> is <strong><em>29</em></strong> and after transposing the message and decrypting the blocks, you get a key of that length:</p>
+
+<div class="codehilite"><pre><span></span><code>Terminator X: Bring the noise
+</code></pre></div>
+
+<p>Lastly, use the <strong><em>Repeating-Key XOR</em></strong> method to decrypt the message with the cracked key (which looks like lyrics to some music track!):</p>
+
+<div class="codehilite"><pre><span></span><code>A rockin&#39; on the mike while the fly girls yell
+Well that&#39;s my DJ Deshay cuttin&#39; all them Z&#39;s
+Vanilla&#39;s on the mike, man I&#39;m not lazy. ?I&#39;m lettin&#39; my drug kick in
+To just let it flow, let my concepts go
+And if you don&#39;t give a damn, then
+So get off &#39;cause I control the stage
+I&#39;m in my own phase
+And I can dance better than any kid n&#39; play ?
+Stage 2 -- Yea the one ya&#39; wanna listen to
+So I can funk it up and make it sound good
+For good luck, I like my rhymes atrocious
+I&#39;m an effect and that you can bet
+There&#39;s no denyin&#39;, You can try to hang 
+Over and over, practice makes perfect
+Soon -- Oh my God, homebody, you probably eat
+Intoxicating so you stagger like a wino
+Vanilla Ice is sellin&#39; and you people are buyin&#39;
+Movin&#39; and groovin&#39; trying to sing along
+Now you&#39;re amazed by the VIP posse. ?
+Steppin&#39; so hard like a German Nazi
+There&#39;s no trippin&#39; on mine, I&#39;m just gettin&#39; down
+You trapped me once and I thought that
+So step down and lend me your ear 
+Your body&#39;s gettin&#39; hot, so, so I can smell it
+&#39;Cause the lyrics belong to ICE, You can call me Dad 
+Let the witch doctor, Ice, do the dance to cure 
+You wanna battle me -- Anytime, anywhere ?
+You thought that I was weak, Boy, you&#39;re dead wrong 
+play that funky music Go white boy, go white boy, go
+Play that funky music white boy you say it, say it 
+Play that funky music, white boy Come on, Come on, Come on
+</code></pre></div>
+
+<p>As mentioned above, this was really challenging and fun, at the same time. Although, Most people (academically) know <strong><em>"how-to"</em></strong> break a Repeating-Key XOR (Vignere Cipher) but being <strong><em>able</em></strong> to break it, is another thing.</p>
+
+<p>Hope you liked reading this article!</p>
+
+<p>But, hang in there, surprisingly, this code will be useful later on for many problems.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>December 18th, 2017</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/cryptography/">
+					Cryptography
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/writings/posts/the-cryptopals-crypto-challenges-set-1--implement-repeatingkey-xor">The Cryptopals Crypto Challenges: Set 1 - Implement Repeating-Key XOR</a></h1>
+		<p class="description">Write a method that encrypts messages using the Repeating-Key XOR method with a given key.</p>
+	</div>
+	<div class="article-body">
+		<p>This is the <a href="http://cryptopals.com/sets/1/challenges/5">fifth challenge</a> of Set 1 in The Cryptopals Crypto Challenges website. Previously, I spoke about these challenges and provided walkthroughs for the previous challenges, if you haven't read them, here are the links:</p>
+
+<ul>
+<li><a href="/posts/the-cryptopals-crypto-challenges">The Cryptopals Crypto Challenges</a></li>
+<li><a href="/posts/the-cryptopals-crypto-challenges-set-1--convert-hex-to-base64">The Cryptopals Crypto Challenges: Set 1 - Convert Hex to Base64</a></li>
+<li><a href="/posts/base64-encoding--decoding-using-bitwise-manipulation-in-c">Base64 Encoding / Decoding using Bitwise Manipulation in C++</a></li>
+<li><a href="/posts/the-cryptopals-crypto-challenges-set-1--fixed-xor">The Cryptopals Crypto Challenges: Set 1 - Fixed XOR Cipher</a></li>
+<li><a href="/posts/the-cryptopals-crypto-challenges-set-1--singlebyte-xor-cipher">The Cryptopals Crypto Challenges: Set 1 - Single-Byte XOR Cipher</a></li>
+<li><a href="/posts/the-cryptopals-crypto-challenges-set-1--detect-singlecharacter-xor">The Cryptopals Crypto Challenges: Set 1 - Detect Single-Character XOR</a></li>
+</ul>
+
+<p>For this challenge, you have to implement a <strong><em>Repeating-Key XOR</em></strong> method to encrypt the following message:</p>
+
+<div class="codehilite"><pre><span></span><code>Burning &#39;em, if you ain&#39;t quick and nimble
+I go crazy when I hear a cymbal
+</code></pre></div>
+
+<p>With a given key:</p>
+
+<div class="codehilite"><pre><span></span><code>ICE
+</code></pre></div>
+
+<p>The final message should look like this:</p>
+
+<div class="codehilite"><pre><span></span><code>0b3637272a2b2e63622c2e69692a23693a2a3c6324202d623d63343c2a26226324272765272
+a282b2f20430a652e2c652a3124333a653e2b2027630c692b20283165286326302e27282f
+</code></pre></div>
+
+<p>If you've already understood the concept of <a href="/posts/base64-encoding-decoding-using-bitwise-manipulation-in-c">XOR</a> and had no issues implementing both <a href="/posts/the-cryptopals-crypto-challenges-set-1--fixed-xor">Fixed XOR Cipher</a> and <a href="/posts/the-cryptopals-crypto-challenges-set-1--singlebyte-xor-cipher">Single-Byte XOR Cipher</a>, then this should be a piece of cake for you when it comes to implementing <strong><em>Repeating-Key XOR Cipher</em></strong>.</p>
+
+<h2>How does this work?</h2>
+
+<p>With <strong><em>Repeating-Key XOR</em></strong>, you'll sequentially apply each byte of the key (which is "ICE", in this case); the first byte of plaintext will be XOR'd against <strong><em>"I"</em></strong>, the next <strong><em>"C"</em></strong>, the next <strong><em>"E"</em></strong>, then <strong><em>"I"</em></strong> again for the 4th byte, and so on.</p>
+
+<p>You can use this method to encrypt anything you want. Emails, Passwords, Secret messages and so on. You'll definitely get a feel for it because things will get interesting after this challenge.</p>
+
+<p>Let's dive in to the code:</p>
+
+<p><strong>Implementation of the method(s):</strong></p>
+
+<div class="codehilite"><pre><span></span><code><span class="c1">//Convert ASCII to HEX</span>
+<span class="n">string</span><span class="w"> </span><span class="nf">CryptoLib::con_ascii_2_hex</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="n">str</span><span class="p">)</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">stringstream</span><span class="w"> </span><span class="n">ss</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">str</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="n">ss</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">hex</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="n">str</span><span class="p">[</span><span class="n">i</span><span class="p">];</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">ss</span><span class="p">.</span><span class="n">str</span><span class="p">();</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+
+<span class="c1">//Repeating Key XOR implementation</span>
+<span class="n">string</span><span class="w"> </span><span class="nf">CryptoLib::repeatingKeyXOR</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="n">str</span><span class="p">,</span><span class="w"> </span><span class="n">string</span><span class="w"> </span><span class="n">key</span><span class="p">)</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">newStr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">    </span><span class="cm">/*</span>
+<span class="cm">        1. Perform XOR against each character of the message </span>
+<span class="cm">        against each character of the key. </span>
+<span class="cm">        So if the key was &quot;ICE&quot; and the message is &quot;abcdefg&quot;,</span>
+<span class="cm">        it would be &quot;a&quot; against &quot;I&quot;, then &quot;b&quot; against &quot;C&quot; and &quot;c&quot; against &quot;E&quot;</span>
+<span class="cm">        but once it reaches the key&#39;s limit, you start again from the beginning</span>
+<span class="cm">        of the key, which should be like: &quot;d&quot; against &quot;I&quot;, &quot;e&quot; against &quot;C&quot; and so on.</span>
+<span class="cm">    */</span><span class="w"></span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">str</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">key</span><span class="p">[</span><span class="n">count</span><span class="p">];</span><span class="w"></span>
+<span class="w">        </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">str</span><span class="p">[</span><span class="n">i</span><span class="p">];</span><span class="w"></span>
+<span class="w">        </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">^</span><span class="w"> </span><span class="n">a</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">        </span><span class="n">newStr</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">c</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">count</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">key</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="mi">-1</span><span class="p">)</span><span class="w"></span>
+<span class="w">        </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+<span class="w">        </span><span class="k">else</span><span class="w"></span>
+<span class="w">        </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="n">count</span><span class="o">++</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">    </span><span class="c1">//2. Convert the ASCII message to Hexadecimal</span>
+<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="k">final</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;0&quot;</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">final</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">con_ascii_2_hex</span><span class="p">(</span><span class="n">newStr</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="k">final</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+
+<p><strong>Final code:</strong></p>
+
+<div class="codehilite"><pre><span></span><code><span class="c1">//Cryptopals Set 1 Challenge 5</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;crypto.h&quot;</span><span class="cp"></span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">CryptoLib</span><span class="w"> </span><span class="n">crypt</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">    </span><span class="c1">//Test cases provided</span>
+<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">str</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;Burning &#39;em, if you ain&#39;t quick and nimble I go crazy when I hear a cymbal&quot;</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;ICE&quot;</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;ENCODED: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">crypt</span><span class="p">.</span><span class="n">repeatingKeyXOR</span><span class="p">(</span><span class="n">str</span><span class="p">,</span><span class="w"> </span><span class="n">key</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+
+<p><strong><em>Note: This solution and the library named <mark>crypto.h</mark> was built using the C++ programming language. The source code for this solution can be found on Github.</em></strong></p>
+
+<p>Stay tuned for the next challenge!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>December 15th, 2017</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/cryptography/">
+					Cryptography
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/writings/posts/the-cryptopals-crypto-challenges-set-1--singlebyte-xor-cipher">The Cryptopals Crypto Challenges: Set 1 - Single-Byte XOR Cipher</a></h1>
 		<p class="description">Write a method that decrypts a hexadecimal message that has been XOR'd against a single character.</p>
 	</div>
@@ -1214,168 +1623,6 @@ set) on my blog and also provide solutions to those problems on my
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/new-feature-share-your-reaction">New feature: Share your reaction</a></h1>
-		<p class="description">Rolled out a new feature to collect emotional intelligence, which would help me to make better blog posts in the future.</p>
-	</div>
-	<div class="article-body">
-		<p>Last night, I was thinking on how to improve my blog posts and post better articles. My head went through questions like:</p>
-
-<ul>
-<li>What do people feel when they read my articles?</li>
-<li>Do they find it interesting?</li>
-<li>Is it boring?</li>
-<li>Is it likeable?</li>
-</ul>
-
-<p>But, in order to do that, I'll require some simple analytics on how people react to my articles on my blog. Taking inspiration from web applications like Facebook, Instagram, Twitter and Medium, I decided to build a small feature named "Share your reaction", from scratch, that would contain six different emotions.</p>
-
-<figure style="text-align: center;">
-    <div>
-        <img style="width: 32px; height:32px; display: inline-block; margin-left: 10px; margin-right: 10px;" src="/static/images/new_emojis/like.png"> 
-        <img style="width: 32px; height:32px; display: inline-block; margin-left: 10px; margin-right: 10px;" src="/static/images/new_emojis/love.png"> 
-        <img style="width: 32px; height:32px; display: inline-block; margin-left: 10px; margin-right: 10px;" src="/static/images/new_emojis/haha.png"> 
-        <img style="width: 32px; height:32px; display: inline-block; margin-left: 10px; margin-right: 10px;" src="/static/images/new_emojis/wow.png"> 
-        <img style="width: 32px; height:32px; display: inline-block; margin-left: 10px; margin-right: 10px;" src="/static/images/new_emojis/sad.png"> 
-        <img style="width: 32px; height:32px; display: inline-block; margin-left: 10px; margin-right: 10px;" src="/static/images/new_emojis/angry.png">
-    </div>
-    <figcaption>The six different emotions used in this new feature</figcaption>
-</figure>
-
-<p>From today onwards, you can start reacting to my blog posts by clicking the <strong><em>"React!"</em></strong> button (which can be found below every article), select an emotion and help me improve and post better articles in my blog in the future.</p>
-
-<p>In case, you're wondering, the data that is collected is <strong><em>completely anonymous</em></strong> as I'm not collecting any IP address or any of your private and sensitive information.</p>
-
-<p>Hope you guys like the new feature!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>October 14th, 2017</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/update/">
-					Update
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/leave-me-alone-i-just-want-to-write-code">Leave me alone, I just want to write code!</a></h1>
-		<p class="description">Do you think that programmers don't have to interact with people? This article will give you an insight.</p>
-	</div>
-	<div class="article-body">
-		<p>The title of this post might be "clickbait" but there are some software developers who believe that they are supposed to just write code and not interact with people.</p>
-
-<p>There are a lot of books that deal with sort of topic but in today's article, I will be borrowing heavily from my career experience and a favorite book of mine named <a href="https://www.amazon.com/Soft-Skills-software-developers-manual/dp/1617292397">Soft Skills: The Software Developer's Life Manual</a> to talk about how important it is for a software developer to interact with people.</p>
-
-<h2>I'm a software developer, why should I interact with people?</h2>
-
-<p>Earlier, I used to be under the impression that software developers are supposed to be glued in to their screens like a Hollywood hacker and just write code. But hey, I'm sure that I'm not the only one who had been thinking in that direction.</p>
-
-<p>In fact, a portion of our time is being spent on interacting with people because not only are we writing code-logic for the computer to understand but it is mainly written for humans to aid in solving their daily problems. If that's not the scenario that means we'd all be talking to computers in binary form or machine language.</p>
-
-<p>As time passed by, I learnt that in order to become a better software developer, you really should know how to deal with people (but I still like being glued to my two HD monitors!).</p>
-
-<figure>
-    <img src="/static/images/workspace.png"/>
-    <figcaption>My current workspace</figcaption>
-</figure>
-
-<p>Think about it, where do the project requirements come from? Is it from computers? <strong><em>No, it's from people</em></strong>. Can your code send you an email to fix the new bug? <strong><em>No, people can</em></strong>.</p>
-
-<p>A few examples:</p>
-
-<ul>
-<li>Sitting down on weekly meetings with your boss or clients</li>
-<li>Communicating with team members about the problem that you're working on and strategizing a way to solve that problem</li>
-</ul>
-
-<p>If you still have the same mindset, you'd better rethink on that again because just like any other profession, you will have to interact with people.</p>
-
-<h2>How do I deal with people?</h2>
-
-<p>Like I had mentioned, at the very beginning of this article, there are a lot of books based on this topic but I'll try to keep it short and talk about a few points that might give you an idea on how to deal with people:</p>
-
-<ul>
-<li><a href="#tip-1">Everybody needs to feel essential</a></li>
-<li><a href="#tip-2">Try not to criticize</a></li>
-<li><a href="#tip-3">Consider what the other person needs</a></li>
-<li><a href="#tip-4">Stay away from arguments</a></li>
-</ul>
-
-<h3><a id="tip-1"></a> Everybody needs to feel essential</h3>
-
-<p>Let's face it, everyone loves to take the spotlight and would like to make everyone listen to them but there's nothing wrong about it as it's one of humanity's most desperate and deepest desires that help motivate us to achieve some of our greatest goals in our career, life and society.</p>
-
-<p>Likewise, you're not the only one who has got amazing ideas, every individual does. It's very easy for you to discard one's idea, so that you can present yours instead but when you make this error, it might backfire on you i.e. you'll find others not listening to your ideas because you didn't value theirs in the first place.</p>
-
-<p>So, always make it a point, if you want people to accept your ideas and think it's valuable, you'll also have to do the same thing, in return, for everyone else.</p>
-
-<h3><a id="tip-2"></a> Try not to criticize</h3>
-
-<p>Back in my university days, when I was working on my graduation project, I used to face a lot of criticism from a fellow Computer Science Professor, who thought negativity is an effective way to motivate an individual and responded to all faults with harsh criticism but I feel that's a wrong method to motivate an individual.</p>
-
-<p>If you want to inspire or motivate people to do their best, you should encourage them with positivity than harsh negativity, this could help boost their self esteem and performance as a software developer.</p>
-
-<p>On the contrary, a little bit of critical feedback to help improve one's problem solving skills is totally fine.</p>
-
-<h3><a id="tip-3"></a> Consider what the other person needs</h3>
-
-<p>During my career, I learnt that I should think about what's important to the other individual and what they want than what's important to me and what I want.</p>
-
-<p>Whenever you enter in a conversation with your team member or boss, make sure you see things from their perspective. Try to understand their requirements and then when it's your turn, phrase the dialog in ways that your implementation matches their requirement.</p>
-
-<p>Having shifted your mindset to this direction, you'll be making the person feel more essential and be more open to their ideas. In return, you can use leverage it in ways where people would deal with you in a favorable manner and value your ideas and skillset.</p>
-
-<h3><a id="tip-4"></a> Stay away from arguments</h3>
-
-<p>One of the most common things that most software developers do is that they falsely believe that pure solid reasoning is enough to make another person accept your style of thinking because they assume that the latter might think about things from a logical perspective. Believe me, even I did this when talking to a lot of people.</p>
-
-<p>But then, we all have this sort of nature in which we tend to pride ourselves on our own intellectual prowess but a slight difference in opinion, it hits us right in our ego and opens up a potential door for arguments.</p>
-
-<p>For this reason, at all costs, it's best to avoid arguments of any sorts because talking in terms of logic and pure reasoning would do little to convince a screaming toddler. Whenever you reach a point of disagreement on how things should be done, it is best to determine whether or not that particular direction is the right way to reach the top of the hill and especially, if it involves another individual, weigh the pros and cons of a decision.</p>
-
-<p>I'd like to share an interesting quote:</p>
-
-<blockquote>
-  <p>"I have to come to the conclusion that there is only one way under high heaven to get the best of an argument &mdash; and that is to avoid it. Avoid it as you would avoid rattlesnakes and earthquakes." - Dale Carnegie, How to Win Friends and Influence People (1936)</p>
-</blockquote>
-
-<p>Probably, it wouldn't hurt much if you try to look for an opportunity to give up and admit that you're wrong on a small matter but, perhaps, it could be a big deal to the other person, which will help you build a good image and respect with them and can be leveraged in the future.</p>
-
-<h2>In conclusion</h2>
-
-<p>Being a good software developer isn't about being really skilled at coding (although, it's an imperative skillset!) but it's also about having good soft skills. If you ever thought that you have never worked on your soft skills, then this is time right for you to begin as you'll find your career much more enjoyable and accumulate a lot of skills and benefits in the future that will help you down the lane.</p>
-
-<p>Hope you liked reading this article!</p>
-
-<p>Au Revoir!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>October 7th, 2017</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/essay/">
-					Essay
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -1460,6 +1707,13 @@ set) on my blog and also provide solutions to those problems on my
 		</li>
 		
 		<li>
+			<a href="/category/php/">
+				PHP
+				<span class="count">11</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/javascript/">
 				JavaScript
 				<span class="count">11</span>
@@ -1495,13 +1749,6 @@ set) on my blog and also provide solutions to those problems on my
 		</li>
 		
 		<li>
-			<a href="/category/php/">
-				PHP
-				<span class="count">10</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/vim/">
 				VIM
 				<span class="count">8</span>
@@ -1519,6 +1766,13 @@ set) on my blog and also provide solutions to those problems on my
 			<a href="/category/programming/">
 				Programming
 				<span class="count">8</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/devops/">
+				DevOps
+				<span class="count">7</span>
 			</a>
 		</li>
 		
@@ -1544,8 +1798,8 @@ set) on my blog and also provide solutions to those problems on my
 		</li>
 		
 		<li>
-			<a href="/category/devops/">
-				DevOps
+			<a href="/category/apache/">
+				Apache
 				<span class="count">5</span>
 			</a>
 		</li>
@@ -1574,13 +1828,6 @@ set) on my blog and also provide solutions to those problems on my
 		<li>
 			<a href="/category/blogmarks/">
 				Blogmarks
-				<span class="count">4</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/apache/">
-				Apache
 				<span class="count">4</span>
 			</a>
 		</li>
@@ -1680,6 +1927,13 @@ set) on my blog and also provide solutions to those problems on my
 			<a href="/category/python/">
 				Python
 				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/aws/">
+				AWS
+				<span class="count">1</span>
 			</a>
 		</li>
 		

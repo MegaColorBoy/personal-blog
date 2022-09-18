@@ -78,6 +78,100 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/allow-inline-elements-in-ckeditor">Allow inline elements in CKEditor</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Using CKEditor is awesome but I hate it when it removes inline elements like <code>&lt;span&gt;</code>, <code>&lt;i&gt;</code> or any DOM elements that contain attributes like classnames or ID, by default.</p>
+
+<p>Well, CKEditor's <a href="https://ckeditor.com/docs/ckeditor4/latest/guide/dev_allowed_content_rules.html">documentation</a> states that you can allow it by adding this line to your configuration:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="kd">var</span> <span class="nx">editor</span> <span class="o">=</span> <span class="nx">CKEDITOR</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="s1">&#39;textarea_edit&#39;</span><span class="p">,{</span>
+    <span class="nx">allowedContent</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
+<span class="p">});</span>
+</code></pre></div>
+
+<p>After adding this line, CKEditor will stop removing those elements from your HTML content but it's also open to all tags. </p>
+
+<p>You can set rules to allow only specific ones like this:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="kd">var</span> <span class="nx">editor</span> <span class="o">=</span> <span class="nx">CKEDITOR</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="s1">&#39;textarea_edit&#39;</span><span class="p">,{</span>
+    <span class="nx">allowedContent</span><span class="o">:</span> <span class="s1">&#39;span; i; ul; li; a[!href]&#39;</span>
+<span class="p">});</span>
+</code></pre></div>
+
+<p>Hope this helps you out! &#x1F60A;</p>
+
+	</div>
+	<div class="article-footer">
+		<time>June 1st, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/javascript/">
+					JavaScript
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/check-if-the-current-route-exists-before-fetching-its-parameters">Check if the current route exists before fetching it's parameters</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>If you've ever come across this type of error when you're trying to fetch parameters of the current route:</p>
+
+<div class="codehilite"><pre><span></span><code>Symfony\Component\Debug\Exception\FatalThrowableError: Call to member function parameters() on null
+</code></pre></div>
+
+<p>It's probably because the route doesn't exist, which is why it failed to call the <code>parameters()</code> function. It can be easily resolved by checking if the route exists before calling the function:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="k">namespace</span> <span class="nx">App\Http\Controllers</span><span class="p">;</span>
+<span class="k">use</span> <span class="nx">Route</span><span class="p">;</span>
+
+<span class="k">class</span> <span class="nc">FooController</span> <span class="k">extends</span> <span class="nx">Controller</span> <span class="p">{</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="fm">__construct</span><span class="p">(</span><span class="nx">Request</span> <span class="nv">$request</span><span class="p">){</span>
+        <span class="c1">// insert code here...</span>
+    <span class="p">}</span>
+
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">foo</span><span class="p">(</span><span class="nx">Request</span> <span class="nv">$request</span><span class="p">){</span>
+        <span class="nv">$params</span> <span class="o">=</span> <span class="nv">$request</span><span class="o">-&gt;</span><span class="na">route</span><span class="p">()</span> <span class="o">?</span> <span class="nx">Route</span><span class="o">::</span><span class="na">current</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">parameters</span><span class="p">()</span> <span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">;</span>
+        <span class="k">return</span> <span class="nv">$params</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+<span class="cp">?&gt;</span><span class="x"></span>
+</code></pre></div>
+
+<p>Although, the sample code above is to fetch parameters of the current route, you can apply this before calling any method from the <code>Route</code> class.</p>
+
+<p>This works for version 5.2 and above.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>May 30th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/laravel/">
+					Laravel
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/queues-and-stacks">Queues & Stacks</a></h1>
 		<p class="description"></p>
 	</div>
@@ -409,77 +503,6 @@ You can use modify this script to rename any extension you want.</p>
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/symbolic-storage-link">Create a symbolic storage link</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>When using Laravel, the <code>public</code> directory is used for files that are publicly accessible. By default, it's stored in <code>local</code> and often stored in this <code>storage/app/public</code> directory. You can make it easily accessible by using the following command:</p>
-
-<div class="codehilite"><pre><span></span><code>php artisan storage:link
-</code></pre></div>
-
-<p>Once, it has been created, you can use access those files using the <code>public_path</code> or <code>asset</code> methods.</p>
-
-<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="k">echo</span> <span class="nx">public_path</span><span class="p">(</span><span class="s1">&#39;images/sample_1.jpg&#39;</span><span class="p">);</span>
-<span class="k">echo</span> <span class="nx">asset</span><span class="p">(</span><span class="s1">&#39;images/sample_2.jpg&#39;</span><span class="p">);</span>
-<span class="cp">?&gt;</span><span class="x"></span>
-</code></pre></div>
-
-	</div>
-	<div class="article-footer">
-		<time>May 25th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/laravel/">
-					Laravel
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/include-exclude-files.zip">Including and excluding files in zip</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>When zipping a directory or a bunch of files, there'll be a lot of stuff that you want to include and exclude.</p>
-
-<p>To exclude a file:</p>
-
-<div class="codehilite"><pre><span></span><code>zip -r files.zip . -x file_1 file_2
-</code></pre></div>
-
-<p>Alternatively, you can choose to include files:</p>
-
-<div class="codehilite"><pre><span></span><code>zip -r files.zip . -i file_1 file_2
-</code></pre></div>
-
-	</div>
-	<div class="article-footer">
-		<time>May 25th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/terminal/">
-					Terminal
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -572,6 +595,13 @@ You can use modify this script to rename any extension you want.</p>
 		</li>
 		
 		<li>
+			<a href="/category/php/">
+				PHP
+				<span class="count">11</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/javascript/">
 				JavaScript
 				<span class="count">11</span>
@@ -607,13 +637,6 @@ You can use modify this script to rename any extension you want.</p>
 		</li>
 		
 		<li>
-			<a href="/category/php/">
-				PHP
-				<span class="count">10</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/vim/">
 				VIM
 				<span class="count">8</span>
@@ -631,6 +654,13 @@ You can use modify this script to rename any extension you want.</p>
 			<a href="/category/programming/">
 				Programming
 				<span class="count">8</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/devops/">
+				DevOps
+				<span class="count">7</span>
 			</a>
 		</li>
 		
@@ -656,8 +686,8 @@ You can use modify this script to rename any extension you want.</p>
 		</li>
 		
 		<li>
-			<a href="/category/devops/">
-				DevOps
+			<a href="/category/apache/">
+				Apache
 				<span class="count">5</span>
 			</a>
 		</li>
@@ -686,13 +716,6 @@ You can use modify this script to rename any extension you want.</p>
 		<li>
 			<a href="/category/blogmarks/">
 				Blogmarks
-				<span class="count">4</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/apache/">
-				Apache
 				<span class="count">4</span>
 			</a>
 		</li>
@@ -792,6 +815,13 @@ You can use modify this script to rename any extension you want.</p>
 			<a href="/category/python/">
 				Python
 				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/aws/">
+				AWS
+				<span class="count">1</span>
 			</a>
 		</li>
 		

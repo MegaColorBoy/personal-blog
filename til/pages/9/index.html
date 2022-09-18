@@ -77,6 +77,135 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-filter-requests-with-errors-on-chromes-devtools">How to filter requests with errors on Chrome's DevTools</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Tired of trying to look for errors in DevTools by scrolling a long list of HTTP responses?</p>
+
+<p>Open up your <strong>Chrome DevTools</strong> and hit the <strong>Network</strong> tab and then try filtering the responses by typing the <code>status-code</code> property in the filter box.</p>
+
+<p>It comes in handy when you want to narrow down to a specific list of HTTP responses. For instance, if you're looking for responses with error 404, you can filter it by typing like this: <code>status-code:404</code>.</p>
+
+<p>Another trick is, you can filter out the responses that you don't want to see by just adding a hyphen like this: <code>-status-code:200</code>.</p>
+
+<p>Hope this tip helps you out!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>September 19th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/chrome-devtools/">
+					Chrome DevTools
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/enable-httpsssl-on-wamp-server">Enable HTTPS/SSL on WAMP Server</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Building a website with HTTPS/SSL in mind can help resolve a lot of problems when you're going to deploy it on production server.</p>
+
+<p>So, here's a small tutorial on how to enable HTTPS mode and install SSL certificate on your local WAMP Server.</p>
+
+<p><strong>Note: This tutorial assumes that you have a Windows PC and have installed WAMP Server 3.2.0 in your local system, if not, <a href="https://www.wampserver.com/en/">download it from here</a>.</strong></p>
+
+<h2>Download OpenSSL</h2>
+
+<p>Based on your system's architecture, you can download either a 32 or 64-bit installer. You can find the latest version of OpenSSL from here. While installing, please make sure all the options selected are default.</p>
+
+<h2>Generate SSL Key and Certificate</h2>
+
+<p>Open your terminal or command-line prompt and navigate to the following folder:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="nb">cd</span> <span class="s2">&quot;C:\Program Files\OpenSSL-Win64\bin&quot;</span>
+</code></pre></div>
+
+<p>Next, you need to create a private key. While generating a private key, you'll have to enter a passphrase, it can be anything but make sure that you can remember it for the next step &#x1F602;.</p>
+
+<p>Execute the following command:</p>
+
+<div class="codehilite"><pre><span></span><code>openssl genrsa -aes256 -out private.key <span class="m">2048</span>
+</code></pre></div>
+
+<p>Good, now let's generate our certificate and in this step, you'll be prompted with several questions. You can fill as per your wish or just hit "Enter" to leave it as default. The only thing that matters is <strong>Common Name</strong> and this should named as <code>localhost</code></p>
+
+<p>Execute the following command:</p>
+
+<div class="codehilite"><pre><span></span><code>openssl req -new -x509 -nodes -sha1 -key private.key -out certificate.crt -days <span class="m">36500</span>
+</code></pre></div>
+
+<h2>Move the certificate and key to Apache's directory</h2>
+
+<p>Create a folder named <code>keys</code> and move both <code>private.key</code> and <code>certificate.crt</code> to this directory: <code>C:\wamp64\bin\apache\apache2.4.41\conf</code>.</p>
+
+<h2>Modify your httpd.conf file</h2>
+
+<p>You have to uncomment 3 lines from <code>C:/wamp64/bin/apache/apache2.4.41/conf/httpd.conf</code>:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="nb">LoadModule</span><span class="w"> </span>ssl_module<span class="w"> </span>modules/mod_ssl.so<span class="w"></span>
+<span class="nb">Include</span><span class="w"> </span>conf/extra/httpd-ssl.conf<span class="w"></span>
+<span class="nb">LoadModule</span><span class="w"> </span>socache_shmcb_module<span class="w"> </span>modules/mod_socache_shmcb.so<span class="w"></span>
+</code></pre></div>
+
+<h2>Modify your httpd-ssl.conf file</h2>
+
+<p>Go to <code>C:/wamp64/bin/apache/apache2.4.41/conf/extra/httpd-ssl.conf</code> and modify the following parameters:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="nb">DocumentRoot</span><span class="w"> </span><span class="s2">&quot;c:/wamp64/www&quot;</span><span class="w"></span>
+<span class="nb">ServerName</span><span class="w"> </span>localhost:443<span class="w"></span>
+<span class="nb">ServerAdmin</span><span class="w"> </span>admin@youremail.com<span class="w"></span>
+<span class="nb">ErrorLog</span><span class="w"> </span><span class="s2">&quot;${SRVROOT}/logs/error.log&quot;</span><span class="w"></span>
+<span class="nb">TransferLog</span><span class="w"> </span><span class="s2">&quot;${SRVROOT}/logs/access.log&quot;</span><span class="w"></span>
+<span class="nb">SSLSessionCache</span><span class="w"> </span><span class="s2">&quot;shmcb:${SRVROOT}/logs/ssl_scache(512000)&quot;</span><span class="w"></span>
+<span class="nb">SSLCertificateFile</span><span class="w"> </span><span class="s2">&quot;${SRVROOT}/conf/keys/certificate.crt&quot;</span><span class="w"></span>
+<span class="nb">SSLCertificateKeyFile</span><span class="w"> </span><span class="s2">&quot;${SRVROOT}/conf/keys/private.key&quot;</span><span class="w"></span>
+<span class="nb">CustomLog</span><span class="w"> </span><span class="s2">&quot;${SRVROOT}/logs/ssl_request.log&quot;</span><span class="w"></span>
+</code></pre></div>
+
+<p><code>DocumentRoot</code> is the location of where your website files are located. <code>ServerName</code> can be anything but preferable to use <code>localhost</code>.</p>
+
+<h2>Restart your WAMP Server</h2>
+
+<p>Just restart your WAMP Server for the changes to take effect. If the WAMP icon turns green, you're good else, an typo or syntax error must have occurred.</p>
+
+<p>Hope you found this tutorial useful! &#x1F600;</p>
+
+	</div>
+	<div class="article-footer">
+		<time>September 13th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/apache/">
+					Apache
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/wamp/">
+					WAMP
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/accessing-wamp-server-from-other-computers-on-lan">Accessing WAMP Server from other computers on LAN</a></h1>
 		<p class="description"></p>
 	</div>
@@ -377,137 +506,6 @@ started practicing my python coding-chops on <a href="https://www.codewars.com">
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/increase-memory-limit-in-php">Increase memory limit in PHP</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Last month, I was building a web application that collected a lot of data via form submissions. I wrote a method to export attachments and form data by zipping them all together. </p>
-
-<p>It worked for a smaller archives but as the records grew larger, I got a fatal error which said that I've exhausted the PHP's memory limit.</p>
-
-<p>So, I found an easy way to increase the memory limit to 1024MB (1GB) like this:</p>
-
-<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="nb">ini_set</span><span class="p">(</span><span class="s1">&#39;memory_limit&#39;</span><span class="p">,</span> <span class="s1">&#39;1024M&#39;</span><span class="p">);</span>
-<span class="cp">?&gt;</span><span class="x"></span>
-</code></pre></div>
-
-<p>Before you write this stub in your script, make sure you have enough resources in your system or else, it'll go splat!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>August 23rd, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/php/">
-					PHP
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/hello-go">Hello, Go!</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>After reading a lot of articles about using Go as a programming language to write high-performing concurrent web applications and services yet maintain a clean codebase, I thought of starting to learn it to see what's it about and so far, it's been great!</p>
-
-<p>This mini-tutorial will show you how to install Go on your system and write a simple "Hello, World" program.</p>
-
-<p><strong>Note: This tutorial will go through installing Go on Linux.</strong></p>
-
-<h2>Install Go</h2>
-
-<p>Make sure you have the latest updates and upgrades on your Linux system before installing Go.</p>
-
-<p>You need to download the binary file from their <a href="https://golang.org/dl/">official package</a>. Find the version that suits your OS and architecture.</p>
-
-<div class="codehilite"><pre><span></span><code><span class="nb">cd</span> /tmp
-wget https://golang.org/dl/go1.14.6.linux-amd64.tar.gz
-</code></pre></div>
-
-<p>Extract the downloaded archive and install it in the <code>/usr/local</code> directory (as per the standards):</p>
-
-<div class="codehilite"><pre><span></span><code>sudo tar -xvf go1.14.6.linux-amd64.tar.gz
-sudo mv go /usr/local
-</code></pre></div>
-
-<h2>Set up environment</h2>
-
-<p>Now, we need to set up three variables:</p>
-
-<ul>
-<li><code>GOROOT</code>: Location of where your Go package is installed.</li>
-<li><code>GOPATH</code>: Location of your work directory.'</li>
-<li><code>PATH</code>: Tells bash on where to look for programs that are being executed.</li>
-</ul>
-
-<p>Open up your <code>.bashrc</code> file and add these lines at the end of the file:</p>
-
-<div class="codehilite"><pre><span></span><code><span class="nb">export</span> <span class="nv">GOROOT</span><span class="o">=</span>/usr/local/go
-<span class="nb">export</span> <span class="nv">GOPATH</span><span class="o">=</span><span class="nv">$HOME</span>/go
-<span class="nb">export</span> <span class="nv">PATH</span><span class="o">=</span><span class="nv">$GOPATH</span>/bin:<span class="nv">$GOROOT</span>/bin:<span class="nv">$PATH</span>
-</code></pre></div>
-
-<p>Save your <code>.bashrc</code> file and update the current shell session:</p>
-
-<div class="codehilite"><pre><span></span><code><span class="nb">source</span> ~/.bashrc
-</code></pre></div>
-
-<h2>Verify your installation</h2>
-
-<p>Type the following command to ensure that your Go installation is successful:</p>
-
-<div class="codehilite"><pre><span></span><code>go version go1.14.6 linux/amd64
-</code></pre></div>
-
-<h2>Hello, world!</h2>
-
-<p>As per traditions, whenever you learn a programming language, you start off with a "Hello, world!" program, so here it is:</p>
-
-<div class="codehilite"><pre><span></span><code><span class="kn">package</span><span class="w"> </span><span class="nx">main</span><span class="w"></span>
-
-<span class="kn">import</span><span class="w"> </span><span class="s">&quot;fmt&quot;</span><span class="w"></span>
-
-<span class="kd">func</span><span class="w"> </span><span class="nx">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;Hello, world!\n&quot;</span><span class="p">)</span><span class="w"></span>
-<span class="p">}</span><span class="w"> </span>
-</code></pre></div>
-
-<h2>Conclusion</h2>
-
-<p>I just started learning it today and at first, you might have the tendency to write code in Go the same way you write in any other language but beware, it doesn't work that way. It forces you to write good code including the way it formats the code using the <code>gofmt</code> tool.</p>
-
-<p>Lots of cool things are coming!</p>
-
-<p>Stay tuned for more.</p>
-
-	</div>
-	<div class="article-footer">
-		<time>August 1st, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/go/">
-					Go
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -590,6 +588,13 @@ sudo mv go /usr/local
 		</li>
 		
 		<li>
+			<a href="/category/php/">
+				PHP
+				<span class="count">11</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/javascript/">
 				JavaScript
 				<span class="count">11</span>
@@ -625,13 +630,6 @@ sudo mv go /usr/local
 		</li>
 		
 		<li>
-			<a href="/category/php/">
-				PHP
-				<span class="count">10</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/vim/">
 				VIM
 				<span class="count">8</span>
@@ -649,6 +647,13 @@ sudo mv go /usr/local
 			<a href="/category/programming/">
 				Programming
 				<span class="count">8</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/devops/">
+				DevOps
+				<span class="count">7</span>
 			</a>
 		</li>
 		
@@ -674,8 +679,8 @@ sudo mv go /usr/local
 		</li>
 		
 		<li>
-			<a href="/category/devops/">
-				DevOps
+			<a href="/category/apache/">
+				Apache
 				<span class="count">5</span>
 			</a>
 		</li>
@@ -704,13 +709,6 @@ sudo mv go /usr/local
 		<li>
 			<a href="/category/blogmarks/">
 				Blogmarks
-				<span class="count">4</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/apache/">
-				Apache
 				<span class="count">4</span>
 			</a>
 		</li>
@@ -810,6 +808,13 @@ sudo mv go /usr/local
 			<a href="/category/python/">
 				Python
 				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/aws/">
+				AWS
+				<span class="count">1</span>
 			</a>
 		</li>
 		
