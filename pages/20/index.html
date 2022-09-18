@@ -78,6 +78,276 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/writings/posts/stripes-scrolling-bubble-header">Stripe's Scrolling Bubble Header</a></h1>
+		<p class="description">An insight into Stripe's interesting use of animated elements.</p>
+	</div>
+	<div class="article-body">
+		<p><link rel="stylesheet" type="text/css" href="/static/projects/stripe-bubbles/index.css"/></p>
+
+<script defer type="text/javascript" src="/static/projects/stripe-bubbles/perlin.js"></script>
+
+<script defer type="text/javascript" src="/static/projects/stripe-bubbles/script.js"></script>
+
+<div id="bubbleWrapper">
+    <div class="stripe-bubbles"></div>
+</div>
+
+<p>Want to know how to make it on your own? Read the article below!</p>
+
+<p>If you're a UI/UX developer, you've probably heard about <a href="https://www.stripe.com">Stripe.com</a> and their uses of motion and design with their targeted audience in mind.</p>
+
+<p>As I was exploring their website, I discovered their <a href="https://stripe.com/customers">customers</a> page and instantly, I was intrigued by their smooth scrolling bubble header and the concept was interesting enought that it caught my attention.</p>
+
+<p>In this article, I'll explain on how I had attempted to recreate their scrolling bubble header.</p>
+
+<h2>Analysis</h2>
+
+<p>The mechanics are pretty simple to understand, these are the following:</p>
+
+<ul>
+<li>The bubbles are randomly generated and placed on page load</li>
+<li>Smooth animation of the up and down movements</li>
+<li>Infinite animation loop</li>
+</ul>
+
+<p>A trivial problem, isn't it? Time to see if we can recreate it!</p>
+
+<h2>Step 1: Create the bubble</h2>
+
+<p>Let's write the CSS to create a simple bubble with a <mark>width</mark> and <mark>height</mark> of 150px and by giving it a <mark>border-radius</mark> of 50%.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="p">.</span><span class="nc">stripe-bubble</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">width</span><span class="p">:</span><span class="w"> </span><span class="mi">150</span><span class="kt">px</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">height</span><span class="p">:</span><span class="w"> </span><span class="mi">150</span><span class="kt">px</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">border-radius</span><span class="p">:</span><span class="w"> </span><span class="mi">50</span><span class="kt">%</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+
+<p>As for the logo, I inspected their code and figured out that Stripe combined all of their customer logos into a single image, also known as, CSS Spritesheet.</p>
+
+<figure>
+    <img src="/static/images/stripe-customer-logos.png"/>
+</figure>
+
+<p>Performance-wise, it's a clever technique used to reduce the number of HTTP requests that your internet browser has to make on every page request.</p>
+
+<p>Let's give the CSS spritesheet as a background-image property and adjust it enough to fit the size of one bubble.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="p">.</span><span class="nc">stripe-bubble</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">position</span><span class="p">:</span><span class="w"> </span><span class="kc">absolute</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">width</span><span class="p">:</span><span class="w"> </span><span class="mi">150</span><span class="kt">px</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">height</span><span class="p">:</span><span class="w"> </span><span class="mi">150</span><span class="kt">px</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">border-radius</span><span class="p">:</span><span class="w"> </span><span class="mi">50</span><span class="kt">%</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">background-image</span><span class="p">:</span><span class="w"> </span><span class="nb">url</span><span class="p">(</span><span class="s1">&#39;https://www.stripe.com/img/v3/customers/logos/header-logos.png&#39;</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="k">box-shadow</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">15</span><span class="kt">px</span><span class="w"> </span><span class="mi">35</span><span class="kt">px</span><span class="w"> </span><span class="nb">rgba</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.1</span><span class="p">),</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">3</span><span class="kt">px</span><span class="w"> </span><span class="mi">10</span><span class="kt">px</span><span class="w"> </span><span class="nb">rgba</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.1</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="k">background-size</span><span class="p">:</span><span class="w"> </span><span class="mi">1076</span><span class="kt">px</span><span class="w"> </span><span class="mi">1076</span><span class="kt">px</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+
+<p>There are about 43 logos, which means you'll have to create different logos by adjusting the background position property.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="p">.</span><span class="nc">logo-1</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">background-position</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+
+<span class="p">.</span><span class="nc">logo-2</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">background-position</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">-154</span><span class="kt">px</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+
+<span class="p">.</span><span class="nc">logo-3</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">background-position</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">-308</span><span class="kt">px</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+
+<p>In the next step, using JavaScript, we'll create the classes for the bubbles and the header.</p>
+
+<h2>Step 2: Create a class for Bubble</h2>
+
+<p>Before we get in deep, let's create the foundation for our code, so that it'll make things neat and tidy and easier on the go. Below, I have created two classes: one is for the bubble and the other is for the bubble wrapper (no puns):</p>
+
+<div class="codehilite"><pre><span></span><code><span class="kd">class</span> <span class="nx">Bubble</span> <span class="p">{</span>
+    <span class="kr">constructor</span><span class="p">(){}</span>
+    <span class="nx">update</span><span class="p">(){}</span>
+<span class="p">}</span>
+
+<span class="kd">class</span> <span class="nx">BubbleMarquee</span> <span class="p">{</span>
+    <span class="kr">constructor</span><span class="p">(){}</span>
+    <span class="nx">update</span><span class="p">(){}</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>Great, you have created the classes, we can now use these to generate the bubbles dynamically in the next step.</p>
+
+<h2>Step 3: Bubble's scale and position</h2>
+
+<figure>
+    <img src="/static/images/stripe-bubbles.png"/>
+</figure>
+
+<p>As you see in the image above, the logos are randomly placed and scaled. It's clear that there has to be some sort of a pattern, so I decided to take a look into their code:</p>
+
+<figure>
+    <img src="/static/images/stripe-bubble-code.png"/>
+</figure>
+
+<p>Aha! I discovered that the positioning and scaling of the bubbles are hard-coded and then the logos order are randomly shuffled. I won't be adding a randomizer but for now, let's add the bubbles with it's specifications and respective logos.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="kd">const</span> <span class="nx">bubbleSettings</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgAffirm&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.6</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">77</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">1134</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgAllianz&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.6</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">271</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">1620</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgAmazon &#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.6</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">372</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">1761</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgBookingCom&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.6</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">79</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">2499</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgCatawiki&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.6</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">334</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">2704</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgCityofBoston&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.6</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">356</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">2271</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgDeliveroo&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.6</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">226</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">795</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgDoordash&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.6</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">256</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">276</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgExpedia&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.6</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">365</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">1210</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgFitbit&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.6</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">193</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">444</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgGoogle&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.6</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">387</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">2545</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgIndiegogo&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.7</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">193</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">1303</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgInstacart&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.7</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">88</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">907</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgKickstarter&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.7</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">320</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">633</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgLyft&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.7</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">76</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">323</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgNasdaq&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.7</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">357</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">129</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgNat-Geo &#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.7</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">342</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">1440</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgRackspace&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.7</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">293</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">1929</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgReddit&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.7</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">198</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">2135</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgSalesforce&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.7</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">82</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">2276</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgShopify&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.7</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">182</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">2654</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgSlack&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.7</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">75</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">2783</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgSpotify&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.7</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">118</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">1519</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgSquarespace&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.7</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">233</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">1071</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgTarget&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.7</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">148</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">1773</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgTed&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.7</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">385</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">2098</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgTheGuardian&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.7</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">244</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">2423</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgTwitch&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.7</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">385</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">901</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgUber&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.7</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">111</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">624</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgWeTransfer&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.7</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">103</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">145</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgWish&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.7</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">367</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">413</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgXero&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.7</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">251</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">2805</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgYelp&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.7</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">75</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">1990</span> <span class="p">}</span>
+<span class="p">];</span>
+
+<span class="kd">class</span> <span class="nx">Bubble</span> <span class="p">{</span>
+    <span class="kr">constructor</span><span class="p">(</span><span class="nx">index</span><span class="p">,</span> <span class="p">{</span><span class="nx">cssClass</span><span class="p">,</span> <span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">,</span> <span class="nx">s</span><span class="o">=</span><span class="mf">.9</span><span class="p">}){</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">index</span> <span class="o">=</span> <span class="nx">index</span><span class="p">;</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="nx">x</span><span class="p">;</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="nx">y</span><span class="p">;</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">scale</span> <span class="o">=</span> <span class="nx">s</span><span class="p">;</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">cssClass</span> <span class="o">=</span> <span class="nx">cssClass</span><span class="p">;</span>
+
+        <span class="k">this</span><span class="p">.</span><span class="nx">el</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s2">&quot;div&quot;</span><span class="p">);</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">el</span><span class="p">.</span><span class="nx">className</span> <span class="o">=</span> <span class="sb">`stripe-bubble </span><span class="si">${</span><span class="k">this</span><span class="p">.</span><span class="nx">cssClass</span><span class="si">}</span><span class="sb">`</span><span class="p">;</span>
+
+        <span class="nx">marqueeEl</span><span class="p">.</span><span class="nx">appendChild</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">el</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="nx">update</span><span class="p">(){}</span>
+<span class="p">}</span>
+
+<span class="kd">class</span> <span class="nx">BubbleMarquee</span><span class="p">{</span>
+    <span class="kr">constructor</span><span class="p">(</span><span class="nx">settings</span><span class="p">){</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">bubbles</span> <span class="o">=</span> <span class="p">[];</span>
+
+        <span class="nx">settings</span><span class="p">.</span><span class="nx">forEach</span><span class="p">((</span><span class="nx">setting</span><span class="p">,</span> <span class="nx">index</span><span class="p">)</span> <span class="p">=&gt;{</span>
+            <span class="k">this</span><span class="p">.</span><span class="nx">bubbles</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="ow">new</span> <span class="nx">Bubble</span><span class="p">(</span><span class="nx">index</span><span class="p">,</span> <span class="nx">setting</span><span class="p">));</span>
+        <span class="p">});</span>
+    <span class="p">}</span>
+    <span class="nx">update</span><span class="p">(){}</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>Okay, now off to animating the bubbles!</p>
+
+<h2>Step 4: Animation</h2>
+
+<p>You could use absolute positioning properties like <mark>top</mark> and <mark>left</mark> but it'd be really expensive in terms of calculations, instead of that, you could use <mark>transform</mark> to move the elements.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="k">this</span><span class="p">.</span><span class="nx">el</span><span class="p">.</span><span class="nx">style</span><span class="p">.</span><span class="nx">transform</span> <span class="o">=</span> <span class="sb">`translate(</span><span class="si">${</span><span class="k">this</span><span class="p">.</span><span class="nx">x</span><span class="si">}</span><span class="sb">px, </span><span class="si">${</span><span class="k">this</span><span class="p">.</span><span class="nx">y</span><span class="si">}</span><span class="sb">px) scale(</span><span class="si">${</span><span class="k">this</span><span class="p">.</span><span class="nx">scale</span><span class="si">}</span><span class="sb">)`</span><span class="p">;</span>
+</code></pre></div>
+
+<p>As for the animation, you could use <mark>setInterval</mark> but don't do that, stop here and read about <a href="https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame">requestAnimationFrame</a>.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="kr">constructor</span><span class="p">(</span><span class="nx">settings</span><span class="p">){</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">bubbles</span> <span class="o">=</span> <span class="p">[];</span>
+
+    <span class="nx">settings</span><span class="p">.</span><span class="nx">forEach</span><span class="p">((</span><span class="nx">setting</span><span class="p">,</span> <span class="nx">index</span><span class="p">)</span> <span class="p">=&gt;{</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">bubbles</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="ow">new</span> <span class="nx">Bubble</span><span class="p">(</span><span class="nx">index</span><span class="p">,</span> <span class="nx">setting</span><span class="p">));</span>
+    <span class="p">});</span>
+
+    <span class="nx">requestAnimationFrame</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">update</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">));</span>
+<span class="p">}</span>
+
+<span class="nx">update</span><span class="p">(){</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">bubbles</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="nx">bubble</span> <span class="p">=&gt;</span> <span class="nx">bubble</span><span class="p">.</span><span class="nx">update</span><span class="p">());</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">raf</span> <span class="o">=</span> <span class="nx">requestAnimationFrame</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">update</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">));</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>Alright, you've done it! It's animating and looks cool but hey, did you notice that there animation doesn't look stale but is more organic-like? That's because they have added some random movement to each bubble.</p>
+
+<p>I took another peek at their code, I found out that they were using <a href="https://en.wikipedia.org/wiki/Perlin_noise">Perlin noise</a> to smoothen the animation movements. Unlike, <mark>Math.random()</mark>, I got to know that it's an algorithm used to generate a sequence of randomness that has some order, which helps create a smooth, organic movement.</p>
+
+<p>I didn't implement the algorithm instead I made use of an existing <a href="https://github.com/josephg/noisejs">implementation</a> written by <a href="https://github.com/josephg">Seph Gentle</a> found on GitHub.</p>
+
+<p>This is how your <mark>update()</mark> method should look like after adding the Perlin Noise:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="nx">update</span><span class="p">(){</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">noiseSeedX</span> <span class="o">+=</span> <span class="nx">noise_speed</span><span class="p">;</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">noiseSeedY</span> <span class="o">+=</span> <span class="nx">noise_speed</span><span class="p">;</span>
+
+    <span class="kd">var</span> <span class="nx">randomXPos</span> <span class="o">=</span> <span class="nx">noise</span><span class="p">.</span><span class="nx">simplex2</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">noiseSeedX</span><span class="p">,</span> <span class="mf">0</span><span class="p">);</span>
+    <span class="kd">var</span> <span class="nx">randomYPos</span> <span class="o">=</span> <span class="nx">noise</span><span class="p">.</span><span class="nx">simplex2</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">noiseSeedY</span><span class="p">,</span> <span class="mf">0</span><span class="p">);</span>
+
+    <span class="k">this</span><span class="p">.</span><span class="nx">y</span> <span class="o">-=</span> <span class="nx">scrollingSpeed</span><span class="p">;</span>
+
+    <span class="k">this</span><span class="p">.</span><span class="nx">xNoisePos</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">x</span> <span class="o">+</span> <span class="p">(</span><span class="nx">randomXPos</span> <span class="o">*</span> <span class="nx">noise_amnt</span><span class="p">);</span> 
+    <span class="k">this</span><span class="p">.</span><span class="nx">yNoisePos</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">y</span> <span class="o">+</span> <span class="p">(</span><span class="nx">randomYPos</span> <span class="o">*</span> <span class="nx">noise_amnt</span><span class="p">);</span> 
+
+    <span class="k">if</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">y</span> <span class="o">&lt;</span> <span class="o">-</span><span class="mf">500</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="nx">canvas_width</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">this</span><span class="p">.</span><span class="nx">el</span><span class="p">.</span><span class="nx">style</span><span class="p">.</span><span class="nx">transform</span> <span class="o">=</span> <span class="sb">`translate(</span><span class="si">${</span><span class="k">this</span><span class="p">.</span><span class="nx">xNoisePos</span><span class="si">}</span><span class="sb">px, </span><span class="si">${</span><span class="k">this</span><span class="p">.</span><span class="nx">yNoisePos</span><span class="si">}</span><span class="sb">px) scale(</span><span class="si">${</span><span class="k">this</span><span class="p">.</span><span class="nx">scale</span><span class="si">}</span><span class="sb">)`</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>After adding that, you have finally achieved what you wanted! Oh, you can find the source code for this project on my <a href="https://github.com/MegaColorBoy/BlogProjects/tree/master/stripe-bubbles">GitHub</a> repository.</p>
+
+<h2>Conclusion</h2>
+
+<p>I hope you enjoyed reading this blog article and learnt something new. If you have questions, please send me your <a href="mailto:megacolorboy@gmail.com">thoughts</a> and I would be happy to help you out!</p>
+
+<p>Thank you for reading!</p>
+
+<p>Stay tuned for more!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>April 6th, 2019</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/user-interface/">
+					User Interface
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/user-experience/">
+					User Experience
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/writings/posts/poker-hand-analyser-in-python">Poker Hand Analyser in Python</a></h1>
 		<p class="description">An algorithm that parses a five-card poker hand and determines it's rank.</p>
 	</div>
@@ -1275,87 +1545,6 @@ questions from the exercises section of this chapter.</p>
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/built-a-2048-clone-in-15-minutes">Built a 2048 clone in 15 minutes</a></h1>
-		<p class="description">An implementation of the famous 2048 game using JavaScript and HTML5 Canvas.</p>
-	</div>
-	<div class="article-body">
-		<script defer src="/static/projects/2048/script.js"></script>
-
-<figure>
-    <canvas id="game-grid" width="500" height="500"></canvas>
-</figure>
-
-<p>Before you read more about this article, play with the above game. You
-can move the tiles around using your <kbd>&uarr;</kbd><kbd>&larr;</kbd><kbd>&darr;</kbd><kbd>&rarr;</kbd>
-or <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> keys. The rule is simple, when two tiles with the same
-number touch, they merge into one tile. Press the <kbd>R</kbd> key to restart
-the game.</p>
-
-<p>Please make sure that you have JavaScript enabled and running in your
-browser, otherwise you won't be able to play this game. Oh, just a
-little heads up, it might get a little buggy and freeze your browser
-window, so keep calm and play patiently.</p>
-
-<p>As for the source code, you can view it in my <a href="https://www.github.com/megacolorboy">GitHub
-repository</a> or can be found near
-the end of this article.</p>
-
-<h2>Background</h2>
-
-<p>I was always fond of puzzle games and <strong>2048</strong> is one of them. The first
-time I got to play this game was back in 2014 and I would play it on my
-iPhone during my train commute to university.</p>
-
-<p>Yesterday, I thought of building a clone and turns out it wasn't as hard
-as I had expected it to be, in fact, I was able to build a functional
-version in just 15 minutes.</p>
-
-<h2>What are the game mechanics?</h2>
-
-<p>The sliding-puzzle game is played on a <strong>four-by-four</strong> grid with
-numbered tiles that is moved by the player in all four directions.</p>
-
-<p>In every move, a new tile would randomly appear in an empty spot in the
-grid with a value that consists of <strong>2</strong> or <strong>4</strong>. These tiles are moved
-towards any direction as far as it could and if there are two tiles that
-collide with the same value, they merge into one tile and as a result,
-the score is updated.</p>
-
-<p>The player wins the game once the tile of <strong>2048</strong> appears on the grid,
-thus is the name of the game.</p>
-
-<h2>Source code</h2>
-
-<script src="https://gist.github.com/MegaColorBoy/fcce2a2029a1b0352884cbbc1f059cb1.js"></script>
-
-<p>Well then, that's all for the game. Just like the previous ones, I had
-fun building this sliding-puzzle game. I'm looking forward to building
-more puzzle games and talking about them in my blog.</p>
-
-<p>Hope you guys liked reading this article and have fun playing the game
-as many times as you like!</p>
-
-<p>Stay tuned for more!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>August 21st, 2018</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/personal-challenge/">
-					Personal Challenge
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -1553,6 +1742,13 @@ as many times as you like!</p>
 		</li>
 		
 		<li>
+			<a href="/category/productivity/">
+				Productivity
+				<span class="count">4</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/blogmarks/">
 				Blogmarks
 				<span class="count">4</span>
@@ -1570,13 +1766,6 @@ as many times as you like!</p>
 			<a href="/category/arcade-challenge/">
 				Arcade Challenge
 				<span class="count">4</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/productivity/">
-				Productivity
-				<span class="count">3</span>
 			</a>
 		</li>
 		
