@@ -77,6 +77,89 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/clearing-cache-on-a-shared-hosting-server">Clearing cache on a Shared Hosting Server</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Hosted your website on a Shared Hosting Server and got limited access to clear the cache on your project?</p>
+
+<p>Open up <code>routes/web.php</code> and create this route:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="nx">Route</span><span class="o">::</span><span class="na">get</span><span class="p">(</span><span class="s1">&#39;/clearcache&#39;</span><span class="p">,</span> <span class="k">function</span><span class="p">(){</span>
+    <span class="nx">\Artisan</span><span class="o">::</span><span class="na">run</span><span class="p">(</span><span class="s1">&#39;config:clear&#39;</span><span class="p">);</span>
+    <span class="nx">\Artisan</span><span class="o">::</span><span class="na">run</span><span class="p">(</span><span class="s1">&#39;cache:clear&#39;</span><span class="p">);</span>
+    <span class="nx">\Artisan</span><span class="o">::</span><span class="na">run</span><span class="p">(</span><span class="s1">&#39;view:clear&#39;</span><span class="p">);</span>
+    <span class="nx">\Artisan</span><span class="o">::</span><span class="na">run</span><span class="p">(</span><span class="s1">&#39;route:clear&#39;</span><span class="p">);</span>
+    <span class="nx">\Artisan</span><span class="o">::</span><span class="na">run</span><span class="p">(</span><span class="s1">&#39;config:cache&#39;</span><span class="p">);</span>
+<span class="p">});</span>
+<span class="cp">?&gt;</span><span class="x"></span>
+</code></pre></div>
+
+<p>Just type the URL and it will clear all existing cache from the project.</p>
+
+<p>Hope this helps you out!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>March 12th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/laravel/">
+					Laravel
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/convert-string-to-date-using-mysql">Convert string to date using MySQL</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Today, I was debugging a piece of code that is supposed to return a list of data based on the year, the funny thing is that the data was being returned on the development server but not on the production one.</p>
+
+<p>Weird, so I opened up <strong>MySQL Workbench</strong> and wrote a simple query to see if the dates were being returned because who knows maybe they weren't stored at all.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="kt">YEAR</span><span class="p">(</span><span class="n">date_posted</span><span class="p">)</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">posts</span><span class="p">;</span><span class="w"></span>
+</code></pre></div>
+
+<p>The values returned were <code>null</code>. Now, that's strange because the dates were present in the column. So, I took a deep look and figured out that the dates were stored in <code>VARCHAR</code> instead of <code>DATETIME</code> data type! &#x1F614;</p>
+
+<p>Luckily, I figured that there's a way to resolve this by <code>STR_TO_DATE()</code> function:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="kt">YEAR</span><span class="p">(</span><span class="nf">STR_TO_DATE</span><span class="p">(</span><span class="n">date_posted</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;%Y-%m-%d&#39;</span><span class="p">))</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">posts</span><span class="p">;</span><span class="w"></span>
+</code></pre></div>
+
+<p>Bam! The results were coming now! &#x1F60C;</p>
+
+<p>Hope this helps you out!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>March 12th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/mysql/">
+					MySQL
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/use-mysql-80-with-native-password-authentication">Use MySQL 8.0 with Native Password Authentication</a></h1>
 		<p class="description"></p>
 	</div>
@@ -377,106 +460,6 @@ php artisan config:cache
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/rename-a-git-branch">Rename a Git Branch</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Using branches are one of the most powerful features of Git and becomes a part of the software development process.</p>
-
-<p>Last night, I came across an issue where I created a new branch and committed my changes until the <code>git</code> tool rejected it because the branch was already created by someone else in the repository.</p>
-
-<p>Luckily, I was able to resolve this issue by renaming my branch using <code>git branch -m</code> command.</p>
-
-<p>Here's a short guide on how you can do that too!</p>
-
-<h2>1. Switch to the remote branch you want to rename</h2>
-
-<div class="codehilite"><pre><span></span><code>git checkout &lt;your_old_branch&gt;
-</code></pre></div>
-
-<h2>2. Rename the current remote branch</h2>
-
-<div class="codehilite"><pre><span></span><code>git branch -m &lt;your_new_branch&gt;
-</code></pre></div>
-
-<p>Proceed to the next step, if you've pushed your old branch to the remote repository.</p>
-
-<h2>3. Push the renamed remote branch</h2>
-
-<div class="codehilite"><pre><span></span><code>git push origin -u &lt;your_new_branch&gt;
-</code></pre></div>
-
-<h2>4. Delete the old remote branch</h2>
-
-<div class="codehilite"><pre><span></span><code>git push origin --delete &lt;your_old_branch&gt;
-</code></pre></div>
-
-<p>If you've come this far without any issues, you've successfully renamed your local and remote Git branch.</p>
-
-<p>Hope you found this useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>November 4th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/git/">
-					Git
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/import-and-export-mysql-database-via-terminal">Import and Export MySQL database via Terminal</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Sometimes, phpMyAdmin can be painful to use especially when you want to import/export a MySQL database.</p>
-
-<p>If you're not afraid of using the Terminal, try these commands to save your time:</p>
-
-<h2>Import MySQL database</h2>
-
-<div class="codehilite"><pre><span></span><code>mysql -u username -p database_name &lt; your_sql_file.sql
-</code></pre></div>
-
-<p>Before you run this command, please make sure that you've created the <code>database_name</code> schema in your database or else, you might get an error especially if the <code>.sql</code> file doesn't have a <code>CREATE DATABASE</code> statement.</p>
-
-<h2>Export MySQL database</h2>
-
-<div class="codehilite"><pre><span></span><code>mysqldump -u username -p database_name &gt; your_sql_file.sql
-</code></pre></div>
-
-<p>This command will export your database with the file name <code>your_sql_file.sql</code> to your current path.</p>
-
-<p>Hope this helps you out!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>November 4th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/mysql/">
-					MySQL
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -545,16 +528,16 @@ php artisan config:cache
 	<ul class="tags">
 		
 		<li>
-			<a href="/category/laravel/">
-				Laravel
+			<a href="/category/linux/">
+				Linux
 				<span class="count">16</span>
 			</a>
 		</li>
 		
 		<li>
-			<a href="/category/linux/">
-				Linux
-				<span class="count">15</span>
+			<a href="/category/laravel/">
+				Laravel
+				<span class="count">16</span>
 			</a>
 		</li>
 		
@@ -601,6 +584,13 @@ php artisan config:cache
 		</li>
 		
 		<li>
+			<a href="/category/devops/">
+				DevOps
+				<span class="count">9</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/vim/">
 				VIM
 				<span class="count">8</span>
@@ -618,13 +608,6 @@ php artisan config:cache
 			<a href="/category/programming/">
 				Programming
 				<span class="count">8</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/devops/">
-				DevOps
-				<span class="count">7</span>
 			</a>
 		</li>
 		
@@ -727,6 +710,13 @@ php artisan config:cache
 		</li>
 		
 		<li>
+			<a href="/category/aws/">
+				AWS
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/generative-art/">
 				Generative Art
 				<span class="count">2</span>
@@ -783,8 +773,8 @@ php artisan config:cache
 		</li>
 		
 		<li>
-			<a href="/category/aws/">
-				AWS
+			<a href="/category/ssh/">
+				SSH
 				<span class="count">1</span>
 			</a>
 		</li>

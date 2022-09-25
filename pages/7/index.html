@@ -78,6 +78,100 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/zip-all-files-that-are-modified-on-a-specific-date">Zip all files that are modified on a specific date</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>I wrote a nifty command to make an archive of the files that I have modified on a particular date. By doing so, this script comes in handy during urgent deployments, so that I don't lose track of the files that I should be updating.</p>
+
+<p>Here's the command at your disposal:</p>
+
+<div class="codehilite"><pre><span></span><code>find . -maxdepth <span class="m">10</span> -type f -newermt <span class="s2">&quot;2021-04-10&quot;</span> <span class="p">|</span> zip -qur archive.zip -@
+</code></pre></div>
+
+<h2>How this works?</h2>
+
+<p>Let's see what this command does in pieces:</p>
+
+<p><code>find</code> is the utility tool used to return the filenames that match the specified parameters in the given directory.</p>
+
+<p><code>-maxdepth</code> is the flag that allows you to specify the depth of recursive searches it should perform.</p>
+
+<p><code>-type</code> is the flag that determines if you're looking for file or a directory.</p>
+
+<p><code>-newermt</code> is the flag that determines if the file has been modified on and/or after the given date.</p>
+
+<p>Once, the file has been found, the output is being <a href="https://www.geeksforgeeks.org/piping-in-unix-or-linux/">redirected</a> to the <code>zip</code> utility function, which would then add the files to the <code>.zip</code> file.
+The <code>-q</code> flag would perform the operation in silent mode, <code>-u</code> flag would update the files in the archive if modified or add it as a new file if it doesn't exist and <code>-@</code> takes the list of files from the standard input.</p>
+
+<p>If you want to ignore certain directories or file extensions, in that case, you can exclude them like so:</p>
+
+<div class="codehilite"><pre><span></span><code>find . -maxdepth <span class="m">30</span> -type f ! -path <span class="s2">&quot;./path/to/directory/*&quot;</span> !  -path <span class="s2">&quot;*.ext&quot;</span> -newermt <span class="s2">&quot;2021-04-10&quot;</span> <span class="p">|</span> zip -qur archive.zip -@
+</code></pre></div>
+
+<p>Or, you can even archive the modified files by specifying a date range:</p>
+
+<div class="codehilite"><pre><span></span><code>touch --date <span class="s2">&quot;2021-04-10&quot;</span> startdate
+touch --date <span class="s2">&quot;2021-04-15&quot;</span> enddate
+find . -maxdepth <span class="m">30</span> -type f -newer startdate -not -newer enddate <span class="p">|</span> zip -ur archive.zip -@
+</code></pre></div>
+
+<p>Hope you found this tip useful! &#x1F601;</p>
+
+	</div>
+	<div class="article-footer">
+		<time>April 10th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/unix/">
+					UNIX
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/get-a-list-of-directories-with-their-sizes-in-the-current-directory">Get a list of directories with their sizes in the current directory</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>If you want to sizes of each directory in a list, try the following command:</p>
+
+<div class="codehilite"><pre><span></span><code>du -sh * <span class="p">|</span> sort -h &gt;&gt; directories-sorted.txt
+</code></pre></div>
+
+<p>And, if you wanted to find the directory that takes consumes a lot of space in your directory, you can try this:</p>
+
+<div class="codehilite"><pre><span></span><code>du -sh * <span class="p">|</span> sort -h <span class="p">|</span> tail -n <span class="m">1</span>
+</code></pre></div>
+
+<p>Hope these tips do come in handy! &#x1F60A;</p>
+
+	</div>
+	<div class="article-footer">
+		<time>April 10th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/unix/">
+					UNIX
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/how-to-update-your-git-remote-origin-url">How to update your Git remote origin URL?</a></h1>
 		<p class="description"></p>
 	</div>
@@ -333,90 +427,6 @@ parse_git_branch<span class="o">()</span> <span class="o">{</span>
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/convert-string-to-variable-in-php">Convert string to variable in PHP</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>I read about <a href="https://www.php.net/language.variables.variable">variable variables</a> in PHP's official documentation.</p>
-
-<p>Here's a sample:</p>
-
-<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
-    <span class="nv">$a</span> <span class="o">=</span> <span class="s2">&quot;hello&quot;</span><span class="p">;</span>
-    <span class="c1">// Remove special characters and tags to prevent it from crashing.</span>
-    <span class="nv">$foo</span> <span class="o">=</span> <span class="nb">preg_replace</span><span class="p">(</span><span class="s1">&#39;/[^a-zA-Z0-9\s]/&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="nv">$$a</span><span class="p">);</span>
-    <span class="k">echo</span> <span class="nv">$foo</span><span class="p">;</span>
-<span class="cp">?&gt;</span><span class="x"></span>
-</code></pre></div>
-
-<p>Not sure if this is a good practice but it sure gets the job done!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>March 12th, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/php/">
-					PHP
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-resolve-the-filegetcontents-ssl-operation-failed-error">How to resolve the "file_get_contents(): SSL operation failed" error</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>If you're facing this error while trying to download a file from your server, it's most probably the SSL certificate that has been hosted on your server isn't correctly verified or maybe, you're using OpenSSL on a server running PHP 5.6.</p>
-
-<p>As per the <a href="http://php.net/manual/en/migration56.openssl.php">documentation</a>, there are some changes that can be made to resolve it, like the following method:</p>
-
-<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="k">public</span> <span class="k">function</span> <span class="nf">foo</span><span class="p">(</span><span class="nx">Request</span> <span class="nv">$request</span><span class="p">)</span> <span class="p">{</span>
-    <span class="nv">$arrContextOptions</span> <span class="o">=</span> <span class="k">array</span><span class="p">(</span>
-        <span class="s2">&quot;ssl&quot;</span> <span class="o">=&gt;</span> <span class="k">array</span><span class="p">(</span>
-            <span class="s2">&quot;verify_peer&quot;</span> <span class="o">=&gt;</span> <span class="k">false</span><span class="p">,</span>
-            <span class="s2">&quot;verify_peer_name&quot;</span> <span class="o">=&gt;</span> <span class="k">false</span><span class="p">,</span>
-        <span class="p">),</span>
-    <span class="p">);</span>
-    <span class="k">return</span> <span class="nx">Response</span><span class="o">::</span><span class="na">make</span><span class="p">(</span><span class="nb">file_get_contents</span><span class="p">(</span><span class="nx">asset</span><span class="p">(</span><span class="s1">&#39;pdf/file.pdf&#39;</span><span class="p">),</span> <span class="k">false</span><span class="p">,</span> <span class="nb">stream_context_create</span><span class="p">(</span><span class="nv">$arrContextOptions</span><span class="p">)),</span> <span class="mi">200</span><span class="p">,</span> <span class="p">[</span>
-        <span class="s1">&#39;Content-Type&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;application/pdf&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;Content-Disposition&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;inline; filename=&quot;file.pdf&quot;&#39;</span><span class="p">,</span>
-    <span class="p">]);</span>
-<span class="p">}</span>
-<span class="cp">?&gt;</span><span class="x"></span>
-</code></pre></div>
-
-<p>Although, I won't recommend this unless you are testing it on a <code>localhost</code> environment as it's not secure and could have significant security implications because disabling verification can permit a <a href="https://en.wikipedia.org/wiki/Man-in-the-middle_attack">Man in the Middle attack</a> to take place.</p>
-
-<p>Use it at your own risk!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>March 12th, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/php/">
-					PHP
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -495,16 +505,16 @@ parse_git_branch<span class="o">()</span> <span class="o">{</span>
 	<ul class="tags">
 		
 		<li>
-			<a href="/category/laravel/">
-				Laravel
+			<a href="/category/linux/">
+				Linux
 				<span class="count">16</span>
 			</a>
 		</li>
 		
 		<li>
-			<a href="/category/linux/">
-				Linux
-				<span class="count">15</span>
+			<a href="/category/laravel/">
+				Laravel
+				<span class="count">16</span>
 			</a>
 		</li>
 		
@@ -551,6 +561,13 @@ parse_git_branch<span class="o">()</span> <span class="o">{</span>
 		</li>
 		
 		<li>
+			<a href="/category/devops/">
+				DevOps
+				<span class="count">9</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/vim/">
 				VIM
 				<span class="count">8</span>
@@ -568,13 +585,6 @@ parse_git_branch<span class="o">()</span> <span class="o">{</span>
 			<a href="/category/programming/">
 				Programming
 				<span class="count">8</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/devops/">
-				DevOps
-				<span class="count">7</span>
 			</a>
 		</li>
 		
@@ -677,6 +687,13 @@ parse_git_branch<span class="o">()</span> <span class="o">{</span>
 		</li>
 		
 		<li>
+			<a href="/category/aws/">
+				AWS
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/generative-art/">
 				Generative Art
 				<span class="count">2</span>
@@ -733,8 +750,8 @@ parse_git_branch<span class="o">()</span> <span class="o">{</span>
 		</li>
 		
 		<li>
-			<a href="/category/aws/">
-				AWS
+			<a href="/category/ssh/">
+				SSH
 				<span class="count">1</span>
 			</a>
 		</li>

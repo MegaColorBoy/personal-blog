@@ -78,6 +78,105 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/using-default-function-parameters-in-internet-explorer">Using default function parameters in Internet Explorer</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Today, I wrote a simple method that fetches images from the database via AJAX and also, I defined an empty object as a default parameter:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="kd">function</span> <span class="nx">fetchImages</span><span class="p">(</span><span class="nx">obj</span><span class="o">=</span><span class="p">{}){</span>
+    <span class="c1">// some code here...</span>
+<span class="p">}</span>
+
+<span class="nx">fetchImages</span><span class="p">();</span>
+</code></pre></div>
+
+<p>The default <code>obj</code> parameter would contain extra parameters like <code>id</code>, <code>slug</code> and <code>page</code>, which would be then used to fetch a particular group of images, else, it'll fetch a random set of images.</p>
+
+<p>This method worked fine in Google Chrome and Mozilla Firefox but not in Internet Explorer. I thought of inspecting the code and I was facing weird errors like <code>undefined</code> or <code>Expected: ')'</code> on the IE console.</p>
+
+<p>Luckily, I had compared it to the other methods that didn't have any default parameters, so I did a little research and turns out that according to <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/default_parameters">Mozilla's documentation</a>, default function parameters are proposed by the ES6 syntax and at this point, I realized that Internet Explorer <strong>doesn't support ES6 syntax</strong>. What a bummer! &#x1F612;</p>
+
+<p>However, there's a way to prevent this from happening by rewriting the method like this:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="kd">function</span> <span class="nx">fetchImages</span><span class="p">(</span><span class="nx">obj</span><span class="p">){</span>
+    <span class="c1">// Check if obj is defined, else make it assign it as an empty object.</span>
+    <span class="kd">var</span> <span class="nx">data</span> <span class="o">=</span> <span class="nx">obj</span> <span class="o">||</span> <span class="p">{};</span>
+
+    <span class="c1">// some code here...</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>And BAM! The method worked flawlessly just as it's intended to do so. &#x1F60E;</p>
+
+<p>Addtionally, you may refer to the <a href="http://kangax.github.io/compat-table/es6/">ECMAScript 6 Compatibility table</a> that you might find it quite helpful to check browser compatiblity for Internet Explorer versions 11 and under.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>June 3rd, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/javascript/">
+					JavaScript
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-identify-the-current-target-of-an-event">How to identify the current target of an event?</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Using the <code>event.currentTarget</code> property which belongs to the <code>Event</code> interface can help you in many ways to identify target of the current event especially if you want to fetch attributes or modify the classname of an element that belongs to a group of elements sharing the same classname.</p>
+
+<p>There are many examples but I chose to write a small snippet of highlighting a tab:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="kd">function</span> <span class="nx">highlightTab</span><span class="p">(</span><span class="nx">e</span><span class="p">){</span>
+    <span class="c1">// Find elements that has the classname &#39;active&#39; </span>
+    <span class="c1">// and remove them</span>
+    <span class="k">if</span><span class="p">(</span><span class="nb">document</span><span class="p">.</span><span class="nx">querySelector</span><span class="p">(</span><span class="s1">&#39;div.tab_item.active&#39;</span><span class="p">)</span> <span class="o">!==</span> <span class="kc">null</span><span class="p">){</span>
+        <span class="nb">document</span><span class="p">.</span><span class="nx">querySelector</span><span class="p">(</span><span class="s1">&#39;div.tab_item.active&#39;</span><span class="p">).</span><span class="nx">classList</span><span class="p">.</span><span class="nx">remove</span><span class="p">(</span><span class="s1">&#39;active&#39;</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="c1">// Add active class to target node</span>
+    <span class="nx">e</span><span class="p">.</span><span class="nx">currentTarget</span><span class="p">.</span><span class="nx">className</span> <span class="o">+=</span> <span class="s2">&quot; active&quot;</span><span class="p">;</span>
+
+    <span class="c1">// Add active class to target&#39;s child node</span>
+    <span class="c1">// e.currentTarget.querySelector(&#39;a.child_anchor_link&#39;).className += &quot; active&quot;;</span>
+
+    <span class="c1">// Add active class to target&#39;s parent node</span>
+    <span class="c1">// e.currentTarget.parentNode.className += &quot; active&quot;;</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>Read <a href="https://developer.mozilla.org/en-US/docs/Web/API/Event/currentTarget">Mozilla's official documentation</a> to know more about getting the current target of an event and it's compatibility with different web browsers.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>June 1st, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/javascript/">
+					JavaScript
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/allow-inline-elements-in-ckeditor">Allow inline elements in CKEditor</a></h1>
 		<p class="description"></p>
 	</div>
@@ -420,89 +519,6 @@
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/remove-patterns-from-multiple-files">Remove patterns from multiple files</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>If you wanted to remove a specific pattern in a list of files, like the ones below:</p>
-
-<div class="codehilite"><pre><span></span><code>23_2020_03_01_article-three.md
-22_2020_02_01_article-two.md
-21_2020_01_01_article-one.md
-</code></pre></div>
-
-<p>You can simply do that using Regular Expressions and the <code>rename</code> tool:</p>
-
-<div class="codehilite"><pre><span></span><code>rename <span class="s1">&#39;s/[0-9]+_[0-9]+_[0-9]+_[0-9]+_//&#39;</span> *.md
-</code></pre></div>
-
-<p>Now, the desired output should look like this:</p>
-
-<div class="codehilite"><pre><span></span><code>article-three.md
-article-two.md
-article-one.md
-</code></pre></div>
-
-<p>This should come in handy if you're lazy to rename each file manually! :)</p>
-
-	</div>
-	<div class="article-footer">
-		<time>May 27th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/terminal/">
-					Terminal
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/rename-extensions-of-multiple-files">Rename extensions of multiple files</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>In this example, we're going to change a list of <code>.txt</code> files to <code>.md</code> files:</p>
-
-<div class="codehilite"><pre><span></span><code><span class="ch">#!/bin/bash</span>
-
-<span class="nb">shopt</span> -s nullglob
-<span class="nv">files</span><span class="o">=(</span><span class="k">$(</span>ls -v *.txt<span class="k">)</span><span class="o">)</span>
-
-<span class="k">for</span> file <span class="k">in</span> <span class="s2">&quot;</span><span class="si">${</span><span class="nv">files</span><span class="p">[@]</span><span class="si">}</span><span class="s2">&quot;</span>
-<span class="k">do</span>
-    mv <span class="si">${</span><span class="nv">file</span><span class="si">}</span> <span class="si">${</span><span class="nv">file</span><span class="si">}</span>.md
-<span class="k">done</span>
-</code></pre></div>
-
-<p>s
-You can use modify this script to rename any extension you want.</p>
-
-	</div>
-	<div class="article-footer">
-		<time>May 27th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/bash/">
-					Bash
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -581,16 +597,16 @@ You can use modify this script to rename any extension you want.</p>
 	<ul class="tags">
 		
 		<li>
-			<a href="/category/laravel/">
-				Laravel
+			<a href="/category/linux/">
+				Linux
 				<span class="count">16</span>
 			</a>
 		</li>
 		
 		<li>
-			<a href="/category/linux/">
-				Linux
-				<span class="count">15</span>
+			<a href="/category/laravel/">
+				Laravel
+				<span class="count">16</span>
 			</a>
 		</li>
 		
@@ -637,6 +653,13 @@ You can use modify this script to rename any extension you want.</p>
 		</li>
 		
 		<li>
+			<a href="/category/devops/">
+				DevOps
+				<span class="count">9</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/vim/">
 				VIM
 				<span class="count">8</span>
@@ -654,13 +677,6 @@ You can use modify this script to rename any extension you want.</p>
 			<a href="/category/programming/">
 				Programming
 				<span class="count">8</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/devops/">
-				DevOps
-				<span class="count">7</span>
 			</a>
 		</li>
 		
@@ -763,6 +779,13 @@ You can use modify this script to rename any extension you want.</p>
 		</li>
 		
 		<li>
+			<a href="/category/aws/">
+				AWS
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/generative-art/">
 				Generative Art
 				<span class="count">2</span>
@@ -819,8 +842,8 @@ You can use modify this script to rename any extension you want.</p>
 		</li>
 		
 		<li>
-			<a href="/category/aws/">
-				AWS
+			<a href="/category/ssh/">
+				SSH
 				<span class="count">1</span>
 			</a>
 		</li>
