@@ -168,7 +168,7 @@ let generativeArt = (() => {
 			style = `<style>
 				.pixels-canvas {
 					width: 500px;
-					height: 250px;
+					height: 200px;
 					border-radius: 4px;
 					margin: 5px 0px 0px;
 					overflow: hidden;
@@ -249,7 +249,7 @@ let generativeArt = (() => {
 			truchetCanvases.forEach((el, idx) => {
 				ctx = el.getContext('2d');
 				ctx.canvas.width = 500;
-				ctx.canvas.height = 150;
+				ctx.canvas.height = 200;
 				var s = 50;
 				for(let x = 0; x < el.width; x += s) {
 					for(let y = 0; y < el.height; y += s) {
@@ -270,14 +270,14 @@ let generativeArt = (() => {
 		}
 		init();
 	};
-	// Truchet Tiles Art - Triangles
+	// Truchet Tiles Art -- Triangles
 	_self.truchetTriangles = () => {
 		injectStyle = () => {
 			style = `<style>
 				.truchet-triangles-pattern {
-					width: 500px;
-					height: 150px;
-					border-radius: 0px;
+					width: 100%;
+					height: 200px;
+					border-radius: 4px;
 					margin: 5px 0px 0px;
 					overflow: hidden;
 				}
@@ -306,7 +306,7 @@ let generativeArt = (() => {
 			return Math.floor(Math.random() * Math.floor(m))
 		};
 		drawTrianglePatternOnPlaceholder = (svg) => {
-			let tiles = 16;
+			let tiles = 25;
 			let w = 500 / tiles;
 			let h = 500 / tiles;
 			const colorPalettes = [
@@ -375,8 +375,9 @@ let generativeArt = (() => {
 	};
 	// Main function
 	_self.init = () => {
-		let methods = ['truchetTriangles', 'bauhaus', 'pixels'];
-		_self[methods[0]]();
+		// let methods = ['truchetTriangles', 'truchetQuarterCircles', 'bauhaus', 'pixels'];
+		let methods = ['truchetTriangles', 'truchetQuarterCircles', 'bauhaus'];
+		_self[methods[_self.utils.generateRandomNumber(0,methods.length-1)]]();
 	};
 	return _self;
 })();
