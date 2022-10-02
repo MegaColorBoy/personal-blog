@@ -78,6 +78,45 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/checkout-branch">Checkout branch</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Want to create a new branch in your project? Simple, just do this:</p>
+
+<div class="codehilite"><pre><span></span><code>git checkout -b new_branch
+</code></pre></div>
+
+<p>By doing this, you'll automatically be shifted to a new branch of your project. To check which branch you're working on, type this:</p>
+
+<div class="codehilite"><pre><span></span><code>git branch
+</code></pre></div>
+
+<p>And you should be able to see your current branch marked with a <code>*</code>:</p>
+
+<div class="codehilite"><pre><span></span><code>master
+* new_branch
+</code></pre></div>
+
+	</div>
+	<div class="article-footer">
+		<time>May 25th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/git/">
+					Git
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/writings/posts/writing-a-book-on-how-to-build-reactjs-applications">Writing a book on how to build ReactJS applications</a></h1>
 		<p class="description">I'm challenging myself to write a book on how to build simple applications using ReactJS</p>
 	</div>
@@ -1562,229 +1601,6 @@ pip install jinja2
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/minesweeper-clone">Minesweeper Clone</a></h1>
-		<p class="description">Wrote an old classic puzzle game using Javascript.</p>
-	</div>
-	<div class="article-body">
-		<iframe src="/static/projects/minesweeper" width='500' height='590'></iframe>
-
-<p>Before you read this article, play with the above game. The rule is simple, reveal one cell at a time by clicking on them, If the cell you've clicked on is clear, you'll see the number of mines that's adjacent to it. Else, if it's a mine, then all mines will explode and you lose the game. Reload the game by clicking the <strong><em>Reset</em></strong> button.</p>
-
-<p>The source code of the game can be found <a href="https://github.com/megacolorboy/BlogProjects/tree/master/minesweeper">over here</a>.</p>
-
-<h2>Background</h2>
-
-<p>It's a classical puzzle game that gained immense popularity when it came along with Windows 3.1 OS. To be honest, I never really had any experience playing this game until a few days ago, I had a sudden curiosity as to how it works. I studied it's game mechanics on Wikipedia and it turned to be simple enough to write a clone in Javascript.</p>
-
-<h2>Game mechanics</h2>
-
-<p>What makes it interesting to play is it's simplicity in which all that matters is that you shouldn't click the cell that goes "KABOOM!".</p>
-
-<p>Here are some of the game mechanics:</p>
-
-<ul>
-<li><a href="#generate-cells">Generate cells</a></li>
-<li><a href="#place-mines">Placing the mines</a></li>
-<li><a href="#reveal-mines">Reveal the mines</a></li>
-<li><a href="#scan-mines">Scan for mines</a></li>
-<li><a href="#level-complete">Level completion</a></li>
-</ul>
-
-<h3><a id="generate-cells"></a> Generate cells</h3>
-
-<p>Generating the grid is pretty much straightforward. Each cell will have an attribute named <mark>data-mine</mark> with a boolean value of <mark>true</mark> or <mark>false</mark>.</p>
-
-<div class="codehilite"><pre><span></span><code><span class="c1">//Generate minesweeper grid</span>
-<span class="kd">const</span> <span class="nx">generateGrid</span> <span class="o">=</span> <span class="p">()</span> <span class="p">=&gt;</span> <span class="p">{</span>
-    <span class="nx">allowClick</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
-    <span class="nx">grid</span><span class="p">.</span><span class="nx">innerHTML</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">;</span>
-    <span class="k">for</span><span class="p">(</span><span class="kd">let</span> <span class="nx">i</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span> <span class="nx">i</span><span class="o">&lt;</span><span class="nx">size</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-        <span class="kd">let</span> <span class="nx">row</span> <span class="o">=</span> <span class="nx">grid</span><span class="p">.</span><span class="nx">insertRow</span><span class="p">(</span><span class="nx">i</span><span class="p">);</span>
-        <span class="k">for</span><span class="p">(</span><span class="kd">let</span> <span class="nx">j</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span> <span class="nx">j</span><span class="o">&lt;</span><span class="nx">size</span><span class="p">;</span> <span class="nx">j</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-            <span class="kd">let</span> <span class="nx">cell</span> <span class="o">=</span> <span class="nx">row</span><span class="p">.</span><span class="nx">insertCell</span><span class="p">(</span><span class="nx">j</span><span class="p">);</span>
-            <span class="nx">cell</span><span class="p">.</span><span class="nx">onclick</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(){</span><span class="nx">clickCell</span><span class="p">(</span><span class="k">this</span><span class="p">);}</span>
-            <span class="kd">let</span> <span class="nx">mine</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">createAttribute</span><span class="p">(</span><span class="s2">&quot;data-mine&quot;</span><span class="p">);</span>
-            <span class="nx">mine</span><span class="p">.</span><span class="nx">value</span> <span class="o">=</span> <span class="s2">&quot;false&quot;</span><span class="p">;</span>
-            <span class="nx">cell</span><span class="p">.</span><span class="nx">setAttributeNode</span><span class="p">(</span><span class="nx">mine</span><span class="p">);</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-    <span class="nx">setMines</span><span class="p">();</span>
-<span class="p">}</span>
-</code></pre></div>
-
-<h3><a id="place-mines"></a> Placing the mines</h3>
-
-<p>After the grid is generated, a mine will be added to each random cell.</p>
-
-<div class="codehilite"><pre><span></span><code><span class="c1">//Set mines</span>
-<span class="kd">const</span> <span class="nx">setMines</span> <span class="o">=</span> <span class="p">()</span> <span class="p">=&gt;</span> <span class="p">{</span>
-    <span class="k">for</span><span class="p">(</span><span class="kd">let</span> <span class="nx">i</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span> <span class="nx">i</span><span class="o">&lt;</span><span class="nx">size</span><span class="o">*</span><span class="mf">2</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-        <span class="kd">let</span> <span class="nx">r</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="nx">size</span><span class="p">);</span>
-        <span class="kd">let</span> <span class="nx">c</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="nx">size</span><span class="p">);</span>
-        <span class="kd">let</span> <span class="nx">cell</span> <span class="o">=</span> <span class="nx">grid</span><span class="p">.</span><span class="nx">rows</span><span class="p">[</span><span class="nx">r</span><span class="p">].</span><span class="nx">cells</span><span class="p">[</span><span class="nx">c</span><span class="p">];</span>
-        <span class="nx">cell</span><span class="p">.</span><span class="nx">setAttribute</span><span class="p">(</span><span class="s2">&quot;data-mine&quot;</span><span class="p">,</span> <span class="s2">&quot;true&quot;</span><span class="p">);</span>
-        <span class="k">if</span><span class="p">(</span><span class="nx">testMode</span><span class="p">){</span><span class="nx">cell</span><span class="p">.</span><span class="nx">innerHTML</span> <span class="o">=</span> <span class="s2">&quot;&amp;#x1f4a3;&quot;</span><span class="p">;}</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</code></pre></div>
-
-<h3><a id="reveal-mines"></a> Reveal the mines</h3>
-
-<p>If you've clicked on a mine, every cell that has a mine will be exposed and then it's game over.</p>
-
-<div class="codehilite"><pre><span></span><code><span class="c1">//Reveal mines</span>
-<span class="kd">const</span> <span class="nx">revealMines</span> <span class="o">=</span> <span class="p">()</span> <span class="p">=&gt;</span> <span class="p">{</span>
-    <span class="k">for</span><span class="p">(</span><span class="kd">let</span> <span class="nx">i</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span> <span class="nx">i</span><span class="o">&lt;</span><span class="nx">size</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-        <span class="k">for</span><span class="p">(</span><span class="kd">let</span> <span class="nx">j</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span> <span class="nx">j</span><span class="o">&lt;</span><span class="nx">size</span><span class="p">;</span> <span class="nx">j</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-            <span class="kd">let</span> <span class="nx">cell</span> <span class="o">=</span> <span class="nx">grid</span><span class="p">.</span><span class="nx">rows</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">cells</span><span class="p">[</span><span class="nx">j</span><span class="p">];</span>
-            <span class="k">if</span><span class="p">(</span><span class="nx">cell</span><span class="p">.</span><span class="nx">getAttribute</span><span class="p">(</span><span class="s2">&quot;data-mine&quot;</span><span class="p">)</span> <span class="o">===</span> <span class="s2">&quot;true&quot;</span><span class="p">)</span> <span class="p">{</span>
-                <span class="nx">cell</span><span class="p">.</span><span class="nx">className</span> <span class="o">=</span> <span class="s2">&quot;mine&quot;</span><span class="p">;</span>
-                <span class="nx">cell</span><span class="p">.</span><span class="nx">innerHTML</span> <span class="o">=</span> <span class="s2">&quot;&amp;#x1f4a3;&quot;</span><span class="p">;</span>
-            <span class="p">}</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</code></pre></div>
-
-<h3><a id="scan-mines"></a> Scan for mines</h3>
-
-<p>When you click on a tile, there are 2 possibilities i.e. either the cell is a mine or not.</p>
-
-<p>If it's a mine, we know what happens, it's self explanatory. If it's not a mine, what happens then? Well, it'll start scanning for mines that are adjacent to it in all eight directions:</p>
-
-<table class="table">
-    <tr>
-        <th>Direction</th>
-        <th>Coordinates</th>
-    </tr>
-    <tr>
-        <td>Top</td><td>(row - 1, col)</td>
-    </tr>
-    <tr>
-        <td>Bottom</td><td>(row + 1, col)</td>
-    </tr>
-    <tr>
-        <td>Left</td><td>(row, col - 1)</td>
-    </tr>
-    <tr>
-        <td>Right</td><td>(row, col + 1)</td>
-    </tr>
-    <tr>
-        <td>Top Left</td><td>(row - 1, col - 1)</td>
-    </tr>
-    <tr>
-        <td>Top Right</td><td>(row - 1, col + 1)</td>
-    </tr>
-    <tr>
-        <td>Bottom Left</td><td>(row + 1, col - 1)</td>
-    </tr>
-    <tr>
-        <td>Bottom Right</td><td>(row + 1, col + 1)</td>
-    </tr>
-</table>
-
-<p>If there aren't any mines adjacent to it, it'll reveal all adjacent cells via recursion.
-    <div class="codehilite"><pre><span></span><code><span class="c1">//Click a cell</span>
-    <span class="kd">const</span> <span class="nx">clickCell</span> <span class="o">=</span> <span class="p">(</span><span class="nx">cell</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="p">{</span>
-        <span class="k">if</span><span class="p">(</span><span class="nx">allowClick</span> <span class="o">!=</span> <span class="kc">false</span><span class="p">)</span> <span class="p">{</span>
-            <span class="c1">//If it&#39;s a mine, game over</span>
-            <span class="k">if</span><span class="p">(</span><span class="nx">cell</span><span class="p">.</span><span class="nx">getAttribute</span><span class="p">(</span><span class="s2">&quot;data-mine&quot;</span><span class="p">)</span> <span class="o">===</span> <span class="s2">&quot;true&quot;</span><span class="p">)</span> <span class="p">{</span>
-                <span class="nx">alert</span><span class="p">(</span><span class="s2">&quot;game over&quot;</span><span class="p">);</span>
-                <span class="nx">revealMines</span><span class="p">();</span>
-                <span class="nx">allowClick</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
-            <span class="p">}</span>
-            <span class="c1">//If it&#39;s not a mine, reveal the mines</span>
-            <span class="k">else</span> <span class="p">{</span>
-                <span class="c1">//Mark it as &quot;clicked&quot;</span>
-                <span class="nx">cell</span><span class="p">.</span><span class="nx">className</span> <span class="o">=</span> <span class="s2">&quot;clicked&quot;</span><span class="p">;</span>
-                <span class="nx">scanForMines</span><span class="p">(</span><span class="nx">cell</span><span class="p">);</span>
-                <span class="nx">checkGameStatus</span><span class="p">();</span>
-            <span class="p">}</span> <br />
-        <span class="p">}</span>
-    <span class="p">}</span>
- <br />
-    <span class="c1">//Scan for mines that are adjacent to the cell</span>
-    <span class="kd">const</span> <span class="nx">scanForMines</span> <span class="o">=</span> <span class="p">(</span><span class="nx">cell</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="p">{</span>
-        <span class="kd">let</span> <span class="nx">rowPos</span> <span class="o">=</span> <span class="nx">cell</span><span class="p">.</span><span class="nx">parentNode</span><span class="p">.</span><span class="nx">rowIndex</span><span class="p">;</span>
-        <span class="kd">let</span> <span class="nx">colPos</span> <span class="o">=</span> <span class="nx">cell</span><span class="p">.</span><span class="nx">cellIndex</span><span class="p">;</span>
-        <span class="kd">let</span> <span class="nx">mineCount</span> <span class="o">=</span> <span class="mf">0</span><span class="p">;</span>
- <br />
-        <span class="k">for</span><span class="p">(</span><span class="kd">let</span> <span class="nx">i</span><span class="o">=</span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="nx">rowPos</span><span class="o">-</span><span class="mf">1</span><span class="p">,</span> <span class="mf">0</span><span class="p">);</span> <span class="nx">i</span><span class="o">&lt;</span><span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(</span><span class="nx">rowPos</span><span class="o">+</span><span class="mf">1</span><span class="p">,</span> <span class="nx">size</span><span class="o">-</span><span class="mf">1</span><span class="p">);</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-            <span class="k">for</span><span class="p">(</span><span class="kd">let</span> <span class="nx">j</span><span class="o">=</span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="nx">colPos</span><span class="o">-</span><span class="mf">1</span><span class="p">,</span> <span class="mf">0</span><span class="p">);</span> <span class="nx">j</span><span class="o">&lt;</span><span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(</span><span class="nx">colPos</span><span class="o">+</span><span class="mf">1</span><span class="p">,</span> <span class="nx">size</span><span class="o">-</span><span class="mf">1</span><span class="p">);</span> <span class="nx">j</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-                <span class="kd">let</span> <span class="nx">adjacentCell</span> <span class="o">=</span> <span class="nx">grid</span><span class="p">.</span><span class="nx">rows</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">cells</span><span class="p">[</span><span class="nx">j</span><span class="p">];</span>
-                <span class="k">if</span><span class="p">(</span><span class="nx">adjacentCell</span><span class="p">.</span><span class="nx">getAttribute</span><span class="p">(</span><span class="s2">&quot;data-mine&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;true&quot;</span><span class="p">)</span> <span class="p">{</span>
-                    <span class="nx">mineCount</span><span class="o">++</span><span class="p">;</span>
-                <span class="p">}</span>
-            <span class="p">}</span>
-        <span class="p">}</span>
- <br />
-        <span class="nx">cell</span><span class="p">.</span><span class="nx">innerHTML</span> <span class="o">=</span> <span class="nx">mineCount</span> <span class="o">&gt;</span> <span class="mf">0</span> <span class="o">?</span> <span class="nx">mineCount</span> <span class="o">:</span> <span class="s2">&quot; &quot;</span><span class="p">;</span>
- <br />
-        <span class="c1">//If zero mines, then reveal all adjacent cells</span>
-        <span class="k">if</span><span class="p">(</span><span class="nx">mineCount</span> <span class="o">==</span> <span class="mf">0</span><span class="p">)</span> <span class="p">{</span>
-            <span class="k">for</span><span class="p">(</span><span class="kd">let</span> <span class="nx">i</span><span class="o">=</span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="nx">rowPos</span><span class="o">-</span><span class="mf">1</span><span class="p">,</span> <span class="mf">0</span><span class="p">);</span> <span class="nx">i</span><span class="o">&lt;</span><span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(</span><span class="nx">rowPos</span><span class="o">+</span><span class="mf">1</span><span class="p">,</span> <span class="nx">size</span><span class="o">-</span><span class="mf">1</span><span class="p">);</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-                <span class="k">for</span><span class="p">(</span><span class="kd">let</span> <span class="nx">j</span><span class="o">=</span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="nx">colPos</span><span class="o">-</span><span class="mf">1</span><span class="p">,</span> <span class="mf">0</span><span class="p">);</span> <span class="nx">j</span><span class="o">&lt;</span><span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(</span><span class="nx">colPos</span><span class="o">+</span><span class="mf">1</span><span class="p">,</span> <span class="nx">size</span><span class="o">-</span><span class="mf">1</span><span class="p">);</span> <span class="nx">j</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-                    <span class="kd">let</span> <span class="nx">adjacentCell</span> <span class="o">=</span> <span class="nx">grid</span><span class="p">.</span><span class="nx">rows</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">cells</span><span class="p">[</span><span class="nx">j</span><span class="p">];</span>
-                    <span class="k">if</span><span class="p">(</span><span class="nx">adjacentCell</span><span class="p">.</span><span class="nx">innerHTML</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="p">{</span>
-                        <span class="nx">clickCell</span><span class="p">(</span><span class="nx">adjacentCell</span><span class="p">);</span>
-                    <span class="p">}</span>
-                <span class="p">}</span>
-            <span class="p">}</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-    </code></pre></div></p>
-
-<h3><a id="level-complete"></a> Level completion</h3>
-
-<p>If the player completed the game without clicking on any mine, the level is complete.
-    <div class="codehilite"><pre><span></span><code><span class="c1">//Check game status</span>
-    <span class="kd">const</span> <span class="nx">checkGameStatus</span> <span class="o">=</span> <span class="p">()</span> <span class="p">=&gt;</span> <span class="p">{</span>
-        <span class="kd">let</span> <span class="nx">levelComplete</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
-        <span class="k">for</span><span class="p">(</span><span class="kd">let</span> <span class="nx">i</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span> <span class="nx">i</span><span class="o">&lt;</span><span class="nx">size</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-            <span class="k">for</span> <span class="p">(</span><span class="kd">let</span> <span class="nx">j</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span> <span class="nx">j</span><span class="o">&lt;</span><span class="nx">size</span><span class="p">;</span> <span class="nx">j</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-                <span class="kd">var</span> <span class="nx">cell</span> <span class="o">=</span> <span class="nx">grid</span><span class="p">.</span><span class="nx">rows</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">cells</span><span class="p">[</span><span class="nx">j</span><span class="p">];</span>
-                <span class="k">if</span><span class="p">((</span><span class="nx">cell</span><span class="p">.</span><span class="nx">getAttribute</span><span class="p">(</span><span class="s2">&quot;data-mine&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;false&quot;</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="nx">cell</span><span class="p">.</span><span class="nx">innerHTML</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">))</span> <span class="p">{</span>
-                    <span class="nx">levelComplete</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
-                <span class="p">}</span>
-            <span class="p">}</span>
-        <span class="p">}</span>
- <br />
-        <span class="k">if</span><span class="p">(</span><span class="nx">levelComplete</span><span class="p">)</span> <span class="p">{</span>
-            <span class="nx">alert</span><span class="p">(</span><span class="s2">&quot;Congratulations, you won!&quot;</span><span class="p">);</span>
-            <span class="nx">revealMines</span><span class="p">();</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-    </code></pre></div></p>
-
-<h2>Conclusion</h2>
-
-<p>Well, that's about it. I had fun writing this game. Do you want me to build more games like this? Send me an email about it and I'll see what I can do from my end.</p>
-
-<p>Have fun playing the game and oh, don't blow yourself up! &#x1F61C;</p>
-
-<p>Hope you liked reading this article!</p>
-
-<p>Stay tuned for more!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>September 6th, 2019</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/personal-challenge/">
-					Personal Challenge
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -1865,7 +1681,7 @@ pip install jinja2
 		<li>
 			<a href="/category/linux/">
 				Linux
-				<span class="count">16</span>
+				<span class="count">17</span>
 			</a>
 		</li>
 		
@@ -1912,16 +1728,16 @@ pip install jinja2
 		</li>
 		
 		<li>
-			<a href="/category/git/">
-				Git
+			<a href="/category/devops/">
+				DevOps
 				<span class="count">10</span>
 			</a>
 		</li>
 		
 		<li>
-			<a href="/category/devops/">
-				DevOps
-				<span class="count">9</span>
+			<a href="/category/git/">
+				Git
+				<span class="count">10</span>
 			</a>
 		</li>
 		
@@ -2104,6 +1920,13 @@ pip install jinja2
 			<a href="/category/python/">
 				Python
 				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/docker/">
+				Docker
+				<span class="count">1</span>
 			</a>
 		</li>
 		
