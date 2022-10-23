@@ -78,6 +78,657 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/writings/posts/build-your-own-static-site-generator-using-python">Build your own Static Site Generator using Python</a></h1>
+		<p class="description">Are you curious enough to build your own Static Site Generator? This article is for you.</p>
+	</div>
+	<div class="article-body">
+		<p>If you are curious about web development, you must have came across names like Jekyll, Hugo, Gatsby and more. These names that I mentioned are called Static Site generators. In fact, this website that you're on, is powered by a static site generator and I really like it so far.</p>
+
+<p>In today's article, you'll learn how to build your own Static Site Generator using Python, create a blog and host it on Netlify for free. Please note, that this is a basic tutorial that would show the bare-metals of this generator.</p>
+
+<p>These are the pre-requisities to this tutorial:</p>
+
+<ul>
+<li>Basic understanding of Python, Git, HTML and Markdown</li>
+<li>Basic knowledge of file I/O</li>
+<li>Know-how on using the command-line</li>
+</ul>
+
+<p>If you don't know them, it's okay, you can still do your own research on Google and learn on-the-go!</p>
+
+<p>Before we jump in, let's see why is it the latest craze!</p>
+
+<h2>Why is it popular?</h2>
+
+<p>Take a blog, it's a dynamic web application that consists of a lot of sections like blog posts, archives and categories. Each time, a user visits a blog post, it sends a GET request to the server, fetches the data, then generates a webpage along with the fetched data on-the-fly. However, with a static site generator, you only serve pre-rendered files, so you don't have to generate or create anything on-the-fly, it's already there!</p>
+
+<p>Apart from that, applications like a blog are usually database-dependant and you need to host it somewhere with a price. Not only that, but it does have security risks. With static site generators, you write your content on a markdown file and then convert it into static HTML files, which can then be used to host your website on services like GitHub Pages or Netlify for free and you don't have to worry about any security issues.</p>
+
+<h2>What are the functionalities?</h2>
+
+<p>These are the functionalities that we'd require in a blog:</p>
+
+<ul>
+<li>Display all blog articles</li>
+<li>Pagination module</li>
+<li>A page for each article</li>
+</ul>
+
+<p>So, let's go ahead and start with building the project.</p>
+
+<h2>Time to build it!</h2>
+
+<p>Let's plan before we dive in straight into coding it. This is the file structure we'll be following in this tutorial:</p>
+
+<h3>Create file structure</h3>
+
+<p>This is the file structure we're going to follow in this tutorial, so create it before you proceed with the tutorial.</p>
+
+<div class="codehilite"><pre><span></span><code>\blog-ssg
+    \content
+    \output
+    \templates
+    make_entry.py
+    ssg.py
+    ssglib.py
+</code></pre></div>
+
+<p>Next, install the following dependencies using <mark>pip</mark>:</p>
+
+<div class="codehilite"><pre><span></span><code>pip install markdown2
+pip install jinja2
+</code></pre></div>
+
+<h3>Generate markdown files</h3>
+
+<p>Go to your <mark>make_entry.py</mark> file and copy-paste this code. This will be used to generate markdown file for you to edit instead of having to create it manually all the time.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">glob</span> <span class="kn">import</span> <span class="n">glob</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+
+<span class="c1"># This is the Markdown template</span>
+<span class="n">TEMPLATE</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">title: </span><span class="si">{title}</span><span class="s2"></span>
+<span class="s2">date: </span><span class="si">{date}</span><span class="s2"></span>
+<span class="s2">slug: </span><span class="si">{slug}</span><span class="s2"></span>
+<span class="s2">category: Write category here.</span>
+<span class="s2">summary: Write summary here.</span>
+
+<span class="s2">Write content here.</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+<span class="k">def</span> <span class="nf">suffix</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
+    <span class="k">return</span> <span class="s1">&#39;th&#39;</span> <span class="k">if</span> <span class="mi">11</span><span class="o">&lt;=</span><span class="n">d</span><span class="o">&lt;=</span><span class="mi">13</span> <span class="k">else</span> <span class="p">{</span><span class="s1">&#39;1&#39;</span><span class="p">:</span><span class="s1">&#39;st&#39;</span><span class="p">,</span> <span class="s1">&#39;2&#39;</span><span class="p">:</span><span class="s1">&#39;nd&#39;</span><span class="p">,</span> <span class="s1">&#39;3&#39;</span><span class="p">:</span><span class="s1">&#39;rd&#39;</span><span class="p">}</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">d</span><span class="o">%</span><span class="mi">10</span><span class="p">,</span> <span class="s1">&#39;th&#39;</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">custom_strftime</span><span class="p">(</span><span class="nb">format</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">t</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="nb">format</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{S}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">day</span><span class="p">)</span> <span class="o">+</span> <span class="n">suffix</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">day</span><span class="p">))</span>
+
+<span class="c1"># Generate file number by looking at the number blog articles in the directory</span>
+<span class="k">def</span> <span class="nf">gen_file_no</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">existing_files</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        If no files are found,</span>
+<span class="sd">        then this is the first file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">existing_files</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">1</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Look for the biggest file number</span>
+<span class="sd">        and return the bigger one</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">prefixes</span> <span class="o">=</span> <span class="p">[</span><span class="n">filename</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">)[:</span><span class="mi">2</span><span class="p">]</span> <span class="k">for</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">existing_files</span><span class="p">]</span>
+    <span class="n">biggest_prefix</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">prefixes</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span> <span class="k">lambda</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">biggest_prefix</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+
+<span class="c1"># Generate slug for the blog article</span>
+<span class="k">def</span> <span class="nf">gen_slug</span><span class="p">(</span><span class="n">title</span><span class="p">):</span>
+    <span class="n">title</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">title</span> <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">isalnum</span><span class="p">()</span> <span class="ow">or</span> <span class="n">x</span> <span class="o">==</span> <span class="s1">&#39; &#39;</span><span class="p">)</span>
+    <span class="n">title</span> <span class="o">=</span> <span class="n">title</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span><span class="s1">&#39;-&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">title</span>
+
+<span class="c1"># Create entry</span>
+<span class="k">def</span> <span class="nf">make_entry</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">file_type</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">file_type</span> <span class="o">==</span> <span class="s2">&quot;articles&quot;</span><span class="p">:</span>
+        <span class="n">file_path</span> <span class="o">=</span> <span class="s2">&quot;content/&quot;</span> <span class="o">+</span> <span class="n">file_type</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span>
+
+        <span class="c1"># Create folders if they didn&#39;t exist</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">file_path</span><span class="p">))</span>
+
+        <span class="n">today</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">today</span><span class="p">()</span>
+
+        <span class="n">slug</span> <span class="o">=</span> <span class="n">gen_slug</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+        <span class="n">file_no</span> <span class="o">=</span> <span class="n">gen_file_no</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">existing_files</span><span class="o">=</span><span class="n">glob</span><span class="p">(</span><span class="n">file_path</span> <span class="o">+</span> <span class="s2">&quot;*.md&quot;</span><span class="p">))</span>
+        <span class="n">blog_file_path</span> <span class="o">=</span> <span class="n">file_path</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="si">{:0&gt;2}</span><span class="s2">_</span><span class="si">{}</span><span class="s2">_</span><span class="si">{:0&gt;2}</span><span class="s2">_</span><span class="si">{:0&gt;2}</span><span class="s2">_</span><span class="si">{}</span><span class="s2">.md&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">file_no</span><span class="p">,</span> <span class="n">today</span><span class="o">.</span><span class="n">year</span><span class="p">,</span> <span class="n">today</span><span class="o">.</span><span class="n">month</span><span class="p">,</span> <span class="n">today</span><span class="o">.</span><span class="n">day</span><span class="p">,</span> <span class="n">slug</span><span class="p">)</span>
+
+        <span class="n">post_date</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">today</span><span class="o">.</span><span class="n">date</span><span class="p">()),</span> <span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">post_date</span> <span class="o">=</span> <span class="n">custom_strftime</span><span class="p">(</span><span class="s1">&#39;%B </span><span class="si">{S}</span><span class="s1">, %Y&#39;</span><span class="p">,</span> <span class="n">post_date</span><span class="p">)</span>
+
+        <span class="n">t</span> <span class="o">=</span> <span class="n">TEMPLATE</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">,</span>
+            <span class="n">year</span><span class="o">=</span><span class="n">today</span><span class="o">.</span><span class="n">year</span><span class="p">,</span>
+            <span class="n">month</span><span class="o">=</span><span class="n">today</span><span class="o">.</span><span class="n">month</span><span class="p">,</span>
+            <span class="n">date</span><span class="o">=</span><span class="n">post_date</span><span class="p">,</span>
+            <span class="n">slug</span><span class="o">=</span><span class="n">slug</span><span class="p">)</span>      
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">blog_file_path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">w</span><span class="p">:</span>
+            <span class="n">w</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+
+        <span class="nb">print</span> <span class="n">blog_file_path</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">make_entry</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+    <span class="nb">print</span> <span class="s2">&quot;Enter blog title and article type&quot;</span>
+</code></pre></div>
+
+<p>To create a blog entry, just type this in your terminal:</p>
+
+<div class="codehilite"><pre><span></span><code>python make_entry.py <span class="s2">&quot;Article Name&quot;</span> articles
+</code></pre></div>
+
+<h3>Create a library</h3>
+
+<p>This library must have the following functionalities:</p>
+
+<ul>
+<li><a href="#stub-1">Fetch content from Markdown files</a></li>
+<li><a href="#stub-2">Create templates</a></li>
+<li><a href="#stub-3">Generate index page</a></li>
+<li><a href="#stub-4">Generate articles from Markdown to HTML</a></li>
+<li><a href="#stub-5">Generate pagination module</a></li>
+<li><a href="#stub-6">Generate blog</a></li>
+</ul>
+
+<p>So, create a new file named <mark>ssglib.py</mark> and let's do each of the functionality step-by-step to gain a deeper understanding of each method/function in the library.</p>
+
+<p>Before that, add the following lines to the file:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">random</span><span class="o">,</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span> <span class="nn">jinja2</span> <span class="kn">import</span> <span class="n">Environment</span><span class="p">,</span> <span class="n">PackageLoader</span>
+<span class="kn">from</span> <span class="nn">markdown2</span> <span class="kn">import</span> <span class="n">markdown</span>
+<span class="kn">from</span> <span class="nn">argparse</span> <span class="kn">import</span> <span class="n">Namespace</span>
+
+<span class="c1"># Jinja2 Environment</span>
+<span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">loader</span><span class="o">=</span><span class="n">PackageLoader</span><span class="p">(</span><span class="s1">&#39;ssg&#39;</span><span class="p">,</span><span class="s1">&#39;templates&#39;</span><span class="p">))</span>
+</code></pre></div>
+
+<h4><a id="stub-1"></a> Fetch content from Markdown files</h4>
+
+<p>This method will fetch content from all of the Markdown files that resides in the <mark>content/articles</mark> folder.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="c1"># Get Markdown files from content directory</span>
+<span class="k">def</span> <span class="nf">get_markdown_files</span><span class="p">(</span><span class="n">section</span><span class="p">):</span>
+    <span class="n">POSTS</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="n">file_path</span> <span class="o">=</span> <span class="s1">&#39;content/&#39;</span>
+
+    <span class="k">for</span> <span class="n">md_file</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
+        <span class="n">md_file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">md_file</span><span class="p">)</span>
+
+        <span class="c1"># if it&#39;s not a directory, read it</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">md_file_path</span><span class="p">):</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">md_file_path</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+                <span class="n">POSTS</span><span class="p">[</span><span class="n">md_file</span><span class="p">]</span> <span class="o">=</span> <span class="n">markdown</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">read</span><span class="p">(),</span> <span class="n">extras</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;metadata&#39;</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">POSTS</span>
+</code></pre></div>
+
+<h4><a id="stub-2"></a> Create templates</h4>
+
+<p>You'll need to create two templates, one for home page and the other is for your articles. All templates will reside in the <mark>templates</mark> folder.</p>
+
+<p>This is the template for the home page of your blog and you can name this as <mark>index.html</mark>:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="cp">&lt;!DOCTYPE html&gt;</span>
+<span class="p">&lt;</span><span class="nt">html</span><span class="p">&gt;</span>
+<span class="p">&lt;</span><span class="nt">head</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">title</span><span class="p">&gt;</span>My Blog<span class="p">&lt;/</span><span class="nt">title</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">base</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;/&quot;</span><span class="p">/&gt;</span>
+    <span class="p">&lt;</span><span class="nt">meta</span> <span class="na">http-equiv</span><span class="o">=</span><span class="s">&quot;Content-Type&quot;</span> <span class="na">content</span><span class="o">=</span><span class="s">&quot;text/html; charset=utf-8&quot;</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">meta</span> <span class="na">name</span><span class="o">=</span><span class="s">&quot;viewport&quot;</span> <span class="na">content</span><span class="o">=</span><span class="s">&quot;width=device-width, initial-scale=1.0&quot;</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">head</span><span class="p">&gt;</span>
+<span class="p">&lt;</span><span class="nt">body</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">main</span><span class="p">&gt;</span>
+        <span class="p">&lt;</span><span class="nt">div</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;posts-list&quot;</span><span class="p">&gt;</span>
+            {% for post in posts %}
+            <span class="p">&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;posts/{{ post.slug }}/&quot;</span><span class="p">&gt;</span>
+                <span class="p">&lt;</span><span class="nt">p</span><span class="p">&gt;</span>{{ post.date }} <span class="ni">&amp;mdash;</span> {{ post.title }}<span class="p">&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
+            <span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;</span>
+            {% endfor %}
+        <span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+
+        <span class="p">&lt;</span><span class="nt">div</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;paginator&quot;</span><span class="p">&gt;</span>
+            {% if curr == 2 %}
+                <span class="p">&lt;</span><span class="nt">a</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;prev&quot;</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;/&quot;</span> <span class="na">rel</span><span class="o">=</span><span class="s">&quot;prev&quot;</span><span class="p">&gt;</span>Newer<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;</span>
+            {% elif prev != 0 %}
+                <span class="p">&lt;</span><span class="nt">a</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;prev&quot;</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;/pages/{{prev}}&quot;</span> <span class="na">rel</span><span class="o">=</span><span class="s">&quot;prev&quot;</span><span class="p">&gt;</span>Newer<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;</span>
+            {% else %}
+                <span class="p">&lt;</span><span class="nt">a</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;prev inactive&quot;</span><span class="p">&gt;</span>Newer<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;</span>
+            {% endif %}
+
+            <span class="p">&lt;</span><span class="nt">p</span><span class="p">&gt;</span>{{curr}} <span class="p">&lt;</span><span class="nt">span</span><span class="p">&gt;</span>of<span class="p">&lt;/</span><span class="nt">span</span><span class="p">&gt;</span> {{total}}<span class="p">&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
+
+            {% if next != 0 %}
+                <span class="p">&lt;</span><span class="nt">a</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;next&quot;</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;/pages/{{next}}&quot;</span> <span class="na">rel</span><span class="o">=</span><span class="s">&quot;next&quot;</span><span class="p">&gt;</span>Older<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;</span>
+            {% else %}
+                <span class="p">&lt;</span><span class="nt">a</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;next inactive&quot;</span><span class="p">&gt;</span>Older<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;</span>
+            {% endif %}
+        <span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+
+    <span class="p">&lt;/</span><span class="nt">main</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">body</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">html</span><span class="p">&gt;</span>
+</code></pre></div>
+
+<p>This is the template for the article page and you can name this as <mark>article.html</mark>:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="cp">&lt;!DOCTYPE html&gt;</span>
+<span class="p">&lt;</span><span class="nt">html</span><span class="p">&gt;</span>
+<span class="p">&lt;</span><span class="nt">head</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">title</span><span class="p">&gt;</span>{{ post.title }}<span class="p">&lt;/</span><span class="nt">title</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">meta</span> <span class="na">http-equiv</span><span class="o">=</span><span class="s">&quot;Content-Type&quot;</span> <span class="na">content</span><span class="o">=</span><span class="s">&quot;text/html; charset=utf-8&quot;</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">meta</span> <span class="na">name</span><span class="o">=</span><span class="s">&quot;viewport&quot;</span> <span class="na">content</span><span class="o">=</span><span class="s">&quot;width=device-width, initial-scale=1.0&quot;</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">meta</span> <span class="na">name</span><span class="o">=</span><span class="s">&quot;author&quot;</span> <span class="na">content</span><span class="o">=</span><span class="s">&quot;Your name&quot;</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">meta</span> <span class="na">name</span><span class="o">=</span><span class="s">&quot;description&quot;</span> <span class="na">content</span><span class="o">=</span><span class="s">&quot;{{ post.summary }}.&quot;</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">head</span><span class="p">&gt;</span>
+<span class="p">&lt;</span><span class="nt">body</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">main</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;article-main&quot;</span><span class="p">&gt;</span>
+        <span class="p">&lt;</span><span class="nt">div</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;article-info&quot;</span><span class="p">&gt;</span>
+            <span class="p">&lt;</span><span class="nt">div</span><span class="p">&gt;</span>
+                <span class="p">&lt;</span><span class="nt">h5</span><span class="p">&gt;</span>{{ post.category }}<span class="p">&lt;/</span><span class="nt">h5</span><span class="p">&gt;</span>
+                <span class="p">&lt;</span><span class="nt">h1</span><span class="p">&gt;</span>{{ post.title }}<span class="p">&lt;/</span><span class="nt">h1</span><span class="p">&gt;</span>
+                <span class="p">&lt;</span><span class="nt">p</span><span class="p">&gt;</span>{{ post.summary }}<span class="p">&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
+                <span class="p">&lt;</span><span class="nt">h6</span><span class="p">&gt;</span>Your name <span class="ni">&amp;mdash;</span> {{ post.date }}<span class="p">&lt;/</span><span class="nt">h6</span><span class="p">&gt;</span>
+            <span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>    
+        <span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+        <span class="p">&lt;</span><span class="nt">article</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;article-container&quot;</span><span class="p">&gt;</span>
+            <span class="p">&lt;</span><span class="nt">div</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;content&quot;</span><span class="p">&gt;</span>
+            {{ post.content }}
+            <span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+        <span class="p">&lt;/</span><span class="nt">article</span><span class="p">&gt;</span>
+    <span class="p">&lt;/</span><span class="nt">main</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">body</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">html</span><span class="p">&gt;</span>
+</code></pre></div>
+
+<p>Though, this is just a bare-bone template, you can be creative and make your own changes to it by making it visually-appealing!</p>
+
+<h4><a id="stub-3"></a> Generate index page</h4>
+
+<p>This method will create your index page. The index page will contain the links for each article.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="n">POSTS</span><span class="p">,</span> <span class="n">isPaginate</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="n">posts_metadata</span> <span class="o">=</span> <span class="n">get_posts_metadata</span><span class="p">(</span><span class="n">POSTS</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">isPaginate</span><span class="p">:</span>
+        <span class="n">template</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s1">&#39;index-alt.html&#39;</span><span class="p">)</span>
+        <span class="n">html_content</span> <span class="o">=</span> <span class="n">template</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">posts</span><span class="o">=</span><span class="n">posts_metadata</span><span class="p">)</span>
+        <span class="n">index_path</span> <span class="o">=</span> <span class="s1">&#39;output/index.html&#39;</span>
+        <span class="n">write_to_file</span><span class="p">(</span><span class="n">index_path</span><span class="p">,</span> <span class="n">html_content</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;template&quot;</span><span class="p">:</span> <span class="n">env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s1">&#39;index.html&#39;</span><span class="p">),</span>
+            <span class="s2">&quot;posts_metadata&quot;</span><span class="p">:</span> <span class="n">posts_metadata</span><span class="p">,</span>
+
+            <span class="c1"># Keeps tracks the current post</span>
+            <span class="s2">&quot;curr_posts_index&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+
+            <span class="c1"># Total number of posts</span>
+            <span class="s2">&quot;total_posts&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">POSTS</span><span class="p">),</span>
+
+            <span class="c1"># Number of posts per page</span>
+            <span class="s2">&quot;posts_per_page&quot;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+
+            <span class="c1"># Directory to hold the pages</span>
+            <span class="s2">&quot;main_pages_path&quot;</span><span class="p">:</span> <span class="s2">&quot;output/pages/&quot;</span>
+        <span class="p">}</span>
+        <span class="n">pagination</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+</code></pre></div>
+
+<h4><a id="stub-4"></a> Generate articles from Markdown to HTML</h4>
+
+<p>This method will convert your Markdown content into HTML pages. One thing to note, each blog post will have it's own folder name with it's own slug and <mark>index.html</mark> file, so that it'll be easier to access the article.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="c1"># Generate all posts</span>
+<span class="k">def</span> <span class="nf">articles</span><span class="p">(</span><span class="n">POSTS</span><span class="p">,</span> <span class="n">post_template</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">post</span> <span class="ow">in</span> <span class="n">POSTS</span><span class="p">:</span>
+        <span class="n">post_metadata</span> <span class="o">=</span> <span class="n">POSTS</span><span class="p">[</span><span class="n">post</span><span class="p">]</span><span class="o">.</span><span class="n">metadata</span>
+        <span class="n">post_data</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;content&#39;</span><span class="p">:</span> <span class="n">POSTS</span><span class="p">[</span><span class="n">post</span><span class="p">],</span>
+            <span class="s1">&#39;slug&#39;</span><span class="p">:</span> <span class="n">post_metadata</span><span class="p">[</span><span class="s1">&#39;slug&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="n">post_metadata</span><span class="p">[</span><span class="s1">&#39;title&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;summary&#39;</span><span class="p">:</span> <span class="n">post_metadata</span><span class="p">[</span><span class="s1">&#39;summary&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;category&#39;</span><span class="p">:</span> <span class="n">post_metadata</span><span class="p">[</span><span class="s1">&#39;category&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;date&#39;</span><span class="p">:</span> <span class="n">post_metadata</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">]</span>
+        <span class="p">}</span>
+        <span class="n">post_html_content</span> <span class="o">=</span> <span class="n">post_template</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">post</span><span class="o">=</span><span class="n">post_data</span><span class="p">)</span>
+        <span class="n">post_file_path</span> <span class="o">=</span> <span class="s1">&#39;output/posts/</span><span class="si">{slug}</span><span class="s1">/index.html&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">slug</span><span class="o">=</span><span class="n">post_metadata</span><span class="p">[</span><span class="s1">&#39;slug&#39;</span><span class="p">])</span>
+        <span class="n">create_directory</span><span class="p">(</span><span class="n">post_file_path</span><span class="p">)</span>
+        <span class="n">write_to_file</span><span class="p">(</span><span class="n">post_file_path</span><span class="p">,</span> <span class="n">post_html_content</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">))</span>
+</code></pre></div>
+
+<h4><a id="stub-5"></a> Generate pagination module</h4>
+
+<p>Depending on the amount of blog articles you want to display, it will create <strong><em>total number of posts / article per page</em></strong> pages on the home page. They will look identical to the index page and these pages will be created in <mark>output/pages</mark> folder.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="c1"># Pagination module</span>
+<span class="k">def</span> <span class="nf">pagination</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+
+    <span class="n">x</span> <span class="o">=</span> <span class="n">Namespace</span><span class="p">(</span><span class="o">**</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="c1"># Number of pages (for pagination)</span>
+    <span class="n">num_pages</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">total_posts</span><span class="o">/</span><span class="n">x</span><span class="o">.</span><span class="n">posts_per_page</span><span class="p">)</span>
+
+    <span class="c1"># Create a page directory, if it doesn&#39;t exist</span>
+    <span class="n">create_directory</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">main_pages_path</span><span class="p">)</span> 
+
+    <span class="k">for</span> <span class="n">pagenum</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_pages</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+        <span class="c1"># This will contain metadata of every x number of posts per page</span>
+        <span class="n">page_metadata</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">page_path</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="n">curr_page</span> <span class="o">=</span> <span class="n">pagenum</span><span class="o">+</span><span class="mi">1</span>
+
+        <span class="k">if</span> <span class="n">curr_page</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">page_path</span> <span class="o">=</span> <span class="s2">&quot;output/index.html&quot;</span> 
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">page_path</span> <span class="o">=</span> <span class="s2">&quot;output/pages/</span><span class="si">{page}</span><span class="s2">/index.html&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">page</span><span class="o">=</span><span class="n">curr_page</span><span class="p">)</span>
+
+        <span class="n">create_directory</span><span class="p">(</span><span class="n">page_path</span><span class="p">)</span>
+
+        <span class="c1"># Internal counter to keep track of posts per page</span>
+        <span class="n">posts_counter</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">curr_posts_index</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">posts_metadata</span><span class="p">)):</span>
+            <span class="n">page_metadata</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">posts_metadata</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+            <span class="n">posts_counter</span> <span class="o">=</span> <span class="n">posts_counter</span><span class="o">+</span><span class="mi">1</span>
+
+            <span class="c1"># If it reached it&#39;s limit, break</span>
+            <span class="k">if</span> <span class="n">posts_counter</span> <span class="o">==</span> <span class="n">x</span><span class="o">.</span><span class="n">posts_per_page</span><span class="p">:</span>
+                <span class="n">x</span><span class="o">.</span><span class="n">curr_posts_index</span> <span class="o">=</span> <span class="n">j</span><span class="o">+</span><span class="mi">1</span>
+                <span class="k">break</span>
+
+        <span class="c1"># Create links for previous and next pages</span>
+        <span class="n">prev_page</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">curr_page</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">curr_page</span><span class="o">-</span><span class="mi">1</span>
+        <span class="n">next_page</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">curr_page</span> <span class="o">==</span> <span class="n">num_pages</span><span class="o">+</span><span class="mi">1</span> <span class="k">else</span> <span class="n">curr_page</span><span class="o">+</span><span class="mi">1</span>
+
+        <span class="c1"># Render the page</span>
+        <span class="n">html_content</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">template</span><span class="o">.</span><span class="n">render</span><span class="p">(</span>
+            <span class="n">posts</span><span class="o">=</span><span class="n">page_metadata</span><span class="p">,</span> 
+            <span class="n">curr</span><span class="o">=</span><span class="n">curr_page</span><span class="p">,</span>
+            <span class="n">prev</span><span class="o">=</span><span class="n">prev_page</span><span class="p">,</span> 
+            <span class="nb">next</span><span class="o">=</span><span class="n">next_page</span><span class="p">,</span>
+            <span class="n">total</span><span class="o">=</span><span class="n">num_pages</span><span class="o">+</span><span class="mi">1</span>
+        <span class="p">)</span>
+
+        <span class="n">write_to_file</span><span class="p">(</span><span class="n">page_path</span><span class="p">,</span> <span class="n">html_content</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">))</span>
+</code></pre></div>
+
+<h4><a id="stub-6"></a> Generate blog</h4>
+
+<p>This is the main function that will generate the entire blog including all of the article pages.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="c1"># Generate blog -- Main function</span>
+<span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">section</span><span class="p">):</span>
+    <span class="n">sections</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;articles&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">section</span> <span class="ow">in</span> <span class="n">sections</span><span class="p">:</span>
+        <span class="n">POSTS</span> <span class="o">=</span> <span class="n">get_markdown_files</span><span class="p">(</span><span class="n">section</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">section</span> <span class="o">==</span> <span class="s2">&quot;articles&quot;</span><span class="p">:</span>
+            <span class="n">posts_template</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s1">&#39;article.html&#39;</span><span class="p">)</span>
+            <span class="n">index</span><span class="p">(</span><span class="n">POSTS</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+            <span class="n">articles</span><span class="p">(</span><span class="n">POSTS</span><span class="p">,</span> <span class="n">posts_template</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span> <span class="s2">&quot;This section doesn&#39;t exist.&quot;</span>
+</code></pre></div>
+
+<p>Take a look at the source code for both <mark>ssglib.py</mark> and <mark>ssg.py</mark> and feel free to tinker around with it.</p>
+
+<p><strong>Source code for</strong> <mark>ssglib.py</mark>:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="ch">#!usr/bin/python</span>
+<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">random</span><span class="o">,</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span> <span class="nn">jinja2</span> <span class="kn">import</span> <span class="n">Environment</span><span class="p">,</span> <span class="n">PackageLoader</span>
+<span class="kn">from</span> <span class="nn">markdown2</span> <span class="kn">import</span> <span class="n">markdown</span>
+<span class="kn">from</span> <span class="nn">argparse</span> <span class="kn">import</span> <span class="n">Namespace</span>
+
+<span class="c1"># Jinja2 Environment</span>
+<span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">loader</span><span class="o">=</span><span class="n">PackageLoader</span><span class="p">(</span><span class="s1">&#39;ssg&#39;</span><span class="p">,</span><span class="s1">&#39;templates&#39;</span><span class="p">))</span>
+
+<span class="c1"># Write to file</span>
+<span class="k">def</span> <span class="nf">write_to_file</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">content</span><span class="p">):</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+        <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">content</span><span class="p">)</span>
+        <span class="n">file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+<span class="c1"># Create directory</span>
+<span class="k">def</span> <span class="nf">create_directory</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
+
+<span class="c1"># Get Markdown files from content directory</span>
+<span class="k">def</span> <span class="nf">get_markdown_files</span><span class="p">(</span><span class="n">section</span><span class="p">):</span>
+    <span class="n">POSTS</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="n">file_path</span> <span class="o">=</span> <span class="s1">&#39;content/&#39;</span>
+
+    <span class="k">for</span> <span class="n">md_file</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
+        <span class="n">md_file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">md_file</span><span class="p">)</span>
+
+        <span class="c1"># if it&#39;s not a directory, read it</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">md_file_path</span><span class="p">):</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">md_file_path</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+                <span class="n">POSTS</span><span class="p">[</span><span class="n">md_file</span><span class="p">]</span> <span class="o">=</span> <span class="n">markdown</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">read</span><span class="p">(),</span> <span class="n">extras</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;metadata&#39;</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">POSTS</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Collect metadata of all the posts</span>
+<span class="sd">for home page and sort them </span>
+<span class="sd">in reversed order</span>
+
+<span class="sd">@param: </span>
+<span class="sd">    POSTS =&gt; Dictionary</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="k">def</span> <span class="nf">get_posts_metadata</span><span class="p">(</span><span class="n">POSTS</span><span class="p">):</span>
+    <span class="n">posts_metadata</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">POSTS</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="n">posts_metadata</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">metadata</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">posts_metadata</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    @params:</span>
+<span class="sd">    POSTS =&gt; Dictionary</span>
+<span class="sd">    template =&gt; jinja template</span>
+<span class="sd">    isPaginate =&gt; boolean to enable pagination</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="n">POSTS</span><span class="p">,</span> <span class="n">isPaginate</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+
+    <span class="n">posts_metadata</span> <span class="o">=</span> <span class="n">get_posts_metadata</span><span class="p">(</span><span class="n">POSTS</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">isPaginate</span><span class="p">:</span>
+        <span class="n">template</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s1">&#39;index-alt.html&#39;</span><span class="p">)</span>
+        <span class="n">html_content</span> <span class="o">=</span> <span class="n">template</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">posts</span><span class="o">=</span><span class="n">posts_metadata</span><span class="p">)</span>
+        <span class="n">index_path</span> <span class="o">=</span> <span class="s1">&#39;output/index.html&#39;</span>
+        <span class="n">write_to_file</span><span class="p">(</span><span class="n">index_path</span><span class="p">,</span> <span class="n">html_content</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">))</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;template&quot;</span><span class="p">:</span> <span class="n">env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s1">&#39;index.html&#39;</span><span class="p">),</span>
+            <span class="s2">&quot;posts_metadata&quot;</span><span class="p">:</span> <span class="n">posts_metadata</span><span class="p">,</span>
+
+            <span class="c1"># Keeps tracks the current post</span>
+            <span class="s2">&quot;curr_posts_index&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+
+            <span class="c1"># Total number of posts</span>
+            <span class="s2">&quot;total_posts&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">POSTS</span><span class="p">),</span>
+
+            <span class="c1"># Number of posts per page</span>
+            <span class="s2">&quot;posts_per_page&quot;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+
+            <span class="c1"># Directory to hold the pages</span>
+            <span class="s2">&quot;main_pages_path&quot;</span><span class="p">:</span> <span class="s2">&quot;output/pages/&quot;</span>
+        <span class="p">}</span>
+
+        <span class="n">pagination</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+
+<span class="c1"># Generate all posts</span>
+<span class="k">def</span> <span class="nf">articles</span><span class="p">(</span><span class="n">POSTS</span><span class="p">,</span> <span class="n">post_template</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">post</span> <span class="ow">in</span> <span class="n">POSTS</span><span class="p">:</span>
+        <span class="n">post_metadata</span> <span class="o">=</span> <span class="n">POSTS</span><span class="p">[</span><span class="n">post</span><span class="p">]</span><span class="o">.</span><span class="n">metadata</span>
+        <span class="n">post_data</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;content&#39;</span><span class="p">:</span> <span class="n">POSTS</span><span class="p">[</span><span class="n">post</span><span class="p">],</span>
+            <span class="s1">&#39;slug&#39;</span><span class="p">:</span> <span class="n">post_metadata</span><span class="p">[</span><span class="s1">&#39;slug&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="n">post_metadata</span><span class="p">[</span><span class="s1">&#39;title&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;summary&#39;</span><span class="p">:</span> <span class="n">post_metadata</span><span class="p">[</span><span class="s1">&#39;summary&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;category&#39;</span><span class="p">:</span> <span class="n">post_metadata</span><span class="p">[</span><span class="s1">&#39;category&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;date&#39;</span><span class="p">:</span> <span class="n">post_metadata</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">]</span>
+        <span class="p">}</span>
+        <span class="n">post_html_content</span> <span class="o">=</span> <span class="n">post_template</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">post</span><span class="o">=</span><span class="n">post_data</span><span class="p">)</span>
+        <span class="n">post_file_path</span> <span class="o">=</span> <span class="s1">&#39;output/posts/</span><span class="si">{slug}</span><span class="s1">/index.html&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">slug</span><span class="o">=</span><span class="n">post_metadata</span><span class="p">[</span><span class="s1">&#39;slug&#39;</span><span class="p">])</span>
+        <span class="n">create_directory</span><span class="p">(</span><span class="n">post_file_path</span><span class="p">)</span>
+        <span class="n">write_to_file</span><span class="p">(</span><span class="n">post_file_path</span><span class="p">,</span> <span class="n">post_html_content</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">))</span>
+
+<span class="c1"># Generate pages</span>
+<span class="k">def</span> <span class="nf">pagination</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+
+    <span class="n">x</span> <span class="o">=</span> <span class="n">Namespace</span><span class="p">(</span><span class="o">**</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="c1"># Number of pages (for pagination)</span>
+    <span class="n">num_pages</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">total_posts</span><span class="o">/</span><span class="n">x</span><span class="o">.</span><span class="n">posts_per_page</span><span class="p">)</span>
+
+    <span class="c1"># Create a page directory, if it doesn&#39;t exist</span>
+    <span class="n">create_directory</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">main_pages_path</span><span class="p">)</span> 
+
+    <span class="k">for</span> <span class="n">pagenum</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_pages</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+        <span class="c1"># This will contain metadata of every x number of posts per page</span>
+        <span class="n">page_metadata</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">page_path</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="n">curr_page</span> <span class="o">=</span> <span class="n">pagenum</span><span class="o">+</span><span class="mi">1</span>
+
+        <span class="k">if</span> <span class="n">curr_page</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">page_path</span> <span class="o">=</span> <span class="s2">&quot;output/index.html&quot;</span> 
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">page_path</span> <span class="o">=</span> <span class="s2">&quot;output/pages/</span><span class="si">{page}</span><span class="s2">/index.html&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">page</span><span class="o">=</span><span class="n">curr_page</span><span class="p">)</span>
+
+        <span class="n">create_directory</span><span class="p">(</span><span class="n">page_path</span><span class="p">)</span>
+
+        <span class="c1"># Internal counter to keep track of posts per page</span>
+        <span class="n">posts_counter</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">curr_posts_index</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">posts_metadata</span><span class="p">)):</span>
+            <span class="n">page_metadata</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">posts_metadata</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+            <span class="n">posts_counter</span> <span class="o">=</span> <span class="n">posts_counter</span><span class="o">+</span><span class="mi">1</span>
+
+            <span class="c1"># If it reached it&#39;s limit, break</span>
+            <span class="k">if</span> <span class="n">posts_counter</span> <span class="o">==</span> <span class="n">x</span><span class="o">.</span><span class="n">posts_per_page</span><span class="p">:</span>
+                <span class="n">x</span><span class="o">.</span><span class="n">curr_posts_index</span> <span class="o">=</span> <span class="n">j</span><span class="o">+</span><span class="mi">1</span>
+                <span class="k">break</span>
+
+        <span class="c1"># Create links for previous and next pages</span>
+        <span class="n">prev_page</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">curr_page</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">curr_page</span><span class="o">-</span><span class="mi">1</span>
+        <span class="n">next_page</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">curr_page</span> <span class="o">==</span> <span class="n">num_pages</span><span class="o">+</span><span class="mi">1</span> <span class="k">else</span> <span class="n">curr_page</span><span class="o">+</span><span class="mi">1</span>
+
+        <span class="c1"># Render the page</span>
+        <span class="n">html_content</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">template</span><span class="o">.</span><span class="n">render</span><span class="p">(</span>
+            <span class="n">posts</span><span class="o">=</span><span class="n">page_metadata</span><span class="p">,</span> 
+            <span class="n">curr</span><span class="o">=</span><span class="n">curr_page</span><span class="p">,</span>
+            <span class="n">prev</span><span class="o">=</span><span class="n">prev_page</span><span class="p">,</span> 
+            <span class="nb">next</span><span class="o">=</span><span class="n">next_page</span><span class="p">,</span>
+            <span class="n">total</span><span class="o">=</span><span class="n">num_pages</span><span class="o">+</span><span class="mi">1</span>
+        <span class="p">)</span>
+        <span class="n">write_to_file</span><span class="p">(</span><span class="n">page_path</span><span class="p">,</span> <span class="n">html_content</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">))</span>
+
+<span class="c1"># Generate blog -- Main function</span>
+<span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">section</span><span class="p">):</span>
+    <span class="n">sections</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;articles&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">section</span> <span class="ow">in</span> <span class="n">sections</span><span class="p">:</span>
+        <span class="n">POSTS</span> <span class="o">=</span> <span class="n">get_markdown_files</span><span class="p">(</span><span class="n">section</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">section</span> <span class="o">==</span> <span class="s2">&quot;articles&quot;</span><span class="p">:</span>
+            <span class="n">posts_template</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s1">&#39;article.html&#39;</span><span class="p">)</span>
+            <span class="n">index</span><span class="p">(</span><span class="n">POSTS</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+            <span class="n">articles</span><span class="p">(</span><span class="n">POSTS</span><span class="p">,</span> <span class="n">posts_template</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span> <span class="s2">&quot;This section doesn&#39;t exist.&quot;</span>
+</code></pre></div>
+
+<p><strong>Source code for</strong> <mark>ssglib.py</mark></p>
+
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span> <span class="nn">ssglib</span>
+<span class="kn">from</span> <span class="nn">ssglib</span> <span class="kn">import</span> <span class="p">(</span><span class="n">os</span><span class="p">,</span> <span class="n">random</span><span class="p">,</span> <span class="n">sys</span><span class="p">,</span> <span class="n">datetime</span><span class="p">,</span> 
+<span class="n">Environment</span><span class="p">,</span> <span class="n">PackageLoader</span><span class="p">,</span> <span class="n">markdown</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">ssglib</span><span class="o">.</span><span class="n">main</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span> <span class="s2">&quot;Enter section name you want to generate.&quot;</span>
+</code></pre></div>
+
+<p>To generate your blog, type the following in your command-line:</p>
+
+<div class="codehilite"><pre><span></span><code>python ssg.py articles
+</code></pre></div>
+
+<p>Make sure you have a local HTTP server running on your computer, if you don't install this using NPM on your command-line:</p>
+
+<div class="codehilite"><pre><span></span><code>npm i live-server
+</code></pre></div>
+
+<p>Alright, your blog is generated and now, it's time to launch it to the internet!</p>
+
+<h3>Deploy project on Netlify</h3>
+
+<p>As I had mentioned in the previous article, I'm currently hosting my blog on Netlify. If you want to know more about it, <a href="/posts/migrating-to-netlify">click here</a>.</p>
+
+<p>Let's go through the steps to deploying your blog:</p>
+
+<h4>1. Create a GitHub repository</h4>
+
+<p>If you have a GitHub account, continue reading. If not, <a href="https://github.com">go here</a>.</p>
+
+<p>Create a repository with any name you like and push all your files into the repository.</p>
+
+<h4>2. Connect to Netlify</h4>
+
+<p>Create an account on Netlify.com and then connect to your GitHub account. After that, you have to select the repository that has your static files (Not the python code).</p>
+
+<h4>3. Sit and Relax</h4>
+
+<p>At this stage, your blog will be deployed automatically and you'll be given a unique URL to view your website.</p>
+
+<p>If you have a custom domain, I suggest you follow the instructions and make the necessary changes in the <mark>CNAME</mark> and <mark>A</mark> records.</p>
+
+<p>Don't worry about the SSL certificate, it does take some time to activate, it took me like 7-8 hours to get it working.</p>
+
+<h2>Conclusion</h2>
+
+<p>If you've completed this tutorial, give a yourself a pat in the back because now you know how static site generators work and you've built and hosted your own blog on the internet.</p>
+
+<p>Hope you liked reading this article and please share it to others too!</p>
+
+<p>Stay tuned for more!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>October 27th, 2019</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/tutorial/">
+					Tutorial
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/writings/posts/migrating-to-netlify">Migrating to Netlify</a></h1>
 		<p class="description">My thoughts on why I made the switch and how it improves my workflow.</p>
 	</div>
@@ -1545,337 +2196,6 @@ hi User1 <span class="nv">ctermbg</span><span class="o">=</span>black <span clas
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/poker-hand-analyser-in-python">Poker Hand Analyser in Python</a></h1>
-		<p class="description">An algorithm that parses a five-card poker hand and determines it's rank.</p>
-	</div>
-	<div class="article-body">
-		<p><link href="/static/css/playing_cards.css" rel="stylesheet" type="text/css"/></p>
-
-<p>I've never played Poker and don't think I ever will because I'm not a fan of gambling and placing bets. However, I ran into an interesting problem on <a href="https://projecteuler.net/problem=54">Project Euler</a> that led me to write a poker hand analyser to determine the rank of each hand.</p>
-
-<p>Before writing this article, I didn't know anything about cards or Poker, I had to do some research on Wikipedia about it. So, forgive me if there's any information that's not accurate in the article.</p>
-
-<h2>Poker Hands</h2>
-
-<p>From what I had understood, a <strong><em>hand</em></strong> is a set of five cards and each card has a rank, which is in the order shown below:</p>
-
-<div class="codehilite"><pre><span></span><code>Cards are valued in the order of lowest to highest (Left to Right):
-2, 3, 4, 5, 6, 7, 8, 9, 10, Jack, Queen, King, Ace
-</code></pre></div>
-
-<p>Based on the card pattern formed in each hand, the ranking category is determined and it's ranked within it's category based on the ranks of it's cards.</p>
-
-<h2>Hand Ranking Categories</h2>
-
-<p>In Poker, there are about 10 ranking categories from lowest to highest:</p>
-
-<ul>
-<li><a href="#highcard">High Card</a></li>
-<li><a href="#onepair">One Pair</a></li>
-<li><a href="#twopairs">Two Pairs</a></li>
-<li><a href="#threeofakind">Three of a Kind</a></li>
-<li><a href="#straight">Straight</a></li>
-<li><a href="#flush">Flush</a></li>
-<li><a href="#fullhouse">Full House</a></li>
-<li><a href="#fourofakind">Four of a Kind</a></li>
-<li><a href="#straightflush">Straight Flush</a></li>
-<li><a href="#royalflush">Royal Flush</a></li>
-</ul>
-
-<p>Before diving into the code snippets, I wrote a library named <a href="https://github.com/megacolorboy/ProjectEuler/blob/master/poker_lib.py">poker_lib.py</a> which contains all the methods used in the code snippets.</p>
-
-<p>To make things simple, I created a class named <strong><em>Card</em></strong> that has two attributes, <strong><em>face</em></strong> and <strong><em>suit</em></strong>, with <strong><em>namedtuple()</em></strong> as it's datatype.</p>
-
-<h3><a id="highcard"></a> High Card</h3>
-
-<figure style="text-align: left;">
-    <div class="playing_card king_diamonds"></div>
-    <div class="playing_card queen_diamonds"></div>
-    <div class="playing_card seven_spades"></div>
-    <div class="playing_card four_spades"></div>
-    <div class="playing_card three_hearts"></div>
-</figure>
-
-<p>This hand contains no pairs and it doesn't fall into any other category.</p>
-
-<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">high_card</span><span class="p">(</span><span class="n">hand</span><span class="p">):</span>
-    <span class="c1"># collect all faces from each card</span>
-    <span class="n">allfaces</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span><span class="p">,</span><span class="n">s</span> <span class="ow">in</span> <span class="n">hand</span><span class="p">]</span>
-
-    <span class="c1">#sort the faces and show the highest card</span>
-    <span class="k">return</span> <span class="s2">&quot;high_card&quot;</span><span class="p">,</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">allfaces</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">f</span><span class="p">:</span> <span class="n">allfaces</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">f</span><span class="p">),</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-</code></pre></div>
-
-<h3><a id="onepair"></a> One Pair</h3>
-
-<figure style="text-align: left;">
-    <div class="playing_card ten_spades"></div>
-    <div class="playing_card ten_hearts"></div>
-    <div class="playing_card eight_spades"></div>
-    <div class="playing_card seven_hearts"></div>
-    <div class="playing_card four_clubs"></div>
-</figure>
-
-<p>This hand contains two cards of one rank and three cards of three other ranks.</p>
-
-<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">one_pair</span><span class="p">(</span><span class="n">hand</span><span class="p">):</span>
-    <span class="n">allfaces</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span><span class="p">,</span><span class="n">s</span> <span class="ow">in</span> <span class="n">hand</span><span class="p">]</span>
-    <span class="n">allftypes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">allfaces</span><span class="p">)</span>
-
-    <span class="c1"># collect pairs</span>
-    <span class="n">pairs</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">allftypes</span> <span class="k">if</span> <span class="n">allfaces</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">]</span>
-
-    <span class="c1"># if there&#39;s more than one pair</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">pairs</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="k">return</span> <span class="kc">False</span>
-
-    <span class="n">allftypes</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">pairs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-    <span class="k">return</span> <span class="s1">&#39;one-pair&#39;</span><span class="p">,</span> <span class="n">pairs</span> <span class="o">+</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">allftypes</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">f</span><span class="p">:</span> <span class="n">face</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">f</span><span class="p">),</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</code></pre></div>
-
-<h3><a id="twopairs"></a> Two Pairs</h3>
-
-<figure style="text-align: left;">
-    <div class="playing_card jack_hearts"></div>
-    <div class="playing_card jack_spades"></div>
-    <div class="playing_card three_clubs"></div>
-    <div class="playing_card three_spades"></div>
-    <div class="playing_card two_hearts"></div>
-</figure>
-
-<p>This hand contains two cards of one rank, two cards of a second rank and one card of a third rank.</p>
-
-<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">two_pair</span><span class="p">(</span><span class="n">hand</span><span class="p">):</span>
-    <span class="n">allfaces</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span><span class="p">,</span><span class="n">s</span> <span class="ow">in</span> <span class="n">hand</span><span class="p">]</span>
-    <span class="n">allftypes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">allfaces</span><span class="p">)</span>
-
-    <span class="c1"># collect pairs</span>
-    <span class="n">pairs</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">allftypes</span> <span class="k">if</span> <span class="n">allfaces</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">]</span>
-
-    <span class="c1"># if there are more than two pairs</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">pairs</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
-        <span class="k">return</span> <span class="kc">False</span>
-
-    <span class="n">p1</span><span class="p">,</span> <span class="n">p2</span> <span class="o">=</span> <span class="n">pairs</span>
-    <span class="c1"># get the difference using sets</span>
-    <span class="n">other_cards</span> <span class="o">=</span> <span class="p">[(</span><span class="n">allftypes</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">pairs</span><span class="p">))</span><span class="o">.</span><span class="n">pop</span><span class="p">()]</span>
-    <span class="k">return</span> <span class="s1">&#39;two-pair&#39;</span><span class="p">,</span> <span class="n">pairs</span> <span class="o">+</span> <span class="n">other_cards</span> <span class="k">if</span><span class="p">(</span><span class="n">face</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">p1</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">face</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">p2</span><span class="p">))</span> <span class="k">else</span> <span class="n">pairs</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">other_cards</span>
-</code></pre></div>
-
-<h3><a id="threeofakind"></a> Three of a Kind</h3>
-
-<figure style="text-align: left;">
-    <div class="playing_card queen_clubs"></div>
-    <div class="playing_card queen_spades"></div>
-    <div class="playing_card queen_hearts"></div>
-    <div class="playing_card nine_hearts"></div>
-    <div class="playing_card two_spades"></div>
-</figure>
-
-<p>This hand, also known as trips or a set, contains three cards of one rank and two cards of two other ranks.</p>
-
-<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">three_of_a_kind</span><span class="p">(</span><span class="n">hand</span><span class="p">):</span>
-    <span class="n">allfaces</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span><span class="p">,</span><span class="n">s</span> <span class="ow">in</span> <span class="n">hand</span><span class="p">]</span>
-
-    <span class="n">uniqueRanks</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">allfaces</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">uniqueRanks</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
-        <span class="k">return</span> <span class="kc">False</span>
-
-    <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">uniqueRanks</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">allfaces</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
-            <span class="n">uniqueRanks</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
-            <span class="k">return</span> <span class="s2">&quot;three-of-a-kind&quot;</span><span class="p">,</span> <span class="n">f</span>
-
-    <span class="k">return</span> <span class="kc">False</span><span class="p">;</span>
-</code></pre></div>
-
-<h3><a id="straight"></a> Straight</h3>
-
-<figure style="text-align: left;">
-    <div class="playing_card ten_diamonds"></div>
-    <div class="playing_card nine_spades"></div>
-    <div class="playing_card eight_hearts"></div>
-    <div class="playing_card seven_diamonds"></div>
-    <div class="playing_card six_clubs"></div>
-</figure>
-
-<p>This hand contains five cards arranged in a sequential order but not all of them have same suits.</p>
-
-<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">straight</span><span class="p">(</span><span class="n">hand</span><span class="p">):</span>
-    <span class="n">ordered</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">hand</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">card</span><span class="p">:</span> <span class="p">(</span><span class="n">faces</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">card</span><span class="o">.</span><span class="n">face</span><span class="p">),</span> <span class="n">card</span><span class="o">.</span><span class="n">suit</span><span class="p">))</span>
-    <span class="k">if</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">card</span><span class="o">.</span><span class="n">face</span> <span class="k">for</span> <span class="n">card</span> <span class="ow">in</span> <span class="n">ordered</span><span class="p">)</span> <span class="ow">in</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">face</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s1">&#39;straight&#39;</span><span class="p">,</span> <span class="n">ordered</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">face</span>
-    <span class="k">return</span> <span class="kc">False</span><span class="p">;</span>
-</code></pre></div>
-
-<h3><a id="flush"></a> Flush</h3>
-
-<figure style="text-align: left;">
-    <div class="playing_card jack_diamonds"></div>
-    <div class="playing_card nine_diamonds"></div>
-    <div class="playing_card eight_diamonds"></div>
-    <div class="playing_card four_diamonds"></div>
-    <div class="playing_card three_diamonds"></div>
-</figure>
-
-<p>This hand contains five cards of the same suit and not necessarily arranged in sequential order.</p>
-
-<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">flush</span><span class="p">(</span><span class="n">hand</span><span class="p">):</span>
-    <span class="n">allfaces</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span><span class="p">,</span><span class="n">s</span> <span class="ow">in</span> <span class="n">hand</span><span class="p">]</span>
-
-    <span class="n">first_card</span> <span class="o">=</span> <span class="n">hand</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">other_cards</span> <span class="o">=</span> <span class="n">hand</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
-
-    <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">first_card</span><span class="o">.</span><span class="n">suit</span> <span class="o">==</span> <span class="n">card</span><span class="o">.</span><span class="n">suit</span> <span class="k">for</span> <span class="n">card</span> <span class="ow">in</span> <span class="n">other_cards</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s1">&#39;flush&#39;</span><span class="p">,</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">allfaces</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">f</span><span class="p">:</span> <span class="n">face</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">f</span><span class="p">),</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="kc">False</span>
-</code></pre></div>
-
-<h3><a id="fullhouse"></a> Full House</h3>
-
-<figure style="text-align: left;">
-    <div class="playing_card six_spades"></div>
-    <div class="playing_card six_hearts"></div>
-    <div class="playing_card six_diamonds"></div>
-    <div class="playing_card king_clubs"></div>
-    <div class="playing_card king_hearts"></div>
-</figure>
-
-<p>This hand, also known as full boat or a boat, contains three cards of one rank and two cards of another rank.</p>
-
-<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">full_house</span><span class="p">(</span><span class="n">hand</span><span class="p">):</span>
-    <span class="n">allfaces</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span><span class="p">,</span><span class="n">s</span> <span class="ow">in</span> <span class="n">hand</span><span class="p">]</span>
-
-    <span class="n">rankFrequency</span> <span class="o">=</span> <span class="n">pe_lib</span><span class="o">.</span><span class="n">character_frequency</span><span class="p">(</span><span class="n">allfaces</span><span class="p">)</span>
-
-    <span class="c1"># if there are 2 types of ranks and there&#39;s a card with 1 pair and 3 of a kind</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">rankFrequency</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="p">(</span><span class="n">rankFrequency</span><span class="o">.</span><span class="n">values</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">rankFrequency</span><span class="o">.</span><span class="n">values</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">3</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s1">&#39;full-house&#39;</span>
-
-    <span class="k">return</span> <span class="kc">False</span>
-</code></pre></div>
-
-<h3><a id="fourofakind"></a> Four of a Kind</h3>
-
-<figure style="text-align: left;">
-    <div class="playing_card five_clubs"></div>
-    <div class="playing_card five_spades"></div>
-    <div class="playing_card five_diamonds"></div>
-    <div class="playing_card five_hearts"></div>
-    <div class="playing_card two_diamonds"></div>
-</figure>
-
-<p>This hand, also known as quads, contains four cards of one rank and one card of another rank.</p>
-
-<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">four_of_a_kind</span><span class="p">(</span><span class="n">hand</span><span class="p">):</span>
-    <span class="n">allfaces</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span><span class="p">,</span><span class="n">s</span> <span class="ow">in</span> <span class="n">hand</span><span class="p">]</span>
-
-    <span class="c1"># create a unique set of ranks</span>
-    <span class="n">uniqueRanks</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">allfaces</span><span class="p">)</span>
-
-    <span class="c1"># if there are more than 2 ranks, it&#39;s not four of a kind</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">uniqueRanks</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
-        <span class="k">return</span> <span class="kc">False</span>
-
-    <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">uniqueRanks</span><span class="p">:</span>
-        <span class="c1"># if there are 4 faces, it is four of a kind</span>
-        <span class="k">if</span> <span class="n">allfaces</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
-            <span class="n">uniqueRanks</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
-            <span class="k">return</span> <span class="s2">&quot;four-of-a-kind&quot;</span><span class="p">,</span> <span class="n">f</span>
-
-    <span class="k">return</span> <span class="kc">False</span>
-</code></pre></div>
-
-<h3><a id="straightflush"></a> Straight Flush</h3>
-
-<figure style="text-align: left;">
-    <div class="playing_card jack_clubs"></div>
-    <div class="playing_card ten_clubs"></div>
-    <div class="playing_card nine_clubs"></div>
-    <div class="playing_card eight_clubs"></div>
-    <div class="playing_card seven_clubs"></div>
-</figure>
-
-<p>This hand contains five cards arranged in a sequential order with all cards having the same suit.</p>
-
-<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">straight_flush</span><span class="p">(</span><span class="n">hand</span><span class="p">):</span>
-    <span class="c1"># sort the cards based on the face rank of each card</span>
-    <span class="n">ordered</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">hand</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">card</span><span class="p">:</span> <span class="p">(</span><span class="n">faces</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">card</span><span class="o">.</span><span class="n">face</span><span class="p">),</span> <span class="n">card</span><span class="o">.</span><span class="n">suit</span><span class="p">))</span>
-
-    <span class="n">first_card</span> <span class="o">=</span> <span class="n">ordered</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">other_cards</span> <span class="o">=</span> <span class="n">ordered</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
-
-    <span class="c1"># check if all are of the same suit</span>
-    <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">first_card</span><span class="o">.</span><span class="n">suit</span> <span class="o">==</span> <span class="n">card</span><span class="o">.</span><span class="n">suit</span> <span class="k">for</span> <span class="n">card</span> <span class="ow">in</span> <span class="n">other_cards</span><span class="p">):</span>
-        <span class="c1"># check if they are in sequential order</span>
-        <span class="c1"># compare the ordered faces substring with the face list (which is converted to string)</span>
-        <span class="k">if</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">card</span><span class="o">.</span><span class="n">face</span> <span class="k">for</span> <span class="n">card</span> <span class="ow">in</span> <span class="n">ordered</span><span class="p">)</span> <span class="ow">in</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">face</span><span class="p">):</span>
-            <span class="k">return</span> <span class="s1">&#39;straight-flush&#39;</span><span class="p">,</span> <span class="n">ordered</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">face</span>
-    <span class="k">return</span> <span class="kc">False</span>
-</code></pre></div>
-
-<h3><a id="royalflush"></a> Royal Flush</h3>
-
-<figure style="text-align: left;">
-    <div class="playing_card ten_hearts"></div>
-    <div class="playing_card jack_hearts"></div>
-    <div class="playing_card queen_hearts"></div>
-    <div class="playing_card king_hearts"></div>
-    <div class="playing_card ace_hearts"></div>
-</figure>
-
-<p>This hand contains the <strong><em>royal</em></strong> ranks in sequential order in the same suit.</p>
-
-<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">royal_flush</span><span class="p">(</span><span class="n">hand</span><span class="p">):</span>
-    <span class="n">royalface</span> <span class="o">=</span> <span class="s2">&quot;TJQKA&quot;</span>
-    <span class="c1"># sort the cards based on the face rank of each card</span>
-    <span class="n">ordered</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">hand</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">card</span><span class="p">:</span> <span class="p">(</span><span class="n">faces</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">card</span><span class="o">.</span><span class="n">face</span><span class="p">),</span> <span class="n">card</span><span class="o">.</span><span class="n">suit</span><span class="p">))</span>
-
-    <span class="n">first_card</span> <span class="o">=</span> <span class="n">ordered</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">other_cards</span> <span class="o">=</span> <span class="n">ordered</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
-
-    <span class="c1"># check if all are of the same suit</span>
-    <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">first_card</span><span class="o">.</span><span class="n">suit</span> <span class="o">==</span> <span class="n">card</span><span class="o">.</span><span class="n">suit</span> <span class="k">for</span> <span class="n">card</span> <span class="ow">in</span> <span class="n">other_cards</span><span class="p">):</span>
-        <span class="c1"># check if they are in sequential order</span>
-        <span class="c1"># compare the ordered faces substring with the face list (which is converted to string)</span>
-        <span class="k">if</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">card</span><span class="o">.</span><span class="n">face</span> <span class="k">for</span> <span class="n">card</span> <span class="ow">in</span> <span class="n">ordered</span><span class="p">)</span> <span class="ow">in</span> <span class="n">royalface</span><span class="p">:</span>
-            <span class="k">return</span> <span class="s1">&#39;royal-flush&#39;</span><span class="p">,</span> <span class="n">ordered</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">face</span>
-    <span class="k">return</span> <span class="kc">False</span>
-</code></pre></div>
-
-<h2>Conclusion</h2>
-
-<p>It was a fun project to work on and I learnt new styles of array and string manipulation techniques using Python.</p>
-
-<p>Inspired by this, I'm planning to create an interactive version of this project using Javascript and talk about it on another article.</p>
-
-<p>The code for this program can be found in my <a href="https://github.com/MegaColorBoy/ProjectEuler">GitHub repository</a>.</p>
-
-<p>Hope you liked reading this article!</p>
-
-<p>Stay tuned for more!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>March 30th, 2019</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/algorithms/">
-					Algorithms
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -1954,6 +2274,13 @@ hi User1 <span class="nv">ctermbg</span><span class="o">=</span>black <span clas
 	<ul class="tags">
 		
 		<li>
+			<a href="/category/laravel/">
+				Laravel
+				<span class="count">17</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/linux/">
 				Linux
 				<span class="count">17</span>
@@ -1961,9 +2288,9 @@ hi User1 <span class="nv">ctermbg</span><span class="o">=</span>black <span clas
 		</li>
 		
 		<li>
-			<a href="/category/laravel/">
-				Laravel
-				<span class="count">16</span>
+			<a href="/category/devops/">
+				DevOps
+				<span class="count">11</span>
 			</a>
 		</li>
 		
@@ -2003,13 +2330,6 @@ hi User1 <span class="nv">ctermbg</span><span class="o">=</span>black <span clas
 		</li>
 		
 		<li>
-			<a href="/category/devops/">
-				DevOps
-				<span class="count">10</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/git/">
 				Git
 				<span class="count">10</span>
@@ -2034,6 +2354,13 @@ hi User1 <span class="nv">ctermbg</span><span class="o">=</span>black <span clas
 			<a href="/category/programming/">
 				Programming
 				<span class="count">8</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/tutorial/">
+				Tutorial
+				<span class="count">6</span>
 			</a>
 		</li>
 		
@@ -2068,13 +2395,6 @@ hi User1 <span class="nv">ctermbg</span><span class="o">=</span>black <span clas
 		<li>
 			<a href="/category/apache/">
 				Apache
-				<span class="count">5</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/tutorial/">
-				Tutorial
 				<span class="count">5</span>
 			</a>
 		</li>
@@ -2132,6 +2452,13 @@ hi User1 <span class="nv">ctermbg</span><span class="o">=</span>black <span clas
 			<a href="/category/general/">
 				General
 				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/docker/">
+				Docker
+				<span class="count">2</span>
 			</a>
 		</li>
 		
@@ -2195,13 +2522,6 @@ hi User1 <span class="nv">ctermbg</span><span class="o">=</span>black <span clas
 			<a href="/category/python/">
 				Python
 				<span class="count">2</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/docker/">
-				Docker
-				<span class="count">1</span>
 			</a>
 		</li>
 		

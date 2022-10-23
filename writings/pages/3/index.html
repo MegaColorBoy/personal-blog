@@ -77,6 +77,162 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/writings/posts/the-circle-packing-algorithm">The Circle Packing Algorithm</a></h1>
+		<p class="description">Implemented a mathematically beautiful generative pattern that looks deceivingly complex to the human.</p>
+	</div>
+	<div class="article-body">
+		<iframe width="100%" height="485" src="/static/projects/circle-packing"></iframe>
+
+<p>Beautiful, isn't it? It might look complex but it's mathematically quite impressive. Making this pattern wasn't hard but it definitely took a lot of trial and error to get it right and honestly, I don't really know if it's this is the most efficient way to generate this pattern.</p>
+
+<p>This article isn't a tutorial but rather, I'll be talking about the algorithm itself. However, you can check out the source code in my <a href="https://github.com/megacolorboy/BlogProjects">GitHub repository</a>.</p>
+
+<h2>How it works?</h2>
+
+<p>In order to achieve that "stacked" effect, there are two things to keep in mind:</p>
+
+<ol>
+<li>Generate circles with a random radius</li>
+<li>Look for collisions with other circles</li>
+</ol>
+
+<p>The logic is quite similar to the <a href="https://stackoverflow.com/questions/306316/determine-if-two-rectangles-overlap-each-other">Overlapping Rectangles</a> problem except this is done with circles.</p>
+
+<h2>Generate circles with dynamic radius</h2>
+
+<p>This method will help generate valid circles with a random radius. Circles that don't overlap or collide with other circles are considered to be valid.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="c1">// Generate a valid circle</span>
+<span class="kd">const</span> <span class="nx">generateCircle</span> <span class="o">=</span> <span class="p">()</span> <span class="p">=&gt;</span> <span class="p">{</span>
+    <span class="kd">let</span> <span class="nx">newCircle</span><span class="p">;</span>
+    <span class="kd">let</span> <span class="nx">isValidCircle</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+
+    <span class="k">for</span><span class="p">(</span><span class="kd">let</span> <span class="nx">i</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span> <span class="nx">i</span><span class="o">&lt;</span><span class="nx">attempts</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">newCircle</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="nx">x</span><span class="o">:</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="nx">width</span><span class="p">),</span>
+            <span class="nx">y</span><span class="o">:</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="nx">width</span><span class="p">),</span>
+            <span class="nx">radius</span><span class="o">:</span> <span class="nx">minRadius</span>
+        <span class="p">};</span>
+
+        <span class="k">if</span><span class="p">(</span><span class="nx">checkForCollision</span><span class="p">(</span><span class="nx">newCircle</span><span class="p">))</span> <span class="p">{</span>
+            <span class="k">continue</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="k">else</span> <span class="p">{</span>
+            <span class="nx">isValidCircle</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+            <span class="k">break</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">isValidCircle</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span><span class="p">;</span> <span class="p">}</span>
+
+    <span class="k">for</span><span class="p">(</span><span class="kd">let</span> <span class="nx">i</span><span class="o">=</span><span class="nx">minRadius</span><span class="p">;</span> <span class="nx">i</span><span class="o">&lt;=</span><span class="nx">maxRadius</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">newCircle</span><span class="p">.</span><span class="nx">radius</span> <span class="o">=</span> <span class="nx">i</span><span class="p">;</span>
+        <span class="k">if</span><span class="p">(</span><span class="nx">checkForCollision</span><span class="p">(</span><span class="nx">newCircle</span><span class="p">))</span> <span class="p">{</span>
+            <span class="nx">newCircle</span><span class="p">.</span><span class="nx">radius</span><span class="o">--</span><span class="p">;</span>
+            <span class="k">break</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="nx">circles</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">newCircle</span><span class="p">);</span>
+    <span class="nx">drawCircleOnCanvas</span><span class="p">(</span><span class="nx">context</span><span class="p">,</span> <span class="nx">newCircle</span><span class="p">,</span> <span class="nx">colors</span><span class="p">[</span><span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="nx">colors</span><span class="p">.</span><span class="nx">length</span><span class="p">)]);</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<h2>Look for collision with other circles</h2>
+
+<p>Thanks to some online research, I was able implement the <a href="https://en.wikipedia.org/wiki/Euclidean_distance">Euclidean Distance</a> equation that helped with calculating the distances between each circle and detect for collisions. Along with that, I also found another article on <a href="http://www.mathsmutt.co.uk/files/tcirc.htm">Touching Circles</a> that was quite useful.</p>
+
+<p>These are the formulas used to detect the collision:</p>
+
+<ol>
+<li><p>Find the distance between two centres
+\[ AB = \sqrt{ (x2 - x1)^2 - (y2 - y1)^2} \]</p></li>
+<li><p>Calculate the radii of both circles.
+\[R = r1 + r2\]</p></li>
+</ol>
+
+<p>If the radii is greater than or equal to the euclidean distance of both circles, then it's a valid circle with no collisions.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="c1">// Check for collision in a canvas</span>
+<span class="kd">const</span> <span class="nx">checkForCollision</span> <span class="o">=</span> <span class="p">(</span><span class="nx">newCircle</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="p">{</span>
+
+    <span class="kd">let</span> <span class="nx">x2</span> <span class="o">=</span> <span class="nx">newCircle</span><span class="p">.</span><span class="nx">x</span><span class="p">;</span>
+    <span class="kd">let</span> <span class="nx">y2</span> <span class="o">=</span> <span class="nx">newCircle</span><span class="p">.</span><span class="nx">y</span><span class="p">;</span>
+    <span class="kd">let</span> <span class="nx">r2</span> <span class="o">=</span> <span class="nx">newCircle</span><span class="p">.</span><span class="nx">radius</span><span class="p">;</span>
+
+
+    <span class="c1">// Determine the euclidean distance between two circle</span>
+    <span class="c1">// using Pythagorean Theorem.</span>
+
+    <span class="c1">// Refer to: </span>
+    <span class="c1">// https://en.wikipedia.org/wiki/Euclidean_distance</span>
+
+    <span class="k">for</span><span class="p">(</span><span class="kd">let</span> <span class="nx">i</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span> <span class="nx">i</span><span class="o">&lt;</span><span class="nx">circles</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+
+        <span class="kd">let</span> <span class="nx">otherCircle</span> <span class="o">=</span> <span class="nx">circles</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
+        <span class="kd">let</span> <span class="nx">r1</span> <span class="o">=</span> <span class="nx">otherCircle</span><span class="p">.</span><span class="nx">radius</span><span class="p">;</span>
+        <span class="kd">let</span> <span class="nx">x1</span> <span class="o">=</span> <span class="nx">otherCircle</span><span class="p">.</span><span class="nx">x</span><span class="p">;</span>
+        <span class="kd">let</span> <span class="nx">y1</span> <span class="o">=</span> <span class="nx">otherCircle</span><span class="p">.</span><span class="nx">y</span><span class="p">;</span>
+        <span class="kd">let</span> <span class="nx">xx</span> <span class="o">=</span> <span class="p">((</span><span class="nx">x2</span> <span class="o">-</span> <span class="nx">x1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="nx">x2</span> <span class="o">-</span> <span class="nx">x1</span><span class="p">));</span>
+        <span class="kd">let</span> <span class="nx">yy</span> <span class="o">=</span> <span class="p">((</span><span class="nx">y2</span> <span class="o">-</span> <span class="nx">y1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="nx">y2</span> <span class="o">-</span> <span class="nx">y1</span><span class="p">));</span>
+        <span class="kd">let</span> <span class="nx">radii</span> <span class="o">=</span> <span class="nx">r2</span> <span class="o">+</span> <span class="nx">r1</span><span class="p">;</span>
+        <span class="kd">let</span> <span class="nx">euclidDistance</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">sqrt</span><span class="p">(</span><span class="nx">xx</span> <span class="o">+</span> <span class="nx">yy</span><span class="p">);</span>
+
+        <span class="k">if</span><span class="p">(</span><span class="nx">radii</span> <span class="o">&gt;=</span> <span class="nx">euclidDistance</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="c1">// Check collision on top</span>
+    <span class="k">if</span><span class="p">(</span><span class="nx">x2</span> <span class="o">+</span> <span class="nx">r2</span> <span class="o">&gt;=</span> <span class="nx">width</span> <span class="o">||</span> 
+        <span class="nx">x2</span> <span class="o">-</span> <span class="nx">r2</span> <span class="o">&lt;=</span> <span class="mf">0</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="c1">// Check collision on bottom</span>
+    <span class="k">if</span><span class="p">(</span><span class="nx">y2</span> <span class="o">+</span> <span class="nx">r2</span> <span class="o">&gt;=</span> <span class="nx">width</span> <span class="o">||</span> 
+        <span class="nx">y2</span> <span class="o">-</span> <span class="nx">r2</span> <span class="o">&lt;=</span> <span class="mf">0</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="c1">//else return false</span>
+    <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<h2>Conclusion</h2>
+
+<p>I'm thinking of implementing more generative patterns like <a href="https://en.wikipedia.org/wiki/Triangle_mesh">Triangular Mesh</a> and Piet Mondrian's <a href="https://en.wikipedia.org/wiki/Composition_with_Red_Blue_and_Yellow">Red, Blue and Yellow composition</a>.</p>
+
+<p>Hope you liked reading this article.</p>
+
+<p>Stay tuned for more!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>December 8th, 2019</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/algorithms/">
+					Algorithms
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/art/">
+					Art
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/writings/posts/deploy-your-laravel-app-on-heroku">Deploy your Laravel app on Heroku</a></h1>
 		<p class="description">Learn how to deploy your Laravel application along with a database on Heroku.</p>
 	</div>
@@ -1866,283 +2022,6 @@ pip install jinja2
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/the-15-puzzle-game">The 15 Puzzle Game</a></h1>
-		<p class="description">A classical numbered puzzle that requires the player to place all the tiles in an ordered sequence.</p>
-	</div>
-	<div class="article-body">
-		<iframe src="/static/projects/15-puzzle" width="500" height="500"></iframe>
-
-<p>Before you read this article, play with the above puzzle. You can move the block around by <strong><em>left-clicking</em></strong> on a numbered tile that's adjacent to the empty tile.</p>
-
-<p>The source code for this puzzle can be found <a href="https://github.com/megacolorboy/BlogProjects/tree/master/15-puzzle">over here</a>.</p>
-
-<h2>Background</h2>
-
-<p>This is a game that has been on my list of projects for a long time and I've finally decided to work on it last night. Although, this post has nothing to do with Artificial Intelligence, I was inspired to write this game when I studied about <a href="https://en.wikipedia.org/wiki/Heuristic_(computer_science)">Heuristics</a> in the book named <a href="/posts/artificial-intelligence-a-modern-approach--chapter-1">Artificial Intelligence: A Modern Approach</a> and on how it was applied to this game.</p>
-
-<h2>What are the game mechanics?</h2>
-
-<p>This game is played on a <strong><em>four-by-four</em></strong> grid with numbered tiles that are shuffled randomly. As you can see, there are <strong><em>15 numbered cells</em></strong> and <strong><em>1 empty cell</em></strong> in the grid, this is to allow movement of the tiles within the grid.</p>
-
-<p>However, the movement is limited to the numbered tiles that are adjacent to the empty tile.</p>
-
-<p>The player wins the game after ordering all the numbered tiles in the grid in an order of ascending sequence.</p>
-
-<h2>Source code</h2>
-
-<p>Here's the source code of the entire game:</p>
-
-<div class="codehilite"><pre><span></span><code><span class="kd">var</span> <span class="nx">board</span> <span class="o">=</span> <span class="p">[],</span> <span class="nx">rows</span> <span class="o">=</span> <span class="mf">4</span><span class="p">,</span> <span class="nx">cols</span> <span class="o">=</span> <span class="mf">4</span><span class="p">;</span>
-<span class="kd">var</span> <span class="nx">possibleMoves</span><span class="p">,</span> <span class="nx">zx</span><span class="p">,</span> <span class="nx">zy</span><span class="p">,</span> <span class="nx">oldzx</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1</span><span class="p">,</span> <span class="nx">oldzy</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1</span><span class="p">;</span>
-
-<span class="c1">//Generate 2D Board</span>
-<span class="kd">function</span> <span class="nx">generateBoard</span><span class="p">()</span>
-<span class="p">{</span>
-    <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span> <span class="nx">i</span><span class="o">&lt;</span><span class="nx">rows</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span>
-    <span class="p">{</span>
-        <span class="nx">board</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">[];</span>
-    <span class="p">}</span>
-
-    <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">j</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span> <span class="nx">j</span><span class="o">&lt;</span><span class="nx">cols</span><span class="p">;</span> <span class="nx">j</span><span class="o">++</span><span class="p">)</span>
-    <span class="p">{</span>
-        <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span> <span class="nx">i</span><span class="o">&lt;</span><span class="nx">rows</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span>
-        <span class="p">{</span>
-            <span class="nx">board</span><span class="p">[</span><span class="nx">j</span><span class="p">][</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="nx">i</span> <span class="o">+</span> <span class="nx">j</span> <span class="o">*</span> <span class="mf">4</span><span class="p">)</span> <span class="o">+</span> <span class="mf">1</span><span class="p">;</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-
-    <span class="c1">//position of the empty cell in the grid i.e. 3,3</span>
-    <span class="nx">zx</span> <span class="o">=</span> <span class="nx">zy</span> <span class="o">=</span> <span class="mf">3</span><span class="p">;</span>
-    <span class="nx">board</span><span class="p">[</span><span class="nx">zx</span><span class="p">][</span><span class="nx">zy</span><span class="p">]</span> <span class="o">=</span> <span class="mf">16</span><span class="p">;</span>
-<span class="p">}</span>
-
-<span class="c1">//Generate the cells</span>
-<span class="kd">function</span> <span class="nx">generateCells</span><span class="p">()</span>
-<span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">grid</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s2">&quot;div&quot;</span><span class="p">);</span>
-    <span class="nx">grid</span><span class="p">.</span><span class="nx">className</span> <span class="o">+=</span> <span class="s2">&quot;board&quot;</span><span class="p">;</span>
-
-    <span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">appendChild</span><span class="p">(</span><span class="nx">grid</span><span class="p">);</span>
-
-    <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">j</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span> <span class="nx">j</span><span class="o">&lt;</span><span class="mf">4</span><span class="p">;</span> <span class="nx">j</span><span class="o">++</span><span class="p">)</span>
-    <span class="p">{</span>
-        <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span> <span class="nx">i</span><span class="o">&lt;</span><span class="mf">4</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span>
-        <span class="p">{</span>
-            <span class="kd">var</span> <span class="nx">cell</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s2">&quot;div&quot;</span><span class="p">);</span>
-            <span class="nx">cell</span><span class="p">.</span><span class="nx">className</span> <span class="o">+=</span> <span class="s2">&quot;cell&quot;</span><span class="p">;</span>
-            <span class="nx">cell</span><span class="p">.</span><span class="nx">id</span> <span class="o">=</span> <span class="s2">&quot;cell_&quot;</span> <span class="o">+</span> <span class="p">(</span><span class="nx">i</span> <span class="o">+</span> <span class="nx">j</span> <span class="o">*</span> <span class="mf">4</span><span class="p">);</span>
-            <span class="nx">cell</span><span class="p">.</span><span class="nx">row</span> <span class="o">=</span> <span class="nx">i</span><span class="p">;</span>
-            <span class="nx">cell</span><span class="p">.</span><span class="nx">col</span> <span class="o">=</span> <span class="nx">j</span><span class="p">;</span>
-            <span class="nx">cell</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;click&quot;</span><span class="p">,</span> <span class="nx">cellEventHandle</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
-            <span class="nx">cell</span><span class="p">.</span><span class="nx">appendChild</span><span class="p">(</span><span class="nb">document</span><span class="p">.</span><span class="nx">createTextNode</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">));</span>
-            <span class="nx">grid</span><span class="p">.</span><span class="nx">appendChild</span><span class="p">(</span><span class="nx">cell</span><span class="p">);</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-
-<span class="cm">/*</span>
-<span class="cm">    Determine the possible number of moves</span>
-<span class="cm">    based on the empty cell&#39;s coordinates.</span>
-<span class="cm">*/</span>
-<span class="kd">function</span> <span class="nx">genPossibleMoves</span><span class="p">()</span>
-<span class="p">{</span>
-    <span class="nx">possibleMoves</span> <span class="o">=</span> <span class="p">[];</span>
-    <span class="kd">var</span> <span class="nx">ii</span><span class="p">,</span> <span class="nx">jj</span><span class="p">;</span>
-
-    <span class="cm">/*</span>
-<span class="cm">        Just for reference:</span>
-<span class="cm">        The empty cell can be moved in the following x,y coords:</span>
-<span class="cm">        -1,0, 0,-1, 1,0, 0,1</span>
-<span class="cm">    */</span>
-    <span class="kd">var</span> <span class="nx">xCoords</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="mf">1</span><span class="p">,</span> <span class="mf">0</span><span class="p">,</span> <span class="mf">1</span><span class="p">,</span> <span class="mf">0</span><span class="p">];</span>
-    <span class="kd">var</span> <span class="nx">yCoords</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0</span><span class="p">,</span> <span class="o">-</span><span class="mf">1</span><span class="p">,</span> <span class="mf">0</span><span class="p">,</span> <span class="mf">1</span><span class="p">];</span>
-
-    <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span> <span class="nx">i</span><span class="o">&lt;</span><span class="mf">4</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span>
-    <span class="p">{</span>
-        <span class="nx">ii</span> <span class="o">=</span> <span class="nx">zx</span> <span class="o">+</span> <span class="nx">xCoords</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
-        <span class="nx">jj</span> <span class="o">=</span> <span class="nx">zy</span> <span class="o">+</span> <span class="nx">yCoords</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
-
-        <span class="c1">//If it&#39;s out of bounds, skip it</span>
-        <span class="k">if</span><span class="p">(</span><span class="nx">ii</span> <span class="o">&lt;</span> <span class="mf">0</span> <span class="o">||</span> <span class="nx">jj</span> <span class="o">&lt;</span> <span class="mf">0</span> <span class="o">||</span> <span class="nx">ii</span> <span class="o">&gt;</span> <span class="mf">3</span> <span class="o">||</span> <span class="nx">jj</span> <span class="o">&gt;</span> <span class="mf">3</span><span class="p">)</span>
-        <span class="p">{</span>
-            <span class="k">continue</span><span class="p">;</span>
-        <span class="p">}</span>
-
-        <span class="nx">possibleMoves</span><span class="p">.</span><span class="nx">push</span><span class="p">({</span><span class="nx">x</span><span class="o">:</span> <span class="nx">ii</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="nx">jj</span><span class="p">});</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-
-<span class="kd">function</span> <span class="nx">updateCells</span><span class="p">()</span>
-<span class="p">{</span>
-    <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">j</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span> <span class="nx">j</span><span class="o">&lt;</span><span class="nx">cols</span><span class="p">;</span> <span class="nx">j</span><span class="o">++</span><span class="p">)</span>
-    <span class="p">{</span>
-        <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span> <span class="nx">i</span><span class="o">&lt;</span><span class="nx">rows</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span>
-        <span class="p">{</span>
-            <span class="kd">var</span> <span class="nx">cell_id</span> <span class="o">=</span> <span class="s2">&quot;cell_&quot;</span> <span class="o">+</span> <span class="p">(</span><span class="nx">i</span> <span class="o">+</span> <span class="nx">j</span> <span class="o">*</span> <span class="mf">4</span><span class="p">);</span>
-            <span class="kd">var</span> <span class="nx">cell</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="nx">cell_id</span><span class="p">);</span>
-            <span class="kd">var</span> <span class="nx">val</span> <span class="o">=</span> <span class="nx">board</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="nx">j</span><span class="p">];</span>
-
-            <span class="k">if</span><span class="p">(</span><span class="nx">val</span> <span class="o">&lt;</span> <span class="mf">16</span><span class="p">)</span>
-            <span class="p">{</span>
-                <span class="nx">cell</span><span class="p">.</span><span class="nx">innerHTML</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;&quot;</span> <span class="o">+</span> <span class="nx">val</span><span class="p">);</span>
-                <span class="k">if</span><span class="p">(</span><span class="nx">val</span> <span class="o">%</span> <span class="mf">2</span> <span class="o">==</span> <span class="mf">0</span><span class="p">)</span>
-                <span class="p">{</span>
-                    <span class="nx">cell</span><span class="p">.</span><span class="nx">className</span> <span class="o">=</span> <span class="s2">&quot;cell dark&quot;</span><span class="p">;</span>               
-                <span class="p">}</span>
-                <span class="k">else</span>
-                <span class="p">{</span>
-                    <span class="nx">cell</span><span class="p">.</span><span class="nx">className</span> <span class="o">=</span> <span class="s2">&quot;cell light&quot;</span><span class="p">;</span>
-                <span class="p">}</span>
-            <span class="p">}</span>
-            <span class="k">else</span>
-            <span class="p">{</span>
-                <span class="nx">cell</span><span class="p">.</span><span class="nx">innerHTML</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">;</span>
-                <span class="nx">cell</span><span class="p">.</span><span class="nx">className</span> <span class="o">=</span> <span class="s2">&quot;empty&quot;</span><span class="p">;</span>
-            <span class="p">}</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-
-<span class="c1">//Event handler for each cell</span>
-<span class="kd">function</span> <span class="nx">cellEventHandle</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span>
-<span class="p">{</span>
-    <span class="nx">genPossibleMoves</span><span class="p">();</span>
-
-    <span class="c1">//Current coords of the cell</span>
-    <span class="kd">var</span> <span class="nx">r</span> <span class="o">=</span> <span class="nx">e</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">row</span><span class="p">;</span>
-    <span class="kd">var</span> <span class="nx">c</span> <span class="o">=</span> <span class="nx">e</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">col</span><span class="p">;</span>
-    <span class="kd">var</span> <span class="nx">pos</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1</span><span class="p">;</span>
-    <span class="kd">var</span> <span class="nx">isPossible</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
-    <span class="c1">// console.log(r + &quot;,&quot; + c);</span>
-
-    <span class="cm">/*</span>
-<span class="cm">        Check if the current cell is </span>
-<span class="cm">        one of the possible moves</span>
-<span class="cm">    */</span>
-    <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span> <span class="nx">i</span><span class="o">&lt;</span><span class="nx">possibleMoves</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span>
-    <span class="p">{</span>
-        <span class="k">if</span><span class="p">(</span><span class="nx">possibleMoves</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">x</span> <span class="o">==</span> <span class="nx">r</span> <span class="o">&amp;&amp;</span> <span class="nx">possibleMoves</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">y</span> <span class="o">==</span> <span class="nx">c</span><span class="p">)</span>
-        <span class="p">{</span>
-            <span class="nx">isPossible</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
-            <span class="nx">pos</span> <span class="o">=</span> <span class="nx">i</span><span class="p">;</span>
-            <span class="k">break</span><span class="p">;</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-
-    <span class="k">if</span><span class="p">(</span><span class="nx">isPossible</span><span class="p">)</span>
-    <span class="p">{</span>
-        <span class="kd">var</span> <span class="nx">temp</span> <span class="o">=</span> <span class="nx">possibleMoves</span><span class="p">[</span><span class="nx">pos</span><span class="p">];</span>
-
-        <span class="c1">//Swap position of the empty cell</span>
-        <span class="nx">board</span><span class="p">[</span><span class="nx">zx</span><span class="p">][</span><span class="nx">zy</span><span class="p">]</span> <span class="o">=</span> <span class="nx">board</span><span class="p">[</span><span class="nx">temp</span><span class="p">.</span><span class="nx">x</span><span class="p">][</span><span class="nx">temp</span><span class="p">.</span><span class="nx">y</span><span class="p">];</span>
-        <span class="c1">//Update the coordinates of the empty cell</span>
-        <span class="nx">zx</span> <span class="o">=</span> <span class="nx">temp</span><span class="p">.</span><span class="nx">x</span><span class="p">;</span>
-        <span class="nx">zy</span> <span class="o">=</span> <span class="nx">temp</span><span class="p">.</span><span class="nx">y</span><span class="p">;</span>
-        <span class="nx">board</span><span class="p">[</span><span class="nx">zx</span><span class="p">][</span><span class="nx">zy</span><span class="p">]</span> <span class="o">=</span> <span class="mf">16</span><span class="p">;</span>
-        <span class="nx">updateCells</span><span class="p">();</span>
-
-        <span class="c1">//Check if the game is over</span>
-        <span class="k">if</span><span class="p">(</span><span class="nx">is_game_over</span><span class="p">())</span>
-        <span class="p">{</span>
-            <span class="nx">setTimeout</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
-                <span class="nx">alert</span><span class="p">(</span><span class="s2">&quot;Congrats!&quot;</span><span class="p">);</span>
-            <span class="p">},</span> <span class="mf">2</span><span class="p">);</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-
-<span class="p">}</span>
-
-<span class="c1">//Check if the game is over</span>
-<span class="kd">function</span> <span class="nx">is_game_over</span><span class="p">()</span>
-<span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">currentVal</span> <span class="o">=</span> <span class="mf">0</span><span class="p">;</span>
-    <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">j</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span> <span class="nx">j</span><span class="o">&lt;</span><span class="nx">cols</span><span class="p">;</span> <span class="nx">j</span><span class="o">++</span><span class="p">)</span>
-    <span class="p">{</span>
-        <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span> <span class="nx">i</span><span class="o">&lt;</span><span class="nx">rows</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span>
-        <span class="p">{</span>
-            <span class="k">if</span><span class="p">(</span><span class="nx">board</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="nx">j</span><span class="p">]</span> <span class="o">&lt;</span> <span class="nx">currentVal</span><span class="p">)</span>
-            <span class="p">{</span>
-                <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>
-            <span class="p">}</span>
-
-            <span class="nx">currentVal</span> <span class="o">=</span> <span class="nx">board</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="nx">j</span><span class="p">];</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-    <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
-<span class="p">}</span>
-
-<span class="c1">//Shuffle the board</span>
-<span class="kd">function</span> <span class="nx">shuffleBoard</span><span class="p">()</span>
-<span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">shuffleLimit</span> <span class="o">=</span> <span class="mf">0</span><span class="p">;</span>
-    <span class="kd">var</span> <span class="nx">temp</span><span class="p">;</span>
-
-    <span class="k">do</span>
-    <span class="p">{</span>
-        <span class="nx">genPossibleMoves</span><span class="p">();</span>
-
-        <span class="k">while</span><span class="p">(</span><span class="kc">true</span><span class="p">)</span>
-        <span class="p">{</span>
-            <span class="c1">// Pick a random cell of possible moves</span>
-            <span class="nx">temp</span> <span class="o">=</span> <span class="nx">possibleMoves</span><span class="p">[</span><span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="nx">possibleMoves</span><span class="p">.</span><span class="nx">length</span><span class="p">)];</span>
-            <span class="k">if</span> <span class="p">(</span><span class="nx">temp</span><span class="p">.</span><span class="nx">x</span> <span class="o">!=</span> <span class="nx">oldzx</span> <span class="o">||</span> <span class="nx">temp</span><span class="p">.</span><span class="nx">y</span> <span class="o">!=</span> <span class="nx">oldzy</span><span class="p">)</span>
-            <span class="p">{</span>
-                <span class="k">break</span><span class="p">;</span>
-            <span class="p">}</span>
-        <span class="p">}</span>
-
-        <span class="nx">oldzx</span> <span class="o">=</span> <span class="nx">zx</span><span class="p">;</span>
-        <span class="nx">oldzy</span> <span class="o">=</span> <span class="nx">zy</span><span class="p">;</span>
-
-        <span class="nx">board</span><span class="p">[</span><span class="nx">zx</span><span class="p">][</span><span class="nx">zy</span><span class="p">]</span> <span class="o">=</span> <span class="nx">board</span><span class="p">[</span><span class="nx">temp</span><span class="p">.</span><span class="nx">x</span><span class="p">][</span><span class="nx">temp</span><span class="p">.</span><span class="nx">y</span><span class="p">];</span>
-        <span class="nx">zx</span> <span class="o">=</span> <span class="nx">temp</span><span class="p">.</span><span class="nx">x</span><span class="p">;</span>
-        <span class="nx">zy</span> <span class="o">=</span> <span class="nx">temp</span><span class="p">.</span><span class="nx">y</span><span class="p">;</span>
-        <span class="nx">board</span><span class="p">[</span><span class="nx">zx</span><span class="p">][</span><span class="nx">zy</span><span class="p">]</span> <span class="o">=</span> <span class="mf">16</span><span class="p">;</span>
-
-    <span class="p">}</span><span class="k">while</span><span class="p">(</span><span class="o">++</span><span class="nx">shuffleLimit</span> <span class="o">&lt;</span> <span class="mf">200</span><span class="p">);</span>
-<span class="p">}</span>
-
-<span class="c1">//REstart the game</span>
-<span class="kd">function</span> <span class="nx">restart</span><span class="p">()</span>
-<span class="p">{</span>
-    <span class="nx">shuffleBoard</span><span class="p">();</span>
-    <span class="nx">updateCells</span><span class="p">();</span>
-<span class="p">}</span>
-
-<span class="c1">//Start the game</span>
-<span class="kd">function</span> <span class="nx">start</span><span class="p">()</span>
-<span class="p">{</span>
-    <span class="nx">generateBoard</span><span class="p">();</span>
-    <span class="nx">generateCells</span><span class="p">();</span>
-    <span class="nx">restart</span><span class="p">();</span>
-<span class="p">}</span>
-</code></pre></div>
-
-<p>As I had mentioned above, today's article has nothing to do with Artificial Intelligence but in the future, I plan to write a solver for this game that makes use of Heuristics.</p>
-
-<p>Hope you liked reading this article and have fun playing the game!</p>
-
-<p>Stay tuned for more!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>June 22nd, 2019</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/personal-challenge/">
-					Personal Challenge
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -2203,6 +2082,13 @@ pip install jinja2
 	<ul class="tags">
 		
 		<li>
+			<a href="/category/laravel/">
+				Laravel
+				<span class="count">17</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/linux/">
 				Linux
 				<span class="count">17</span>
@@ -2210,9 +2096,9 @@ pip install jinja2
 		</li>
 		
 		<li>
-			<a href="/category/laravel/">
-				Laravel
-				<span class="count">16</span>
+			<a href="/category/devops/">
+				DevOps
+				<span class="count">11</span>
 			</a>
 		</li>
 		
@@ -2252,13 +2138,6 @@ pip install jinja2
 		</li>
 		
 		<li>
-			<a href="/category/devops/">
-				DevOps
-				<span class="count">10</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/git/">
 				Git
 				<span class="count">10</span>
@@ -2283,6 +2162,13 @@ pip install jinja2
 			<a href="/category/programming/">
 				Programming
 				<span class="count">8</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/tutorial/">
+				Tutorial
+				<span class="count">6</span>
 			</a>
 		</li>
 		
@@ -2317,13 +2203,6 @@ pip install jinja2
 		<li>
 			<a href="/category/apache/">
 				Apache
-				<span class="count">5</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/tutorial/">
-				Tutorial
 				<span class="count">5</span>
 			</a>
 		</li>
@@ -2381,6 +2260,13 @@ pip install jinja2
 			<a href="/category/general/">
 				General
 				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/docker/">
+				Docker
+				<span class="count">2</span>
 			</a>
 		</li>
 		
@@ -2444,13 +2330,6 @@ pip install jinja2
 			<a href="/category/python/">
 				Python
 				<span class="count">2</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/docker/">
-				Docker
-				<span class="count">1</span>
 			</a>
 		</li>
 		
