@@ -77,6 +77,301 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/writings/posts/the-cryptopals-crypto-challenges-set-1--convert-hex-to-base64">The Cryptopals Crypto Challenges: Set 1 - Convert Hex to Base64</a></h1>
+		<p class="description">Convert Hexadecimal strings to encoded Base64 strings.</p>
+	</div>
+	<div class="article-body">
+		<p>This is the <a href="http://cryptopals.com/sets/1/challenges/1">first challenge</a> of Set 1 in The Cryptopals Crypto Challenges website. If you want to know more about these challenges, look at my <a href="/posts/the-cryptopals-crypto-challenges">previous post</a>.</p>
+
+<p>For this challenge, you need to be able to convert Hexadecimal strings to encoded Base64 strings:</p>
+
+<p>The string:</p>
+
+<div class="codehilite"><pre><span></span><code>49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d
+</code></pre></div>
+
+<p>Should produce:</p>
+
+<div class="codehilite"><pre><span></span><code>SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t
+</code></pre></div>
+
+<p>Not only is this challenge just a warmup but it is also designed to make you feel comfortable in dealing with raw bytes as Base64 is used to encode binary information and Hexadecimal is used to view the raw bytes.</p>
+
+<h2>How to convert from Hexadecimal to Base64?</h2>
+
+<p>Well, it's simpler than you think! You will have to go through the following steps:</p>
+
+<ol>
+<li><a href="#step-1">Convert hexadecimal string to binary string</a></li>
+<li><a href="#step-2">Split the binary string into 4 pieces of 6 bits each</a></li>
+<li><a href="#step-3">Convert the binary string to decimal</a></li>
+<li><a href="#step-4">Compare each decimal against each character in a reference string of 64 characters</a></li>
+</ol>
+
+<h3><a id="step-1"></a> Convert hexadecimal string to binary string</h3>
+
+<p>Before converting to binary, you should compare each character against a hashmap table of hardcoded hexadecimal keys and binary values.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="c1">//Hashmap that contain hex key and binary values</span>
+<span class="n">map</span><span class="o">&lt;</span><span class="kt">char</span><span class="p">,</span><span class="w"> </span><span class="n">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">CryptoLib</span><span class="o">::</span><span class="n">gen_hex_table</span><span class="p">()</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">map</span><span class="o">&lt;</span><span class="kt">char</span><span class="p">,</span><span class="w"> </span><span class="n">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">map</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">    </span><span class="n">map</span><span class="p">[</span><span class="sc">&#39;0&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;0000&quot;</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">map</span><span class="p">[</span><span class="sc">&#39;1&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;0001&quot;</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">map</span><span class="p">[</span><span class="sc">&#39;2&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;0010&quot;</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">map</span><span class="p">[</span><span class="sc">&#39;3&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;0011&quot;</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">map</span><span class="p">[</span><span class="sc">&#39;4&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;0100&quot;</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">map</span><span class="p">[</span><span class="sc">&#39;5&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;0101&quot;</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">map</span><span class="p">[</span><span class="sc">&#39;6&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;0110&quot;</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">map</span><span class="p">[</span><span class="sc">&#39;7&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;0111&quot;</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">map</span><span class="p">[</span><span class="sc">&#39;8&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1000&quot;</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">map</span><span class="p">[</span><span class="sc">&#39;9&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1001&quot;</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">map</span><span class="p">[</span><span class="sc">&#39;a&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1010&quot;</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">map</span><span class="p">[</span><span class="sc">&#39;b&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1011&quot;</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">map</span><span class="p">[</span><span class="sc">&#39;c&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1100&quot;</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">map</span><span class="p">[</span><span class="sc">&#39;d&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1101&quot;</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">map</span><span class="p">[</span><span class="sc">&#39;e&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1110&quot;</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">map</span><span class="p">[</span><span class="sc">&#39;f&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1111&quot;</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">map</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+
+<span class="c1">//Convert hex to string</span>
+<span class="n">string</span><span class="w"> </span><span class="n">CryptoLib</span><span class="o">::</span><span class="n">con_hex_2_bin</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="n">hexStr</span><span class="p">)</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">map</span><span class="o">&lt;</span><span class="kt">char</span><span class="p">,</span><span class="n">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">m</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">gen_hex_table</span><span class="p">();</span><span class="w"></span>
+
+<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">newStr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="n">hexStr</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">isdigit</span><span class="p">(</span><span class="n">hexStr</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span><span class="w"></span>
+<span class="w">        </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="n">newStr</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">m</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="n">hexStr</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">-&gt;</span><span class="n">second</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+<span class="w">        </span><span class="k">else</span><span class="w"></span>
+<span class="w">        </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="n">newStr</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">m</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="n">hexStr</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">-&gt;</span><span class="n">second</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+<span class="w">        </span><span class="c1">// newStr += m.find(hexStr[i])-&gt;second;</span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">newStr</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+
+<h3><a id="step-2"></a> Split the binary string into 4 pieces of 6 bits each</h3>
+
+<p>Base64 represents data in the form of ASCII format that follows a Radix-64 representation. Each character is picked from a set of 64 characters, which means that I'll only need 6 bits represent each character because <strong>2<sup>6</sup> = 64 characters</strong>.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="c1">//Add spaces between strings</span>
+<span class="n">string</span><span class="w"> </span><span class="nf">CryptoLib::add_spaces</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="n">str</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">spaces</span><span class="p">)</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">newStr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">str</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="p">{</span><span class="w"></span>
+
+<span class="w">        </span><span class="c1">// newStr += str[i];</span>
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">count</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">spaces</span><span class="p">)</span><span class="w"></span>
+<span class="w">        </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="n">newStr</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">;</span><span class="w"></span>
+<span class="w">            </span><span class="n">i</span><span class="o">--</span><span class="p">;</span><span class="w"></span>
+<span class="w">            </span><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+<span class="w">        </span><span class="k">else</span><span class="w"></span>
+<span class="w">        </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="n">newStr</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">str</span><span class="p">[</span><span class="n">i</span><span class="p">];</span><span class="w"></span>
+<span class="w">            </span><span class="n">count</span><span class="o">++</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">newStr</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+
+<h3><a id="step-3"></a> Convert the binary string to decimal</h3>
+
+<p>Before converting, you should know that a decimal number is equal to the sum of binary digits (d~n~) times their power of 2 (2<sup>n</sup>).</p>
+
+<p>Let's say you have a binary string of <mark>111001</mark>, it's decimal
+would be <mark>1x2<sup>5</sup> + 1x2<sup>4</sup> + 1x2<sup>3</sup> + 0x2<sup>2</sup> + 0x2<sup>1</sup> + 1x2<sup>0</sup> =
+57</mark></p>
+
+<div class="codehilite"><pre><span></span><code><span class="c1">//Convert binary to decimal</span>
+<span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">CryptoLib</span><span class="o">::</span><span class="n">con_bin_2_dec</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="n">str</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">power</span><span class="p">)</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">v</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">newStr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">istringstream</span><span class="w"> </span><span class="nf">iss</span><span class="p">(</span><span class="n">str</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">x</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">iss</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">x</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="kt">double</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">power</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="kt">double</span><span class="w"> </span><span class="n">decimal</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">x</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"></span>
+<span class="w">        </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">&#39;1&#39;</span><span class="p">)</span><span class="w"></span>
+<span class="w">            </span><span class="p">{</span><span class="w"></span>
+<span class="w">                </span><span class="n">decimal</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">pow</span><span class="p">(</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="n">p</span><span class="p">);</span><span class="w"></span>
+<span class="w">            </span><span class="p">}</span><span class="w"></span>
+<span class="w">            </span><span class="n">p</span><span class="o">--</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+<span class="w">        </span><span class="n">v</span><span class="p">.</span><span class="n">push_back</span><span class="p">((</span><span class="kt">int</span><span class="p">)</span><span class="n">decimal</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">v</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+
+<h3><a id="step-4"></a> Compare each decimal against each character in a reference string of 64 characters</h3>
+
+<p>At this stage, all you have to do is find and concatenate each character (using the reference string) based on each decimal and return your encoded Base64 string as the final output.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="c1">//Convert HEX to Base 64</span>
+<span class="n">string</span><span class="w"> </span><span class="nf">CryptoLib::con_hex_2_b64</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="n">str</span><span class="p">)</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">b64</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">ref</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/&quot;</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">newStr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">add_spaces</span><span class="p">(</span><span class="n">con_hex_2_bin</span><span class="p">(</span><span class="n">str</span><span class="p">),</span><span class="w"> </span><span class="mi">6</span><span class="p">);</span><span class="w"></span>
+
+<span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">con_bin_2_dec</span><span class="p">(</span><span class="n">newStr</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">);</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">v</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="n">b64</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">ref</span><span class="p">[</span><span class="n">v</span><span class="p">[</span><span class="n">i</span><span class="p">]];</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">b64</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+
+<p>Here's the final section of the code:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="c1">//CryptoPals Set 1 Challenge 1</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;crypto.h&quot;</span><span class="cp"></span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">CryptoLib</span><span class="w"> </span><span class="n">crypt</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">    </span><span class="c1">//Test case provided from the site</span>
+<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">str</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d&quot;</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">crypt</span><span class="p">.</span><span class="n">con_hex_2_b64</span><span class="p">(</span><span class="n">str</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+
+<p><strong><em>Note: This solution and the library named <code>crypto.h</code> was built using the C++ programming language. The source code for this solution can be found on Github.</em></strong></p>
+
+<p>Stay tuned for the next challenge.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>December 6th, 2017</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/cryptography/">
+					Cryptography
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/writings/posts/the-cryptopals-crypto-challenges">The Cryptopals Crypto Challenges</a></h1>
+		<p class="description">Came across an interesting website that hosts cryptographic challenges based on real world cryptography.</p>
+	</div>
+	<div class="article-body">
+		<p>Last week, I came across an interesting website named <a href="http://cryptopals.com/">The Cryptopals
+Crypto Challenges</a> (also known as The Matasano
+Crypto Challenges) that hosts cryptographic challenges based on
+real-world cryptography that makes use of various ciphers and secure
+protocols.</p>
+
+<h2>What is it about?</h2>
+
+<p>These challenges were developed by a security team called <a href="https://www.nccgroup.trust/us/">NCC
+Security</a>, which is developed as a tool
+for teaching <a href="https://en.wikipedia.org/wiki/Cryptography">Cryptography</a>.</p>
+
+<p>Currently, there are eight sets of problems in which each set gets
+progressively harder as you solve them. As I'm writing this post, I'm
+solving the <a href="http://cryptopals.com/sets/1">first set</a> of problems, these
+problems are designed in such a way that you get to build own
+cryptographic functions/utilities and exploit them. Most importantly,
+not only do these challenges give you an overview on how to build secure
+cryptographic systems but also you'll get an understanding on how
+they're being attacked.</p>
+
+<p>In the first few challenges, I was exposed to some crypto math but these
+concepts weren't that hard as it was more practical and gentler:</p>
+
+<ul>
+<li><a href="http://en.wikipedia.org/wiki/Modular_arithmetic">Modular arithmetic</a></li>
+<li>Working with different bases such as Base 2 and Base 16</li>
+<li><a href="http://en.wikipedia.org/wiki/Hamming_distance">Hamming Distance</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Standard_deviation">Standard Deviation and Variance</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Frequency_(statistics)">Frequency</a></li>
+</ul>
+
+<p>Also, I found myself using different techniques to solve these
+challenges such as:</p>
+
+<ul>
+<li>String manipulation</li>
+<li>Lookup tables / Hashmaps</li>
+<li>Conversion of string to integer and vice-versa</li>
+<li>Bitwise operators</li>
+</ul>
+
+<p>Like I had mentioned above, this is also designed as a tool to learn
+cryptography, which means you don't really need to have prior knowledge
+of cryptography and security. It's all about doing your own research on
+various algorithms, implementing the solution and then breaking your own
+solution.</p>
+
+<h2>Why do I want to do this?</h2>
+
+<p>I found it as a good opportunity to sharpen my C++ programming skills
+and learn more about cryptographical theory and it's applications. If
+you're curious and passionate enough to solve puzzles, this is your
+chance!</p>
+
+<h2>What's next?</h2>
+
+<p>I will be posting walkthroughs (on how I solved every problem in each
+set) on my blog and also provide solutions to those problems on my
+<a href="https://www.github.com/megacolorboy">GitHub</a> repository.</p>
+
+<p>Stay tuned!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>November 11th, 2017</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/cryptography/">
+					Cryptography
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/writings/posts/new-feature-share-your-reaction">New feature: Share your reaction</a></h1>
 		<p class="description">Rolled out a new feature to collect emotional intelligence, which would help me to make better blog posts in the future.</p>
 	</div>
@@ -807,174 +1102,6 @@
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/arcade-challenge-1-snake-game">Arcade Challenge 1: Snake Game</a></h1>
-		<p class="description">This is the first post of this month's personal challenge. I'll be talking about Snake Game, it's history and game mechanics, in short.</p>
-	</div>
-	<div class="article-body">
-		<script defer type="text/javascript" src="/static/projects/snake/js/snake.js"></script>
-
-<figure>
-    <canvas style="border-radius: 5px;" id="snake_canvas" width="500" height="500"></canvas>
-</figure>
-
-<p>Before you read more about this article, play with the above game. You can control the snake using <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or the <kbd>&larr;</kbd> <kbd>&uarr;</kbd> <kbd>&darr;</kbd> <kbd>&rarr;</kbd> keys. Orange block is for food, it'll increase your score. Yellow block is for poison, if eaten, it'll reduce your score. Press <kbd>Space</kbd> to pause the game. Press <kbd>P</kbd> to resume and <kbd>R</kbd> to restart the game. Oh and avoid hitting the white walls!</p>
-
-<h2>Background</h2>
-
-<p>Snake is a game of simple concept where the player manuevers the snake in all 4 straight directions (reverse movement is not possible i.e. UP, DOWN, LEFT, RIGHT only) to eat the fruit and as a result, the length of the snake increases, making the game difficult for the player. The player will have to prevent the snake to hit the walls or from eating the poison, which will decrease the snake's length, and also prevent it from hitting itself.</p>
-
-<h2>History</h2>
-
-<p>I remember playing this game, for the first time, on my father's monochrome <strong><em>Nokia 3310</em></strong> mobile phone (which can still break walls, I guess!) and every 90's kid I knew played this game a lot.</p>
-
-<figure>
-    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/31/Nokia_3310_blue.jpg/320px-Nokia_3310_blue.jpg"/>
-    <figcaption>Nokia 3310 (in case, if you've never heard about it!)</figcaption>
-</figure>
-
-<p>The game was published by <strong><em>Nokia</em></strong> and it was programmed by a Nokia Design Engineer named Taneli Armanto in 1997 for <strong><em>Nokia 6110</em></strong>. The original concept of this game was derived from an arcade game called <a href="https://en.wikipedia.org/wiki/Blockade_(video_game)">Blockade</a>, which was published in 1976 by <strong><em>Gremlin Industries</em></strong>. Ever since, there have been so many variations and clones of this game, in fact, there are over 300+ variations of this game for iOS devices alone.</p>
-
-<h2>Game mechanics</h2>
-
-<p>The game makes use of <a href="https://en.wikipedia.org/wiki/Linked_list">Linked Lists</a>, which is a simple and dynamic data structure used to store and control the movement of the snake. Below is the pseudocode for each of the game's behaviour:</p>
-
-<p><strong>Movement of the Snake:</strong></p>
-
-<div class="codehilite"><pre><span></span><code>for node in the list (always starts from the end of the list):
-    if node is not equal to head node:
-        shift the snake&#39;s position to node+1 (by making it closer to the snake)
-    set head node to new position
-endfor
-</code></pre></div>
-
-<p><strong>Length of the Snake:</strong></p>
-
-<div class="codehilite"><pre><span></span><code>nx: current x coordinate of the snake head
-ny: current y coordinate of the snake head
-
-fx: x coordinate of the food
-fy: y coordinate of the food
-
-px: x coordinate of the poison
-py: y coordinate of the poison
-
-if [nx] matches with [fx] and if [ny] matches with [fy]:
-    push the new cell to the snake&#39;s tail node
-    shift the new cell from tail node to the head node
-    increment score + 1
-
-if [nx] matches with [px] and if [ny] matches with [py]:
-    pop the cell from the tail node
-    shift cell from tail node to head node
-    decrement life - 1
-</code></pre></div>
-
-<p><strong>Collision of the Snake:</strong></p>
-
-<div class="codehilite"><pre><span></span><code>nx: current x coordinate of the snake head
-ny: current y coordinate of the snake head
-
-sx: x coordinate of the snake cell
-sy: y coordinate of the snake cell
-
-wx: x coordinate of the wall cell
-wy: y coordinate of the wall cell
-
-for cell in the wall array:
-    if [nx] matches with [wx] and if [ny] matches with [wy]:
-        display &quot;game over&quot; message
-
-for cell in the snake list:
-    if [nx] matches with [sx] and if [ny] matches with [sy]:
-        display &quot;game over&quot; message
-</code></pre></div>
-
-<p>Oh yeah, please feel free to study the source code of this game in order to understand how this game was implemented on Javascript.</p>
-
-<h2>What's next?</h2>
-
-<p>In my next post, I'll be talking about, the second game that I built in this challenge, <strong><em>Breakout</em></strong>. I hope you've found this article interactive and interesting and yes, have fun playing this game! </p>
-
-<p>Adios Amigo!</p>
-
-<h2>References</h2>
-
-<ul>
-<li><a href="https://en.wikipedia.org/wiki/Snake_(video_game)">Snake</a></li>
-<li><a href="https://en.wikipedia.org/wiki/Nokia_3310">Nokia 3310</a></li>
-<li><a href="https://en.wikipedia.org/wiki/Blockade_(video_game)">Blockade (1976)</a></li>
-<li><a href="https://en.wikipedia.org/wiki/Linked_list">Linked List</a></li>
-</ul>
-
-	</div>
-	<div class="article-footer">
-		<time>July 14th, 2017</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/arcade-challenge/">
-					Arcade Challenge
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/i-challenged-myself-to-build-4-arcade-games">I challenged myself to build 4 arcade games!</a></h1>
-		<p class="description">I challenged myself to build four arcade games during this month. Hope you'll enjoy reading this article.</p>
-	</div>
-	<div class="article-body">
-		<p>Alas! It has been a long time since my last blog post.</p>
-
-<p>Last month was the Holy Month of Ramadan, so I kept myself busy with my religious duties and it also kind of ruined my sleeping pattern, thus I was tired to post anything. Since I was pretty exhausted after that, I decided to take a week off from work to spend some time with my family and also thought of working on my side projects and then I realized that I need to set a personal challenge to get myself motivated for the month.</p>
-
-<h2>What's the challenge?</h2>
-
-<p>When I was building this blog, I had the intention of remaking arcade games and posting them over here for the visitors to come and play them! So since I had a week off from work, I challenged myself to build four arcade games this month and create a separate blog post for each game, where I would be talking about how it was built, it's history and it's game mechanics.</p>
-
-<p>These are the list of games that I had planned to build/already built during this month:</p>
-
-<ul>
-<li>Snake</li>
-<li>Breakout</li>
-<li>Pong</li>
-<li>Tetris</li>
-</ul>
-
-<h2>How did the challenge feel?</h2>
-
-<p>Honestly, it was really refreshing and felt like a mini-hackathon. I was able to learn new things about <strong><em>Game Programming</em></strong> and <strong><em>2D Mathematics</em></strong> and as a result, I have upgraded my knowledge on <strong><em>Javascript</em></strong> as well. Although I told myself that I would build all of these games in a month, during my time off, I was able to build everything except <strong><em>Tetris</em></strong> as I'm still working on it. </p>
-
-<h2>What's next?</h2>
-
-<p>I know this is a short post but I'm working on the content for each blog post, so that it doesn't feel rushed! Once I have posted all of them, I'd like to know your views on each of them and it would be also nice if you could suggest any arcade games that I could remake!</p>
-
-<p>Until next time, then!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>July 8th, 2017</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/personal-challenge/">
-					Personal Challenge
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -1025,6 +1152,13 @@ for cell in the snake list:
 	<ul class="tags">
 		
 		<li>
+			<a href="/category/linux/">
+				Linux
+				<span class="count">19</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/laravel/">
 				Laravel
 				<span class="count">17</span>
@@ -1032,16 +1166,9 @@ for cell in the snake list:
 		</li>
 		
 		<li>
-			<a href="/category/linux/">
-				Linux
-				<span class="count">17</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/devops/">
 				DevOps
-				<span class="count">11</span>
+				<span class="count">13</span>
 			</a>
 		</li>
 		
@@ -1088,6 +1215,13 @@ for cell in the snake list:
 		</li>
 		
 		<li>
+			<a href="/category/programming/">
+				Programming
+				<span class="count">9</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/vim/">
 				VIM
 				<span class="count">8</span>
@@ -1097,13 +1231,6 @@ for cell in the snake list:
 		<li>
 			<a href="/category/unix/">
 				UNIX
-				<span class="count">8</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/programming/">
-				Programming
 				<span class="count">8</span>
 			</a>
 		</li>
@@ -1137,6 +1264,13 @@ for cell in the snake list:
 		</li>
 		
 		<li>
+			<a href="/category/productivity/">
+				Productivity
+				<span class="count">5</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/blogmarks/">
 				Blogmarks
 				<span class="count">5</span>
@@ -1154,13 +1288,6 @@ for cell in the snake list:
 			<a href="/category/personal-challenge/">
 				Personal Challenge
 				<span class="count">5</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/productivity/">
-				Productivity
-				<span class="count">4</span>
 			</a>
 		</li>
 		
@@ -1273,6 +1400,27 @@ for cell in the snake list:
 			<a href="/category/python/">
 				Python
 				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/learning/">
+				Learning
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/tech/">
+				Tech
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/ubuntu/">
+				Ubuntu
+				<span class="count">1</span>
 			</a>
 		</li>
 		

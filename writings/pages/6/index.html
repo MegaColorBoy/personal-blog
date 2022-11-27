@@ -77,6 +77,236 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/writings/posts/lexicographic-permutations">Lexicographic Permutations</a></h1>
+		<p class="description">How to generate the next permutation of any given sequence in lexicographical order.</p>
+	</div>
+	<div class="article-body">
+		<p>According to <a href="https://projecteuler.net/problem=24">Problem 24</a> in Project Euler, you are asked to find the millionth permutation using the following sequence of 10 digits (0, 1, 2, 3, 4, 5, 6, 7, 8, 9). Well, if you do the math, there are around <strong><em>10! = 3,628,800 unique permutations</em></strong> and that means, you have to come up with an efficient algorithm.</p>
+
+<p>I tried writing a recursive function but it turned out to be a bit tricky, so I thought of writing a brute-force solution which seemed far more simpler to understand and it's quite efficient.</p>
+
+<h2>Algorithm Description</h2>
+
+<p>The following algorithm is quite simple and easy to understand:</p>
+
+<div class="codehilite"><pre><span></span><code>1. Find i such that a[i-1] is greater than or equal to a[i].
+2. Find j such that a[j-1] is less than or equal to a[i-1].
+3. Swap a[i] with a[j].
+4. Reverse the suffix from a[i+1] to the last element.
+</code></pre></div>
+
+<p>Suppose, if the first step fails, it means the current permutation is the last one because such an index that does not exist. However, it's simple to implement the following algorithm correctly and efficiently, so let's take a look at the implementation.</p>
+
+<h2>Python Implementation</h2>
+
+<p>The following method only generates the next permutation of any given sequence, so if you're interested in generating all the permutations, especially, for very large lists, this function can be useful.</p>
+
+<p><strong>Implementation of the method(s):</strong></p>
+
+<div class="codehilite"><pre><span></span><code><span class="c1"># Swap numbers in a list</span>
+<span class="k">def</span> <span class="nf">swap</span><span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
+    <span class="nb">list</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="nb">list</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="nb">list</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+<span class="c1"># Get the next permutation</span>
+<span class="k">def</span> <span class="nf">nextPermutation</span><span class="p">(</span><span class="nb">list</span><span class="p">):</span>
+
+    <span class="n">i</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="c1"># As long as the f(x-1) &gt;= f(x), decrement the first index</span>
+    <span class="k">while</span> <span class="nb">list</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="nb">list</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="n">i</span><span class="o">-</span><span class="mi">1</span>
+
+    <span class="n">j</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+
+    <span class="c1"># As long as the f(y-1) &lt;= f(x-1), decrement the second index</span>
+    <span class="k">while</span> <span class="nb">list</span><span class="p">[</span><span class="n">j</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="nb">list</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="n">j</span> <span class="o">=</span> <span class="n">j</span><span class="o">-</span><span class="mi">1</span>
+
+    <span class="c1"># make a swap</span>
+    <span class="n">swap</span><span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">j</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">i</span> <span class="o">=</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span>
+    <span class="n">j</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+
+    <span class="c1"># keep swapping until you get the next permutation</span>
+    <span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">j</span><span class="p">:</span>
+        <span class="n">swap</span><span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">j</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span>
+        <span class="n">j</span> <span class="o">=</span> <span class="n">j</span><span class="o">-</span><span class="mi">1</span>
+
+    <span class="k">return</span> <span class="nb">list</span>
+</code></pre></div>
+
+<p><strong>Final code:</strong></p>
+
+<div class="codehilite"><pre><span></span><code><span class="ch">#!usr/bin/python</span>
+<span class="kn">import</span> <span class="nn">math</span><span class="o">,</span> <span class="nn">time</span><span class="o">,</span> <span class="nn">pe_lib</span>
+
+<span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+<span class="nb">list</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">9</span><span class="p">]</span>
+
+<span class="n">count</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">limit</span> <span class="o">=</span> <span class="mi">1000000</span>
+
+<span class="k">while</span> <span class="n">count</span> <span class="o">&lt;</span> <span class="n">limit</span><span class="p">:</span>
+    <span class="n">pe_lib</span><span class="o">.</span><span class="n">nextPermutation</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+    <span class="n">count</span> <span class="o">=</span> <span class="n">count</span> <span class="o">+</span> <span class="mi">1</span>
+
+<span class="nb">print</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">)</span>
+<span class="nb">print</span> <span class="s2">&quot;Finished: </span><span class="si">%f</span><span class="s2"> seconds&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span>
+</code></pre></div>
+
+<p>This code in executed in approximately <strong>2.37 seconds</strong> with an algorithmic complexity of <strong>O(n)</strong> i.e. linear time complexity and the replacements of the numbers were done <a href="https://en.wikipedia.org/wiki/In-place_algorithm">in-place</a> since no extra space was used.</p>
+
+<p>Hope you liked reading this article!</p>
+
+<h2>References</h2>
+
+<ul>
+<li><a href="https://www.cut-the-knot.org/do_you_know/AllPerm.shtml">Counting and Listing all Permutations</a></li>
+<li><a href="https://leetcode.com/articles/next-permutation">LeetCode: Next Permutation</a></li>
+</ul>
+
+	</div>
+	<div class="article-footer">
+		<time>May 25th, 2018</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/algorithms/">
+					Algorithms
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/data-structures/">
+					Data Structures
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/writings/posts/finding-the-1000-digit-fibonacci-number-using-the-golden-ratio">Finding the 1000 digit Fibonacci number using the Golden Ratio</a></h1>
+		<p class="description">Rather than sticking to using a brute force solution, I decided to find the 1000 digit fibonacci number using the Golden Ratio.</p>
+	</div>
+	<div class="article-body">
+		<p>Back in February, I said that I'm going to start <a href="/posts/i-decided-to-learn-python">solving Project Euler
+problems using Python</a> and yes, I
+have been doing it actively but sometimes, I don't find the time to post
+the solutions.</p>
+
+<p>If you're someone who has tried Project Euler before, you'll know that
+you'll get to encounter problems that require you to implement smart
+solutions to crunch big numbers efficiently. One of those problems is
+<a href="https://www.projecteuler.net/problem=25">Problem 25</a>, which states to
+find the first term in the <a href="https://en.wikipedia.org/wiki/Fibonacci_number">Fibonacci
+Sequence</a> that contains
+1000 digits.</p>
+
+<p>This problem can be easily solved using a Brute Force solution, instead,
+I opted to try out a mathematical solution that makes use of the <a href="https://en.wikipedia.org/wiki/Golden_ratio">Golden
+Ratio</a> and also, it gave me
+the perfect excuse to try writing those formulas using
+<a href="https://en.wikipedia.org/wiki/LaTeX">LaTeX</a> markup.</p>
+
+<h2>What is Golden Ratio?</h2>
+
+<p>Famously known as <strong><em>Phi</em></strong> that represents the Golden Ratio is an
+irrational number that's approximately equal to <strong><em>1.6180</em></strong> and just like
+it's cousin, <strong><em>Pi</em></strong>, it has a never ending pattern of decimal digits.</p>
+
+<p>\[\Phi = 1.6180339887... \]</p>
+
+<p>According to the <a href="https://en.wikipedia.org/wiki/Golden_ratio">article</a>
+in Wikipedia, back in the Twentieth Century, architects and artists had
+proportioned their works to approximate the Golden Ratio in the form of
+a <a href="https://en.wikipedia.org/wiki/Golden_rectangle">Golden Rectangle</a>,
+that is believed to be aesthetically pleasing.</p>
+
+<h2>Time for some Calculus!</h2>
+
+<p>This is the equation used to find the <strong><em>n<sup>th</sup></em></strong> Fibonacci Number:</p>
+
+<p>\[ F(n) = {log(\Phi)^n \over \sqrt{5}} \]</p>
+
+<p>Now, let's modify this formula to find the smallest integer i.e. the
+first term of the 1000 digit number that fulfills this inequality:</p>
+
+<p>\[ {log(\Phi)^n \over \sqrt{5}} \gt {10^{999}} \]</p>
+
+<p>Expand the formula a little bit more:</p>
+
+<p>\[ n \times log(\Phi) - {log(5) \over 2} \gt {999 \times log(10)} \]</p>
+
+<p>\[ n \times log(\Phi) \gt {999 \times log(10)} + {log(5) \over 2} \]</p>
+
+<p>We need to find n, so let's isolate it:</p>
+
+<p>\[ n = {{999 \times log(10) + {log(5) \over 2}} \over
+{log(\Phi)}} = 4782.06 \]</p>
+
+<p>\[ n \cong 4782 \]</p>
+
+<p>So, the first term that contains the 1000 digit Fibonacci Number is
+<strong><em>4782</em></strong>.</p>
+
+<p>Here's the solution using Python that solved in 0.000194 seconds:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span> <span class="nn">math</span>
+
+<span class="n">limit</span> <span class="o">=</span> <span class="mi">999</span>
+<span class="n">golden_ratio</span> <span class="o">=</span> <span class="mf">1.6180</span>
+
+<span class="n">n</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(((</span><span class="n">limit</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">10</span><span class="p">))</span> <span class="o">+</span> <span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">))</span><span class="o">/</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">golden_ratio</span><span class="p">)))</span>
+
+<span class="nb">print</span> <span class="n">n</span>
+</code></pre></div>
+
+<p>So, this is how it would look in our first equation above:</p>
+
+<p>\[F(4782) = {log(\Phi)^{4782} \over \sqrt{5}} = Some Large
+Number \]</p>
+
+<p>Well, if you try to find the number using a calculator or compile it on
+your computer, you'll end up having a compile error that says <strong><em>"Math
+Error"</em></strong>!</p>
+
+<p>Hope you liked reading this article!</p>
+
+<h2>References</h2>
+
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Fibonacci_number">Fibonacci Number Sequence</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Golden_ratio">Golden Ratio</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Golden_rectangle">Golden Rectangle</a></li>
+</ul>
+
+	</div>
+	<div class="article-footer">
+		<time>May 18th, 2018</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/mathematics/">
+					Mathematics
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/writings/posts/the-game-of-life">The Game of Life</a></h1>
 		<p class="description">An essay about The Game of Life and it's unpredictable behaviour of creating different yet unique patterns.</p>
 	</div>
@@ -834,168 +1064,6 @@ challenges, let's see how it goes!</p>
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/the-cryptopals-crypto-challenges-set-1---aes-in-ecb-mode">The Cryptopals Crypto Challenges: Set 1 -  AES in ECB Mode</a></h1>
-		<p class="description">Decrypt a Base64 encoded file that is encrypted with an AES-128 Cipher in ECB mode.</p>
-	</div>
-	<div class="article-body">
-		<p>This is the <a href="http://cryptopals.com/sets/1/challenges/7">seventh challenge</a> of Set 1 in The Cryptopals Crypto Challenges website. Previously, I spoke about these challenges and provided walkthroughs for the previous challenges, if you haven't read them, here are the links:</p>
-
-<ul>
-<li><a href="/posts/the-cryptopals-crypto-challenges">The Cryptopals Crypto Challenges</a></li>
-<li><a href="/posts/the-cryptopals-crypto-challenges-set-1-convert-hex-to-base64">The Cryptopals Crypto Challenges: Set 1 - Convert Hex to Base64</a></li>
-<li><a href="/posts/base64-encoding-decoding-using-bitwise-manipulation-in-c">Base64 Encoding / Decoding using Bitwise Manipulation in C++</a></li>
-<li><a href="/posts/the-cryptopals-crypto-challenges-set-1-fixed-xor">The Cryptopals Crypto Challenges: Set 1 - Fixed XOR Cipher</a></li>
-<li><a href="/posts/the-cryptopals-crypto-challenges-set-1-single-byte-xor-cipher">The Cryptopals Crypto Challenges: Set 1 - Single-Byte XOR Cipher</a></li>
-<li><a href="/posts/the-cryptopals-crypto-challenges-set-1-detect-single-character-xor">The Cryptopals Crypto Challenges: Set 1 - Detect Single-Character XOR</a></li>
-<li><a href="/posts/the-cryptopals-crypto-challenges-set-1-implement-repeating-key-xor">The Cryptopals Crypto Challenges: Set 1 - Implement Repeating-Key XOR</a></li>
-<li><a href="/posts/hamming-distance-algorithm-in-c">Hamming Distance Algorithm in C++</a></li>
-<li><a href="/posts/the-cryptopals-crypto-challenges-set-1-break-repeating-key-xor">The Cryptopals Crypto Challenges: Set 1 - Break Repeating-Key XOR</a></li>
-</ul>
-
-<p>For this challenge, you are given a <a href="http://cryptopals.com/static/challenge-data/7.txt">file</a>, which contains a ciphertext that has been encrypted using <strong><em>AES-128 Cipher</em></strong> with <strong><em>ECB (Electronic Codebook)</em></strong> mode and then encoded using Base64. Decrypt it.</p>
-
-<p>In order to decrypt it, you are given a key:</p>
-
-<div class="codehilite"><pre><span></span><code>YELLOW SUBMARINE
-</code></pre></div>
-
-<h2>What is AES?</h2>
-
-<p><a href="https://en.wikipedia.org/wiki/Advanced_Encryption_Standard">Advanced Encryption Standard</a> a.k.a <strong><em>Rjindael</em></strong>, which was developed by two belgian cryptographers, <a href="https://en.wikipedia.org/wiki/Vincent_Rijmen">Vincent Rijmen</a> and <a href="https://en.wikipedia.org/wiki/Joan_Daemen">Joan Daemen</a>. <strong><em>Rjindael</em></strong> is a family of ciphers with various block and key sizes.</p>
-
-<p><strong><em>AES-128</em></strong> is commonly used but there are also larger key sizes such as <strong><em>192</em></strong> and <strong><em>256</em></strong> bits. Similar to <strong><em>XOR cipher</em></strong>, it uses the same key to encrypt and decrypt the message. Till date, there isn't any publication that states if whether <strong><em>AES</em></strong> is broken but even if you were to break it, it will take atleast a <strong><em>billion years</em></strong> with a supercomputer, which could beyond the age of the universe.</p>
-
-<h2>What is ECB Mode?</h2>
-
-<p>What if your plaintext is longer than (in this case, 128 bits) the keysize? This is where <strong><em>ECB</em></strong> comes into the picture. <a href="https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation">ECB (Electronic Codebook)</a> is a cipher mode that is used to repeat the key until it covers the entire plaintext (similar to <a href="/posts/the-cryptopals-crypto-challenges-set-1-implement-repeating-key-xor">Repeating-Key XOR Cipher</a>) and then each <strong><em>block</em></strong> is independently encrypted using the <strong><em>AES</em></strong> algorithm to produce the desired ciphertext.</p>
-
-<p>This challenge is not that hard, in fact, it's completely trivial and more like an introduction of <strong><em>AES Cipher</em></strong>. There are so many ways to solve this problem but I chose to solve this problem using <strong><em>OpenSSL</em></strong> and other commandline tools such as <strong><em>xxd</em></strong> (used to print the hexdump of a file) on my UNIX terminal.</p>
-
-<p>Here's the solution:</p>
-
-<div class="codehilite"><pre><span></span><code>openssl enc -aes-128-ecb -d -a -in secret.txt -K <span class="k">$(</span><span class="nb">echo</span> <span class="s2">&quot;YELLOW SUBMARINE&quot;</span> <span class="p">|</span> xxd -p<span class="k">)</span> -iv <span class="m">1</span> <span class="p">|</span> head
-</code></pre></div>
-
-<p>This is the decrypted message:</p>
-
-<div class="codehilite"><pre><span></span><code>I&#39;m back and I&#39;m ringin&#39; the bell
-A rockin&#39; on the mike while the fly girls yell
-In ecstasy in the back of me
-Well that&#39;s my DJ Deshay cuttin&#39; all them Z&#39;s
-Hittin&#39; hard and the girlies goin&#39; crazy
-Vanilla&#39;s on the mike, man I&#39;m not lazy.
-
-I&#39;m lettin&#39; my drug kick in
-It controls my mouth and I begin
-To just let it flow, let my concepts go
-</code></pre></div>
-
-<p>Initially, I was planning to write an implementation of <strong><em>AES</em></strong> for fun, but then I decided to make it a side project that I can work on as there are a lot of things about <strong><em>AES</em></strong> that I'd like to talk about in the future.</p>
-
-<p>Stay tuned for the next challenge!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>December 21st, 2017</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/cryptography/">
-					Cryptography
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/hamming-distance-algorithm-in-c">Hamming Distance Algorithm in C++</a></h1>
-		<p class="description">An article about the Hamming Distance algorithm that will be used in the next challenge.</p>
-	</div>
-	<div class="article-body">
-		<p>This is a short article about the <strong><em>Hamming Distance</em></strong> algorithm, which will be used in The Cryptopals Crypto Challenges: Set 1 - Break Repeating-Key XOR challenge.</p>
-
-<p>In <a href="http://cryptopals.com/sets/1/challenges/6">Challenge 6</a>, the first step states that you have to write a function to compute the <strong><em>edit distance/Hamming distance</em></strong> between two strings:</p>
-
-<div class="codehilite"><pre><span></span><code>this is a test
-</code></pre></div>
-
-<p>And</p>
-
-<div class="codehilite"><pre><span></span><code>wokka wokka!!!
-</code></pre></div>
-
-<p>When this function is executed, the expected result must be <strong><em>37</em></strong>. If you we're able to make this function work, you can proceed with the next steps in the challenge.</p>
-
-<h2>What is Hamming Distance?</h2>
-
-<p>Applied in domains like Cryptography, Information theory and Coding theory, Hamming distance is just the number of differing bits between two strings of equal length. Named after the American Mathematician, <a href="https://en.wikipedia.org/wiki/Richard_Hamming">Richard Hamming</a>, this algorithm mainly used for Error Detection and Error Correction (and yes, this also makes use of <a href="/posts/base64-encoding-decoding-using-bitwise-manipulation-in-c">Bitwise Operators</a>).</p>
-
-<p>Using the example above, let's see how this works, in theory:</p>
-
-<div class="codehilite"><pre><span></span><code>ASCII Format: this is a test
-Binary Format: 011101[0][0] 01101[0][0][0] 011010[0]1 011[1][0]011 0[0]10000[0] 0[1]10[1]00[1] 01110[0]11 0[0]10[0][0][0][0] 0110[0]0[0]1 0[0]10[0]0[0][0] 011[1]0[1]0[0] 0[1]100[1]01 0[1]1[1]00[1]1 0[1]1[1]0[1]0[0]
-
-ASCII Format: wokka wokka!!!
-Binary Format: 011101[1][1] 01101[1][1][1] 011010[1]1 011[0][1]011 0[1]10000[1] 0[0]10[0]00[0] 01110[1]11 0[1]10[1][1][1][1] 0110[1]0[1]1 0[1]10[1]0[1][1] 011[0]0[0]0[1] 0[0]100[0]01 0[0]1[0]00[0]1 0[0]1[0]0[0]0[1]
-</code></pre></div>
-
-<p>As per the given example, when you count the number of differing bits (the bits marked in brackets) between the two strings, the result is <strong><em>37</em></strong>.</p>
-
-<p>With help of <strong><em>Google</em></strong> and <strong><em>Wikipedia</em></strong>, I was able to build an implementation of this algorithm using the C++ programming language:</p>
-
-<div class="codehilite"><pre><span></span><code><span class="c1">//Hamming Distance</span>
-<span class="kt">int</span><span class="w"> </span><span class="nf">CryptoLib::hamming_distance</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="n">str1</span><span class="p">,</span><span class="w"> </span><span class="n">string</span><span class="w"> </span><span class="n">str2</span><span class="p">)</span><span class="w"></span>
-<span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">count</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">str1</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"></span>
-<span class="w">    </span><span class="p">{</span><span class="w"></span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">partial</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">str1</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="mh">0xFF</span><span class="p">)</span><span class="w"> </span><span class="o">^</span><span class="w"> </span><span class="p">(</span><span class="n">str2</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="mh">0xFF</span><span class="p">);</span><span class="w"></span>
-<span class="w">        </span><span class="k">while</span><span class="p">(</span><span class="n">partial</span><span class="p">)</span><span class="w"></span>
-<span class="w">        </span><span class="p">{</span><span class="w"></span>
-<span class="w">            </span><span class="n">count</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">partial</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"></span>
-<span class="w">            </span><span class="n">partial</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">partial</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="mi">1</span><span class="p">;</span><span class="w"></span>
-<span class="w">        </span><span class="p">}</span><span class="w"></span>
-<span class="w">    </span><span class="p">}</span><span class="w"></span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">count</span><span class="p">;</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
-</code></pre></div>
-
-<p><strong><em>Note: This solution and the library named <code>crypto.h</code> was built using the C++ programming language. The source code for this solution can be found on Github.</em></strong></p>
-
-<p>Hope you found this article useful!</p>
-
-<p>Adios Amigo!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>December 18th, 2017</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/algorithms/">
-					Algorithms
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/programming/">
-					Programming
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -1056,6 +1124,13 @@ Binary Format: 011101[1][1] 01101[1][1][1] 011010[1]1 011[0][1]011 0[1]10000[1] 
 	<ul class="tags">
 		
 		<li>
+			<a href="/category/linux/">
+				Linux
+				<span class="count">19</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/laravel/">
 				Laravel
 				<span class="count">17</span>
@@ -1063,16 +1138,9 @@ Binary Format: 011101[1][1] 01101[1][1][1] 011010[1]1 011[0][1]011 0[1]10000[1] 
 		</li>
 		
 		<li>
-			<a href="/category/linux/">
-				Linux
-				<span class="count">17</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/devops/">
 				DevOps
-				<span class="count">11</span>
+				<span class="count">13</span>
 			</a>
 		</li>
 		
@@ -1119,6 +1187,13 @@ Binary Format: 011101[1][1] 01101[1][1][1] 011010[1]1 011[0][1]011 0[1]10000[1] 
 		</li>
 		
 		<li>
+			<a href="/category/programming/">
+				Programming
+				<span class="count">9</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/vim/">
 				VIM
 				<span class="count">8</span>
@@ -1128,13 +1203,6 @@ Binary Format: 011101[1][1] 01101[1][1][1] 011010[1]1 011[0][1]011 0[1]10000[1] 
 		<li>
 			<a href="/category/unix/">
 				UNIX
-				<span class="count">8</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/programming/">
-				Programming
 				<span class="count">8</span>
 			</a>
 		</li>
@@ -1168,6 +1236,13 @@ Binary Format: 011101[1][1] 01101[1][1][1] 011010[1]1 011[0][1]011 0[1]10000[1] 
 		</li>
 		
 		<li>
+			<a href="/category/productivity/">
+				Productivity
+				<span class="count">5</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/blogmarks/">
 				Blogmarks
 				<span class="count">5</span>
@@ -1185,13 +1260,6 @@ Binary Format: 011101[1][1] 01101[1][1][1] 011010[1]1 011[0][1]011 0[1]10000[1] 
 			<a href="/category/personal-challenge/">
 				Personal Challenge
 				<span class="count">5</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/productivity/">
-				Productivity
-				<span class="count">4</span>
 			</a>
 		</li>
 		
@@ -1304,6 +1372,27 @@ Binary Format: 011101[1][1] 01101[1][1][1] 011010[1]1 011[0][1]011 0[1]10000[1] 
 			<a href="/category/python/">
 				Python
 				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/learning/">
+				Learning
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/tech/">
+				Tech
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/ubuntu/">
+				Ubuntu
+				<span class="count">1</span>
 			</a>
 		</li>
 		

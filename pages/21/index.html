@@ -78,6 +78,940 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/writings/posts/build-your-own-toy-spellchecker">Build your own toy spellchecker</a></h1>
+		<p class="description">Wrote a simple toy spellchecker using C++ by taking inspiration from Peter Norvig's article.</p>
+	</div>
+	<div class="article-body">
+		<p>Spellcheckers and autocorrect, aren't they magical? They do feel like magic to me. I mean, how is it able to predict what word do you want to type?</p>
+
+<p>According to <a href="https://norvig.com">Norvig</a>, some of the most talented engineers at Google don't have a complete understanding of how a spellchecker works.</p>
+
+<p>Peter Norvig's <a href="https://norvig.com/spell-correct.html">solution in Python</a> is so elegant and simple, I don't think anyone can write better than that. However, I wanted to know how it works, so I thought of building it to understand it's functionality. Also, an excuse to exercise my C++ skills.</p>
+
+<p>So, are you as curious as I am? If you are, I think you're in the right spot.</p>
+
+<h2>How it works?</h2>
+
+<p>Okay, so think about it? What does a spellchecker do? You type in a misspelled word and it returns a word with the highest probability, right? </p>
+
+<p>Well, there's a little bit more to it.</p>
+
+<h3>Create a word dictionary</h3>
+
+<p>First, we must create a dictionary, in order to do that, you need to extract words from a large piece of text and store it in a Hashmap in which each word will have a word count. In this example, I've used a Sherlock Holmes novel (which is around 6MB). The words are extracted from a novel instead of an actual dictionary because it can be used to create a simple Language Model.</p>
+
+<p><strong>Source code to create a dictionary:</strong></p>
+
+<div class="codehilite"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">SpellChecker::extractWords</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="o">&amp;</span><span class="n">filename</span><span class="p">)</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">ifstream</span><span class="w"> </span><span class="n">infile</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">infile</span><span class="p">.</span><span class="n">open</span><span class="p">(</span><span class="n">filename</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">x</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">infile</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">x</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">filterAlpha</span><span class="p">(</span><span class="n">x</span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="n">dictionary</span><span class="p">[</span><span class="n">x</span><span class="p">]</span><span class="o">++</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+
+<span class="n">string</span><span class="w"> </span><span class="nf">SpellChecker::filterAlpha</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="o">&amp;</span><span class="n">word</span><span class="p">)</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">word</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="kt">char</span><span class="w"> </span><span class="n">ch</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">word</span><span class="p">[</span><span class="n">i</span><span class="p">];</span><span class="w"></span>
+
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">ch</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"></span>
+<span class="w">        </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="n">word</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sc">&#39;-&#39;</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">isalpha</span><span class="p">(</span><span class="n">ch</span><span class="p">))</span><span class="w"></span>
+<span class="w">        </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="n">word</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tolower</span><span class="p">(</span><span class="n">ch</span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">word</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+
+<h3>Create a list of candidates</h3>
+
+<p>Second, we must able to predict/hypothesize the ways of editing text when the user types. It could be one of the following types of editing:</p>
+
+<ul>
+<li><a href="#inserts">Adding a letter</a></li>
+<li><a href="#replaces">Replacing a letter</a></li>
+<li><a href="#transposes">Switching two adjacent letters</a></li>
+<li><a href="#deletes">Removing a letter</a></li>
+</ul>
+
+<p>Based on the types of edits a user could make, we can generate a list of possible candidates by creating permutations using these edit methods mentioned above.</p>
+
+<h4><a id="inserts"></a> Adding a letter</h4>
+
+<p>In this method, you generate a list of candidates by inserting a letter in every iteration.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">SpellChecker::inserts</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="o">&amp;</span><span class="n">word</span><span class="p">,</span><span class="w"> </span><span class="n">Vector</span><span class="w"> </span><span class="o">&amp;</span><span class="n">result</span><span class="p">)</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">word</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="o">+</span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="n">alphabets</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">)</span><span class="w"></span>
+<span class="w">        </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="kt">char</span><span class="w"> </span><span class="n">ch</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">alphabets</span><span class="p">[</span><span class="n">j</span><span class="p">];</span><span class="w"></span>
+<span class="w">            </span><span class="n">result</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">word</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">ch</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">word</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="n">i</span><span class="p">));</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+
+<h4><a id="replaces"></a> Replacing a letter</h4>
+
+<p>In this method, you generate a list of candidates by replacing each character with a letter from a list of alphabets in every iteration.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">SpellChecker::replaces</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="o">&amp;</span><span class="n">word</span><span class="p">,</span><span class="w"> </span><span class="n">Vector</span><span class="w"> </span><span class="o">&amp;</span><span class="n">result</span><span class="p">)</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">word</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="n">alphabets</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">)</span><span class="w"></span>
+<span class="w">        </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="kt">char</span><span class="w"> </span><span class="n">ch</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">alphabets</span><span class="p">[</span><span class="n">j</span><span class="p">];</span><span class="w"></span>
+<span class="w">            </span><span class="n">result</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">word</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">ch</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">word</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">));</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+
+<h4><a id="transposes"></a> Switching two adjacent letters</h4>
+
+<p>In this method, you generate a list of candidates by switcing two adjacent letters in every iteration. For example: the word "ornage" would look like this: "orange", when the letters "n" and "a" are swapped.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">SpellChecker::transposes</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="o">&amp;</span><span class="n">word</span><span class="p">,</span><span class="w"> </span><span class="n">Vector</span><span class="w"> </span><span class="o">&amp;</span><span class="n">result</span><span class="p">)</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">word</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="mi">-1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="n">result</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">word</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">word</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">word</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">word</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">2</span><span class="p">));</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+
+<h4><a id="deletes"></a> Removing a letter</h4>
+
+<p>In this method, you generate a list of candidates by removing a letter in every iteration.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">SpellChecker::deletes</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="o">&amp;</span><span class="n">word</span><span class="p">,</span><span class="w"> </span><span class="n">Vector</span><span class="w"> </span><span class="o">&amp;</span><span class="n">result</span><span class="p">)</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">word</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="n">result</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">word</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">word</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">));</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+
+<p>All of these methods are called in one wrapper method:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">SpellChecker::edits</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="o">&amp;</span><span class="n">word</span><span class="p">,</span><span class="w"> </span><span class="n">Vector</span><span class="w"> </span><span class="o">&amp;</span><span class="n">result</span><span class="p">)</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="c1">//Deletion</span>
+<span class="w">    </span><span class="n">deletes</span><span class="p">(</span><span class="n">word</span><span class="p">,</span><span class="w"> </span><span class="n">result</span><span class="p">);</span><span class="w"></span>
+
+<span class="w">    </span><span class="c1">//Transposition</span>
+<span class="w">    </span><span class="n">transposes</span><span class="p">(</span><span class="n">word</span><span class="p">,</span><span class="w"> </span><span class="n">result</span><span class="p">);</span><span class="w"></span>
+
+<span class="w">    </span><span class="c1">//Replacement</span>
+<span class="w">    </span><span class="n">replaces</span><span class="p">(</span><span class="n">word</span><span class="p">,</span><span class="w"> </span><span class="n">result</span><span class="p">);</span><span class="w"></span>
+
+<span class="w">    </span><span class="c1">//Insertion</span>
+<span class="w">    </span><span class="n">inserts</span><span class="p">(</span><span class="n">word</span><span class="p">,</span><span class="w"> </span><span class="n">result</span><span class="p">);</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+
+<h3>Extract the known words</h3>
+
+<p>Third, at this stage, the above step would've generated a huge list of words but 90% of them would be gibberish, so we need to "clean" the list and extract the known words using the dictionary we've created.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">SpellChecker::known_words</span><span class="p">(</span><span class="n">Vector</span><span class="o">&amp;</span><span class="w"> </span><span class="n">results</span><span class="p">,</span><span class="w"> </span><span class="n">Dictionary</span><span class="w"> </span><span class="o">&amp;</span><span class="n">candidates</span><span class="p">)</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">Dictionary</span><span class="o">::</span><span class="n">iterator</span><span class="w"> </span><span class="n">end</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dictionary</span><span class="p">.</span><span class="n">end</span><span class="p">();</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">results</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="n">Dictionary</span><span class="o">::</span><span class="n">iterator</span><span class="w"> </span><span class="n">val</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dictionary</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span><span class="w"></span>
+
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">val</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">end</span><span class="p">)</span><span class="w"></span>
+<span class="w">        </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="n">candidates</span><span class="p">[</span><span class="n">val</span><span class="o">-&gt;</span><span class="n">first</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">val</span><span class="o">-&gt;</span><span class="n">second</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+
+<p>The <mark>edits()</mark> method apply to words that have a edit distance of 1, what if it was 2 or more? Like if the user typed "the", it could've been "then" or "they". So, all you have to do is create a method that generates a new set of permutations based on the already generated list of edited words and extract the known words.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">SpellChecker::edits2</span><span class="p">(</span><span class="n">Vector</span><span class="w"> </span><span class="o">&amp;</span><span class="n">result</span><span class="p">,</span><span class="w"> </span><span class="n">Dictionary</span><span class="w"> </span><span class="o">&amp;</span><span class="n">candidates</span><span class="p">)</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">result</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="n">Vector</span><span class="w"> </span><span class="n">edit2</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">        </span><span class="n">edits</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="w"> </span><span class="n">edit2</span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="n">known_words</span><span class="p">(</span><span class="n">edit2</span><span class="p">,</span><span class="w"> </span><span class="n">candidates</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w">   </span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+
+<h3>Display the correct word</h3>
+
+<p>In order to determine the correct word, the following possibilities are considered:</p>
+
+<ol>
+<li>Check if this word is in the dictionary, if it does, display it.</li>
+<li>Generate known words that have an edit distance of 1 and check in the dictionary, if it does, display it.</li>
+<li>Generate known words that have an edit distance of 2 and check in the dictionary, if it does, display it.</li>
+<li>If all else fails, this word is unique or not a known word.</li>
+</ol>
+
+<p></p>
+
+<div class="codehilite"><pre><span></span><code><span class="n">string</span><span class="w"> </span><span class="nf">SpellChecker::correct</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="o">&amp;</span><span class="n">word</span><span class="p">)</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">Vector</span><span class="w"> </span><span class="n">result</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">Dictionary</span><span class="w"> </span><span class="n">candidates</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;big.txt&quot;</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">    </span><span class="c1">//1. if it&#39;s in the dictionary, display it</span>
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">dictionary</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="n">word</span><span class="p">)</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">dictionary</span><span class="p">.</span><span class="n">end</span><span class="p">())</span><span class="w"></span>
+<span class="w">    </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">word</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">    </span><span class="n">extractWords</span><span class="p">(</span><span class="n">file</span><span class="p">);</span><span class="w"></span>
+
+<span class="w">    </span><span class="n">edits</span><span class="p">(</span><span class="n">word</span><span class="p">,</span><span class="w"> </span><span class="n">result</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="n">known_words</span><span class="p">(</span><span class="n">result</span><span class="p">,</span><span class="w"> </span><span class="n">candidates</span><span class="p">);</span><span class="w"></span>
+
+<span class="w">    </span><span class="c1">//2. if it&#39;s a known word but one edit away</span>
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">candidates</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">max_element</span><span class="p">(</span><span class="n">candidates</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span><span class="w"> </span><span class="n">candidates</span><span class="p">.</span><span class="n">end</span><span class="p">())</span><span class="o">-&gt;</span><span class="n">first</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">    </span><span class="c1">//3. if it&#39;s a known word but two edits away</span>
+<span class="w">    </span><span class="n">edits2</span><span class="p">(</span><span class="n">result</span><span class="p">,</span><span class="w"> </span><span class="n">candidates</span><span class="p">);</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">candidates</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">max_element</span><span class="p">(</span><span class="n">candidates</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span><span class="w"> </span><span class="n">candidates</span><span class="p">.</span><span class="n">end</span><span class="p">())</span><span class="o">-&gt;</span><span class="n">first</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">    </span><span class="c1">//4. Display nothing if it doesn&#39;t exist</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="s">&quot;This word doesn&#39;t exist!&quot;</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+
+<p>However, for conditions 2 and 3, the word displayed would most likely have the highest word frequency in the dictionary.</p>
+
+<h2>Conclusion</h2>
+
+<p>Phew! I hope that wasn't a long read. Although, I've written this on C++, I plan to rewrite this on Javascript for some of my future projects.</p>
+
+<p>To be honest, I don't think it's completely accurate, although, I got most of the words correct when tested.</p>
+
+<p>The source code can be found on my <a href="https://www.github.com/megacolorboy/ToySpellChecker">GitHub</a> repository.</p>
+
+<p>Hope you liked reading this article!</p>
+
+<p>Stay tuned for more!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>July 19th, 2019</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/algorithms/">
+					Algorithms
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/writings/posts/the-15-puzzle-game">The 15 Puzzle Game</a></h1>
+		<p class="description">A classical numbered puzzle that requires the player to place all the tiles in an ordered sequence.</p>
+	</div>
+	<div class="article-body">
+		<iframe src="/static/projects/15-puzzle" width="500" height="500"></iframe>
+
+<p>Before you read this article, play with the above puzzle. You can move the block around by <strong><em>left-clicking</em></strong> on a numbered tile that's adjacent to the empty tile.</p>
+
+<p>The source code for this puzzle can be found <a href="https://github.com/megacolorboy/BlogProjects/tree/master/15-puzzle">over here</a>.</p>
+
+<h2>Background</h2>
+
+<p>This is a game that has been on my list of projects for a long time and I've finally decided to work on it last night. Although, this post has nothing to do with Artificial Intelligence, I was inspired to write this game when I studied about <a href="https://en.wikipedia.org/wiki/Heuristic_(computer_science)">Heuristics</a> in the book named <a href="/posts/artificial-intelligence-a-modern-approach--chapter-1">Artificial Intelligence: A Modern Approach</a> and on how it was applied to this game.</p>
+
+<h2>What are the game mechanics?</h2>
+
+<p>This game is played on a <strong><em>four-by-four</em></strong> grid with numbered tiles that are shuffled randomly. As you can see, there are <strong><em>15 numbered cells</em></strong> and <strong><em>1 empty cell</em></strong> in the grid, this is to allow movement of the tiles within the grid.</p>
+
+<p>However, the movement is limited to the numbered tiles that are adjacent to the empty tile.</p>
+
+<p>The player wins the game after ordering all the numbered tiles in the grid in an order of ascending sequence.</p>
+
+<h2>Source code</h2>
+
+<p>Here's the source code of the entire game:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="kd">var</span> <span class="nx">board</span> <span class="o">=</span> <span class="p">[],</span> <span class="nx">rows</span> <span class="o">=</span> <span class="mf">4</span><span class="p">,</span> <span class="nx">cols</span> <span class="o">=</span> <span class="mf">4</span><span class="p">;</span>
+<span class="kd">var</span> <span class="nx">possibleMoves</span><span class="p">,</span> <span class="nx">zx</span><span class="p">,</span> <span class="nx">zy</span><span class="p">,</span> <span class="nx">oldzx</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1</span><span class="p">,</span> <span class="nx">oldzy</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1</span><span class="p">;</span>
+
+<span class="c1">//Generate 2D Board</span>
+<span class="kd">function</span> <span class="nx">generateBoard</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span> <span class="nx">i</span><span class="o">&lt;</span><span class="nx">rows</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="nx">board</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">[];</span>
+    <span class="p">}</span>
+
+    <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">j</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span> <span class="nx">j</span><span class="o">&lt;</span><span class="nx">cols</span><span class="p">;</span> <span class="nx">j</span><span class="o">++</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span> <span class="nx">i</span><span class="o">&lt;</span><span class="nx">rows</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="nx">board</span><span class="p">[</span><span class="nx">j</span><span class="p">][</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="nx">i</span> <span class="o">+</span> <span class="nx">j</span> <span class="o">*</span> <span class="mf">4</span><span class="p">)</span> <span class="o">+</span> <span class="mf">1</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="c1">//position of the empty cell in the grid i.e. 3,3</span>
+    <span class="nx">zx</span> <span class="o">=</span> <span class="nx">zy</span> <span class="o">=</span> <span class="mf">3</span><span class="p">;</span>
+    <span class="nx">board</span><span class="p">[</span><span class="nx">zx</span><span class="p">][</span><span class="nx">zy</span><span class="p">]</span> <span class="o">=</span> <span class="mf">16</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="c1">//Generate the cells</span>
+<span class="kd">function</span> <span class="nx">generateCells</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">grid</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s2">&quot;div&quot;</span><span class="p">);</span>
+    <span class="nx">grid</span><span class="p">.</span><span class="nx">className</span> <span class="o">+=</span> <span class="s2">&quot;board&quot;</span><span class="p">;</span>
+
+    <span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">appendChild</span><span class="p">(</span><span class="nx">grid</span><span class="p">);</span>
+
+    <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">j</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span> <span class="nx">j</span><span class="o">&lt;</span><span class="mf">4</span><span class="p">;</span> <span class="nx">j</span><span class="o">++</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span> <span class="nx">i</span><span class="o">&lt;</span><span class="mf">4</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">cell</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s2">&quot;div&quot;</span><span class="p">);</span>
+            <span class="nx">cell</span><span class="p">.</span><span class="nx">className</span> <span class="o">+=</span> <span class="s2">&quot;cell&quot;</span><span class="p">;</span>
+            <span class="nx">cell</span><span class="p">.</span><span class="nx">id</span> <span class="o">=</span> <span class="s2">&quot;cell_&quot;</span> <span class="o">+</span> <span class="p">(</span><span class="nx">i</span> <span class="o">+</span> <span class="nx">j</span> <span class="o">*</span> <span class="mf">4</span><span class="p">);</span>
+            <span class="nx">cell</span><span class="p">.</span><span class="nx">row</span> <span class="o">=</span> <span class="nx">i</span><span class="p">;</span>
+            <span class="nx">cell</span><span class="p">.</span><span class="nx">col</span> <span class="o">=</span> <span class="nx">j</span><span class="p">;</span>
+            <span class="nx">cell</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;click&quot;</span><span class="p">,</span> <span class="nx">cellEventHandle</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
+            <span class="nx">cell</span><span class="p">.</span><span class="nx">appendChild</span><span class="p">(</span><span class="nb">document</span><span class="p">.</span><span class="nx">createTextNode</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">));</span>
+            <span class="nx">grid</span><span class="p">.</span><span class="nx">appendChild</span><span class="p">(</span><span class="nx">cell</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="cm">/*</span>
+<span class="cm">    Determine the possible number of moves</span>
+<span class="cm">    based on the empty cell&#39;s coordinates.</span>
+<span class="cm">*/</span>
+<span class="kd">function</span> <span class="nx">genPossibleMoves</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="nx">possibleMoves</span> <span class="o">=</span> <span class="p">[];</span>
+    <span class="kd">var</span> <span class="nx">ii</span><span class="p">,</span> <span class="nx">jj</span><span class="p">;</span>
+
+    <span class="cm">/*</span>
+<span class="cm">        Just for reference:</span>
+<span class="cm">        The empty cell can be moved in the following x,y coords:</span>
+<span class="cm">        -1,0, 0,-1, 1,0, 0,1</span>
+<span class="cm">    */</span>
+    <span class="kd">var</span> <span class="nx">xCoords</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="mf">1</span><span class="p">,</span> <span class="mf">0</span><span class="p">,</span> <span class="mf">1</span><span class="p">,</span> <span class="mf">0</span><span class="p">];</span>
+    <span class="kd">var</span> <span class="nx">yCoords</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0</span><span class="p">,</span> <span class="o">-</span><span class="mf">1</span><span class="p">,</span> <span class="mf">0</span><span class="p">,</span> <span class="mf">1</span><span class="p">];</span>
+
+    <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span> <span class="nx">i</span><span class="o">&lt;</span><span class="mf">4</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="nx">ii</span> <span class="o">=</span> <span class="nx">zx</span> <span class="o">+</span> <span class="nx">xCoords</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
+        <span class="nx">jj</span> <span class="o">=</span> <span class="nx">zy</span> <span class="o">+</span> <span class="nx">yCoords</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
+
+        <span class="c1">//If it&#39;s out of bounds, skip it</span>
+        <span class="k">if</span><span class="p">(</span><span class="nx">ii</span> <span class="o">&lt;</span> <span class="mf">0</span> <span class="o">||</span> <span class="nx">jj</span> <span class="o">&lt;</span> <span class="mf">0</span> <span class="o">||</span> <span class="nx">ii</span> <span class="o">&gt;</span> <span class="mf">3</span> <span class="o">||</span> <span class="nx">jj</span> <span class="o">&gt;</span> <span class="mf">3</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="k">continue</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="nx">possibleMoves</span><span class="p">.</span><span class="nx">push</span><span class="p">({</span><span class="nx">x</span><span class="o">:</span> <span class="nx">ii</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="nx">jj</span><span class="p">});</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">updateCells</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">j</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span> <span class="nx">j</span><span class="o">&lt;</span><span class="nx">cols</span><span class="p">;</span> <span class="nx">j</span><span class="o">++</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span> <span class="nx">i</span><span class="o">&lt;</span><span class="nx">rows</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">cell_id</span> <span class="o">=</span> <span class="s2">&quot;cell_&quot;</span> <span class="o">+</span> <span class="p">(</span><span class="nx">i</span> <span class="o">+</span> <span class="nx">j</span> <span class="o">*</span> <span class="mf">4</span><span class="p">);</span>
+            <span class="kd">var</span> <span class="nx">cell</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="nx">cell_id</span><span class="p">);</span>
+            <span class="kd">var</span> <span class="nx">val</span> <span class="o">=</span> <span class="nx">board</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="nx">j</span><span class="p">];</span>
+
+            <span class="k">if</span><span class="p">(</span><span class="nx">val</span> <span class="o">&lt;</span> <span class="mf">16</span><span class="p">)</span>
+            <span class="p">{</span>
+                <span class="nx">cell</span><span class="p">.</span><span class="nx">innerHTML</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;&quot;</span> <span class="o">+</span> <span class="nx">val</span><span class="p">);</span>
+                <span class="k">if</span><span class="p">(</span><span class="nx">val</span> <span class="o">%</span> <span class="mf">2</span> <span class="o">==</span> <span class="mf">0</span><span class="p">)</span>
+                <span class="p">{</span>
+                    <span class="nx">cell</span><span class="p">.</span><span class="nx">className</span> <span class="o">=</span> <span class="s2">&quot;cell dark&quot;</span><span class="p">;</span>               
+                <span class="p">}</span>
+                <span class="k">else</span>
+                <span class="p">{</span>
+                    <span class="nx">cell</span><span class="p">.</span><span class="nx">className</span> <span class="o">=</span> <span class="s2">&quot;cell light&quot;</span><span class="p">;</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+            <span class="k">else</span>
+            <span class="p">{</span>
+                <span class="nx">cell</span><span class="p">.</span><span class="nx">innerHTML</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">;</span>
+                <span class="nx">cell</span><span class="p">.</span><span class="nx">className</span> <span class="o">=</span> <span class="s2">&quot;empty&quot;</span><span class="p">;</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1">//Event handler for each cell</span>
+<span class="kd">function</span> <span class="nx">cellEventHandle</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="nx">genPossibleMoves</span><span class="p">();</span>
+
+    <span class="c1">//Current coords of the cell</span>
+    <span class="kd">var</span> <span class="nx">r</span> <span class="o">=</span> <span class="nx">e</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">row</span><span class="p">;</span>
+    <span class="kd">var</span> <span class="nx">c</span> <span class="o">=</span> <span class="nx">e</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">col</span><span class="p">;</span>
+    <span class="kd">var</span> <span class="nx">pos</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1</span><span class="p">;</span>
+    <span class="kd">var</span> <span class="nx">isPossible</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+    <span class="c1">// console.log(r + &quot;,&quot; + c);</span>
+
+    <span class="cm">/*</span>
+<span class="cm">        Check if the current cell is </span>
+<span class="cm">        one of the possible moves</span>
+<span class="cm">    */</span>
+    <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span> <span class="nx">i</span><span class="o">&lt;</span><span class="nx">possibleMoves</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">if</span><span class="p">(</span><span class="nx">possibleMoves</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">x</span> <span class="o">==</span> <span class="nx">r</span> <span class="o">&amp;&amp;</span> <span class="nx">possibleMoves</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">y</span> <span class="o">==</span> <span class="nx">c</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="nx">isPossible</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+            <span class="nx">pos</span> <span class="o">=</span> <span class="nx">i</span><span class="p">;</span>
+            <span class="k">break</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span><span class="p">(</span><span class="nx">isPossible</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">temp</span> <span class="o">=</span> <span class="nx">possibleMoves</span><span class="p">[</span><span class="nx">pos</span><span class="p">];</span>
+
+        <span class="c1">//Swap position of the empty cell</span>
+        <span class="nx">board</span><span class="p">[</span><span class="nx">zx</span><span class="p">][</span><span class="nx">zy</span><span class="p">]</span> <span class="o">=</span> <span class="nx">board</span><span class="p">[</span><span class="nx">temp</span><span class="p">.</span><span class="nx">x</span><span class="p">][</span><span class="nx">temp</span><span class="p">.</span><span class="nx">y</span><span class="p">];</span>
+        <span class="c1">//Update the coordinates of the empty cell</span>
+        <span class="nx">zx</span> <span class="o">=</span> <span class="nx">temp</span><span class="p">.</span><span class="nx">x</span><span class="p">;</span>
+        <span class="nx">zy</span> <span class="o">=</span> <span class="nx">temp</span><span class="p">.</span><span class="nx">y</span><span class="p">;</span>
+        <span class="nx">board</span><span class="p">[</span><span class="nx">zx</span><span class="p">][</span><span class="nx">zy</span><span class="p">]</span> <span class="o">=</span> <span class="mf">16</span><span class="p">;</span>
+        <span class="nx">updateCells</span><span class="p">();</span>
+
+        <span class="c1">//Check if the game is over</span>
+        <span class="k">if</span><span class="p">(</span><span class="nx">is_game_over</span><span class="p">())</span>
+        <span class="p">{</span>
+            <span class="nx">setTimeout</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
+                <span class="nx">alert</span><span class="p">(</span><span class="s2">&quot;Congrats!&quot;</span><span class="p">);</span>
+            <span class="p">},</span> <span class="mf">2</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+<span class="p">}</span>
+
+<span class="c1">//Check if the game is over</span>
+<span class="kd">function</span> <span class="nx">is_game_over</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">currentVal</span> <span class="o">=</span> <span class="mf">0</span><span class="p">;</span>
+    <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">j</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span> <span class="nx">j</span><span class="o">&lt;</span><span class="nx">cols</span><span class="p">;</span> <span class="nx">j</span><span class="o">++</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span> <span class="nx">i</span><span class="o">&lt;</span><span class="nx">rows</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="k">if</span><span class="p">(</span><span class="nx">board</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="nx">j</span><span class="p">]</span> <span class="o">&lt;</span> <span class="nx">currentVal</span><span class="p">)</span>
+            <span class="p">{</span>
+                <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>
+            <span class="p">}</span>
+
+            <span class="nx">currentVal</span> <span class="o">=</span> <span class="nx">board</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="nx">j</span><span class="p">];</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="c1">//Shuffle the board</span>
+<span class="kd">function</span> <span class="nx">shuffleBoard</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">shuffleLimit</span> <span class="o">=</span> <span class="mf">0</span><span class="p">;</span>
+    <span class="kd">var</span> <span class="nx">temp</span><span class="p">;</span>
+
+    <span class="k">do</span>
+    <span class="p">{</span>
+        <span class="nx">genPossibleMoves</span><span class="p">();</span>
+
+        <span class="k">while</span><span class="p">(</span><span class="kc">true</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="c1">// Pick a random cell of possible moves</span>
+            <span class="nx">temp</span> <span class="o">=</span> <span class="nx">possibleMoves</span><span class="p">[</span><span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="nx">possibleMoves</span><span class="p">.</span><span class="nx">length</span><span class="p">)];</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">temp</span><span class="p">.</span><span class="nx">x</span> <span class="o">!=</span> <span class="nx">oldzx</span> <span class="o">||</span> <span class="nx">temp</span><span class="p">.</span><span class="nx">y</span> <span class="o">!=</span> <span class="nx">oldzy</span><span class="p">)</span>
+            <span class="p">{</span>
+                <span class="k">break</span><span class="p">;</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+
+        <span class="nx">oldzx</span> <span class="o">=</span> <span class="nx">zx</span><span class="p">;</span>
+        <span class="nx">oldzy</span> <span class="o">=</span> <span class="nx">zy</span><span class="p">;</span>
+
+        <span class="nx">board</span><span class="p">[</span><span class="nx">zx</span><span class="p">][</span><span class="nx">zy</span><span class="p">]</span> <span class="o">=</span> <span class="nx">board</span><span class="p">[</span><span class="nx">temp</span><span class="p">.</span><span class="nx">x</span><span class="p">][</span><span class="nx">temp</span><span class="p">.</span><span class="nx">y</span><span class="p">];</span>
+        <span class="nx">zx</span> <span class="o">=</span> <span class="nx">temp</span><span class="p">.</span><span class="nx">x</span><span class="p">;</span>
+        <span class="nx">zy</span> <span class="o">=</span> <span class="nx">temp</span><span class="p">.</span><span class="nx">y</span><span class="p">;</span>
+        <span class="nx">board</span><span class="p">[</span><span class="nx">zx</span><span class="p">][</span><span class="nx">zy</span><span class="p">]</span> <span class="o">=</span> <span class="mf">16</span><span class="p">;</span>
+
+    <span class="p">}</span><span class="k">while</span><span class="p">(</span><span class="o">++</span><span class="nx">shuffleLimit</span> <span class="o">&lt;</span> <span class="mf">200</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="c1">//REstart the game</span>
+<span class="kd">function</span> <span class="nx">restart</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="nx">shuffleBoard</span><span class="p">();</span>
+    <span class="nx">updateCells</span><span class="p">();</span>
+<span class="p">}</span>
+
+<span class="c1">//Start the game</span>
+<span class="kd">function</span> <span class="nx">start</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="nx">generateBoard</span><span class="p">();</span>
+    <span class="nx">generateCells</span><span class="p">();</span>
+    <span class="nx">restart</span><span class="p">();</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>As I had mentioned above, today's article has nothing to do with Artificial Intelligence but in the future, I plan to write a solver for this game that makes use of Heuristics.</p>
+
+<p>Hope you liked reading this article and have fun playing the game!</p>
+
+<p>Stay tuned for more!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>June 22nd, 2019</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/personal-challenge/">
+					Personal Challenge
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/writings/posts/keep-a-programming-journal-using-vim-and-bash">Keep a programming journal using VIM and Bash</a></h1>
+		<p class="description">Become a better programmer by writing your own programming journal using VIM and Bash.</p>
+	</div>
+	<div class="article-body">
+		<p>Back in the days of Polymath scientists, physicists and engineers like <a href="https://en.wikipedia.org/wiki/Leonardo_Da_Vinci">Leonardo Da Vinci</a> and <a href="https://en.wikipedia.org/wiki/Albert_Einstein">Albert Einstein</a>, they usually maintained a sort of journal to record their thoughts, ideas and experiments.</p>
+
+<p>It's been 20 days since I have started maintaining journals, one is for personal stuff and the other is for programming, engineering and math related stuff, I mean, we all need to have some new hobbies to keep ourselves productive, right?</p>
+
+<p>Maintaining a journal helped me create a flow to write down my experiences ofthe day. It also helps me clear my mind and be more emotionally stable (I get moody, sometimes) and record my thoughts and ideas too.</p>
+
+<p>There are so many ways to write a journal like you could sign up on some online platform, install Evernote on your desktop or mobile or traditional pen and paper (which is the best way, honestly).</p>
+
+<h2>Requirements</h2>
+
+<p>I thought of keeping it in my laptop and I wanted it to have the following features:</p>
+
+<ol>
+<li>No use of internet required</li>
+<li>Must be super fast, simple and precise to the point</li>
+<li>Privacy (I mean, you can't trust the internet, sometimes!)</li>
+<li>Record thoughts and ideas with a timestamp, similar to a logbook</li>
+<li>Yes, it must look cool and nerdy</li>
+</ol>
+
+<p>I looked on some options like Google Docs, Dropbox Paper and Evernote but I just wanted something that matches my requirements. I went on YouTube and I saw a guy named <a href="https://www.youtube.com/watch?v=M_TQ3tgc4kg">Mike Levin</a>, who made a video named "VIM Journalcasting Experiment" and it inspired me to create something like that too.</p>
+
+<h2>Setup</h2>
+
+<p>First, you need to create a directory to store your journal notes and create a file to create them:</p>
+
+<div class="codehilite"><pre><span></span><code>mkdir journal
+<span class="nb">cd</span> journal
+touch writer.sh
+chmod u+rwx writer.sh
+</code></pre></div>
+
+<p>Next, you need to write a few lines of code in Bash:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="ch">#!/bin/bash</span>
+
+<span class="nv">folder</span><span class="o">=</span><span class="sb">`</span>date +%Y_%m_%d<span class="sb">`</span>
+mkdir -p <span class="nv">$folder</span>
+<span class="nb">cd</span> <span class="nv">$folder</span>
+
+vi +star <span class="sb">`</span>date +%Y%m%d<span class="sb">`</span><span class="s2">&quot;.jrnl&quot;</span>
+</code></pre></div>
+
+<p>One more step, create an alias on your <strong><em>bash_profile</em></strong> in order to access it from anywhere:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="nb">alias</span> <span class="nv">jrnl</span><span class="o">=</span><span class="s2">&quot;cd /journal;./writer.sh&quot;</span>
+</code></pre></div>
+
+<p>Alright, that's the basic setup! To test it, just do the following in your Terminal:</p>
+
+<div class="codehilite"><pre><span></span><code>journal
+</code></pre></div>
+
+<h2>VIM Customization</h2>
+
+<p>Are you one of those people who gets confused on how to get out of VIM? Don't worry, you'll figure it out <a href="https://google.com/search?q=how-to-get-out-of-vim">over here</a>!</p>
+
+<p>The following setup can be done in your <code>~/.vimrc</code> file to enhance your journaling experience like adding a spellchecker, word counter, highlight colors and so on.</p>
+
+<p>Below are the configurations:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="nb">set</span> spell <span class="nv">spelllang</span><span class="o">=</span>en_gb
+cmap &lt;F6&gt; setlocal spell!
+
+<span class="k">function</span>! WordCount<span class="o">()</span>
+        <span class="nb">let</span> s:old_status <span class="o">=</span> v:statusmsg
+        <span class="nb">let</span> <span class="nv">position</span> <span class="o">=</span> getpos<span class="o">(</span><span class="s2">&quot;.&quot;</span><span class="o">)</span>
+        exe <span class="s2">&quot;:silent normal g\&lt;c-g&gt;&quot;</span>
+        <span class="nb">let</span> <span class="nv">stat</span> <span class="o">=</span> v:statusmsg
+        <span class="nb">let</span> s:word_count <span class="o">=</span> <span class="m">0</span>
+        <span class="k">if</span> stat !<span class="o">=</span> <span class="s1">&#39;--No lines in buffer--&#39;</span>
+                <span class="nb">let</span> s:word_count <span class="o">=</span> str2nr<span class="o">(</span>split<span class="o">(</span>v:statusmsg<span class="o">)[</span><span class="m">11</span><span class="o">])</span>
+                <span class="nb">let</span> v:statusmsg <span class="o">=</span> s:old_status
+        end
+        call setpos<span class="o">(</span><span class="s1">&#39;.&#39;</span>, position<span class="o">)</span>
+        <span class="k">return</span> s:word_count
+endfunction
+
+hi User1 <span class="nv">ctermbg</span><span class="o">=</span>black <span class="nv">ctermfg</span><span class="o">=</span>red <span class="nv">cterm</span><span class="o">=</span>BOLD <span class="nv">guibg</span><span class="o">=</span>black <span class="nv">guifg</span><span class="o">=</span>red <span class="nv">gui</span><span class="o">=</span>BOLD
+
+<span class="nb">set</span> <span class="nv">laststatus</span><span class="o">=</span><span class="m">2</span>
+<span class="nb">set</span> <span class="nv">statusline</span><span class="o">=</span>
+<span class="nb">set</span> <span class="nv">statusline</span><span class="o">+=</span>%1*
+<span class="nb">set</span> <span class="nv">statusline</span><span class="o">+=</span>%&lt;<span class="se">\</span>
+</code></pre></div>
+
+<p>Now, you can start writing your own journal whenever and wherever you want using VIM.</p>
+
+<h2>Conclusion</h2>
+
+<p>I'm not saying that you should write your journal on VIM, I thought it would be fun if I could do it on VIM, so that I get a chance to learn it. However, you can do it on Notepad too!</p>
+
+<p>Apart from that, journaling does have a lot of benefits and can help you become more productive!</p>
+
+<p>Get your ideas floating and start building cool stuff!</p>
+
+<p>Hope you liked reading this article!</p>
+
+<p>Until next time, then!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>April 26th, 2019</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/productivity/">
+					Productivity
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/writings/posts/stripes-scrolling-bubble-header">Stripe's Scrolling Bubble Header</a></h1>
+		<p class="description">An insight into Stripe's interesting use of animated elements.</p>
+	</div>
+	<div class="article-body">
+		<p><link rel="stylesheet" type="text/css" href="/static/projects/stripe-bubbles/index.css"/></p>
+
+<script defer type="text/javascript" src="/static/projects/stripe-bubbles/perlin.js"></script>
+
+<script defer type="text/javascript" src="/static/projects/stripe-bubbles/script.js"></script>
+
+<div id="bubbleWrapper">
+    <div class="stripe-bubbles"></div>
+</div>
+
+<p>Want to know how to make it on your own? Read the article below!</p>
+
+<p>If you're a UI/UX developer, you've probably heard about <a href="https://www.stripe.com">Stripe.com</a> and their uses of motion and design with their targeted audience in mind.</p>
+
+<p>As I was exploring their website, I discovered their <a href="https://stripe.com/customers">customers</a> page and instantly, I was intrigued by their smooth scrolling bubble header and the concept was interesting enought that it caught my attention.</p>
+
+<p>In this article, I'll explain on how I had attempted to recreate their scrolling bubble header.</p>
+
+<h2>Analysis</h2>
+
+<p>The mechanics are pretty simple to understand, these are the following:</p>
+
+<ul>
+<li>The bubbles are randomly generated and placed on page load</li>
+<li>Smooth animation of the up and down movements</li>
+<li>Infinite animation loop</li>
+</ul>
+
+<p>A trivial problem, isn't it? Time to see if we can recreate it!</p>
+
+<h2>Step 1: Create the bubble</h2>
+
+<p>Let's write the CSS to create a simple bubble with a <mark>width</mark> and <mark>height</mark> of 150px and by giving it a <mark>border-radius</mark> of 50%.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="p">.</span><span class="nc">stripe-bubble</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">width</span><span class="p">:</span><span class="w"> </span><span class="mi">150</span><span class="kt">px</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">height</span><span class="p">:</span><span class="w"> </span><span class="mi">150</span><span class="kt">px</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">border-radius</span><span class="p">:</span><span class="w"> </span><span class="mi">50</span><span class="kt">%</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+
+<p>As for the logo, I inspected their code and figured out that Stripe combined all of their customer logos into a single image, also known as, CSS Spritesheet.</p>
+
+<figure>
+    <img src="/static/images/stripe-customer-logos.png"/>
+</figure>
+
+<p>Performance-wise, it's a clever technique used to reduce the number of HTTP requests that your internet browser has to make on every page request.</p>
+
+<p>Let's give the CSS spritesheet as a background-image property and adjust it enough to fit the size of one bubble.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="p">.</span><span class="nc">stripe-bubble</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">position</span><span class="p">:</span><span class="w"> </span><span class="kc">absolute</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">width</span><span class="p">:</span><span class="w"> </span><span class="mi">150</span><span class="kt">px</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">height</span><span class="p">:</span><span class="w"> </span><span class="mi">150</span><span class="kt">px</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">border-radius</span><span class="p">:</span><span class="w"> </span><span class="mi">50</span><span class="kt">%</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">background-image</span><span class="p">:</span><span class="w"> </span><span class="nb">url</span><span class="p">(</span><span class="s1">&#39;https://www.stripe.com/img/v3/customers/logos/header-logos.png&#39;</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="k">box-shadow</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">15</span><span class="kt">px</span><span class="w"> </span><span class="mi">35</span><span class="kt">px</span><span class="w"> </span><span class="nb">rgba</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.1</span><span class="p">),</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">3</span><span class="kt">px</span><span class="w"> </span><span class="mi">10</span><span class="kt">px</span><span class="w"> </span><span class="nb">rgba</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.1</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="k">background-size</span><span class="p">:</span><span class="w"> </span><span class="mi">1076</span><span class="kt">px</span><span class="w"> </span><span class="mi">1076</span><span class="kt">px</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+
+<p>There are about 43 logos, which means you'll have to create different logos by adjusting the background position property.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="p">.</span><span class="nc">logo-1</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">background-position</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+
+<span class="p">.</span><span class="nc">logo-2</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">background-position</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">-154</span><span class="kt">px</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+
+<span class="p">.</span><span class="nc">logo-3</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">background-position</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">-308</span><span class="kt">px</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+
+<p>In the next step, using JavaScript, we'll create the classes for the bubbles and the header.</p>
+
+<h2>Step 2: Create a class for Bubble</h2>
+
+<p>Before we get in deep, let's create the foundation for our code, so that it'll make things neat and tidy and easier on the go. Below, I have created two classes: one is for the bubble and the other is for the bubble wrapper (no puns):</p>
+
+<div class="codehilite"><pre><span></span><code><span class="kd">class</span> <span class="nx">Bubble</span> <span class="p">{</span>
+    <span class="kr">constructor</span><span class="p">(){}</span>
+    <span class="nx">update</span><span class="p">(){}</span>
+<span class="p">}</span>
+
+<span class="kd">class</span> <span class="nx">BubbleMarquee</span> <span class="p">{</span>
+    <span class="kr">constructor</span><span class="p">(){}</span>
+    <span class="nx">update</span><span class="p">(){}</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>Great, you have created the classes, we can now use these to generate the bubbles dynamically in the next step.</p>
+
+<h2>Step 3: Bubble's scale and position</h2>
+
+<figure>
+    <img src="/static/images/stripe-bubbles.png"/>
+</figure>
+
+<p>As you see in the image above, the logos are randomly placed and scaled. It's clear that there has to be some sort of a pattern, so I decided to take a look into their code:</p>
+
+<figure>
+    <img src="/static/images/stripe-bubble-code.png"/>
+</figure>
+
+<p>Aha! I discovered that the positioning and scaling of the bubbles are hard-coded and then the logos order are randomly shuffled. I won't be adding a randomizer but for now, let's add the bubbles with it's specifications and respective logos.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="kd">const</span> <span class="nx">bubbleSettings</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgAffirm&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.6</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">77</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">1134</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgAllianz&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.6</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">271</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">1620</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgAmazon &#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.6</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">372</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">1761</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgBookingCom&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.6</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">79</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">2499</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgCatawiki&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.6</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">334</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">2704</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgCityofBoston&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.6</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">356</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">2271</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgDeliveroo&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.6</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">226</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">795</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgDoordash&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.6</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">256</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">276</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgExpedia&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.6</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">365</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">1210</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgFitbit&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.6</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">193</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">444</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgGoogle&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.6</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">387</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">2545</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgIndiegogo&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.7</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">193</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">1303</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgInstacart&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.7</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">88</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">907</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgKickstarter&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.7</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">320</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">633</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgLyft&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.7</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">76</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">323</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgNasdaq&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.7</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">357</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">129</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgNat-Geo &#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.7</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">342</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">1440</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgRackspace&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.7</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">293</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">1929</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgReddit&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.7</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">198</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">2135</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgSalesforce&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.7</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">82</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">2276</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgShopify&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.7</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">182</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">2654</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgSlack&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.7</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">75</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">2783</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgSpotify&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.7</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">118</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">1519</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgSquarespace&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.7</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">233</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">1071</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgTarget&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.7</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">148</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">1773</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgTed&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.7</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">385</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">2098</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgTheGuardian&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.7</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">244</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">2423</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgTwitch&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.7</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">385</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">901</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgUber&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.7</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">111</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">624</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgWeTransfer&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.7</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">103</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">145</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgWish&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.7</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">367</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">413</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgXero&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.7</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">251</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">2805</span> <span class="p">},</span> 
+    <span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgYelp&#39;</span><span class="p">,</span> <span class="nx">s</span><span class="o">:</span> <span class="mf">.7</span><span class="p">,</span> <span class="nx">x</span><span class="o">:</span> <span class="mf">75</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">1990</span> <span class="p">}</span>
+<span class="p">];</span>
+
+<span class="kd">class</span> <span class="nx">Bubble</span> <span class="p">{</span>
+    <span class="kr">constructor</span><span class="p">(</span><span class="nx">index</span><span class="p">,</span> <span class="p">{</span><span class="nx">cssClass</span><span class="p">,</span> <span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">,</span> <span class="nx">s</span><span class="o">=</span><span class="mf">.9</span><span class="p">}){</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">index</span> <span class="o">=</span> <span class="nx">index</span><span class="p">;</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="nx">x</span><span class="p">;</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="nx">y</span><span class="p">;</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">scale</span> <span class="o">=</span> <span class="nx">s</span><span class="p">;</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">cssClass</span> <span class="o">=</span> <span class="nx">cssClass</span><span class="p">;</span>
+
+        <span class="k">this</span><span class="p">.</span><span class="nx">el</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s2">&quot;div&quot;</span><span class="p">);</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">el</span><span class="p">.</span><span class="nx">className</span> <span class="o">=</span> <span class="sb">`stripe-bubble </span><span class="si">${</span><span class="k">this</span><span class="p">.</span><span class="nx">cssClass</span><span class="si">}</span><span class="sb">`</span><span class="p">;</span>
+
+        <span class="nx">marqueeEl</span><span class="p">.</span><span class="nx">appendChild</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">el</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="nx">update</span><span class="p">(){}</span>
+<span class="p">}</span>
+
+<span class="kd">class</span> <span class="nx">BubbleMarquee</span><span class="p">{</span>
+    <span class="kr">constructor</span><span class="p">(</span><span class="nx">settings</span><span class="p">){</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">bubbles</span> <span class="o">=</span> <span class="p">[];</span>
+
+        <span class="nx">settings</span><span class="p">.</span><span class="nx">forEach</span><span class="p">((</span><span class="nx">setting</span><span class="p">,</span> <span class="nx">index</span><span class="p">)</span> <span class="p">=&gt;{</span>
+            <span class="k">this</span><span class="p">.</span><span class="nx">bubbles</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="ow">new</span> <span class="nx">Bubble</span><span class="p">(</span><span class="nx">index</span><span class="p">,</span> <span class="nx">setting</span><span class="p">));</span>
+        <span class="p">});</span>
+    <span class="p">}</span>
+    <span class="nx">update</span><span class="p">(){}</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>Okay, now off to animating the bubbles!</p>
+
+<h2>Step 4: Animation</h2>
+
+<p>You could use absolute positioning properties like <mark>top</mark> and <mark>left</mark> but it'd be really expensive in terms of calculations, instead of that, you could use <mark>transform</mark> to move the elements.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="k">this</span><span class="p">.</span><span class="nx">el</span><span class="p">.</span><span class="nx">style</span><span class="p">.</span><span class="nx">transform</span> <span class="o">=</span> <span class="sb">`translate(</span><span class="si">${</span><span class="k">this</span><span class="p">.</span><span class="nx">x</span><span class="si">}</span><span class="sb">px, </span><span class="si">${</span><span class="k">this</span><span class="p">.</span><span class="nx">y</span><span class="si">}</span><span class="sb">px) scale(</span><span class="si">${</span><span class="k">this</span><span class="p">.</span><span class="nx">scale</span><span class="si">}</span><span class="sb">)`</span><span class="p">;</span>
+</code></pre></div>
+
+<p>As for the animation, you could use <mark>setInterval</mark> but don't do that, stop here and read about <a href="https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame">requestAnimationFrame</a>.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="kr">constructor</span><span class="p">(</span><span class="nx">settings</span><span class="p">){</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">bubbles</span> <span class="o">=</span> <span class="p">[];</span>
+
+    <span class="nx">settings</span><span class="p">.</span><span class="nx">forEach</span><span class="p">((</span><span class="nx">setting</span><span class="p">,</span> <span class="nx">index</span><span class="p">)</span> <span class="p">=&gt;{</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">bubbles</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="ow">new</span> <span class="nx">Bubble</span><span class="p">(</span><span class="nx">index</span><span class="p">,</span> <span class="nx">setting</span><span class="p">));</span>
+    <span class="p">});</span>
+
+    <span class="nx">requestAnimationFrame</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">update</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">));</span>
+<span class="p">}</span>
+
+<span class="nx">update</span><span class="p">(){</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">bubbles</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="nx">bubble</span> <span class="p">=&gt;</span> <span class="nx">bubble</span><span class="p">.</span><span class="nx">update</span><span class="p">());</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">raf</span> <span class="o">=</span> <span class="nx">requestAnimationFrame</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">update</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">));</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>Alright, you've done it! It's animating and looks cool but hey, did you notice that there animation doesn't look stale but is more organic-like? That's because they have added some random movement to each bubble.</p>
+
+<p>I took another peek at their code, I found out that they were using <a href="https://en.wikipedia.org/wiki/Perlin_noise">Perlin noise</a> to smoothen the animation movements. Unlike, <mark>Math.random()</mark>, I got to know that it's an algorithm used to generate a sequence of randomness that has some order, which helps create a smooth, organic movement.</p>
+
+<p>I didn't implement the algorithm instead I made use of an existing <a href="https://github.com/josephg/noisejs">implementation</a> written by <a href="https://github.com/josephg">Seph Gentle</a> found on GitHub.</p>
+
+<p>This is how your <mark>update()</mark> method should look like after adding the Perlin Noise:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="nx">update</span><span class="p">(){</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">noiseSeedX</span> <span class="o">+=</span> <span class="nx">noise_speed</span><span class="p">;</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">noiseSeedY</span> <span class="o">+=</span> <span class="nx">noise_speed</span><span class="p">;</span>
+
+    <span class="kd">var</span> <span class="nx">randomXPos</span> <span class="o">=</span> <span class="nx">noise</span><span class="p">.</span><span class="nx">simplex2</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">noiseSeedX</span><span class="p">,</span> <span class="mf">0</span><span class="p">);</span>
+    <span class="kd">var</span> <span class="nx">randomYPos</span> <span class="o">=</span> <span class="nx">noise</span><span class="p">.</span><span class="nx">simplex2</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">noiseSeedY</span><span class="p">,</span> <span class="mf">0</span><span class="p">);</span>
+
+    <span class="k">this</span><span class="p">.</span><span class="nx">y</span> <span class="o">-=</span> <span class="nx">scrollingSpeed</span><span class="p">;</span>
+
+    <span class="k">this</span><span class="p">.</span><span class="nx">xNoisePos</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">x</span> <span class="o">+</span> <span class="p">(</span><span class="nx">randomXPos</span> <span class="o">*</span> <span class="nx">noise_amnt</span><span class="p">);</span> 
+    <span class="k">this</span><span class="p">.</span><span class="nx">yNoisePos</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">y</span> <span class="o">+</span> <span class="p">(</span><span class="nx">randomYPos</span> <span class="o">*</span> <span class="nx">noise_amnt</span><span class="p">);</span> 
+
+    <span class="k">if</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">y</span> <span class="o">&lt;</span> <span class="o">-</span><span class="mf">500</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">y</span> <span class="o">=</span> <span class="nx">canvas_width</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">this</span><span class="p">.</span><span class="nx">el</span><span class="p">.</span><span class="nx">style</span><span class="p">.</span><span class="nx">transform</span> <span class="o">=</span> <span class="sb">`translate(</span><span class="si">${</span><span class="k">this</span><span class="p">.</span><span class="nx">xNoisePos</span><span class="si">}</span><span class="sb">px, </span><span class="si">${</span><span class="k">this</span><span class="p">.</span><span class="nx">yNoisePos</span><span class="si">}</span><span class="sb">px) scale(</span><span class="si">${</span><span class="k">this</span><span class="p">.</span><span class="nx">scale</span><span class="si">}</span><span class="sb">)`</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>After adding that, you have finally achieved what you wanted! Oh, you can find the source code for this project on my <a href="https://github.com/MegaColorBoy/BlogProjects/tree/master/stripe-bubbles">GitHub</a> repository.</p>
+
+<h2>Conclusion</h2>
+
+<p>I hope you enjoyed reading this blog article and learnt something new. If you have questions, please send me your <a href="mailto:megacolorboy@gmail.com">thoughts</a> and I would be happy to help you out!</p>
+
+<p>Thank you for reading!</p>
+
+<p>Stay tuned for more!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>April 6th, 2019</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/user-interface/">
+					User Interface
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/user-experience/">
+					User Experience
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/writings/posts/poker-hand-analyser-in-python">Poker Hand Analyser in Python</a></h1>
 		<p class="description">An algorithm that parses a five-card poker hand and determines it's rank.</p>
 	</div>
@@ -730,632 +1664,6 @@
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/say-hello-new-blog">Say Hello, New Blog</a></h1>
-		<p class="description">Everything from new updates to shifting to a static site generator.</p>
-	</div>
-	<div class="article-body">
-		<p>Hello, 2019!</p>
-
-<p>Uhh, I guess it's a bit too late, but better late than never!</p>
-
-<p>Lately, the concept of using a static site generator has become the new rage. This blog that you are seeing now is powered by a custom-built static site generator written on Python and trust me, I love it!</p>
-
-<h2>Why shift from a dynamic to static website?</h2>
-
-<p>It took me some time to make a decision on why I would need to make a shift from a dynamic website to a website that serves static files, here are some of my reasons:</p>
-
-<ul>
-<li>Edit posts using Markdown</li>
-<li>Increased speed</li>
-<li>Eliminates the use of CMS and Databases</li>
-<li>Pre-generated and will be served on request without any delay</li>
-<li>Lightweight</li>
-<li>Ease of Maintenance</li>
-<li>More secure</li>
-</ul>
-
-<p>Apart from that, I wanted to understand the concept of Static Site Generators, so I thought of writing a static site generator using Python.</p>
-
-<p>Sure, there are many static site generators available online but I always like to be the curious cat!</p>
-
-<h2>How it works</h2>
-
-<p>Nothing complicated, the concept is pretty simple. All you have to do is write down your articles in Markdown and when you execute your static site generator, it will compile all your posts from your directory into individual static files using a template, which can then be served to your visitors.</p>
-
-<p>For example, let's say you have a markdown file named <mark>hello-world.md</mark> and you wrote your content:</p>
-
-<div class="codehilite"><pre><span></span><code>title: Hello World
-date: 2019-03-01 20:00
-
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed ut sollicitudin dui, 
-pulvinar vulputate nibh. Cras eu nunc mauris. Vestibulum quis diam at diam feugiat semper vitae at sem. 
-Mauris in orci iaculis mauris semper gravida at nec augue. Phasellus luctus accumsan velit, 
-in molestie odio luctus at. Curabitur neque erat, pretium vitae condimentum placerat, sodales eu 
-nisi. Cras pretium nulla ac est interdum, vitae tempor mauris ornare. 
-Nullam tortor nisi, scelerisque vel purus id, dictum finibus erat. Nulla tincidunt egestas 
-sodales. Sed sit amet elit placerat, pellentesque est in, bibendum enim. Nam dolor lorem, venenatis sit 
-amet sem at, sagittis feugiat risus. Fusce turpis felis, sodales a tortor vitae, volutpat semper 
-justo. Donec porta id mi non porttitor. Fusce id est sit amet leo consectetur consequat.
-</code></pre></div>
-
-<p>Also, this is your template:</p>
-
-<div class="codehilite"><pre><span></span><code><span class="p">&lt;</span><span class="nt">html</span><span class="p">&gt;</span>
-    <span class="p">&lt;</span><span class="nt">head</span><span class="p">&gt;</span>
-        <span class="p">&lt;</span><span class="nt">title</span><span class="p">&gt;</span>{{ title }}<span class="p">&lt;/</span><span class="nt">title</span><span class="p">&gt;</span>
-    <span class="p">&lt;/</span><span class="nt">head</span><span class="p">&gt;</span>
-    <span class="p">&lt;</span><span class="nt">body</span><span class="p">&gt;</span>
-    <span class="p">&lt;</span><span class="nt">div</span><span class="p">&gt;</span>Published on: {{ date }}<span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
-    {{ content }}
-    <span class="p">&lt;/</span><span class="nt">body</span><span class="p">&gt;</span>
-<span class="p">&lt;/</span><span class="nt">html</span><span class="p">&gt;</span>
-</code></pre></div>
-
-<p>And when you execute the application, this is what happens:</p>
-
-<div class="codehilite"><pre><span></span><code><span class="p">&lt;</span><span class="nt">html</span><span class="p">&gt;</span>
-    <span class="p">&lt;</span><span class="nt">head</span><span class="p">&gt;</span>
-        <span class="p">&lt;</span><span class="nt">title</span><span class="p">&gt;</span>Hello World<span class="p">&lt;/</span><span class="nt">title</span><span class="p">&gt;</span>
-    <span class="p">&lt;/</span><span class="nt">head</span><span class="p">&gt;</span>
-    <span class="p">&lt;</span><span class="nt">body</span><span class="p">&gt;</span>
-    <span class="p">&lt;</span><span class="nt">div</span><span class="p">&gt;</span>Published on: 2019-03-01 20:00<span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
-    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed ut sollicitudin dui, 
-    pulvinar vulputate nibh. Cras eu nunc mauris. Vestibulum quis diam at diam feugiat semper vitae at sem. 
-    Mauris in orci iaculis mauris semper gravida at nec augue. Phasellus luctus accumsan velit, 
-    in molestie odio luctus at. Curabitur neque erat, pretium vitae condimentum placerat, sodales eu 
-    nisi. Cras pretium nulla ac est interdum, vitae tempor mauris ornare. 
-    Nullam tortor nisi, scelerisque vel purus id, dictum finibus erat. Nulla tincidunt egestas 
-    sodales. Sed sit amet elit placerat, pellentesque est in, bibendum enim. Nam dolor lorem, venenatis sit 
-    amet sem at, sagittis feugiat risus. Fusce turpis felis, sodales a tortor vitae, volutpat semper 
-    justo. Donec porta id mi non porttitor. Fusce id est sit amet leo consectetur consequat.
-    <span class="p">&lt;/</span><span class="nt">body</span><span class="p">&gt;</span>
-<span class="p">&lt;/</span><span class="nt">html</span><span class="p">&gt;</span>
-</code></pre></div>
-
-<p>The generator just parsed your article on Markdown and put the details on the template and tada, the article is generated. Easy peasy!</p>
-
-<p>The next step is to deploy it, I wrote a bash script to deploy all static files via FTP onto my server.</p>
-
-<p>It's a simple but powerful idea and gives me a lot of flexibility to create my future blog posts with each having a different look (not always, but sometimes).</p>
-
-<h2>Refreshed look, Creative energy</h2>
-
-<p>Although, the old one was good and minimal, something felt empty about it and I decided to change it.</p>
-
-<p>I experimented with different fonts and chose Fira Sans as the blog's primary font. As for colors, I took inspiration from Dropbox's recent change in branding and they combined various colors to create dynamic elements to their brand.</p>
-
-<p>So, I wrote a pattern generator on Javascript that would create a background image for every blog post and make it look colorful (See above).</p>
-
-<figure>
-    <img src="https://cdn-images-1.medium.com/max/2600/1*-egs-meZ08WEmAhlwa481Q.png"/>
-    <figcaption>“Floating Lines in the DeepSpace”. A generative artwork by Miguel Neto & Rodrigo Carvalho.</figcaption>
-</figure>
-
-<p>Also, I have been exploring the concept of Generative Art, I found it really interesting especially it's creative and mathematical aspect. I have plans on replacing these colorful patterns with the random generative artworks, after all, I don't aim to make it look boring.</p>
-
-<h2>Discovery and Experimentation</h2>
-
-<p>I have been working on some side projects like Pac-Man clone, a text-editor based on C and a terminal-based to-do list application on Linux, learning and customizing VIM, tinkering with Vagrant boxes, Capture-The-Flags challenges, experiments with UI frameworks like ReactJS and so much more.</p>
-
-<h2>Hang in there, it's not over!</h2>
-
-<p>It's a work-in-progress and I'm trying to make my blog to be more creative, interactive and colorful.</p>
-
-<p>I will be hosting a separate section called <strong><em>"Projects"</em></strong>, which is currently under the works, it will contain all of my projects, UI/UX components to play around with, games and much more. I hope it will be the coolest section of this blog.</p>
-
-<p>Hope you liked reading this article and the new changes!</p>
-
-<p>Peace Out!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>March 1st, 2019</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/update/">
-					Update
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/goodbye-windows-10">Goodbye, Windows 10!</a></h1>
-		<p class="description">An essay on why I switched from Windows 10 to Ubuntu 18.04 LTS.</p>
-	</div>
-	<div class="article-body">
-		<p>Ah, it's been a long time since I had posted anything on my blog. In
-today's article, I will be talking about my switch from Windows 10 to
-Ubuntu 18.04 LTS.</p>
-
-<h2>Why did I make the switch?</h2>
-
-<p>I grew up using different versions of Windows OS and my favorite one is
-Windows 7. I use Windows 8.1 at work and macOS High Sierra on my
-mid-2010 MacBook Pro at home.</p>
-
-<p>Recently, I bought myself a Dell XPS 9360 for serious development. Below
-are the specs:</p>
-
-<ul>
-<li>Intel Core i7 @ 2.4Ghz 7th Generation</li>
-<li>256GB SSD</li>
-<li>8GB RAM</li>
-<li>13.3" Inch Full-HD Display</li>
-</ul>
-
-<p>However, I did have an issue with it, it came pre-installed with a bloated Windows 10.</p>
-
-<p>I tried giving Windows 10 a shot even after reading several blog posts
-on how Microsoft collects data, forces updates that users can't opt out
-of and so on.</p>
-
-<p>Then one fine day, I left my laptop to download some files and then
-Windows decides to update without asking for my permission. My download
-got disrupted and I finally decided to make the switch.</p>
-
-<p>Besides that, I wanted to have a good environment that's secure,
-programmer friendly and wanted to use the Terminal, which is a
-programmer's sweet spot for automation, executing scripts and accessing
-remote machines and so on.</p>
-
-<h2>Choosing a Linux distribution</h2>
-
-<p>At first, I wanted to try out Arch Linux for it's strong community and
-amazing configurations but I thought of taking a safe side by trying out
-Ubuntu.</p>
-
-<p>I downloaded the latest distribution from the official website and
-created a bootable USB drive. Later, I changed my laptop's BIOS
-configuration to Legacy mode from it's UEFI Secure Boot mode, which was
-a bit annoying.</p>
-
-<p>After everything was done, I plugged in the bootable USB drive and
-voila, Ubuntu's loaded on my screen.</p>
-
-<h2>Check for Hardware Compatibility</h2>
-
-<p>If you've read some articles, you might find some people writing out
-comments that when you install Linux on your computer, you might face
-some hardware compatibility issues. You can be detect it beforehand by
-trying it out on a bootable USB drive.</p>
-
-<p>Luckily, thanks to Dell's hardware support for Linux, it detected all of
-my laptop's hardware without any issues.</p>
-
-<p>I decided to go with a minimal installation as I don't want to have any
-bloatware on my computer.</p>
-
-<h2>Hello Ubuntu!</h2>
-
-<p>Ubuntu's new user interface looks really clean and minimal and it looked
-really vibrant in my laptop's Full HD Display.</p>
-
-<p>The boot time was fast and it took a mere few seconds to display the
-login screen. As soon as I logged in, I installed the necessary
-development tools such as gcc, python, perl, git, node.js, npm package
-manager, Emacs text editor and more.</p>
-
-<h2>Conclusion</h2>
-
-<p>Well, every operating system has it's own pros and cons, likewise, Linux
-has a few cons such as that I won't be able to use Adobe applications
-like Photoshop and Illustrator but that's not a big deal for me as my
-focus is purely on development.</p>
-
-<p>If you're a programmer and serious about development, I would strongly
-recommend you to try it out and you'll never want to return back to
-Windows again.</p>
-
-<p>Hope you liked reading this article!</p>
-
-<p>Adios Amigo!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>November 2nd, 2018</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/essay/">
-					Essay
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/artificial-intelligence-a-modern-approach--chapter-1">Artificial Intelligence: A Modern Approach - Chapter 1</a></h1>
-		<p class="description">An introduction into the foundations of Artificial Intelligence.</p>
-	</div>
-	<div class="article-body">
-		<p>It's something that I had in my mind for a long time but never got the
-time to execute it but finally, I decided to get out of my comfort zone
-to learn new concepts and techniques that would enable me to solve new
-problems. Hence, I chose to study <strong><em>Artificial Intelligence</em></strong>.</p>
-
-<figure>
-    <img src="http://www-fp.pearsonhighered.com/assets/hip/images/bigcovers/0132071487.jpg"/>
-    <figcaption>
-        Artificial Intelligence, A Modern Approach (3rd Edition)
-    </figcaption>
-</figure>
-
-<p>I did some online research and found out a really good book named
-<a href="https://www.amazon.com/Artificial-Intelligence-Modern-Approach-3rd/dp/0136042597">Artificial Intelligence, A Modern Approach (3rd
-Edition)</a> by
-the <a href="https://en.wikipedia.org/wiki/Stuart_J._Russell">Stuart Russell</a>
-and one of my favorite computer scientists, <a href="https://en.wikipedia.org/wiki/Peter_Norvig">Peter
-Norvig</a> (Director of
-Research at Google) to learn about it's concepts and techniques. The
-book has 1000+ pages and it's a book used for undergraduate and graduate
-level courses in university.</p>
-
-<p>My current knowledge of Artificial Intelligence is pretty basic (e.g:
-write game AI) and I want to learn more about it and be able absorb any
-information related to it and build toy AI projects.</p>
-
-<p>I've completed the first chapter of the book, so let's dive in because
-this going to be a long read.</p>
-
-<h2>What is Artificial Intelligence?</h2>
-
-<p>We read about it in the news, it's being deployed in our mobile
-applications that we use everyday such as Facebook, Instagram, Twitter,
-Reddit and so on to filter out graphic content, fake information and
-insensitive political content. It's also being used in games such as
-chess, scientific research, diagnosis of several diseases and
-self-driving cars.</p>
-
-<p>But do we know what is it? According to Google Search, it means:</p>
-
-<blockquote>
-  <p>The theory and development of computer systems able to perform tasks
-  normally requiring human intelligence such as visual perception,
-  speech recognition, decision-making and translation between
-  languages. </p>
-</blockquote>
-
-<p>It encompasses a huge number of fields and sub-fields and AI is already
-the next big thing that it's shaping our everyday life.</p>
-
-<h2>Approaches towards AI</h2>
-
-<p>The book states that there are four types of approaches when it comes to
-creating an AI:</p>
-
-<figure>
-    <img src="https://cs.shaunlgs.com/wp-content/uploads/2017/02/slide_3.jpg"/>
-    <figcaption>
-        Four approaches towards AI.
-    </figcaption>
-</figure>
-
-<h3>Acting Humanly</h3>
-
-<p>Proposed by British computer scientist <a href="https://en.wikipedia.org/wiki/Alan_Turing">Alan
-Turing</a>, the <a href="https://en.wikipedia.org/wiki/Turing_test">Turing
-Test</a> approach was designed
-to provide a functional definition of Artificial Intelligence. The test
-is proved positive only when a human is unable to tell the difference
-between the results of a computer or a human. In order to think like a
-human, it should possess the following capabilities:</p>
-
-<ul>
-<li><strong><em>Natural Language Processing</em></strong> to enable communication in any
-language with the human</li>
-<li><strong><em>Knowledge Representation</em></strong> to store what it knows or hears</li>
-<li><strong><em>Automated Reasoning</em></strong> to make conclusions based on the repository
-of information to answer questions</li>
-<li><strong><em>Machine Learning</em></strong> to learn and adapt to new patterns and
-extrapolations</li>
-</ul>
-
-<p>It is to be noted that the test deliberately avoided interaction with
-the human because physical interaction with the human wasn't necessary
-for intelligence.</p>
-
-<p>Then came another test called <strong><em>Total Turing Test</em></strong>, this was made to
-test the computer's ability of visual perception. The computer passes
-this test when it's possess the following abilities:</p>
-
-<ul>
-<li><strong><em>Computer Vision</em></strong> to be able to perceive and identify objects</li>
-<li><strong><em>Robotics</em></strong> to be able to manipulate physical objects</li>
-</ul>
-
-<figure>
-    <img src="https://www.sony.net/SonyInfo/CorporateInfo/newbusiness/AI_Robotics/img/image_movie_sp.jpg"/>
-    <figcaption>
-        Sony's AIBO Home Entertainment robot.
-    </figcaption>
-</figure>
-
-<p>The abilities mentioned above, composes most of what modern AI is today
-and Turing deserves a huge credit for designing this test that still
-remains relevant for more than 60+ years.</p>
-
-<h3>Thinking Humanly</h3>
-
-<p>Do we know how humans think? Maybe, but for us to be able to determine
-that, we would need to achieve a deep understanding of the human mind
-works. There are a few ways such as:</p>
-
-<ul>
-<li><strong><em>Introspection</em></strong> by catching our own thoughts as they pass by</li>
-<li><strong><em>Psychological experiments</em></strong> by observing the actions or behavior
-of a human</li>
-<li><strong><em>Brain imaging</em></strong> by observing the brain in action</li>
-</ul>
-
-<figure>
-    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Cognitive_Science_Hexagon.svg/800px-Cognitive_Science_Hexagon.svg.png"/>
-    <figcaption>
-        Fields that contributed to the birth of cognitive science.
-    </figcaption>
-</figure>
-
-<p>Once we have sufficient information, it's possible to theorize that a
-computer program behaves like a human. <a href="https://en.wikipedia.org/wiki/Cognitive_science">Cognitive
-Science</a> enables you to
-combine both computational models of an AI and psychological
-experimentation techniques to provide testable theories as to how the
-human mind works.</p>
-
-<h3>Thinking Rationally</h3>
-
-<p>Greek Philosopher <a href="https://en.wikipedia.org/wiki/Aristotle">Aristotle</a>
-attempted to arrange information based on irrefutable evidence based on
-the process of reasoning. His rules of inference a.k.a <strong><em>syllogisms</em></strong> (a
-form of reasoning in which conclusions are drawn from various
-propositions or a set of premises) provided patterns that yielded
-correct conclusions from correct premises. For example: <em>"Socrates is a
-man; All men are mortal; therefore, Socrates is a mortal being"</em>. These
-laws of thought initiated the study of logic, which gave hope to 19th
-century logicians to help create intelligent systems.</p>
-
-<figure>
-    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/ae/Aristotle_Altemps_Inv8575.jpg/448px-Aristotle_Altemps_Inv8575.jpg"/>
-    <figcaption>
-        Marble bust of Greek Philosopher Aristotle.
-    </figcaption>
-</figure>
-
-<p>However, there are two main obstacles to this logical approach. Firstly,
-it's difficult to convert informal information into formal terms
-required by logical notations especially when the information isn't 100%
-certain. Secondly, being able to solve a problem in theory vs. solving a
-problem in practice are two different things. You can have a computer
-that can solve a problem with a few hundred facts yet use up all of it's
-resources.</p>
-
-<h3>Acting Rationally</h3>
-
-<p>This is focused on creating <strong><em>intelligent agents</em></strong> that can perform
-various tasks like being able to operate autonomously, perceive objects,
-adapt to change, create new goals and pursue them. A <strong><em>rational
-agent</em></strong> is an agent that acts to achieve the best expected outcome.</p>
-
-<p>Making the right conclusions based on evidences i.e. <strong><em>correct
-inferences</em></strong> is part of a rational agent because to act rationally, an
-agent must be able to reason with logic to reach to a conclusion for a
-given action to achieve one's goals.</p>
-
-<p>However, it doesn't necessarily that it's always "correct", sometimes,
-it has there's no such thing as the "right" thing to do but something
-must be done.</p>
-
-<figure>
-    <img src="https://upload.wikimedia.org/wikipedia/commons/3/3f/IntelligentAgent-SimpleReflex.png"/>
-    <figcaption>
-        A simple agent reflex.
-    </figcaption>
-</figure>
-
-<p>The skills needed for a Turing Test allows an agent to act rationally
-especially on making good decisions using <strong><em>Knowledge
-Representation</em></strong> and <strong><em>Automated Reasoning</em></strong>, generating intelligible
-sentences using <strong><em>Natural Language Processing</em></strong> for a complex society,
-adapting to change and generating effective behavior using <strong><em>Machine
-Learning</em></strong>.</p>
-
-<p>But, there are some advantages to this approach. Firstly, it's more
-general in terms of the logical approach (mentioned in <strong><em>Thinking
-Rationally</em></strong>). Secondly, it's more open to scientific development
-compared to human behavior (mentioned in <strong><em>Acting Humanly</em></strong>) and human
-thought (mentioned in <strong><em>Thinking Humanly</em></strong>). The standard rationality of
-an agent is purely mathematically defined and completely general whereas
-human behavior adapts to a specific environment.</p>
-
-<p>Later, the book states that it's focus is going to be based on the
-general principles of rational agents and on components for constructing
-them.</p>
-
-<h2>Is AI a science, or is it engineering?</h2>
-
-<p>As I was reading the book, it was fascinating to see how various
-disciplines have contributed ideas, techniques and viewpoints to the
-field of Artificial Intelligence. The following disciplines are:</p>
-
-<ul>
-<li>Philosophy</li>
-<li>Neuroscience</li>
-<li>Mathematics</li>
-<li>Economics</li>
-<li>Linguistics</li>
-<li>Psychology</li>
-<li>Computer engineering</li>
-<li>Control theory and cybernetics</li>
-</ul>
-
-<p>Each disciplines had thoughtful questions like How does a human brain
-work? How are valid conclusions drawn from formal rules? How can we
-build an efficient computer? How to think and communicate in one's
-language? How does the brain process large amounts of information? How
-do humans and other living things think and act? How does language
-relate to thought?</p>
-
-<p>This part of the book is really long but it was a good way to understand
-about it's early foundations.</p>
-
-<h2>How is it useful today?</h2>
-
-<p>Well, that's not very easy to answer because it's being used in multiple
-fields and sub-fields. There are so many applications such as:</p>
-
-<ul>
-<li>Self Driving Cars</li>
-<li>Speech Recognition</li>
-<li>Facial Recognition</li>
-<li>Fighting Malware and Spam bots</li>
-<li>Filtering graphic content and fake information from social media</li>
-<li>Game playing AIs for different board games like Checkers, Go and Chess</li>
-</ul>
-
-<figure>
-    <img src="https://cdn1.i-scmp.com/sites/default/files/styles/980x551/public/images/methode/2018/04/25/2e2a124c-3b92-11e8-b6d9-57447a4b43e5_image_hires_135128.JPG?itok=uWX9_NQ4"/>
-    <figcaption>
-        Chinese Government surveillance system using Facial Recognition.
-    </figcaption>
-</figure>
-
-<p>All of this used to be science fiction but thanks to the advancements of
-Mathematics, Science and Engineering, it's become a reality in today's
-era.</p>
-
-<h2>Conclusion</h2>
-
-<p>Well, I don't know if this is one of the longest articles I have ever
-written but I really did enjoy writing this because this made me read
-the chapter again and gained a better understanding of the concepts.</p>
-
-<p>I will be writing more articles about it, write algorithms and build
-toy  implementations of Artificial Intelligence applications.</p>
-
-<p>In fact, I wrote this article to answer all, if not, most of the
-questions from the exercises section of this chapter.</p>
-
-<p>Hope you liked reading this article!</p>
-
-<p>Stay tuned for more!</p>
-
-<h2>Extras</h2>
-
-<ul>
-<li><a href="https://www.csee.umbc.edu/courses/471/papers/turing.pdf">Computing Machinery and Intelligence by Alan Turing</a></li>
-</ul>
-
-	</div>
-	<div class="article-footer">
-		<time>September 1st, 2018</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/artificial-intelligence/">
-					Artificial Intelligence
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/built-a-2048-clone-in-15-minutes">Built a 2048 clone in 15 minutes</a></h1>
-		<p class="description">An implementation of the famous 2048 game using JavaScript and HTML5 Canvas.</p>
-	</div>
-	<div class="article-body">
-		<script defer src="/static/projects/2048/script.js"></script>
-
-<figure>
-    <canvas id="game-grid" width="500" height="500"></canvas>
-</figure>
-
-<p>Before you read more about this article, play with the above game. You
-can move the tiles around using your <kbd>&uarr;</kbd><kbd>&larr;</kbd><kbd>&darr;</kbd><kbd>&rarr;</kbd>
-or <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> keys. The rule is simple, when two tiles with the same
-number touch, they merge into one tile. Press the <kbd>R</kbd> key to restart
-the game.</p>
-
-<p>Please make sure that you have JavaScript enabled and running in your
-browser, otherwise you won't be able to play this game. Oh, just a
-little heads up, it might get a little buggy and freeze your browser
-window, so keep calm and play patiently.</p>
-
-<p>As for the source code, you can view it in my <a href="https://www.github.com/megacolorboy">GitHub
-repository</a> or can be found near
-the end of this article.</p>
-
-<h2>Background</h2>
-
-<p>I was always fond of puzzle games and <strong>2048</strong> is one of them. The first
-time I got to play this game was back in 2014 and I would play it on my
-iPhone during my train commute to university.</p>
-
-<p>Yesterday, I thought of building a clone and turns out it wasn't as hard
-as I had expected it to be, in fact, I was able to build a functional
-version in just 15 minutes.</p>
-
-<h2>What are the game mechanics?</h2>
-
-<p>The sliding-puzzle game is played on a <strong>four-by-four</strong> grid with
-numbered tiles that is moved by the player in all four directions.</p>
-
-<p>In every move, a new tile would randomly appear in an empty spot in the
-grid with a value that consists of <strong>2</strong> or <strong>4</strong>. These tiles are moved
-towards any direction as far as it could and if there are two tiles that
-collide with the same value, they merge into one tile and as a result,
-the score is updated.</p>
-
-<p>The player wins the game once the tile of <strong>2048</strong> appears on the grid,
-thus is the name of the game.</p>
-
-<h2>Source code</h2>
-
-<script src="https://gist.github.com/MegaColorBoy/fcce2a2029a1b0352884cbbc1f059cb1.js"></script>
-
-<p>Well then, that's all for the game. Just like the previous ones, I had
-fun building this sliding-puzzle game. I'm looking forward to building
-more puzzle games and talking about them in my blog.</p>
-
-<p>Hope you guys liked reading this article and have fun playing the game
-as many times as you like!</p>
-
-<p>Stay tuned for more!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>August 21st, 2018</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/personal-challenge/">
-					Personal Challenge
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -1434,6 +1742,13 @@ as many times as you like!</p>
 	<ul class="tags">
 		
 		<li>
+			<a href="/category/linux/">
+				Linux
+				<span class="count">19</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/laravel/">
 				Laravel
 				<span class="count">17</span>
@@ -1441,16 +1756,9 @@ as many times as you like!</p>
 		</li>
 		
 		<li>
-			<a href="/category/linux/">
-				Linux
-				<span class="count">17</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/devops/">
 				DevOps
-				<span class="count">11</span>
+				<span class="count">13</span>
 			</a>
 		</li>
 		
@@ -1497,6 +1805,13 @@ as many times as you like!</p>
 		</li>
 		
 		<li>
+			<a href="/category/programming/">
+				Programming
+				<span class="count">9</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/vim/">
 				VIM
 				<span class="count">8</span>
@@ -1506,13 +1821,6 @@ as many times as you like!</p>
 		<li>
 			<a href="/category/unix/">
 				UNIX
-				<span class="count">8</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/programming/">
-				Programming
 				<span class="count">8</span>
 			</a>
 		</li>
@@ -1546,6 +1854,13 @@ as many times as you like!</p>
 		</li>
 		
 		<li>
+			<a href="/category/productivity/">
+				Productivity
+				<span class="count">5</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/blogmarks/">
 				Blogmarks
 				<span class="count">5</span>
@@ -1563,13 +1878,6 @@ as many times as you like!</p>
 			<a href="/category/personal-challenge/">
 				Personal Challenge
 				<span class="count">5</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/productivity/">
-				Productivity
-				<span class="count">4</span>
 			</a>
 		</li>
 		
@@ -1682,6 +1990,27 @@ as many times as you like!</p>
 			<a href="/category/python/">
 				Python
 				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/learning/">
+				Learning
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/tech/">
+				Tech
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/ubuntu/">
+				Ubuntu
+				<span class="count">1</span>
 			</a>
 		</li>
 		

@@ -78,6 +78,288 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-identify-the-current-target-of-an-event">How to identify the current target of an event?</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Using the <code>event.currentTarget</code> property which belongs to the <code>Event</code> interface can help you in many ways to identify target of the current event especially if you want to fetch attributes or modify the classname of an element that belongs to a group of elements sharing the same classname.</p>
+
+<p>There are many examples but I chose to write a small snippet of highlighting a tab:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="kd">function</span> <span class="nx">highlightTab</span><span class="p">(</span><span class="nx">e</span><span class="p">){</span>
+    <span class="c1">// Find elements that has the classname &#39;active&#39; </span>
+    <span class="c1">// and remove them</span>
+    <span class="k">if</span><span class="p">(</span><span class="nb">document</span><span class="p">.</span><span class="nx">querySelector</span><span class="p">(</span><span class="s1">&#39;div.tab_item.active&#39;</span><span class="p">)</span> <span class="o">!==</span> <span class="kc">null</span><span class="p">){</span>
+        <span class="nb">document</span><span class="p">.</span><span class="nx">querySelector</span><span class="p">(</span><span class="s1">&#39;div.tab_item.active&#39;</span><span class="p">).</span><span class="nx">classList</span><span class="p">.</span><span class="nx">remove</span><span class="p">(</span><span class="s1">&#39;active&#39;</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="c1">// Add active class to target node</span>
+    <span class="nx">e</span><span class="p">.</span><span class="nx">currentTarget</span><span class="p">.</span><span class="nx">className</span> <span class="o">+=</span> <span class="s2">&quot; active&quot;</span><span class="p">;</span>
+
+    <span class="c1">// Add active class to target&#39;s child node</span>
+    <span class="c1">// e.currentTarget.querySelector(&#39;a.child_anchor_link&#39;).className += &quot; active&quot;;</span>
+
+    <span class="c1">// Add active class to target&#39;s parent node</span>
+    <span class="c1">// e.currentTarget.parentNode.className += &quot; active&quot;;</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>Read <a href="https://developer.mozilla.org/en-US/docs/Web/API/Event/currentTarget">Mozilla's official documentation</a> to know more about getting the current target of an event and it's compatibility with different web browsers.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>June 1st, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/javascript/">
+					JavaScript
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/allow-inline-elements-in-ckeditor">Allow inline elements in CKEditor</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Using CKEditor is awesome but I hate it when it removes inline elements like <code>&lt;span&gt;</code>, <code>&lt;i&gt;</code> or any DOM elements that contain attributes like classnames or ID, by default.</p>
+
+<p>Well, CKEditor's <a href="https://ckeditor.com/docs/ckeditor4/latest/guide/dev_allowed_content_rules.html">documentation</a> states that you can allow it by adding this line to your configuration:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="kd">var</span> <span class="nx">editor</span> <span class="o">=</span> <span class="nx">CKEDITOR</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="s1">&#39;textarea_edit&#39;</span><span class="p">,{</span>
+    <span class="nx">allowedContent</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
+<span class="p">});</span>
+</code></pre></div>
+
+<p>After adding this line, CKEditor will stop removing those elements from your HTML content but it's also open to all tags. </p>
+
+<p>You can set rules to allow only specific ones like this:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="kd">var</span> <span class="nx">editor</span> <span class="o">=</span> <span class="nx">CKEDITOR</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="s1">&#39;textarea_edit&#39;</span><span class="p">,{</span>
+    <span class="nx">allowedContent</span><span class="o">:</span> <span class="s1">&#39;span; i; ul; li; a[!href]&#39;</span>
+<span class="p">});</span>
+</code></pre></div>
+
+<p>Hope this helps you out! &#x1F60A;</p>
+
+	</div>
+	<div class="article-footer">
+		<time>June 1st, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/javascript/">
+					JavaScript
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/check-if-the-current-route-exists-before-fetching-its-parameters">Check if the current route exists before fetching it's parameters</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>If you've ever come across this type of error when you're trying to fetch parameters of the current route:</p>
+
+<div class="codehilite"><pre><span></span><code>Symfony\Component\Debug\Exception\FatalThrowableError: Call to member function parameters() on null
+</code></pre></div>
+
+<p>It's probably because the route doesn't exist, which is why it failed to call the <code>parameters()</code> function. It can be easily resolved by checking if the route exists before calling the function:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="k">namespace</span> <span class="nx">App\Http\Controllers</span><span class="p">;</span>
+<span class="k">use</span> <span class="nx">Route</span><span class="p">;</span>
+
+<span class="k">class</span> <span class="nc">FooController</span> <span class="k">extends</span> <span class="nx">Controller</span> <span class="p">{</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="fm">__construct</span><span class="p">(</span><span class="nx">Request</span> <span class="nv">$request</span><span class="p">){</span>
+        <span class="c1">// insert code here...</span>
+    <span class="p">}</span>
+
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">foo</span><span class="p">(</span><span class="nx">Request</span> <span class="nv">$request</span><span class="p">){</span>
+        <span class="nv">$params</span> <span class="o">=</span> <span class="nv">$request</span><span class="o">-&gt;</span><span class="na">route</span><span class="p">()</span> <span class="o">?</span> <span class="nx">Route</span><span class="o">::</span><span class="na">current</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">parameters</span><span class="p">()</span> <span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">;</span>
+        <span class="k">return</span> <span class="nv">$params</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+<span class="cp">?&gt;</span><span class="x"></span>
+</code></pre></div>
+
+<p>Although, the sample code above is to fetch parameters of the current route, you can apply this before calling any method from the <code>Route</code> class.</p>
+
+<p>This works for version 5.2 and above.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>May 30th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/laravel/">
+					Laravel
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/queues-and-stacks">Queues & Stacks</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Let's look at the differences between the two data structures:</p>
+
+<ol>
+<li><strong>Queues</strong>: First-In First-Out</li>
+<li><strong>Stacks</strong>: Last-In Last-Out</li>
+</ol>
+
+<h2>Queues</h2>
+
+<p>This follows a <strong>First-In First-Out</strong> processing order i.e. the first element added to a queue will be processed first. A queue should support two operations:</p>
+
+<ul>
+<li>Enqueue</li>
+<li>Dequeue</li>
+</ul>
+
+<h3>Enqueue</h3>
+
+<p>Adds the element to the tail of a queue. The tail position gets incremented.</p>
+
+<h3>Dequeue</h3>
+
+<p>Removes the first element of a queue i.e. the head element. Once, it's removed, the subsequent element becomes the new head element of the queue. The position of the new head element gets incremented and the previous one is assigned a negative integer like -1 or some garbage value. </p>
+
+<p><strong>Implementation of a standard queue using C++:</strong></p>
+
+<div class="codehilite"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">Queue</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">private</span><span class="o">:</span><span class="w"></span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">pos</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">data</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">public</span><span class="o">:</span><span class="w"></span>
+<span class="w">        </span><span class="n">Queue</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="n">pos</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="n">enqueue</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="n">data</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">value</span><span class="p">);</span><span class="w"></span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="n">dequeue</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">isEmpty</span><span class="p">()){</span><span class="w"></span>
+<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span><span class="w"></span>
+<span class="w">            </span><span class="p">}</span><span class="w"></span>
+<span class="w">            </span><span class="n">pos</span><span class="o">++</span><span class="p">;</span><span class="w"></span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">front</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="n">pos</span><span class="p">];</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="n">isEmpty</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">pos</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+
+<p>In terms of memory management, a standard Queue is quite inefficient and incapable of handling dynamic memory.</p>
+
+<h2>Stacks</h2>
+
+<p>This follows a <strong>Last-In First-Out</strong> processing order i.e. the last element added to a queue will be the first to be removed. Just like queues, it has two simple operations:</p>
+
+<ul>
+<li>Push</li>
+<li>Pop</li>
+</ul>
+
+<h3>Push</h3>
+
+<p>Each element is pushed towards the end of the stack. Think of it as a card deck where you stack a card on top of another card.</p>
+
+<h3>Pop</h3>
+
+<p>It removes the most recent element i.e. the newly added element from the stack.</p>
+
+<p><strong>Implementation of a stack using C++:</strong></p>
+
+<div class="codehilite"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">Stack</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">private</span><span class="o">:</span><span class="w"></span>
+<span class="w">        </span><span class="n">vector</span><span class="o">&amp;</span><span class="n">ltint</span><span class="o">&gt;</span><span class="w"> </span><span class="n">data</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">public</span><span class="o">:</span><span class="w"></span>
+<span class="w">        </span><span class="kt">void</span><span class="w"> </span><span class="n">push</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="n">data</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">value</span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="n">isEmpty</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">empty</span><span class="p">();</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">top</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">back</span><span class="p">();</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="n">pop</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">isEmpty</span><span class="p">())</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">                </span><span class="n">data</span><span class="p">.</span><span class="n">pop_back</span><span class="p">();</span><span class="w"></span>
+<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w"></span>
+<span class="w">            </span><span class="p">}</span><span class="w"></span>
+<span class="w">            </span><span class="k">else</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span><span class="w"></span>
+<span class="w">            </span><span class="p">}</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+
+<p>Unlike queues, stacks are easier to implement and pretty efficient at managing dynamic memory.</p>
+
+<p>Oh, if you ever get to use these, don't worry about implementing them, nearly all programming languages have their own implementations of <code>stack</code> and <code>queue</code> that comes with it's own standard library.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>May 30th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/algorithms/">
+					Algorithms
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/data-structures/">
+					Data Structures
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/writings/posts/launched-a-microblog-site">Launched a microblog site</a></h1>
 		<p class="description">A tiny experiment to see how it could improve my writing productivity.</p>
 	</div>
@@ -229,151 +511,6 @@ article-one.md
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/rename-extensions-of-multiple-files">Rename extensions of multiple files</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>In this example, we're going to change a list of <code>.txt</code> files to <code>.md</code> files:</p>
-
-<div class="codehilite"><pre><span></span><code><span class="ch">#!/bin/bash</span>
-
-<span class="nb">shopt</span> -s nullglob
-<span class="nv">files</span><span class="o">=(</span><span class="k">$(</span>ls -v *.txt<span class="k">)</span><span class="o">)</span>
-
-<span class="k">for</span> file <span class="k">in</span> <span class="s2">&quot;</span><span class="si">${</span><span class="nv">files</span><span class="p">[@]</span><span class="si">}</span><span class="s2">&quot;</span>
-<span class="k">do</span>
-    mv <span class="si">${</span><span class="nv">file</span><span class="si">}</span> <span class="si">${</span><span class="nv">file</span><span class="si">}</span>.md
-<span class="k">done</span>
-</code></pre></div>
-
-<p>s
-You can use modify this script to rename any extension you want.</p>
-
-	</div>
-	<div class="article-footer">
-		<time>May 27th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/bash/">
-					Bash
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/symbolic-storage-link">Create a symbolic storage link</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>When using Laravel, the <code>public</code> directory is used for files that are publicly accessible. By default, it's stored in <code>local</code> and often stored in this <code>storage/app/public</code> directory. You can make it easily accessible by using the following command:</p>
-
-<div class="codehilite"><pre><span></span><code>php artisan storage:link
-</code></pre></div>
-
-<p>Once, it has been created, you can use access those files using the <code>public_path</code> or <code>asset</code> methods.</p>
-
-<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="k">echo</span> <span class="nx">public_path</span><span class="p">(</span><span class="s1">&#39;images/sample_1.jpg&#39;</span><span class="p">);</span>
-<span class="k">echo</span> <span class="nx">asset</span><span class="p">(</span><span class="s1">&#39;images/sample_2.jpg&#39;</span><span class="p">);</span>
-<span class="cp">?&gt;</span><span class="x"></span>
-</code></pre></div>
-
-	</div>
-	<div class="article-footer">
-		<time>May 25th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/laravel/">
-					Laravel
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/include-exclude-files.zip">Including and excluding files in zip</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>When zipping a directory or a bunch of files, there'll be a lot of stuff that you want to include and exclude.</p>
-
-<p>To exclude a file:</p>
-
-<div class="codehilite"><pre><span></span><code>zip -r files.zip . -x file_1 file_2
-</code></pre></div>
-
-<p>Alternatively, you can choose to include files:</p>
-
-<div class="codehilite"><pre><span></span><code>zip -r files.zip . -i file_1 file_2
-</code></pre></div>
-
-	</div>
-	<div class="article-footer">
-		<time>May 25th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/terminal/">
-					Terminal
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/find-file-by-ext">Find a file by extension</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>This comes in handy whenever I want to look for files that exists with a specific extension in a computer or server:</p>
-
-<div class="codehilite"><pre><span></span><code>find . -name <span class="s2">&quot;*.ext&quot;</span>
-</code></pre></div>
-
-<p>In addition, sometimes, you might want to look for a bunch of files with a specific extension but with matching keywords:</p>
-
-<div class="codehilite"><pre><span></span><code>find .name <span class="s2">&quot;*.ext&quot;</span> <span class="p">|</span> grep <span class="s2">&quot;keyword&quot;</span>
-</code></pre></div>
-
-<p>Hope you found this helpful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>May 25th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/terminal/">
-					Terminal
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -452,6 +589,13 @@ You can use modify this script to rename any extension you want.</p>
 	<ul class="tags">
 		
 		<li>
+			<a href="/category/linux/">
+				Linux
+				<span class="count">19</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/laravel/">
 				Laravel
 				<span class="count">17</span>
@@ -459,16 +603,9 @@ You can use modify this script to rename any extension you want.</p>
 		</li>
 		
 		<li>
-			<a href="/category/linux/">
-				Linux
-				<span class="count">17</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/devops/">
 				DevOps
-				<span class="count">11</span>
+				<span class="count">13</span>
 			</a>
 		</li>
 		
@@ -515,6 +652,13 @@ You can use modify this script to rename any extension you want.</p>
 		</li>
 		
 		<li>
+			<a href="/category/programming/">
+				Programming
+				<span class="count">9</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/vim/">
 				VIM
 				<span class="count">8</span>
@@ -524,13 +668,6 @@ You can use modify this script to rename any extension you want.</p>
 		<li>
 			<a href="/category/unix/">
 				UNIX
-				<span class="count">8</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/programming/">
-				Programming
 				<span class="count">8</span>
 			</a>
 		</li>
@@ -564,6 +701,13 @@ You can use modify this script to rename any extension you want.</p>
 		</li>
 		
 		<li>
+			<a href="/category/productivity/">
+				Productivity
+				<span class="count">5</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/blogmarks/">
 				Blogmarks
 				<span class="count">5</span>
@@ -581,13 +725,6 @@ You can use modify this script to rename any extension you want.</p>
 			<a href="/category/personal-challenge/">
 				Personal Challenge
 				<span class="count">5</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/productivity/">
-				Productivity
-				<span class="count">4</span>
 			</a>
 		</li>
 		
@@ -700,6 +837,27 @@ You can use modify this script to rename any extension you want.</p>
 			<a href="/category/python/">
 				Python
 				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/learning/">
+				Learning
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/tech/">
+				Tech
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/ubuntu/">
+				Ubuntu
+				<span class="count">1</span>
 			</a>
 		</li>
 		

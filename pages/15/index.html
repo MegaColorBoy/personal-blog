@@ -78,6 +78,290 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/configuring-audio-drivers-in-arch-Linux">Configuring audio drivers in Arch Linux</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Yesterday, I thought of testing my Arch Linux system's audio and turns out, I didn't even install it yet! &#x1F612;</p>
+
+<p>Well, thanks to <a href="https://wiki.archlinux.org">ArchWiki</a>, it was simple enough to install to make the audio work on my old laptop. Just install the following packages:</p>
+
+<div class="codehilite"><pre><span></span><code>pacman -S alsa-firmware alsa-lib alsa-utils
+</code></pre></div>
+
+<p>Reboot the system once you're done installing the packages. Depending on your window manager, you should be able to see your sound icon being active.</p>
+
+<h2>Bonus: Bash script to control your volume from the terminal</h2>
+
+<p>In my current laptop, I still haven't mapped out the keys to control the audio volume, so I thought of writing a small method in my <code>.bashrc</code> file, so that I can control it from my terminal.</p>
+
+<p>Open your favorite text editor and Add this method in your <code>.bashrc</code> file:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="c1"># simple volume control</span>
+volume<span class="o">(){</span>
+    <span class="nv">x</span><span class="o">=</span><span class="m">5</span>
+    <span class="k">if</span> <span class="o">[</span> <span class="nv">$1</span> <span class="o">==</span> <span class="s1">&#39;up&#39;</span> <span class="o">]</span>
+    <span class="k">then</span>
+        amixer <span class="nb">set</span> Master <span class="nv">$x</span>%+ <span class="p">&amp;</span>&gt; /dev/null
+    <span class="k">elif</span> <span class="o">[</span> <span class="nv">$1</span> <span class="o">==</span> <span class="s1">&#39;down&#39;</span> <span class="o">]</span>
+    <span class="k">then</span>
+        amixer <span class="nb">set</span> Master <span class="nv">$x</span>%- <span class="p">&amp;</span>&gt; /dev/null
+    <span class="k">elif</span> <span class="o">[</span> <span class="nv">$1</span> <span class="o">==</span> <span class="s1">&#39;toggle&#39;</span> <span class="o">]</span>
+    <span class="k">then</span>
+        amixer <span class="nb">set</span> Master toggle <span class="p">&amp;</span>&gt; /dev/null
+    <span class="k">fi</span>
+<span class="o">}</span>
+</code></pre></div>
+
+<p>Save the file, close your edit and refresh your file by typing:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="nb">source</span> .bashrc
+</code></pre></div>
+
+<p>Now, it should work when you type any of these commands:</p>
+
+<div class="codehilite"><pre><span></span><code>volume up
+volume down
+volume toggle
+</code></pre></div>
+
+<p>Hope this tiny script helps you out! </p>
+
+	</div>
+	<div class="article-footer">
+		<time>June 20th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/troubleshoot-time-related-ssl-errors-on-secure-websites">Troubleshoot time-related SSL errors on secure websites</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>As I was configuring Arch Linux setup on my old HP 8460p laptop, I noticed that I wasn't able to access any site using Chrome or Firefox as I was faced with a weird error:</p>
+
+<p><!--- <img src="../../../static/til_images/ssl-time-error.png" alt="SSL Certificate Error" />-->
+<img src="../../../static/til_images/ssl-time-error.png" style="width: 500px;" /></p>
+
+<p>I was quite confused and thought it might be an issue with my WiFi card or probably some server issue but turns out it was neither of them.</p>
+
+<p>On the side of my screen, I noticed my system time was displaying 4 hours ahead of the current local time, which is wrong. So, I did a little research and turns out my suspicions were correct, it's a time-related issue.</p>
+
+<h2>How is time related to secure websites?</h2>
+
+<p>Well, each website that uses SSL or that begins with <code>https://</code> are only valid for a period of time before getting expired. If the website that you're trying to visit presents a certificate with a time and date that doesn't match with your system's clock, Firefox will prevent you from accessing the page.</p>
+
+<h2>How to fix it?</h2>
+
+<p>Actually, the fix is quite simple. All you have to is just set the correct date and time on your system and you're good to go!</p>
+
+<p>If you're using Linux, just do the following:</p>
+
+<h3>1. Set up your timezone</h3>
+
+<p>You can look up for your timezones by executing the following:</p>
+
+<div class="codehilite"><pre><span></span><code>timedatectl list-timezones <span class="p">|</span> less
+</code></pre></div>
+
+<p>Once, you've found your timezone, execute the following by replacing <code>Continent/Country</code> with your timezone:</p>
+
+<div class="codehilite"><pre><span></span><code>timedatectl set-timezone Continent/Country
+</code></pre></div>
+
+<h3>2. Manually set your local time</h3>
+
+<p>Execute the following to set up your time, locally on your system:</p>
+
+<div class="codehilite"><pre><span></span><code>timedatectl set-time <span class="s2">&quot;yyyy-MM-dd hh:mm:ss&quot;</span>
+</code></pre></div>
+
+<h3>3. Set the hardware clock from the system clock</h3>
+
+<p>The following command sets the hardware clock from the system clock:</p>
+
+<div class="codehilite"><pre><span></span><code>hwclock --systohc
+</code></pre></div>
+
+<p>Now, that you've executed them, you should be able to view the correct time on your system by executing <code>timedatectl status</code> and you should see something like this:</p>
+
+<div class="codehilite"><pre><span></span><code>               Local time: Sun <span class="m">2020</span>-06-14 <span class="m">21</span>:04:04 +04
+           Universal time: Sun <span class="m">2020</span>-06-14 <span class="m">17</span>:04:04 UTC
+                 RTC time: Sun <span class="m">2020</span>-06-14 <span class="m">17</span>:04:05    
+                Time zone: Asia/Dubai <span class="o">(</span>+04, +0400<span class="o">)</span>    
+System clock synchronized: no                         
+              NTP service: inactive 
+</code></pre></div>
+
+<p>Although, this issue was time-related, you may face the same kind of error for various other reasons. Try reading more on how to <a href="https://support.mozilla.org/en-US/kb/troubleshoot-time-errors-secure-websites">troubleshoot</a> errors like these from Mozilla's official documentation.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>June 14th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/ssl/">
+					SSL
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/transfer-files-remotely-using-scp">Transfer files remotely using SCP</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Do you want to transfer files remotely from one UNIX-based system to another? Try using the <code>scp</code> tool, which is a shorthand for <strong>Secure Copy Protocol</strong>. It's based off the SSH protocol using it as a means to securely transfer files from a local machine to one or more remote machines.</p>
+
+<p>Here's a code snippet that can help you out to transfer from computer A to computer B:</p>
+
+<div class="codehilite"><pre><span></span><code>scp your_local_file user@ipaddress:/directory_to_store
+</code></pre></div>
+
+<p>And transfer from computer B to computer A:</p>
+
+<div class="codehilite"><pre><span></span><code>scp user@ipaddress:/directory/file_name your_local_directory
+</code></pre></div>
+
+<p>Oh, before you transfer files to another computer, make sure that you have permissions to access it first. If you don't have one, then create a new account using <code>useradd</code> on your remote system.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>June 13th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-manually-configure-your-wifi-on-arch-linux">How to manually configure your WiFi on Arch Linux?</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Recently, I thought of playing around with Arch Linux to learn more about Linux under-the-hood and to see if it can become my new daily driver.</p>
+
+<p>As I booted from live USB, I tried connecting to my WiFi using <code>wifi-menu</code> but it never worked after selecting my network name and entering the credentials.</p>
+
+<p>So, I did a little bit of research in <a href="https://wiki.archlinux.org">ArchWiki</a> and forums and I figured a way to set it up manually using <code>netctl</code> by myself.</p>
+
+<p><code>netctl</code> is a network profile manager and it's apparently an Arch Linux project.</p>
+
+<h2>1. Select your interface</h2>
+
+<p>Before you begin to set up your WiFi connection from your computer, check if your network interface is being detected:</p>
+
+<div class="codehilite"><pre><span></span><code>iwconfig
+</code></pre></div>
+
+<p>Since it's a WiFi connection, your interface most probably must be <code>wlan0</code>. If you see it, then set the interface up:</p>
+
+<div class="codehilite"><pre><span></span><code>ip link <span class="nb">set</span> wlan0 up
+</code></pre></div>
+
+<h2>2. Scan for networks</h2>
+
+<p>Now, that your interface, use it to scan for your WiFi network:</p>
+
+<div class="codehilite"><pre><span></span><code>iwlist wlan0 scan <span class="p">|</span> less
+</code></pre></div>
+
+<p>Once, you execute this command, you must be able to see your WiFi's SSID (or network name).</p>
+
+<p>Now, put your interface down for a while:</p>
+
+<div class="codehilite"><pre><span></span><code>ip link <span class="nb">set</span> wlan0 down
+</code></pre></div>
+
+<h2>3. Create a network profile</h2>
+
+<p>Alright, go to <code>/etc/netctl/examples/</code> directory and make a copy of the <code>wireless-wpa</code> file to the <code>/etc/netctl</code> directory:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="nb">cd</span> /etc/netctl/examples
+cp /etc/netctl/examples/wireless-wpa /etc/netctl/your-wifi-name
+</code></pre></div>
+
+<p>Now, go back to <code>/etc/netctl/</code> directory and open the <code>your-wifi-name</code> file with your preferred text editor and edit the following only:</p>
+
+<div class="codehilite"><pre><span></span><code>ESSID: your-wifi-name
+key: your-wifi-password
+</code></pre></div>
+
+<p>After you're done editing, save the file.</p>
+
+<h2>4. Test network profile</h2>
+
+<p>To test if your profile is working, do the following:</p>
+
+<div class="codehilite"><pre><span></span><code>netctl start your-wifi-name
+ping -c <span class="m">3</span> www.google.com
+</code></pre></div>
+
+<p>In case, you get an error, try doing this:</p>
+
+<div class="codehilite"><pre><span></span><code>ip link <span class="nb">set</span> dev wlan0 down
+netctl start your-wifi-name
+ping -c <span class="m">3</span> www.google.com
+</code></pre></div>
+
+<p>If you're able to ping, then it works. Else, edit your network profile and try connecting to it again.</p>
+
+<h2>5. Enable network profile</h2>
+
+<p>If you've reached this stage that means your network profile must be working fine. Just do the following to enable the network profile to run the internet throughout the setup:</p>
+
+<div class="codehilite"><pre><span></span><code>netctl <span class="nb">enable</span> your-wifi-name
+</code></pre></div>
+
+<p>Try reading more about using <a href="https://wiki.archlinux.org/index.php/Netctl">netctl</a> in Arch Linux's official wikipage.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>June 9th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/add-search-functionality-to-your-static-site">Add search functionality to your static site</a></h1>
 		<p class="description"></p>
 	</div>
@@ -385,288 +669,6 @@
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-identify-the-current-target-of-an-event">How to identify the current target of an event?</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Using the <code>event.currentTarget</code> property which belongs to the <code>Event</code> interface can help you in many ways to identify target of the current event especially if you want to fetch attributes or modify the classname of an element that belongs to a group of elements sharing the same classname.</p>
-
-<p>There are many examples but I chose to write a small snippet of highlighting a tab:</p>
-
-<div class="codehilite"><pre><span></span><code><span class="kd">function</span> <span class="nx">highlightTab</span><span class="p">(</span><span class="nx">e</span><span class="p">){</span>
-    <span class="c1">// Find elements that has the classname &#39;active&#39; </span>
-    <span class="c1">// and remove them</span>
-    <span class="k">if</span><span class="p">(</span><span class="nb">document</span><span class="p">.</span><span class="nx">querySelector</span><span class="p">(</span><span class="s1">&#39;div.tab_item.active&#39;</span><span class="p">)</span> <span class="o">!==</span> <span class="kc">null</span><span class="p">){</span>
-        <span class="nb">document</span><span class="p">.</span><span class="nx">querySelector</span><span class="p">(</span><span class="s1">&#39;div.tab_item.active&#39;</span><span class="p">).</span><span class="nx">classList</span><span class="p">.</span><span class="nx">remove</span><span class="p">(</span><span class="s1">&#39;active&#39;</span><span class="p">);</span>
-    <span class="p">}</span>
-
-    <span class="c1">// Add active class to target node</span>
-    <span class="nx">e</span><span class="p">.</span><span class="nx">currentTarget</span><span class="p">.</span><span class="nx">className</span> <span class="o">+=</span> <span class="s2">&quot; active&quot;</span><span class="p">;</span>
-
-    <span class="c1">// Add active class to target&#39;s child node</span>
-    <span class="c1">// e.currentTarget.querySelector(&#39;a.child_anchor_link&#39;).className += &quot; active&quot;;</span>
-
-    <span class="c1">// Add active class to target&#39;s parent node</span>
-    <span class="c1">// e.currentTarget.parentNode.className += &quot; active&quot;;</span>
-<span class="p">}</span>
-</code></pre></div>
-
-<p>Read <a href="https://developer.mozilla.org/en-US/docs/Web/API/Event/currentTarget">Mozilla's official documentation</a> to know more about getting the current target of an event and it's compatibility with different web browsers.</p>
-
-	</div>
-	<div class="article-footer">
-		<time>June 1st, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/javascript/">
-					JavaScript
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/allow-inline-elements-in-ckeditor">Allow inline elements in CKEditor</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Using CKEditor is awesome but I hate it when it removes inline elements like <code>&lt;span&gt;</code>, <code>&lt;i&gt;</code> or any DOM elements that contain attributes like classnames or ID, by default.</p>
-
-<p>Well, CKEditor's <a href="https://ckeditor.com/docs/ckeditor4/latest/guide/dev_allowed_content_rules.html">documentation</a> states that you can allow it by adding this line to your configuration:</p>
-
-<div class="codehilite"><pre><span></span><code><span class="kd">var</span> <span class="nx">editor</span> <span class="o">=</span> <span class="nx">CKEDITOR</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="s1">&#39;textarea_edit&#39;</span><span class="p">,{</span>
-    <span class="nx">allowedContent</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
-<span class="p">});</span>
-</code></pre></div>
-
-<p>After adding this line, CKEditor will stop removing those elements from your HTML content but it's also open to all tags. </p>
-
-<p>You can set rules to allow only specific ones like this:</p>
-
-<div class="codehilite"><pre><span></span><code><span class="kd">var</span> <span class="nx">editor</span> <span class="o">=</span> <span class="nx">CKEDITOR</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="s1">&#39;textarea_edit&#39;</span><span class="p">,{</span>
-    <span class="nx">allowedContent</span><span class="o">:</span> <span class="s1">&#39;span; i; ul; li; a[!href]&#39;</span>
-<span class="p">});</span>
-</code></pre></div>
-
-<p>Hope this helps you out! &#x1F60A;</p>
-
-	</div>
-	<div class="article-footer">
-		<time>June 1st, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/javascript/">
-					JavaScript
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/check-if-the-current-route-exists-before-fetching-its-parameters">Check if the current route exists before fetching it's parameters</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>If you've ever come across this type of error when you're trying to fetch parameters of the current route:</p>
-
-<div class="codehilite"><pre><span></span><code>Symfony\Component\Debug\Exception\FatalThrowableError: Call to member function parameters() on null
-</code></pre></div>
-
-<p>It's probably because the route doesn't exist, which is why it failed to call the <code>parameters()</code> function. It can be easily resolved by checking if the route exists before calling the function:</p>
-
-<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="k">namespace</span> <span class="nx">App\Http\Controllers</span><span class="p">;</span>
-<span class="k">use</span> <span class="nx">Route</span><span class="p">;</span>
-
-<span class="k">class</span> <span class="nc">FooController</span> <span class="k">extends</span> <span class="nx">Controller</span> <span class="p">{</span>
-    <span class="k">public</span> <span class="k">function</span> <span class="fm">__construct</span><span class="p">(</span><span class="nx">Request</span> <span class="nv">$request</span><span class="p">){</span>
-        <span class="c1">// insert code here...</span>
-    <span class="p">}</span>
-
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">foo</span><span class="p">(</span><span class="nx">Request</span> <span class="nv">$request</span><span class="p">){</span>
-        <span class="nv">$params</span> <span class="o">=</span> <span class="nv">$request</span><span class="o">-&gt;</span><span class="na">route</span><span class="p">()</span> <span class="o">?</span> <span class="nx">Route</span><span class="o">::</span><span class="na">current</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">parameters</span><span class="p">()</span> <span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">;</span>
-        <span class="k">return</span> <span class="nv">$params</span><span class="p">;</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-<span class="cp">?&gt;</span><span class="x"></span>
-</code></pre></div>
-
-<p>Although, the sample code above is to fetch parameters of the current route, you can apply this before calling any method from the <code>Route</code> class.</p>
-
-<p>This works for version 5.2 and above.</p>
-
-	</div>
-	<div class="article-footer">
-		<time>May 30th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/laravel/">
-					Laravel
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/queues-and-stacks">Queues & Stacks</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Let's look at the differences between the two data structures:</p>
-
-<ol>
-<li><strong>Queues</strong>: First-In First-Out</li>
-<li><strong>Stacks</strong>: Last-In Last-Out</li>
-</ol>
-
-<h2>Queues</h2>
-
-<p>This follows a <strong>First-In First-Out</strong> processing order i.e. the first element added to a queue will be processed first. A queue should support two operations:</p>
-
-<ul>
-<li>Enqueue</li>
-<li>Dequeue</li>
-</ul>
-
-<h3>Enqueue</h3>
-
-<p>Adds the element to the tail of a queue. The tail position gets incremented.</p>
-
-<h3>Dequeue</h3>
-
-<p>Removes the first element of a queue i.e. the head element. Once, it's removed, the subsequent element becomes the new head element of the queue. The position of the new head element gets incremented and the previous one is assigned a negative integer like -1 or some garbage value. </p>
-
-<p><strong>Implementation of a standard queue using C++:</strong></p>
-
-<div class="codehilite"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">Queue</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="k">private</span><span class="o">:</span><span class="w"></span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">pos</span><span class="p">;</span><span class="w"></span>
-<span class="w">        </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">data</span><span class="p">;</span><span class="w"></span>
-
-<span class="w">    </span><span class="k">public</span><span class="o">:</span><span class="w"></span>
-<span class="w">        </span><span class="n">Queue</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">            </span><span class="n">pos</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
-<span class="w">        </span><span class="p">}</span><span class="w"></span>
-
-<span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="n">enqueue</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">            </span><span class="n">data</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">value</span><span class="p">);</span><span class="w"></span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w"></span>
-<span class="w">        </span><span class="p">}</span><span class="w"></span>
-
-<span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="n">dequeue</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">isEmpty</span><span class="p">()){</span><span class="w"></span>
-<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span><span class="w"></span>
-<span class="w">            </span><span class="p">}</span><span class="w"></span>
-<span class="w">            </span><span class="n">pos</span><span class="o">++</span><span class="p">;</span><span class="w"></span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w"></span>
-<span class="w">        </span><span class="p">}</span><span class="w"></span>
-
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">front</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="n">pos</span><span class="p">];</span><span class="w"></span>
-<span class="w">        </span><span class="p">}</span><span class="w"></span>
-
-<span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="n">isEmpty</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">pos</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"></span>
-<span class="w">        </span><span class="p">}</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
-</code></pre></div>
-
-<p>In terms of memory management, a standard Queue is quite inefficient and incapable of handling dynamic memory.</p>
-
-<h2>Stacks</h2>
-
-<p>This follows a <strong>Last-In First-Out</strong> processing order i.e. the last element added to a queue will be the first to be removed. Just like queues, it has two simple operations:</p>
-
-<ul>
-<li>Push</li>
-<li>Pop</li>
-</ul>
-
-<h3>Push</h3>
-
-<p>Each element is pushed towards the end of the stack. Think of it as a card deck where you stack a card on top of another card.</p>
-
-<h3>Pop</h3>
-
-<p>It removes the most recent element i.e. the newly added element from the stack.</p>
-
-<p><strong>Implementation of a stack using C++:</strong></p>
-
-<div class="codehilite"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">Stack</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="k">private</span><span class="o">:</span><span class="w"></span>
-<span class="w">        </span><span class="n">vector</span><span class="o">&amp;</span><span class="n">ltint</span><span class="o">&gt;</span><span class="w"> </span><span class="n">data</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="k">public</span><span class="o">:</span><span class="w"></span>
-<span class="w">        </span><span class="kt">void</span><span class="w"> </span><span class="n">push</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">            </span><span class="n">data</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">value</span><span class="p">);</span><span class="w"></span>
-<span class="w">        </span><span class="p">}</span><span class="w"></span>
-
-<span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="n">isEmpty</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">empty</span><span class="p">();</span><span class="w"></span>
-<span class="w">        </span><span class="p">}</span><span class="w"></span>
-
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">top</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">back</span><span class="p">();</span><span class="w"></span>
-<span class="w">        </span><span class="p">}</span><span class="w"></span>
-
-<span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="n">pop</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">isEmpty</span><span class="p">())</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">                </span><span class="n">data</span><span class="p">.</span><span class="n">pop_back</span><span class="p">();</span><span class="w"></span>
-<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w"></span>
-<span class="w">            </span><span class="p">}</span><span class="w"></span>
-<span class="w">            </span><span class="k">else</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span><span class="w"></span>
-<span class="w">            </span><span class="p">}</span><span class="w"></span>
-<span class="w">        </span><span class="p">}</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
-</code></pre></div>
-
-<p>Unlike queues, stacks are easier to implement and pretty efficient at managing dynamic memory.</p>
-
-<p>Oh, if you ever get to use these, don't worry about implementing them, nearly all programming languages have their own implementations of <code>stack</code> and <code>queue</code> that comes with it's own standard library.</p>
-
-	</div>
-	<div class="article-footer">
-		<time>May 30th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/algorithms/">
-					Algorithms
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/data-structures/">
-					Data Structures
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -745,6 +747,13 @@
 	<ul class="tags">
 		
 		<li>
+			<a href="/category/linux/">
+				Linux
+				<span class="count">19</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/laravel/">
 				Laravel
 				<span class="count">17</span>
@@ -752,16 +761,9 @@
 		</li>
 		
 		<li>
-			<a href="/category/linux/">
-				Linux
-				<span class="count">17</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/devops/">
 				DevOps
-				<span class="count">11</span>
+				<span class="count">13</span>
 			</a>
 		</li>
 		
@@ -808,6 +810,13 @@
 		</li>
 		
 		<li>
+			<a href="/category/programming/">
+				Programming
+				<span class="count">9</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/vim/">
 				VIM
 				<span class="count">8</span>
@@ -817,13 +826,6 @@
 		<li>
 			<a href="/category/unix/">
 				UNIX
-				<span class="count">8</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/programming/">
-				Programming
 				<span class="count">8</span>
 			</a>
 		</li>
@@ -857,6 +859,13 @@
 		</li>
 		
 		<li>
+			<a href="/category/productivity/">
+				Productivity
+				<span class="count">5</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/blogmarks/">
 				Blogmarks
 				<span class="count">5</span>
@@ -874,13 +883,6 @@
 			<a href="/category/personal-challenge/">
 				Personal Challenge
 				<span class="count">5</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/productivity/">
-				Productivity
-				<span class="count">4</span>
 			</a>
 		</li>
 		
@@ -993,6 +995,27 @@
 			<a href="/category/python/">
 				Python
 				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/learning/">
+				Learning
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/tech/">
+				Tech
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/ubuntu/">
+				Ubuntu
+				<span class="count">1</span>
 			</a>
 		</li>
 		

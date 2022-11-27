@@ -78,6 +78,261 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/create-a-unique-multidimensional-array-using-a-key-index">Create a unique multidimensional array using a key index</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Let's say, you have a multidimensional array like this:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="nv">$cars</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">[</span>
+        <span class="s2">&quot;id&quot;</span> <span class="o">=&gt;</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="s2">&quot;name&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;Mercedes Benz&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;color&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;Black&quot;</span>
+    <span class="p">],</span>
+    <span class="p">[</span>
+        <span class="s2">&quot;id&quot;</span> <span class="o">=&gt;</span> <span class="mi">2</span><span class="p">,</span>
+        <span class="s2">&quot;name&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;Toyota&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;color&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;Red&quot;</span>
+    <span class="p">],</span>
+    <span class="p">[</span>
+        <span class="s2">&quot;id&quot;</span> <span class="o">=&gt;</span> <span class="mi">3</span><span class="p">,</span>
+        <span class="s2">&quot;name&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;Toyota&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;color&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;White&quot;</span>
+    <span class="p">],</span>
+    <span class="p">[</span>
+        <span class="s2">&quot;id&quot;</span> <span class="o">=&gt;</span> <span class="mi">4</span><span class="p">,</span>
+        <span class="s2">&quot;name&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;Nissan&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;color&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;Grey&quot;</span>
+    <span class="p">],</span>
+<span class="p">];</span>
+<span class="cp">?&gt;</span><span class="x"></span>
+</code></pre></div>
+
+<p>And say, you want to be able to return unique cars by <code>name</code> or <code>color</code>, use this method:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="k">function</span> <span class="nf">multi_array_unique</span><span class="p">(</span><span class="nv">$array</span><span class="p">,</span> <span class="nv">$key</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nv">$i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="nv">$temp_array</span> <span class="o">=</span> <span class="p">[];</span>
+    <span class="nv">$key_array</span> <span class="o">=</span> <span class="p">[];</span>
+
+    <span class="k">foreach</span><span class="p">(</span><span class="nv">$array</span> <span class="k">as</span> <span class="nv">$val</span><span class="p">)</span> <span class="p">{</span>
+        <span class="c1">// insert only unique keys</span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nb">in_array</span><span class="p">(</span><span class="nv">$val</span><span class="p">[</span><span class="nv">$key</span><span class="p">],</span> <span class="nv">$key_array</span><span class="p">))</span> <span class="p">{</span>
+            <span class="nv">$key_array</span><span class="p">[</span><span class="nv">$i</span><span class="p">]</span> <span class="o">=</span> <span class="nv">$val</span><span class="p">[</span><span class="nv">$key</span><span class="p">];</span>
+            <span class="nv">$temp_array</span><span class="p">[</span><span class="nv">$i</span><span class="p">]</span> <span class="o">=</span> <span class="nv">$val</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="nv">$i</span><span class="o">++</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="nv">$temp_array</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="cp">?&gt;</span><span class="x"></span>
+</code></pre></div>
+
+<p>Call this method from anywhere in your code like this:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="nv">$unique_cars</span> <span class="o">=</span> <span class="nx">multi_array_unique</span><span class="p">(</span><span class="nv">$cars</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">);</span>
+<span class="nx">dd</span><span class="p">(</span><span class="nv">$unique_cars</span><span class="p">);</span>
+<span class="cp">?&gt;</span><span class="x"></span>
+</code></pre></div>
+
+<p>And now, you'll get something like this:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="p">[</span>
+    <span class="p">[</span>
+        <span class="s2">&quot;id&quot;</span> <span class="o">=&gt;</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="s2">&quot;name&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;Mercedes Benz&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;color&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;Black&quot;</span>
+    <span class="p">],</span>
+    <span class="p">[</span>
+        <span class="s2">&quot;id&quot;</span> <span class="o">=&gt;</span> <span class="mi">2</span><span class="p">,</span>
+        <span class="s2">&quot;name&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;Toyota&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;color&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;Red&quot;</span>
+    <span class="p">],</span>
+    <span class="p">[</span>
+        <span class="s2">&quot;id&quot;</span> <span class="o">=&gt;</span> <span class="mi">4</span><span class="p">,</span>
+        <span class="s2">&quot;name&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;Nissan&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;color&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;Grey&quot;</span>
+    <span class="p">],</span>
+<span class="p">];</span>
+<span class="cp">?&gt;</span><span class="x"></span>
+</code></pre></div>
+
+<p>You might wonder why I tried this instead of PHP's <code>array_unique()</code> method and the reason I didn't use it is because it doesn't support multidimensional arrays.</p>
+
+<p>Hope you found this useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>July 18th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/php/">
+					PHP
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/extract-youtube-channel-id-from-url">Extract YouTube Channel ID from URL</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Using PHP's in-built function, <code>parse_url</code>, you can write a helper method to pull the channel ID off a YouTube URL especially if you're pulling videos using YouTube's Data API. Here's the code:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="k">public</span> <span class="k">function</span> <span class="nf">extractChannelID</span><span class="p">(</span><span class="nv">$url</span><span class="p">){</span>
+    <span class="c1">// Parse the link and trim any whitespaces</span>
+    <span class="nv">$parsed_link</span> <span class="o">=</span> <span class="nb">parse_url</span><span class="p">(</span><span class="nb">rtrim</span><span class="p">(</span><span class="nv">$url</span><span class="p">,</span> <span class="s1">&#39;/&#39;</span><span class="p">));</span>
+
+    <span class="c1">// Return the channel ID if it matches the pattern</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nb">isset</span><span class="p">(</span><span class="nv">$parsed_link</span><span class="p">[</span><span class="s1">&#39;path&#39;</span><span class="p">])</span> <span class="o">&amp;&amp;</span> <span class="nb">preg_match</span><span class="p">(</span><span class="s1">&#39;/^\/channel\/(([^\/])+?)$/&#39;</span><span class="p">,</span> <span class="nv">$parsed_link</span><span class="p">[</span><span class="s1">&#39;path&#39;</span><span class="p">],</span> <span class="nv">$matches</span><span class="p">))</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nv">$matches</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
+    <span class="p">}</span>
+
+    <span class="k">throw</span> <span class="k">new</span> <span class="nx">Exception</span><span class="p">(</span><span class="s2">&quot;This </span><span class="si">{</span><span class="nv">$url</span><span class="si">}</span><span class="s2"> is not a valid YouTube channel URL&quot;</span><span class="p">);</span>
+    <span class="k">return</span> <span class="k">null</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="cp">?&gt;</span><span class="x"></span>
+</code></pre></div>
+
+<p>Writing tiny methods like these can help save time and be reusable in more than one context. </p>
+
+<p>Hope you find this tip useful! &#x1F601;</p>
+
+	</div>
+	<div class="article-footer">
+		<time>July 13th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/php/">
+					PHP
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/using-zipcloak-to-encrypt-files-within-an-archive">Using zipcloak to encrypt files within an archive</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Whenever you're sending a bunch of files or an archive that contains sensitive or confidential information, it's wise to encrypt before you send it to the person that you intend to.</p>
+
+<p>Using <code>zipcloak</code>, you'll be able to encrypt files within your existing archive.</p>
+
+<p>Do the following after you've <a href="til/posts/zip-a-file">created a zip archive</a>:</p>
+
+<div class="codehilite"><pre><span></span><code>zipcloak files.zip    
+</code></pre></div>
+
+<p>Now, you'll be prompted twice to enter a new password and verify your entered password. If they match, your archive will get encrypted. So whenever, you try to unzip or open using an Archive Manager, you'll be prompted to enter the password or else, you won't be able to access it.</p>
+
+<p>You also have the choice of not encrypting the original archive and creating a new one instead, just like this:</p>
+
+<div class="codehilite"><pre><span></span><code>zipcloak files.zip -O encrypted.zip    
+</code></pre></div>
+
+<p>On the other hand, if you do wish to remove the encryption from your archive, just type the following:</p>
+
+<div class="codehilite"><pre><span></span><code>zipcloak -d files.zip
+</code></pre></div>
+
+<p>And you'll be prompted again to enter your password before it removes it's encryption.</p>
+
+<p>Hope this helps you out! &#x1F601;</p>
+
+	</div>
+	<div class="article-footer">
+		<time>July 7th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-cache-your-queries-on-your-laravel-application">How to cache your queries on your Laravel application?</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Although, Laravel is a good framework, it's quite heavy when it comes to executing queries especially if you're using the <a href="https://laravel.com/docs/7.x/eloquent">Eloquent ORM</a> instead of the normal <a href="https://laravel.com/docs/7.x/queries">query builder</a>.</p>
+
+<p>But Laravel does offer the option of caching your queries in the server and will only make calls to your database if there's a change in content.</p>
+
+<p>Quite handy when you're having a content-heavy website and huge amount of user traffic.</p>
+
+<p>Using the <code>Cache</code> class, you can cache your queries like this:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="nv">$apples</span> <span class="o">=</span> <span class="nx">\Cache</span><span class="o">::</span><span class="na">rememberForever</span><span class="p">(</span><span class="s1">&#39;apples_cache&#39;</span><span class="p">,</span> <span class="k">function</span><span class="p">(){</span>
+    <span class="k">return</span> <span class="nx">FruitsModel</span><span class="o">::</span><span class="na">where</span><span class="p">(</span><span class="s1">&#39;item_name&#39;</span><span class="p">,</span> <span class="s1">&#39;LIKE&#39;</span><span class="p">,</span> <span class="s1">&#39;%apples&#39;</span><span class="p">)</span>
+        <span class="o">-&gt;</span><span class="na">get</span><span class="p">();</span>
+<span class="p">});</span>
+<span class="cp">?&gt;</span><span class="x"></span>
+</code></pre></div>
+
+<p>In the above example, <code>apples_cache</code> is the key that stores your queries of apples forever and which will be used to obtain your cached results from the server. </p>
+
+<p>Oh, be sure to create distinctive names for different types of queries or else, you'll end up being confused! &#128540;</p>
+
+<p>You can also give it a time limit in milliseconds:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="nv">$apples</span> <span class="o">=</span> <span class="nx">\Cache</span><span class="o">::</span><span class="na">remember</span><span class="p">(</span><span class="s1">&#39;apples_cache&#39;</span><span class="p">,</span> <span class="mi">300000</span><span class="p">,</span> <span class="k">function</span><span class="p">(){</span>
+    <span class="k">return</span> <span class="nx">FruitsModel</span><span class="o">::</span><span class="na">where</span><span class="p">(</span><span class="s1">&#39;item_name&#39;</span><span class="p">,</span> <span class="s1">&#39;LIKE&#39;</span><span class="p">,</span> <span class="s1">&#39;%apples&#39;</span><span class="p">)</span>
+        <span class="o">-&gt;</span><span class="na">get</span><span class="p">();</span>
+<span class="p">});</span>
+<span class="cp">?&gt;</span><span class="x"></span>
+</code></pre></div>
+
+<p>Hope this tip helps you out! &#x1F600;</p>
+
+	</div>
+	<div class="article-footer">
+		<time>July 5th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/laravel/">
+					Laravel
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/looping-infinitely-around-an-array">Looping infinitely around an array</a></h1>
 		<p class="description"></p>
 	</div>
@@ -278,290 +533,6 @@ URxvt.perl-ext-common: default,clipboard
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/configuring-audio-drivers-in-arch-Linux">Configuring audio drivers in Arch Linux</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Yesterday, I thought of testing my Arch Linux system's audio and turns out, I didn't even install it yet! &#x1F612;</p>
-
-<p>Well, thanks to <a href="https://wiki.archlinux.org">ArchWiki</a>, it was simple enough to install to make the audio work on my old laptop. Just install the following packages:</p>
-
-<div class="codehilite"><pre><span></span><code>pacman -S alsa-firmware alsa-lib alsa-utils
-</code></pre></div>
-
-<p>Reboot the system once you're done installing the packages. Depending on your window manager, you should be able to see your sound icon being active.</p>
-
-<h2>Bonus: Bash script to control your volume from the terminal</h2>
-
-<p>In my current laptop, I still haven't mapped out the keys to control the audio volume, so I thought of writing a small method in my <code>.bashrc</code> file, so that I can control it from my terminal.</p>
-
-<p>Open your favorite text editor and Add this method in your <code>.bashrc</code> file:</p>
-
-<div class="codehilite"><pre><span></span><code><span class="c1"># simple volume control</span>
-volume<span class="o">(){</span>
-    <span class="nv">x</span><span class="o">=</span><span class="m">5</span>
-    <span class="k">if</span> <span class="o">[</span> <span class="nv">$1</span> <span class="o">==</span> <span class="s1">&#39;up&#39;</span> <span class="o">]</span>
-    <span class="k">then</span>
-        amixer <span class="nb">set</span> Master <span class="nv">$x</span>%+ <span class="p">&amp;</span>&gt; /dev/null
-    <span class="k">elif</span> <span class="o">[</span> <span class="nv">$1</span> <span class="o">==</span> <span class="s1">&#39;down&#39;</span> <span class="o">]</span>
-    <span class="k">then</span>
-        amixer <span class="nb">set</span> Master <span class="nv">$x</span>%- <span class="p">&amp;</span>&gt; /dev/null
-    <span class="k">elif</span> <span class="o">[</span> <span class="nv">$1</span> <span class="o">==</span> <span class="s1">&#39;toggle&#39;</span> <span class="o">]</span>
-    <span class="k">then</span>
-        amixer <span class="nb">set</span> Master toggle <span class="p">&amp;</span>&gt; /dev/null
-    <span class="k">fi</span>
-<span class="o">}</span>
-</code></pre></div>
-
-<p>Save the file, close your edit and refresh your file by typing:</p>
-
-<div class="codehilite"><pre><span></span><code><span class="nb">source</span> .bashrc
-</code></pre></div>
-
-<p>Now, it should work when you type any of these commands:</p>
-
-<div class="codehilite"><pre><span></span><code>volume up
-volume down
-volume toggle
-</code></pre></div>
-
-<p>Hope this tiny script helps you out! </p>
-
-	</div>
-	<div class="article-footer">
-		<time>June 20th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/linux/">
-					Linux
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/troubleshoot-time-related-ssl-errors-on-secure-websites">Troubleshoot time-related SSL errors on secure websites</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>As I was configuring Arch Linux setup on my old HP 8460p laptop, I noticed that I wasn't able to access any site using Chrome or Firefox as I was faced with a weird error:</p>
-
-<p><!--- <img src="../../../static/til_images/ssl-time-error.png" alt="SSL Certificate Error" />-->
-<img src="../../../static/til_images/ssl-time-error.png" style="width: 500px;" /></p>
-
-<p>I was quite confused and thought it might be an issue with my WiFi card or probably some server issue but turns out it was neither of them.</p>
-
-<p>On the side of my screen, I noticed my system time was displaying 4 hours ahead of the current local time, which is wrong. So, I did a little research and turns out my suspicions were correct, it's a time-related issue.</p>
-
-<h2>How is time related to secure websites?</h2>
-
-<p>Well, each website that uses SSL or that begins with <code>https://</code> are only valid for a period of time before getting expired. If the website that you're trying to visit presents a certificate with a time and date that doesn't match with your system's clock, Firefox will prevent you from accessing the page.</p>
-
-<h2>How to fix it?</h2>
-
-<p>Actually, the fix is quite simple. All you have to is just set the correct date and time on your system and you're good to go!</p>
-
-<p>If you're using Linux, just do the following:</p>
-
-<h3>1. Set up your timezone</h3>
-
-<p>You can look up for your timezones by executing the following:</p>
-
-<div class="codehilite"><pre><span></span><code>timedatectl list-timezones <span class="p">|</span> less
-</code></pre></div>
-
-<p>Once, you've found your timezone, execute the following by replacing <code>Continent/Country</code> with your timezone:</p>
-
-<div class="codehilite"><pre><span></span><code>timedatectl set-timezone Continent/Country
-</code></pre></div>
-
-<h3>2. Manually set your local time</h3>
-
-<p>Execute the following to set up your time, locally on your system:</p>
-
-<div class="codehilite"><pre><span></span><code>timedatectl set-time <span class="s2">&quot;yyyy-MM-dd hh:mm:ss&quot;</span>
-</code></pre></div>
-
-<h3>3. Set the hardware clock from the system clock</h3>
-
-<p>The following command sets the hardware clock from the system clock:</p>
-
-<div class="codehilite"><pre><span></span><code>hwclock --systohc
-</code></pre></div>
-
-<p>Now, that you've executed them, you should be able to view the correct time on your system by executing <code>timedatectl status</code> and you should see something like this:</p>
-
-<div class="codehilite"><pre><span></span><code>               Local time: Sun <span class="m">2020</span>-06-14 <span class="m">21</span>:04:04 +04
-           Universal time: Sun <span class="m">2020</span>-06-14 <span class="m">17</span>:04:04 UTC
-                 RTC time: Sun <span class="m">2020</span>-06-14 <span class="m">17</span>:04:05    
-                Time zone: Asia/Dubai <span class="o">(</span>+04, +0400<span class="o">)</span>    
-System clock synchronized: no                         
-              NTP service: inactive 
-</code></pre></div>
-
-<p>Although, this issue was time-related, you may face the same kind of error for various other reasons. Try reading more on how to <a href="https://support.mozilla.org/en-US/kb/troubleshoot-time-errors-secure-websites">troubleshoot</a> errors like these from Mozilla's official documentation.</p>
-
-	</div>
-	<div class="article-footer">
-		<time>June 14th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/ssl/">
-					SSL
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/transfer-files-remotely-using-scp">Transfer files remotely using SCP</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Do you want to transfer files remotely from one UNIX-based system to another? Try using the <code>scp</code> tool, which is a shorthand for <strong>Secure Copy Protocol</strong>. It's based off the SSH protocol using it as a means to securely transfer files from a local machine to one or more remote machines.</p>
-
-<p>Here's a code snippet that can help you out to transfer from computer A to computer B:</p>
-
-<div class="codehilite"><pre><span></span><code>scp your_local_file user@ipaddress:/directory_to_store
-</code></pre></div>
-
-<p>And transfer from computer B to computer A:</p>
-
-<div class="codehilite"><pre><span></span><code>scp user@ipaddress:/directory/file_name your_local_directory
-</code></pre></div>
-
-<p>Oh, before you transfer files to another computer, make sure that you have permissions to access it first. If you don't have one, then create a new account using <code>useradd</code> on your remote system.</p>
-
-	</div>
-	<div class="article-footer">
-		<time>June 13th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/linux/">
-					Linux
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-manually-configure-your-wifi-on-arch-linux">How to manually configure your WiFi on Arch Linux?</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Recently, I thought of playing around with Arch Linux to learn more about Linux under-the-hood and to see if it can become my new daily driver.</p>
-
-<p>As I booted from live USB, I tried connecting to my WiFi using <code>wifi-menu</code> but it never worked after selecting my network name and entering the credentials.</p>
-
-<p>So, I did a little bit of research in <a href="https://wiki.archlinux.org">ArchWiki</a> and forums and I figured a way to set it up manually using <code>netctl</code> by myself.</p>
-
-<p><code>netctl</code> is a network profile manager and it's apparently an Arch Linux project.</p>
-
-<h2>1. Select your interface</h2>
-
-<p>Before you begin to set up your WiFi connection from your computer, check if your network interface is being detected:</p>
-
-<div class="codehilite"><pre><span></span><code>iwconfig
-</code></pre></div>
-
-<p>Since it's a WiFi connection, your interface most probably must be <code>wlan0</code>. If you see it, then set the interface up:</p>
-
-<div class="codehilite"><pre><span></span><code>ip link <span class="nb">set</span> wlan0 up
-</code></pre></div>
-
-<h2>2. Scan for networks</h2>
-
-<p>Now, that your interface, use it to scan for your WiFi network:</p>
-
-<div class="codehilite"><pre><span></span><code>iwlist wlan0 scan <span class="p">|</span> less
-</code></pre></div>
-
-<p>Once, you execute this command, you must be able to see your WiFi's SSID (or network name).</p>
-
-<p>Now, put your interface down for a while:</p>
-
-<div class="codehilite"><pre><span></span><code>ip link <span class="nb">set</span> wlan0 down
-</code></pre></div>
-
-<h2>3. Create a network profile</h2>
-
-<p>Alright, go to <code>/etc/netctl/examples/</code> directory and make a copy of the <code>wireless-wpa</code> file to the <code>/etc/netctl</code> directory:</p>
-
-<div class="codehilite"><pre><span></span><code><span class="nb">cd</span> /etc/netctl/examples
-cp /etc/netctl/examples/wireless-wpa /etc/netctl/your-wifi-name
-</code></pre></div>
-
-<p>Now, go back to <code>/etc/netctl/</code> directory and open the <code>your-wifi-name</code> file with your preferred text editor and edit the following only:</p>
-
-<div class="codehilite"><pre><span></span><code>ESSID: your-wifi-name
-key: your-wifi-password
-</code></pre></div>
-
-<p>After you're done editing, save the file.</p>
-
-<h2>4. Test network profile</h2>
-
-<p>To test if your profile is working, do the following:</p>
-
-<div class="codehilite"><pre><span></span><code>netctl start your-wifi-name
-ping -c <span class="m">3</span> www.google.com
-</code></pre></div>
-
-<p>In case, you get an error, try doing this:</p>
-
-<div class="codehilite"><pre><span></span><code>ip link <span class="nb">set</span> dev wlan0 down
-netctl start your-wifi-name
-ping -c <span class="m">3</span> www.google.com
-</code></pre></div>
-
-<p>If you're able to ping, then it works. Else, edit your network profile and try connecting to it again.</p>
-
-<h2>5. Enable network profile</h2>
-
-<p>If you've reached this stage that means your network profile must be working fine. Just do the following to enable the network profile to run the internet throughout the setup:</p>
-
-<div class="codehilite"><pre><span></span><code>netctl <span class="nb">enable</span> your-wifi-name
-</code></pre></div>
-
-<p>Try reading more about using <a href="https://wiki.archlinux.org/index.php/Netctl">netctl</a> in Arch Linux's official wikipage.</p>
-
-	</div>
-	<div class="article-footer">
-		<time>June 9th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/linux/">
-					Linux
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -640,6 +611,13 @@ ping -c <span class="m">3</span> www.google.com
 	<ul class="tags">
 		
 		<li>
+			<a href="/category/linux/">
+				Linux
+				<span class="count">19</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/laravel/">
 				Laravel
 				<span class="count">17</span>
@@ -647,16 +625,9 @@ ping -c <span class="m">3</span> www.google.com
 		</li>
 		
 		<li>
-			<a href="/category/linux/">
-				Linux
-				<span class="count">17</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/devops/">
 				DevOps
-				<span class="count">11</span>
+				<span class="count">13</span>
 			</a>
 		</li>
 		
@@ -703,6 +674,13 @@ ping -c <span class="m">3</span> www.google.com
 		</li>
 		
 		<li>
+			<a href="/category/programming/">
+				Programming
+				<span class="count">9</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/vim/">
 				VIM
 				<span class="count">8</span>
@@ -712,13 +690,6 @@ ping -c <span class="m">3</span> www.google.com
 		<li>
 			<a href="/category/unix/">
 				UNIX
-				<span class="count">8</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/programming/">
-				Programming
 				<span class="count">8</span>
 			</a>
 		</li>
@@ -752,6 +723,13 @@ ping -c <span class="m">3</span> www.google.com
 		</li>
 		
 		<li>
+			<a href="/category/productivity/">
+				Productivity
+				<span class="count">5</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/blogmarks/">
 				Blogmarks
 				<span class="count">5</span>
@@ -769,13 +747,6 @@ ping -c <span class="m">3</span> www.google.com
 			<a href="/category/personal-challenge/">
 				Personal Challenge
 				<span class="count">5</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/productivity/">
-				Productivity
-				<span class="count">4</span>
 			</a>
 		</li>
 		
@@ -888,6 +859,27 @@ ping -c <span class="m">3</span> www.google.com
 			<a href="/category/python/">
 				Python
 				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/learning/">
+				Learning
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/tech/">
+				Tech
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/ubuntu/">
+				Ubuntu
+				<span class="count">1</span>
 			</a>
 		</li>
 		

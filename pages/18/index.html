@@ -78,6 +78,181 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/check-ubuntu-version">Check Ubuntu version</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Want to know the current version of your Ubuntu distro? Type this:</p>
+
+<div class="codehilite"><pre><span></span><code>lsb_release -r
+</code></pre></div>
+
+	</div>
+	<div class="article-footer">
+		<time>May 25th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/save-a-file">Save a file</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Want to save your work? Type <code>:w</code></p>
+
+<p>Type <code>:wq!</code> to save your file and quit VIM at the same time.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>May 25th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/vim/">
+					VIM
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/ssh-with-private-key">Using SSH with a private key</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Got a <em>.pem</em> key but don't know how to SSH to your server, just do this:</p>
+
+<div class="codehilite"><pre><span></span><code>ssh -i name_of_key user@domain -p <span class="m">22</span>
+</code></pre></div>
+
+<h2>BONUS: Convert .ppk to .pem key</h2>
+
+<p>Recently, I started working from home and as a programmer, it's pretty common to access the company server for development purposes. </p>
+
+<p>Back in the office, I used to access it using <a href="https://www.putty.org">PuTTY</a> but now that I'm using a linux machine, I thought of accessing it via Terminal but there's a catch, I can't use <em>.ppk</em> key to access it.</p>
+
+<p>So, I did a little research and figured that I can easily convert it using <code>puttygen</code></p>
+
+<p>Open up your terminal and type:</p>
+
+<div class="codehilite"><pre><span></span><code>sudo apt install putty-tools
+</code></pre></div>
+
+<p>Now, convert your private key to PEM format:</p>
+
+<div class="codehilite"><pre><span></span><code>puttygen yourprivate.ppk -O private-openssh -o your_new_key.pem
+</code></pre></div>
+
+<p>That's it and you're good to go!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>May 25th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/terminal/">
+					Terminal
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/set-up-recaptcha">Set up reCaptcha in Laravel</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>I mean, come on, you need to have a reCaptcha in your forms, no matter what.</p>
+
+<p>Here are the steps:</p>
+
+<h2>1. Install using Composer</h2>
+
+<div class="codehilite"><pre><span></span><code>composer require anhskohbo/no-captcha
+</code></pre></div>
+
+<h2>2. Add provider and alias to configuration</h2>
+
+<p>Open your <code>config/app.php</code> file and add this to your providers array:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="nx">Anhskohbo\NoCaptcha\NoCaptchaServiceProvider</span><span class="o">::</span><span class="na">class</span><span class="p">,</span>
+<span class="cp">?&gt;</span><span class="x"></span>
+</code></pre></div>
+
+<p>And this to your aliases array:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="s1">&#39;NoCaptcha&#39;</span> <span class="o">=&gt;</span> <span class="nx">Anhskohbo\NoCaptcha\Facades\NoCaptcha</span><span class="o">::</span><span class="na">class</span><span class="p">,</span>
+<span class="cp">?&gt;</span><span class="x"></span>
+</code></pre></div>
+
+<h2>3. Publish configuration</h2>
+
+<div class="codehilite"><pre><span></span><code>php artisan vendor:publish --provider<span class="o">=</span><span class="s2">&quot;Anhskohbo\NoCaptcha\NoCaptchaServiceProvider&quot;</span>
+</code></pre></div>
+
+<h2>4. Add sitekey and secret key to .env file</h2>
+
+<p>Open your <code>.env</code> file and add this:</p>
+
+<div class="codehilite"><pre><span></span><code>NOCAPTCHA_SITEKEY=yoursitekey
+NOCAPTCHA_SECRET=yoursecret
+</code></pre></div>
+
+<h2>How to use it?</h2>
+
+<p>Now, you can use it in your validator using like this:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="nv">$validate</span> <span class="o">=</span> <span class="nx">Validator</span><span class="o">::</span><span class="na">make</span><span class="p">(</span><span class="nx">Input</span><span class="o">::</span><span class="na">all</span><span class="p">(),[</span>
+    <span class="s1">&#39;g-recaptcha-response&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;required|captcha&#39;</span>
+<span class="p">]);</span>
+<span class="cp">?&gt;</span><span class="x"></span>
+</code></pre></div>
+
+	</div>
+	<div class="article-footer">
+		<time>May 25th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/laravel/">
+					Laravel
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/clear-all-lines">Clear all lines</a></h1>
 		<p class="description"></p>
 	</div>
@@ -203,210 +378,6 @@
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/insert-mode">Insert mode</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>I get it, a lot of people are confused on how to start typing on VIM. All you have to do is press the <code>A</code> key, the editor will be switched to <strong>insert mode</strong>.</p>
-
-<p>Press <code>ESC</code> key to switch back to <strong>normal mode</strong>. </p>
-
-	</div>
-	<div class="article-footer">
-		<time>May 25th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/vim/">
-					VIM
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/check-ram-disk-space">Check RAM and disk space</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<h2>RAM space</h2>
-
-<p>Type the following command to view available memory in your system:</p>
-
-<div class="codehilite"><pre><span></span><code>free -h
-</code></pre></div>
-
-<h2>Disk space</h2>
-
-<p>Type the following command to view available disk space in your system:</p>
-
-<div class="codehilite"><pre><span></span><code>df -h
-</code></pre></div>
-
-	</div>
-	<div class="article-footer">
-		<time>May 25th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/terminal/">
-					Terminal
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/symlink-shared-hosting">Symbolic storage link in shared hosting</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>If you're hosting a laravel project via cPanel, chances are that it could be a shared hosting server and that means you can't really use <code>php artisan storage:link</code> for this.
-But don't worry, there's another way to this. Just follow the steps below:</p>
-
-<h2>1. Create a symlink</h2>
-
-<p>In your <code>public_html/public</code> directory, remove the <code>storage</code> folder. Next, create a <code>symlink.php</code> file in your <code>public_html</code> directory and add the following code:</p>
-
-<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="nv">$targetFolder</span> <span class="o">=</span> <span class="nv">$_SERVER</span><span class="p">[</span><span class="s1">&#39;DOCUMENT_ROOT&#39;</span><span class="p">]</span><span class="o">.</span><span class="s1">&#39;/storage/app/public&#39;</span><span class="p">;</span>
-<span class="nv">$linkedFolder</span> <span class="o">=</span> <span class="nv">$_SERVER</span><span class="p">[</span><span class="s1">&#39;DOCUMENT_ROOT&#39;</span><span class="p">]</span><span class="o">.</span><span class="s1">&#39;/public/storage&#39;</span><span class="p">;</span>
-<span class="nb">symlink</span><span class="p">(</span><span class="nv">$targetFolder</span><span class="p">,</span> <span class="nv">$linkedFolder</span><span class="p">);</span>
-<span class="k">echo</span> <span class="s2">&quot;done&quot;</span><span class="p">;</span>
-<span class="cp">?&gt;</span><span class="x"></span>
-</code></pre></div>
-
-<h2>2. Create a custom route to access storage</h2>
-
-<p>Alright, this is kind of a hack but it works extremely fine. Just add the following route in your <code>routes/web.php</code> file:</p>
-
-<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="nx">Route</span><span class="o">::</span><span class="na">get</span><span class="p">(</span><span class="s1">&#39;/storage/anyfolder/{filename}&#39;</span><span class="p">,</span> <span class="k">function</span><span class="p">(</span><span class="nv">$filename</span><span class="p">){</span>
-    <span class="c1">// Your folder path</span>
-    <span class="nv">$folder_path</span> <span class="o">=</span> <span class="nx">storage_path</span><span class="p">(</span><span class="s1">&#39;app/public/anyfolder/&#39;</span><span class="o">.</span><span class="nv">$filename</span><span class="p">);</span>
-
-    <span class="c1">// check if the file exists</span>
-    <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">File</span><span class="o">::</span><span class="na">exists</span><span class="p">(</span><span class="nv">$folder_path</span><span class="p">))</span> <span class="p">{</span>
-        <span class="nx">abort</span><span class="p">(</span><span class="mi">404</span><span class="p">);</span>
-    <span class="p">}</span>
-
-    <span class="nv">$file</span> <span class="o">=</span> <span class="nx">File</span><span class="o">::</span><span class="na">get</span><span class="p">(</span><span class="nv">$folder_path</span><span class="p">);</span>
-    <span class="nv">$type</span> <span class="o">=</span> <span class="nx">File</span><span class="o">::</span><span class="na">mimeType</span><span class="p">(</span><span class="nv">$folder_path</span><span class="p">);</span>
-
-    <span class="nv">$response</span> <span class="o">=</span> <span class="nx">Response</span><span class="o">::</span><span class="na">make</span><span class="p">(</span><span class="nv">$file</span><span class="p">,</span> <span class="mi">200</span><span class="p">);</span>
-    <span class="nv">$response</span><span class="o">-&gt;</span><span class="na">header</span><span class="p">(</span><span class="s2">&quot;Content-Type&quot;</span><span class="p">,</span> <span class="nv">$type</span><span class="p">);</span>
-
-    <span class="k">return</span> <span class="nv">$response</span><span class="p">;</span>
-<span class="p">})</span>
-<span class="cp">?&gt;</span><span class="x"></span>
-</code></pre></div>
-
-<p>Now, you can access your images or any other assets easily using: </p>
-
-<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="nx">asset</span><span class="p">(</span><span class="s1">&#39;storage/anyfolder/&#39;</span><span class="o">.</span><span class="nv">$filename</span><span class="p">)</span>
-<span class="cp">?&gt;</span><span class="x"></span>
-</code></pre></div>
-
-<p>Hope this helps you out!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>May 25th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/laravel/">
-					Laravel
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/integrate-excel-into-your-laravel-project">Integrate Excel into your Laravel project</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Before you integrate Excel into your application, make sure your project meets the following requirements:</p>
-
-<ul>
-<li>PHP v7.0 or greater</li>
-<li>Laravel v5.5 or greater</li>
-<li>PhpSpreadsheet v1.6 or greater</li>
-</ul>
-
-<h2>Download the package</h2>
-
-<p>Download the <code>maatwebsite/excel</code> package using Composer:</p>
-
-<div class="codehilite"><pre><span></span><code>composer require maatwebsite/excel
-</code></pre></div>
-
-<h2>Add it to service provider</h2>
-
-<p>By default, this will be done automatically when you're installing the package but if you want to do it yourself, add this in your <code>config/app.php</code> file:</p>
-
-<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="c1">// ...</span>
-<span class="s1">&#39;providers&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span>
-    <span class="c1">// ...</span>
-    <span class="nx">Maatwebsite\Excel\ExcelServiceProvider</span><span class="o">::</span><span class="na">class</span><span class="p">,</span>
-<span class="p">],</span>
-
-<span class="c1">// ...</span>
-<span class="s1">&#39;aliases&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span>
-    <span class="c1">// ...</span>
-    <span class="s1">&#39;Excel&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;Maatwebsite\Excel\Facades\Excel::class&#39;</span><span class="p">,</span>
-<span class="p">],</span>
-<span class="cp">?&gt;</span><span class="x">;</span>
-</code></pre></div>
-
-<h2>Publish your configuration</h2>
-
-<p>Last but not the least, run the <code>vendor:publish</code> command using <code>artisan</code> to publish your configuration:</p>
-
-<div class="codehilite"><pre><span></span><code>php artisan vendor:publish -provider<span class="o">=</span><span class="s2">&quot;Maatwebsite\Excel\ExcelServiceProvider&quot;</span>
-</code></pre></div>
-
-<p>Upon publishing, the <code>config/excel.php</code> configuration file will be created where you can make your changes.</p>
-
-<p>Hope this helps you out!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>May 25th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/laravel/">
-					Laravel
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -485,6 +456,13 @@ But don't worry, there's another way to this. Just follow the steps below:</p>
 	<ul class="tags">
 		
 		<li>
+			<a href="/category/linux/">
+				Linux
+				<span class="count">19</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/laravel/">
 				Laravel
 				<span class="count">17</span>
@@ -492,16 +470,9 @@ But don't worry, there's another way to this. Just follow the steps below:</p>
 		</li>
 		
 		<li>
-			<a href="/category/linux/">
-				Linux
-				<span class="count">17</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/devops/">
 				DevOps
-				<span class="count">11</span>
+				<span class="count">13</span>
 			</a>
 		</li>
 		
@@ -548,6 +519,13 @@ But don't worry, there's another way to this. Just follow the steps below:</p>
 		</li>
 		
 		<li>
+			<a href="/category/programming/">
+				Programming
+				<span class="count">9</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/vim/">
 				VIM
 				<span class="count">8</span>
@@ -557,13 +535,6 @@ But don't worry, there's another way to this. Just follow the steps below:</p>
 		<li>
 			<a href="/category/unix/">
 				UNIX
-				<span class="count">8</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/programming/">
-				Programming
 				<span class="count">8</span>
 			</a>
 		</li>
@@ -597,6 +568,13 @@ But don't worry, there's another way to this. Just follow the steps below:</p>
 		</li>
 		
 		<li>
+			<a href="/category/productivity/">
+				Productivity
+				<span class="count">5</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/blogmarks/">
 				Blogmarks
 				<span class="count">5</span>
@@ -614,13 +592,6 @@ But don't worry, there's another way to this. Just follow the steps below:</p>
 			<a href="/category/personal-challenge/">
 				Personal Challenge
 				<span class="count">5</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/productivity/">
-				Productivity
-				<span class="count">4</span>
 			</a>
 		</li>
 		
@@ -733,6 +704,27 @@ But don't worry, there's another way to this. Just follow the steps below:</p>
 			<a href="/category/python/">
 				Python
 				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/learning/">
+				Learning
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/tech/">
+				Tech
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/ubuntu/">
+				Ubuntu
+				<span class="count">1</span>
 			</a>
 		</li>
 		

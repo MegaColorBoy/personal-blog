@@ -78,6 +78,232 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-install-composer-manually">How to install Composer manually?</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>You may wonder <strong>"why not install Composer via apt or yum package manager?"</strong> and yes, it can be installed that way too.</p>
+
+<p>But what if you are using old composer packages or you wanted to skip the checks done during the interactive installation routine, this could be the way for you.</p>
+
+<p>I wouldn't really call it an advanced technique or something but if you know what you're doing, then you should be in the right direction.</p>
+
+<p>The below snippet will show you how to install it manually:</p>
+
+<div class="codehilite"><pre><span></span><code>wget <span class="s2">&quot;https://getcomposer.org/download/VERSION_X.X.X/composer.phar&quot;</span>
+sudo mv composer.phar /usr/local/bin/composer
+sudo chmod a+x /usr/local/bin/composer
+</code></pre></div>
+
+<h2>Yes, that's it!</h2>
+
+<p>By placing Composer in the <code>/usr/local/bin</code> directory, it will be accessible from any directory within the system and you can run it globally.</p>
+
+<p>To check if you've installed it correctly, just do the following:</p>
+
+<div class="codehilite"><pre><span></span><code>composer -V
+</code></pre></div>
+
+<p>Hope you found this tip useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>July 3rd, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/tooling/">
+					Tooling
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/prevent-vim-from-creating-swapfiles">Prevent VIM from creating swapfiles</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>I like VIM and use it regularly to write and edit code on a daily basis but I always find the creation of <code>.swp</code> files really annoying.</p>
+
+<p>If you find them annoying too, you disable them temporarily in the editor, like this:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="p">:</span><span class="k">set</span> <span class="nb">noswapfile</span>
+</code></pre></div>
+
+<p>Or if you want to disable it permanently, just add this line in your <code>.vimrc</code> file:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="k">set</span> <span class="nb">noswapfile</span>
+</code></pre></div>
+
+<p>Don't get me wrong, I'm not saying that you should dislike <code>.swp</code> files because if the editor crashes or your computer/server crashes in midway, those files can save your progress.</p>
+
+<p>Hope you found this tip useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>July 3rd, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/vim/">
+					VIM
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-setup-rsync-with-passwordless-ssh-on-unixlinux">How to setup rsync with passwordless SSH on UNIX/Linux?</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Tired of ensuring if whether each file in every server is synced? Planning on doing automated backups? If so, then this technique should come in handy for you.</p>
+
+<p>Interested? Then follow the steps below:</p>
+
+<h2>Check if rsync over SSH works</h2>
+
+<p>Before you start, please ensure that you can <code>rsync</code> to your intended server over <code>ssh</code> using a password.
+With the following example, you can just send a simple file over to the intended server and see if it works or not:</p>
+
+<div class="codehilite"><pre><span></span><code>rsync -avz -e ssh test.txt username@REMOTE_SERVER_IP_OR_DOMAIN:/path/to/folder/
+</code></pre></div>
+
+<p>Once you execute this command on the terminal, it'll prompt you for a password on the remote server, if it does, then it works.</p>
+
+<h2>Generate SSH Keys</h2>
+
+<p>If you want to do a passwordless SSH, you need to generate public and private SSH keys on the local server by typing the following command on the terminal:</p>
+
+<div class="codehilite"><pre><span></span><code>ssh-keygen
+Enter passphrase <span class="o">(</span>empty <span class="k">for</span> no passphrase<span class="o">)</span>:
+Enter same passphrase again:
+</code></pre></div>
+
+<p>If you're prompted to enter a passphrase, just hit <code>Enter</code> and proceed until the key is generated. Once the keys are generated, they'll be in the <code>~/.ssh</code> directory on your local server.</p>
+
+<h2>Copy public key to remote server</h2>
+
+<p>Using <code>ssh-copy-id</code>, you can copy the public key to the remote server:</p>
+
+<div class="codehilite"><pre><span></span><code>ssh-copy-id -i ~/.ssh/id_rsa.pub REMOTE_SERVER_IP_OR_DOMAIN
+</code></pre></div>
+
+<p>Once executed, you'll be prompted to enter the password of the account on the remote server and if successful, the public key will be copied to the remote server and will be stored in it's appropriate location.</p>
+
+<h2>Perform Rsync over passwordless SSH</h2>
+
+<p>If you've come this far, then you should be able to SSH to the remote server without entering the password:</p>
+
+<div class="codehilite"><pre><span></span><code>ssh REMOTE_SERVER_IP_OR_DOMAIN
+</code></pre></div>
+
+<p>If it works, then perform the <code>rsync</code> operation again <a href="#rsync-operation">(above)</a> and this time, it shouldn't prompt you to enter any password.</p>
+
+<p>Hope you liked reading this short article!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>July 3rd, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/render-a-simple-rgb-colored-image-in-c">Render a simple RGB colored image in C++</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p><img src="../../../static/til_images/rgb-colored-spectrum.png" style="width: 500px; height: 300px;" /></p>
+
+<p>Recently, I started reading a book called <a href="https://graphicscodex.courses.nvidia.com/app.html">The Graphics Codex</a>, it's an amazing book about Computer Graphics covering a lot of content and I find it quite resourceful. I wanted to build my own toy raytracer for the sake of exploring, so that's why I started to refresh my graphics coding knowledge a bit.</p>
+
+<p>Just like any graphics renderer, in order to view your image. you must be able to write your image to a file, right?</p>
+
+<p>Below, I wrote a really simple code to generate the entire RGB colored spectrum from top to bottom:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span><span class="cp"></span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span><span class="w"></span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">800</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">height</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">800</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;P3</span><span class="se">\n</span><span class="s">&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">width</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">height</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">255</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="n">height</span><span class="mi">-1</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&gt;=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">--</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">width</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="k">auto</span><span class="w"> </span><span class="n">r</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kt">double</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="n">width</span><span class="mi">-1</span><span class="p">);</span><span class="w"></span>
+<span class="w">            </span><span class="k">auto</span><span class="w"> </span><span class="n">g</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kt">double</span><span class="p">(</span><span class="n">j</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="n">height</span><span class="mi">-1</span><span class="p">);</span><span class="w"></span>
+<span class="w">            </span><span class="k">auto</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.25</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">ir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="mf">255.999</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">r</span><span class="p">);</span><span class="w"></span>
+<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">ig</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="mf">255.999</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">g</span><span class="p">);</span><span class="w"></span>
+<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">ib</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="mf">255.999</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">b</span><span class="p">);</span><span class="w"></span>
+
+<span class="w">            </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">ir</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">ig</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">ib</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+
+<p>You can generate it by simply creating an executable like this:</p>
+
+<div class="codehilite"><pre><span></span><code>g++ -o pixels pixels.cpp
+</code></pre></div>
+
+<p>Now, when you execute it by typing <code>./pixels</code>, you'll get a list of numbers that's pretty much a combination and permutation of RGB color values.</p>
+
+<p>Lastly, to generate a colored image, like the one above, just redirect the output to an image format, in this example, I used PPM image format:</p>
+
+<div class="codehilite"><pre><span></span><code>./pixels &gt; image.ppm <span class="o">&amp;&amp;</span> xdg-open image.ppm
+</code></pre></div>
+
+<p>And that's it, you have generated your own colored image! &#x1F601;</p>
+
+<p>Hope you found this useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>June 11th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/graphics/">
+					Graphics
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/writings/posts/one-year-of-writing-til-articles">One year of writing TIL articles</a></h1>
 		<p class="description">A little self-reflection on how writing TIL articles has improved my productivity and learning.</p>
 	</div>
@@ -339,135 +565,6 @@ find . -type d -maxdepth <span class="m">1</span> -newer start <span class="se">
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/exclude-directories-while-searching-for-a-pattern-in-files">Exclude directories while searching for a pattern in files</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Looking for a specific text pattern in a directory but wanted to avoid some paths? Here's a quick command that you can try:</p>
-
-<div class="codehilite"><pre><span></span><code>grep -R --exclude-dir<span class="o">=</span>path/to/directory <span class="s1">&#39;some pattern&#39;</span> /path/to/search
-</code></pre></div>
-
-<p>Hope this helps you out!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>April 10th, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/unix/">
-					UNIX
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/fetch-selected-files-from-your-remote-repository">Fetch selected files from your remote repository</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Wanted to fetch a specific file from your Git repository except that the repository doesn't exist in your local machine?</p>
-
-<p>Try this out:</p>
-
-<div class="codehilite"><pre><span></span><code>git init
-git remote add origin &lt;your_repo_link&gt;.git
-git fetch
-git checkout &lt;your_branch_name&gt; -- &lt;/path/to/file&gt;
-</code></pre></div>
-
-<p>After executing these commands, you should be able to see the selected directory/file in your project directory.</p>
-
-<p>Hope you found this useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>April 10th, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/git/">
-					Git
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/find-directories-older-than-a-specific-date-and-sorted-by-size">Find directories older than a specific date and sorted by size</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Wanted to see which directories were created on an older date along with their sizes? Try this:</p>
-
-<div class="codehilite"><pre><span></span><code>find . -type d -maxdepth <span class="m">1</span> ! -newermt <span class="s2">&quot;2021-04-10&quot;</span> -exec du -sh <span class="o">{}</span> <span class="se">\;</span> <span class="p">|</span> sort -h &gt;&gt; oldprojectsizes.txt
-</code></pre></div>
-
-<p>Hope you found this tip useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>April 10th, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/unix/">
-					UNIX
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-change-the-character-encoding-of-a-file-via-terminal">How to change the character encoding of a file via Terminal?</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Sometimes, I face character encoding issues while making minor edits via a SFTP console connected to a Linux server. I found a quick hack to change the file encoding using <code>vim</code> on the command line.</p>
-
-<p>In this example, I'm changing the encoding of the file to <code>unix</code>:</p>
-
-<div class="codehilite"><pre><span></span><code>vim <span class="nv">$filename</span> +<span class="s2">&quot;set ff=unix&quot;</span> +wq
-</code></pre></div>
-
-<p>Hope you found this helpful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>April 10th, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/unix/">
-					UNIX
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -546,6 +643,13 @@ git checkout &lt;your_branch_name&gt; -- &lt;/path/to/file&gt;
 	<ul class="tags">
 		
 		<li>
+			<a href="/category/linux/">
+				Linux
+				<span class="count">19</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/laravel/">
 				Laravel
 				<span class="count">17</span>
@@ -553,16 +657,9 @@ git checkout &lt;your_branch_name&gt; -- &lt;/path/to/file&gt;
 		</li>
 		
 		<li>
-			<a href="/category/linux/">
-				Linux
-				<span class="count">17</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/devops/">
 				DevOps
-				<span class="count">11</span>
+				<span class="count">13</span>
 			</a>
 		</li>
 		
@@ -609,6 +706,13 @@ git checkout &lt;your_branch_name&gt; -- &lt;/path/to/file&gt;
 		</li>
 		
 		<li>
+			<a href="/category/programming/">
+				Programming
+				<span class="count">9</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/vim/">
 				VIM
 				<span class="count">8</span>
@@ -618,13 +722,6 @@ git checkout &lt;your_branch_name&gt; -- &lt;/path/to/file&gt;
 		<li>
 			<a href="/category/unix/">
 				UNIX
-				<span class="count">8</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/programming/">
-				Programming
 				<span class="count">8</span>
 			</a>
 		</li>
@@ -658,6 +755,13 @@ git checkout &lt;your_branch_name&gt; -- &lt;/path/to/file&gt;
 		</li>
 		
 		<li>
+			<a href="/category/productivity/">
+				Productivity
+				<span class="count">5</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/blogmarks/">
 				Blogmarks
 				<span class="count">5</span>
@@ -675,13 +779,6 @@ git checkout &lt;your_branch_name&gt; -- &lt;/path/to/file&gt;
 			<a href="/category/personal-challenge/">
 				Personal Challenge
 				<span class="count">5</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/productivity/">
-				Productivity
-				<span class="count">4</span>
 			</a>
 		</li>
 		
@@ -794,6 +891,27 @@ git checkout &lt;your_branch_name&gt; -- &lt;/path/to/file&gt;
 			<a href="/category/python/">
 				Python
 				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/learning/">
+				Learning
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/tech/">
+				Tech
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/ubuntu/">
+				Ubuntu
+				<span class="count">1</span>
 			</a>
 		</li>
 		
