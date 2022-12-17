@@ -78,108 +78,6 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/install-pfx-certificate-on-a-linux-server">Install PFX certificate on a Linux server</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>I would consider this as an extended post to my <a href="https://www.megacolorboy.com/til/posts/extract-private-key-and-certificate-from-pfx-file/">previous post</a> that I had written six months ago.</p>
-
-<p>A PFX Certificate usually contains the following in PKCS#12 format:</p>
-
-<ul>
-<li>The actual certificate.</li>
-<li>The private key to the certificate.</li>
-<li>The Intermediate authority certificate that ensures the trustworthiness of the certificate.</li>
-</ul>
-
-<p>To extract all those files, here are the steps that I have documented:</p>
-
-<div class="post-notification warning">
-    <h3><i class="ph-warning-light"></i> Note</h3>
-    <p>If the .PFX file prompts you for a passphrase, please check with your project manager or client regarding this information.</p>
-</div>
-
-<h2>Extract the Encrypted Private Key</h2>
-
-<div class="codehilite"><pre><span></span><code>openssl pkcs12 -in &lt;filename.pfx&gt; -nocerts -out encrypted.key
-</code></pre></div>
-
-<h2>Extract RSA Private Key</h2>
-
-<div class="codehilite"><pre><span></span><code>openssl rsa -in encrypted.key -out private.key
-</code></pre></div>
-
-<h2>Extract Certificate</h2>
-
-<div class="codehilite"><pre><span></span><code>openssl pkcs12 -in &lt;filename.pfx&gt; -clcerts -nokeys -out certificate.crt
-</code></pre></div>
-
-<h2>Extract Combined Chain Certificate (Optional)</h2>
-
-<div class="codehilite"><pre><span></span><code>openssl pkcs12 -in &lt;filename.pfx&gt; -cacerts -nokeys -chain <span class="p">|</span> sed -ne <span class="s1">&#39;/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p&#39;</span> &gt; combined_chain_certificate.crt
-</code></pre></div>
-
-<p>Once you are done extracting all the required files, you can add the certificates like this:</p>
-
-<h3>Apache configuration:</h3>
-
-<div class="codehilite"><pre><span></span><code>SSLCertificateFile /path/to/certificate.crt
-SSLCertificateKeyFile /path/to/private.key
-
-<span class="c1"># Optional, if you have it, else skip.</span>
-SSLCertificateChainFile /path/to/combined_chain_certificate.crt
-</code></pre></div>
-
-<p>Test if it works:</p>
-
-<div class="codehilite"><pre><span></span><code>apachectl configtest
-systemctl restart httpd
-</code></pre></div>
-
-<h3>Nginx configuration:</h3>
-
-<div class="codehilite"><pre><span></span><code><span class="c1"># If you don&#39;t have a combined chain certificate:</span>
-ssl_certificate /path/to/certificate.crt<span class="p">;</span>
-ssl_certificate_key /path/to/private.key<span class="p">;</span>
-
-<span class="c1"># If you have a combined chain certificate:</span>
-ssl_certificate /path/to/combined_chain_certificate.crt
-ssl_certificate_key /path/to/private.key<span class="p">;</span>
-</code></pre></div>
-
-<p>Test if it works:</p>
-
-<div class="codehilite"><pre><span></span><code>nginx -t
-systemctl restart nginx
-</code></pre></div>
-
-<p>Hope you found this tip useful.</p>
-
-	</div>
-	<div class="article-footer">
-		<time>September 24th, 2022</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/devops/">
-					DevOps
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/linux/">
-					Linux
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/install-microsoft-sql-server-driver-for-php-on-amazon-linux-2">Install Microsoft SQL Server Driver for PHP on Amazon Linux 2</a></h1>
 		<p class="description"></p>
 	</div>
@@ -509,6 +407,65 @@ sudo systemctl restart httpd <span class="o">&amp;&amp;</span> sudo apachectl re
 </div>
 
 				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/writings/posts/built-a-new-generative-art-pattern-generator">Built a new generative art pattern generator</a></h1>
+		<p class="description">Thought of giving a colorful touch to the site.</p>
+	</div>
+	<div class="article-body">
+		<p>Ten days ago, I launched a new makeover for the blog and I felt that it needed a little bit of a colorful yet unique touch.</p>
+
+<p>Recently, I started playing around with the concept of Generative Art and have been studying a lot of about various patterns like:</p>
+
+<ul>
+<li>Bauhaus</li>
+<li>Truchet Tiles</li>
+<li>Piet Mondrian</li>
+</ul>
+
+<p>So, I thought of writing a new pattern generator using CSS and JavaScript that would assign each article a unique, colorful pattern. Though, it's not yet quite complete, I would consider it to be an experimental feature to see if it goes well with the site.</p>
+
+<p>What do you think about it? Does it look good? What kind of patterns should I add to my generator?</p>
+
+<p>Interested on how it's implemented? Have a look at the <a href="/static/js/art.js">source code</a>.</p>
+
+<p>Hope you found this article to be inspiring!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>July 24th, 2022</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/update/">
+					Update
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/generative-art/">
+					Generative Art
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/css/">
+					CSS
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/javascript/">
+					JavaScript
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
 			</div>
 			
 <div class="pagination">
@@ -694,13 +651,6 @@ sudo systemctl restart httpd <span class="o">&amp;&amp;</span> sudo apachectl re
 		</li>
 		
 		<li>
-			<a href="/category/blogmarks/">
-				Blogmarks
-				<span class="count">5</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/apache/">
 				Apache
 				<span class="count">5</span>
@@ -711,6 +661,13 @@ sudo systemctl restart httpd <span class="o">&amp;&amp;</span> sudo apachectl re
 			<a href="/category/personal-challenge/">
 				Personal Challenge
 				<span class="count">5</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/blogmarks/">
+				Blogmarks
+				<span class="count">4</span>
 			</a>
 		</li>
 		
