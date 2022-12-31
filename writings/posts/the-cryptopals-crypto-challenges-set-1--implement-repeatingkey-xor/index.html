@@ -93,20 +93,20 @@
 
 <p>For this challenge, you have to implement a <strong><em>Repeating-Key XOR</em></strong> method to encrypt the following message:</p>
 
-<div class="codehilite"><pre><span></span><code>Burning &#39;em, if you ain&#39;t quick and nimble
+<pre><code>Burning 'em, if you ain't quick and nimble
 I go crazy when I hear a cymbal
-</code></pre></div>
+</code></pre>
 
 <p>With a given key:</p>
 
-<div class="codehilite"><pre><span></span><code>ICE
-</code></pre></div>
+<pre><code>ICE
+</code></pre>
 
 <p>The final message should look like this:</p>
 
-<div class="codehilite"><pre><span></span><code>0b3637272a2b2e63622c2e69692a23693a2a3c6324202d623d63343c2a26226324272765272
+<pre><code>0b3637272a2b2e63622c2e69692a23693a2a3c6324202d623d63343c2a26226324272765272
 a282b2f20430a652e2c652a3124333a653e2b2027630c692b20283165286326302e27282f
-</code></pre></div>
+</code></pre>
 
 <p>If you've already understood the concept of <a href="/posts/base64-encoding-decoding-using-bitwise-manipulation-in-c">XOR</a> and had no issues implementing both <a href="/posts/the-cryptopals-crypto-challenges-set-1--fixed-xor">Fixed XOR Cipher</a> and <a href="/posts/the-cryptopals-crypto-challenges-set-1--singlebyte-xor-cipher">Single-Byte XOR Cipher</a>, then this should be a piece of cake for you when it comes to implementing <strong><em>Repeating-Key XOR Cipher</em></strong>.</p>
 
@@ -120,73 +120,73 @@ a282b2f20430a652e2c652a3124333a653e2b2027630c692b20283165286326302e27282f
 
 <p><strong>Implementation of the method(s):</strong></p>
 
-<div class="codehilite"><pre><span></span><code><span class="c1">//Convert ASCII to HEX</span>
-<span class="n">string</span><span class="w"> </span><span class="nf">CryptoLib::con_ascii_2_hex</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="n">str</span><span class="p">)</span><span class="w"></span>
-<span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="n">stringstream</span><span class="w"> </span><span class="n">ss</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">str</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"></span>
-<span class="w">    </span><span class="p">{</span><span class="w"></span>
-<span class="w">        </span><span class="n">ss</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">hex</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="n">str</span><span class="p">[</span><span class="n">i</span><span class="p">];</span><span class="w"></span>
-<span class="w">    </span><span class="p">}</span><span class="w"></span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">ss</span><span class="p">.</span><span class="n">str</span><span class="p">();</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
+<pre><code>//Convert ASCII to HEX
+string CryptoLib::con_ascii_2_hex(string str)
+{
+    stringstream ss;
+    for(int i=0; i&lt;str.size(); i++)
+    {
+        ss &lt;&lt; std::hex &lt;&lt; (int)str[i];
+    }
+    return ss.str();
+}
 
-<span class="c1">//Repeating Key XOR implementation</span>
-<span class="n">string</span><span class="w"> </span><span class="nf">CryptoLib::repeatingKeyXOR</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="n">str</span><span class="p">,</span><span class="w"> </span><span class="n">string</span><span class="w"> </span><span class="n">key</span><span class="p">)</span><span class="w"></span>
-<span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">newStr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
+//Repeating Key XOR implementation
+string CryptoLib::repeatingKeyXOR(string str, string key)
+{
+    string newStr = "";
+    int count = 0;
 
-<span class="w">    </span><span class="cm">/*</span>
-<span class="cm">        1. Perform XOR against each character of the message </span>
-<span class="cm">        against each character of the key. </span>
-<span class="cm">        So if the key was &quot;ICE&quot; and the message is &quot;abcdefg&quot;,</span>
-<span class="cm">        it would be &quot;a&quot; against &quot;I&quot;, then &quot;b&quot; against &quot;C&quot; and &quot;c&quot; against &quot;E&quot;</span>
-<span class="cm">        but once it reaches the key&#39;s limit, you start again from the beginning</span>
-<span class="cm">        of the key, which should be like: &quot;d&quot; against &quot;I&quot;, &quot;e&quot; against &quot;C&quot; and so on.</span>
-<span class="cm">    */</span><span class="w"></span>
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">str</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"></span>
-<span class="w">    </span><span class="p">{</span><span class="w"></span>
-<span class="w">        </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">key</span><span class="p">[</span><span class="n">count</span><span class="p">];</span><span class="w"></span>
-<span class="w">        </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">str</span><span class="p">[</span><span class="n">i</span><span class="p">];</span><span class="w"></span>
-<span class="w">        </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">^</span><span class="w"> </span><span class="n">a</span><span class="p">;</span><span class="w"></span>
+    /*
+        1. Perform XOR against each character of the message 
+        against each character of the key. 
+        So if the key was "ICE" and the message is "abcdefg",
+        it would be "a" against "I", then "b" against "C" and "c" against "E"
+        but once it reaches the key's limit, you start again from the beginning
+        of the key, which should be like: "d" against "I", "e" against "C" and so on.
+    */
+    for(int i=0; i&lt;str.size(); i++)
+    {
+        unsigned char a = key[count];
+        unsigned char b = str[i];
+        unsigned char c = b ^ a;
 
-<span class="w">        </span><span class="n">newStr</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">c</span><span class="p">;</span><span class="w"></span>
+        newStr += c;
 
-<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">count</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">key</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="mi">-1</span><span class="p">)</span><span class="w"></span>
-<span class="w">        </span><span class="p">{</span><span class="w"></span>
-<span class="w">            </span><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
-<span class="w">        </span><span class="p">}</span><span class="w"></span>
-<span class="w">        </span><span class="k">else</span><span class="w"></span>
-<span class="w">        </span><span class="p">{</span><span class="w"></span>
-<span class="w">            </span><span class="n">count</span><span class="o">++</span><span class="p">;</span><span class="w"></span>
-<span class="w">        </span><span class="p">}</span><span class="w"></span>
-<span class="w">    </span><span class="p">}</span><span class="w"></span>
+        if(count == key.size()-1)
+        {
+            count = 0;
+        }
+        else
+        {
+            count++;
+        }
+    }
 
-<span class="w">    </span><span class="c1">//2. Convert the ASCII message to Hexadecimal</span>
-<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="k">final</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;0&quot;</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="k">final</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">con_ascii_2_hex</span><span class="p">(</span><span class="n">newStr</span><span class="p">);</span><span class="w"></span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="k">final</span><span class="p">;</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
-</code></pre></div>
+    //2. Convert the ASCII message to Hexadecimal
+    string final = "0";
+    final += con_ascii_2_hex(newStr);
+    return final;
+}
+</code></pre>
 
 <p><strong>Final code:</strong></p>
 
-<div class="codehilite"><pre><span></span><code><span class="c1">//Cryptopals Set 1 Challenge 5</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;crypto.h&quot;</span><span class="cp"></span>
+<pre><code>//Cryptopals Set 1 Challenge 5
+#include "crypto.h"
 
-<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"></span>
-<span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="n">CryptoLib</span><span class="w"> </span><span class="n">crypt</span><span class="p">;</span><span class="w"></span>
+int main()
+{
+    CryptoLib crypt;
 
-<span class="w">    </span><span class="c1">//Test cases provided</span>
-<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">str</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;Burning &#39;em, if you ain&#39;t quick and nimble I go crazy when I hear a cymbal&quot;</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;ICE&quot;</span><span class="p">;</span><span class="w"></span>
+    //Test cases provided
+    string str = "Burning 'em, if you ain't quick and nimble I go crazy when I hear a cymbal";
+    string key = "ICE";
 
-<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;ENCODED: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">crypt</span><span class="p">.</span><span class="n">repeatingKeyXOR</span><span class="p">(</span><span class="n">str</span><span class="p">,</span><span class="w"> </span><span class="n">key</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
-</code></pre></div>
+    cout &lt;&lt; "ENCODED: " &lt;&lt; crypt.repeatingKeyXOR(str, key) &lt;&lt; endl;
+    return 0;
+}
+</code></pre>
 
 <p><strong><em>Note: This solution and the library named <mark>crypto.h</mark> was built using the C++ programming language. The source code for this solution can be found on Github.</em></strong></p>
 
@@ -245,7 +245,12 @@ a282b2f20430a652e2c652a3124333a653e2b2027630c692b20283165286326302e27282f
 
   gtag('config', 'UA-98290003-2');
 </script>
-
+<script src="/static/vendor/jquery-lazy/jquery.lazy.min.js"></script>
+<script>
+  $(function () {
+    $('.lazy').lazy();
+  });
+</script>
 <!-- <script>
     const darkModeButton = document.createElement('button');
     const syntaxHighlightSource = document.getElementById('syntaxHighlight');

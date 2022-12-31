@@ -97,59 +97,59 @@
 
 <p>These are the commands used to install the SQL Server driver:</p>
 
-<div class="codehilite"><pre><span></span><code>sudo su
+<pre><code>sudo su
 sudo yum-config-manager --add-repo https://packages.microsoft.com/config/rhel/7/prod.repo
 sudo yum update
-sudo <span class="nv">ACCEPT_EULA</span><span class="o">=</span>Y yum install -y msodbcsql mssql-tools unixODBC-devel re2c gcc-c++ gcc
+sudo ACCEPT_EULA=Y yum install -y msodbcsql mssql-tools unixODBC-devel re2c gcc-c++ gcc
 sudo pecl install sqlsrv
 sudo pecl install pdo_sqlsrv
-</code></pre></div>
+</code></pre>
 
 <h2>Modify php.ini</h2>
 
 <p>You can either to go to your <code>php.ini</code> file and add the <code>extension=sqlsrv</code> extension or add it like this:</p>
 
-<div class="codehilite"><pre><span></span><code><span class="nb">echo</span> <span class="s2">&quot;extension=sqlsrv&quot;</span> &gt;&gt; <span class="sb">`</span>php --ini <span class="p">|</span> grep <span class="s2">&quot;Loaded Configuration&quot;</span> <span class="p">|</span> sed -e <span class="s2">&quot;s|.*:\s*||&quot;</span><span class="sb">`</span>
-<span class="nb">echo</span> <span class="s2">&quot;extension=pdo_sqlsrv&quot;</span> &gt;&gt; /etc/php.d/30-pdo_sqlsrv.ini
-</code></pre></div>
+<pre><code>echo "extension=sqlsrv" &gt;&gt; `php --ini | grep "Loaded Configuration" | sed -e "s|.*:\s*||"`
+echo "extension=pdo_sqlsrv" &gt;&gt; /etc/php.d/30-pdo_sqlsrv.ini
+</code></pre>
 
 <h2>Restart the service</h2>
 
 <p>Ensure that the server can connect and restart the service:</p>
 
-<div class="codehilite"><pre><span></span><code>sudo setsebool -P httpd_can_network_connect_db <span class="m">1</span>
-sudo systemctl restart httpd <span class="o">&amp;&amp;</span> sudo apachectl restart
-</code></pre></div>
+<pre><code>sudo setsebool -P httpd_can_network_connect_db 1
+sudo systemctl restart httpd &amp;&amp; sudo apachectl restart
+</code></pre>
 
 <p>Next, run the following the command to see that both <code>pdo_sqlsrv</code> and <code>sqlsrv</code> are installed:</p>
 
-<div class="codehilite"><pre><span></span><code>php -m <span class="p">|</span> grep <span class="s2">&quot;sqlsrv&quot;</span><span class="sb">`</span>
-</code></pre></div>
+<pre><code>php -m | grep "sqlsrv"`
+</code></pre>
 
 <h2>Test if the driver works</h2>
 
 <p>Create a <code>test.php</code> file in your root directory and copy-paste this snippet to test if it works:</p>
 
-<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="nb">error_reporting</span><span class="p">(</span><span class="k">E_ALL</span><span class="p">);</span>
-<span class="nb">ini_set</span><span class="p">(</span><span class="s1">&#39;display_errors&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+<pre><code>&lt;?php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
-<span class="nv">$serverName</span> <span class="o">=</span> <span class="s2">&quot;YOUR_DB_HOST&quot;</span><span class="p">;</span>
-<span class="nv">$connectionOptions</span> <span class="o">=</span> <span class="k">array</span><span class="p">(</span>
-    <span class="s2">&quot;Database&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;YOUR_DB_NAME&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;Uid&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;YOUR_DB_USER&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;PWD&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;YOUR_DB_PASSWORD&quot;</span>
-<span class="p">);</span>
+$serverName = "YOUR_DB_HOST";
+$connectionOptions = array(
+    "Database" =&gt; "YOUR_DB_NAME",
+    "Uid" =&gt; "YOUR_DB_USER",
+    "PWD" =&gt; "YOUR_DB_PASSWORD"
+);
 
-<span class="nv">$conn</span> <span class="o">=</span> <span class="nb">sqlsrv_connect</span><span class="p">(</span><span class="nv">$serverName</span><span class="p">,</span> <span class="nv">$connectionOptions</span><span class="p">);</span>
+$conn = sqlsrv_connect($serverName, $connectionOptions);
 
-<span class="k">if</span><span class="p">(</span><span class="nv">$conn</span> <span class="o">===</span> <span class="k">false</span> <span class="p">)</span> <span class="p">{</span>
-    <span class="k">print</span> <span class="s2">&quot;Connected successfully.&quot;</span><span class="p">;</span> 
-<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-    <span class="k">print</span> <span class="s2">&quot;Error while connecting to server.&quot;</span><span class="p">;</span>
-<span class="p">}</span>
-<span class="cp">?&gt;</span><span class="x"></span>
-</code></pre></div>
+if($conn === false ) {
+    print "Connected successfully."; 
+} else {
+    print "Error while connecting to server.";
+}
+?&gt;
+</code></pre>
 
 <p>Hope you found this tip useful!</p>
 
@@ -218,7 +218,12 @@ sudo systemctl restart httpd <span class="o">&amp;&amp;</span> sudo apachectl re
 
   gtag('config', 'UA-98290003-2');
 </script>
-
+<script src="/static/vendor/jquery-lazy/jquery.lazy.min.js"></script>
+<script>
+  $(function () {
+    $('.lazy').lazy();
+  });
+</script>
 <!-- <script>
     const darkModeButton = document.createElement('button');
     const syntaxHighlightSource = document.getElementById('syntaxHighlight');

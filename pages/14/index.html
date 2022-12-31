@@ -78,27 +78,134 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/create-a-unique-multidimensional-array-using-a-key-index">Create a unique multidimensional array using a key index</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Let's say, you have a multidimensional array like this:</p>
+
+<pre><code>&lt;?php
+$cars = [
+    [
+        "id" =&gt; 1,
+        "name" =&gt; "Mercedes Benz",
+        "color" =&gt; "Black"
+    ],
+    [
+        "id" =&gt; 2,
+        "name" =&gt; "Toyota",
+        "color" =&gt; "Red"
+    ],
+    [
+        "id" =&gt; 3,
+        "name" =&gt; "Toyota",
+        "color" =&gt; "White"
+    ],
+    [
+        "id" =&gt; 4,
+        "name" =&gt; "Nissan",
+        "color" =&gt; "Grey"
+    ],
+];
+?&gt;
+</code></pre>
+
+<p>And say, you want to be able to return unique cars by <code>name</code> or <code>color</code>, use this method:</p>
+
+<pre><code>&lt;?php
+function multi_array_unique($array, $key) {
+    $i = 0;
+    $temp_array = [];
+    $key_array = [];
+
+    foreach($array as $val) {
+        // insert only unique keys
+        if (!in_array($val[$key], $key_array)) {
+            $key_array[$i] = $val[$key];
+            $temp_array[$i] = $val;
+        }
+        $i++;
+    }
+    return $temp_array;
+}
+?&gt;
+</code></pre>
+
+<p>Call this method from anywhere in your code like this:</p>
+
+<pre><code>&lt;?php
+$unique_cars = multi_array_unique($cars, "name");
+dd($unique_cars);
+?&gt;
+</code></pre>
+
+<p>And now, you'll get something like this:</p>
+
+<pre><code>&lt;?php
+[
+    [
+        "id" =&gt; 1,
+        "name" =&gt; "Mercedes Benz",
+        "color" =&gt; "Black"
+    ],
+    [
+        "id" =&gt; 2,
+        "name" =&gt; "Toyota",
+        "color" =&gt; "Red"
+    ],
+    [
+        "id" =&gt; 4,
+        "name" =&gt; "Nissan",
+        "color" =&gt; "Grey"
+    ],
+];
+?&gt;
+</code></pre>
+
+<p>You might wonder why I tried this instead of PHP's <code>array_unique()</code> method and the reason I didn't use it is because it doesn't support multidimensional arrays.</p>
+
+<p>Hope you found this useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>July 18th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/php/">
+					PHP
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/extract-youtube-channel-id-from-url">Extract YouTube Channel ID from URL</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
 		<p>Using PHP's in-built function, <code>parse_url</code>, you can write a helper method to pull the channel ID off a YouTube URL especially if you're pulling videos using YouTube's Data API. Here's the code:</p>
 
-<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="k">public</span> <span class="k">function</span> <span class="nf">extractChannelID</span><span class="p">(</span><span class="nv">$url</span><span class="p">){</span>
-    <span class="c1">// Parse the link and trim any whitespaces</span>
-    <span class="nv">$parsed_link</span> <span class="o">=</span> <span class="nb">parse_url</span><span class="p">(</span><span class="nb">rtrim</span><span class="p">(</span><span class="nv">$url</span><span class="p">,</span> <span class="s1">&#39;/&#39;</span><span class="p">));</span>
+<pre><code>&lt;?php
+public function extractChannelID($url){
+    // Parse the link and trim any whitespaces
+    $parsed_link = parse_url(rtrim($url, '/'));
 
-    <span class="c1">// Return the channel ID if it matches the pattern</span>
-    <span class="k">if</span> <span class="p">(</span><span class="nb">isset</span><span class="p">(</span><span class="nv">$parsed_link</span><span class="p">[</span><span class="s1">&#39;path&#39;</span><span class="p">])</span> <span class="o">&amp;&amp;</span> <span class="nb">preg_match</span><span class="p">(</span><span class="s1">&#39;/^\/channel\/(([^\/])+?)$/&#39;</span><span class="p">,</span> <span class="nv">$parsed_link</span><span class="p">[</span><span class="s1">&#39;path&#39;</span><span class="p">],</span> <span class="nv">$matches</span><span class="p">))</span> <span class="p">{</span>
-        <span class="k">return</span> <span class="nv">$matches</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
-    <span class="p">}</span>
+    // Return the channel ID if it matches the pattern
+    if (isset($parsed_link['path']) &amp;&amp; preg_match('/^\/channel\/(([^\/])+?)$/', $parsed_link['path'], $matches)) {
+        return $matches[1];
+    }
 
-    <span class="k">throw</span> <span class="k">new</span> <span class="nx">Exception</span><span class="p">(</span><span class="s2">&quot;This </span><span class="si">{</span><span class="nv">$url</span><span class="si">}</span><span class="s2"> is not a valid YouTube channel URL&quot;</span><span class="p">);</span>
-    <span class="k">return</span> <span class="k">null</span><span class="p">;</span>
-<span class="p">}</span>
-<span class="cp">?&gt;</span><span class="x"></span>
-</code></pre></div>
+    throw new Exception("This {$url} is not a valid YouTube channel URL");
+    return null;
+}
+?&gt;
+</code></pre>
 
 <p>Writing tiny methods like these can help save time and be reusable in more than one context. </p>
 
@@ -133,20 +240,20 @@
 
 <p>Do the following after you've <a href="til/posts/zip-a-file">created a zip archive</a>:</p>
 
-<div class="codehilite"><pre><span></span><code>zipcloak files.zip    
-</code></pre></div>
+<pre><code>zipcloak files.zip    
+</code></pre>
 
 <p>Now, you'll be prompted twice to enter a new password and verify your entered password. If they match, your archive will get encrypted. So whenever, you try to unzip or open using an Archive Manager, you'll be prompted to enter the password or else, you won't be able to access it.</p>
 
 <p>You also have the choice of not encrypting the original archive and creating a new one instead, just like this:</p>
 
-<div class="codehilite"><pre><span></span><code>zipcloak files.zip -O encrypted.zip    
-</code></pre></div>
+<pre><code>zipcloak files.zip -O encrypted.zip    
+</code></pre>
 
 <p>On the other hand, if you do wish to remove the encryption from your archive, just type the following:</p>
 
-<div class="codehilite"><pre><span></span><code>zipcloak -d files.zip
-</code></pre></div>
+<pre><code>zipcloak -d files.zip
+</code></pre>
 
 <p>And you'll be prompted again to enter your password before it removes it's encryption.</p>
 
@@ -183,13 +290,13 @@
 
 <p>Using the <code>Cache</code> class, you can cache your queries like this:</p>
 
-<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="nv">$apples</span> <span class="o">=</span> <span class="nx">\Cache</span><span class="o">::</span><span class="na">rememberForever</span><span class="p">(</span><span class="s1">&#39;apples_cache&#39;</span><span class="p">,</span> <span class="k">function</span><span class="p">(){</span>
-    <span class="k">return</span> <span class="nx">FruitsModel</span><span class="o">::</span><span class="na">where</span><span class="p">(</span><span class="s1">&#39;item_name&#39;</span><span class="p">,</span> <span class="s1">&#39;LIKE&#39;</span><span class="p">,</span> <span class="s1">&#39;%apples&#39;</span><span class="p">)</span>
-        <span class="o">-&gt;</span><span class="na">get</span><span class="p">();</span>
-<span class="p">});</span>
-<span class="cp">?&gt;</span><span class="x"></span>
-</code></pre></div>
+<pre><code>&lt;?php
+$apples = \Cache::rememberForever('apples_cache', function(){
+    return FruitsModel::where('item_name', 'LIKE', '%apples')
+        -&gt;get();
+});
+?&gt;
+</code></pre>
 
 <p>In the above example, <code>apples_cache</code> is the key that stores your queries of apples forever and which will be used to obtain your cached results from the server. </p>
 
@@ -197,13 +304,13 @@
 
 <p>You can also give it a time limit in milliseconds:</p>
 
-<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="nv">$apples</span> <span class="o">=</span> <span class="nx">\Cache</span><span class="o">::</span><span class="na">remember</span><span class="p">(</span><span class="s1">&#39;apples_cache&#39;</span><span class="p">,</span> <span class="mi">300000</span><span class="p">,</span> <span class="k">function</span><span class="p">(){</span>
-    <span class="k">return</span> <span class="nx">FruitsModel</span><span class="o">::</span><span class="na">where</span><span class="p">(</span><span class="s1">&#39;item_name&#39;</span><span class="p">,</span> <span class="s1">&#39;LIKE&#39;</span><span class="p">,</span> <span class="s1">&#39;%apples&#39;</span><span class="p">)</span>
-        <span class="o">-&gt;</span><span class="na">get</span><span class="p">();</span>
-<span class="p">});</span>
-<span class="cp">?&gt;</span><span class="x"></span>
-</code></pre></div>
+<pre><code>&lt;?php
+$apples = \Cache::remember('apples_cache', 300000, function(){
+    return FruitsModel::where('item_name', 'LIKE', '%apples')
+        -&gt;get();
+});
+?&gt;
+</code></pre>
 
 <p>Hope this tip helps you out! &#x1F600;</p>
 
@@ -234,8 +341,8 @@
 
 <p>Let's say we have an array like this:</p>
 
-<div class="codehilite"><pre><span></span><code><span class="kd">var</span> <span class="nx">colors</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;#111&quot;</span><span class="p">,</span> <span class="s2">&quot;#222&quot;</span><span class="p">,</span> <span class="s2">&quot;#333&quot;</span><span class="p">];</span>
-</code></pre></div>
+<pre><code>var colors = ["#111", "#222", "#333"];
+</code></pre>
 
 <p>The code is an array of three colors that we want to apply to, hmmm, say a list of HTML DOM elements like <code>&lt;div&gt;</code> containers or any element that you prefer. In this example, we'll add some colors to a bunch of <code>&lt;div&gt;</code> elements that has the classname <code>.card</code> or we'll just call them "cards".</p>
 
@@ -251,23 +358,23 @@
 
 <p>Did that make sense? If not, then try the following code in your browser:</p>
 
-<div class="codehilite"><pre><span></span><code><span class="kd">var</span> <span class="nx">x</span> <span class="o">=</span> <span class="mf">10</span> <span class="o">%</span> <span class="mf">4</span><span class="p">;</span>
-<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">x</span><span class="p">);</span> <span class="c1">// output will be 2</span>
-</code></pre></div>
+<pre><code>var x = 10 % 4;
+console.log(x); // output will be 2
+</code></pre>
 
 <p>Let's say we have 10 "cards" and we want every 3 three cards to have 3 different colors, we must just define a way to determine the index of each color while iterating through a loop of cards. So, we can easily get the index by doing so:</p>
 
-<div class="codehilite"><pre><span></span><code><span class="kd">var</span> <span class="nx">currentColor</span> <span class="o">=</span> <span class="nx">colors</span><span class="p">[</span><span class="nx">i</span> <span class="o">%</span> <span class="nx">colors</span><span class="p">.</span><span class="nx">length</span><span class="o">-</span><span class="mf">1</span><span class="p">];</span>
-</code></pre></div>
+<pre><code>var currentColor = colors[i % colors.length-1];
+</code></pre>
 
 <p>Here's the full code:</p>
 
-<div class="codehilite"><pre><span></span><code><span class="kd">var</span> <span class="nx">elements</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">querySelectorAll</span><span class="p">(</span><span class="s1">&#39;.card&#39;</span><span class="p">);</span>
-<span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span> <span class="nx">i</span><span class="o">&lt;</span><span class="nx">elements</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
-    <span class="kd">var</span> <span class="nx">currentColor</span> <span class="o">=</span> <span class="nx">colors</span><span class="p">[</span><span class="nx">i</span> <span class="o">%</span> <span class="nx">colors</span><span class="p">.</span><span class="nx">length</span><span class="o">-</span><span class="mf">1</span><span class="p">];</span>
-    <span class="nx">elements</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">style</span><span class="p">.</span><span class="nx">backgroundColor</span> <span class="o">=</span> <span class="nx">currentColor</span><span class="p">;</span>
-<span class="p">}</span>
-</code></pre></div>
+<pre><code>var elements = document.querySelectorAll('.card');
+for(var i=0; i&amp;lt;elements.length; i++){
+    var currentColor = colors[i % colors.length-1];
+    elements[i].style.backgroundColor = currentColor;
+}
+</code></pre>
 
 <p>The following code will apply the colors to each "card" with respect to it's order and will reset back to the first color once it's reached it's last color based on the remainder of the next iteration in the loop.</p>
 
@@ -300,8 +407,8 @@
 
 <p>You can enable it by writing this header in your <code>.htaccess</code> file in your <code>public</code> directory:</p>
 
-<div class="codehilite"><pre><span></span><code>Header always <span class="nb">set</span> Strict-Transport-Security <span class="s2">&quot;max-age=31536000&quot;</span> <span class="nv">env</span><span class="o">=</span>HTTPS
-</code></pre></div>
+<pre><code>Header always set Strict-Transport-Security "max-age=31536000" env=HTTPS
+</code></pre>
 
 <p>Please note that once you enable this protocol, your web application is committed to using SSL i.e. you won't be able to use insecure HTTP for your web application.</p>
 
@@ -330,9 +437,9 @@
 	<div class="article-body">
 		<p>You can manually force HTTP to HTTPS after enabling your SSL certificate by adding the following condition at the beginning of your <code>.htaccess</code> file in your <code>public</code> directory:</p>
 
-<div class="codehilite"><pre><span></span><code>RewriteCond %<span class="o">{</span>HTTP:X-Forward-Proto<span class="o">}</span> !<span class="o">=</span>https
-RewriteRule .* https://%<span class="o">{</span>HTTP_HOST<span class="o">}</span>%<span class="o">{</span>REQUEST_URI<span class="o">}</span> <span class="o">[</span><span class="nv">R</span><span class="o">=</span><span class="m">301</span>,L<span class="o">]</span>
-</code></pre></div>
+<pre><code>RewriteCond %{HTTP:X-Forward-Proto} !=https
+RewriteRule .* https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+</code></pre>
 
 <p>Save your file and restart your Apache server and now, your web application will redirect all your users to <code>https://</code> instead of <code>http://</code> URLs in the future.</p>
 
@@ -369,114 +476,46 @@ RewriteRule .* https://%<span class="o">{</span>HTTP_HOST<span class="o">}</span
 
 <p>Type the following command to install the package:</p>
 
-<div class="codehilite"><pre><span></span><code>pacman -S xclip
-</code></pre></div>
+<pre><code>pacman -S xclip
+</code></pre>
 
 <h2>2. Activate Clipboard using Perl</h2>
 
 <p>Now, you have to paste these custom commands into your <code>clipboard</code> file, which is found in <code>/usr/lib/urxvt/perl</code> directory:</p>
 
-<div class="codehilite"><pre><span></span><code><span class="c1"># paste selection from clipboard</span>
-<span class="k">sub</span> <span class="nf">paste</span> <span class="p">{</span>
-     <span class="k">my</span> <span class="p">(</span><span class="nv">$self</span><span class="p">)</span> <span class="o">=</span> <span class="nv">@_</span><span class="p">;</span>
-     <span class="k">my</span> <span class="nv">$content</span> <span class="o">=</span> <span class="sb">`/usr/bin/xclip -loop 1 -out -selection clipboard`</span> <span class="p">;</span>
-     <span class="nv">$self</span><span class="o">-&gt;</span><span class="n">tt_write</span> <span class="p">(</span><span class="nv">$content</span><span class="p">);</span>
-<span class="p">}</span>
+<pre><code># paste selection from clipboard
+sub paste {
+     my ($self) = @_;
+     my $content = `/usr/bin/xclip -loop 1 -out -selection clipboard` ;
+     $self-&gt;tt_write ($content);
+}
 
-<span class="c1"># copy text to clipbard on selection</span>
-<span class="k">sub</span> <span class="nf">on_sel_grab</span> <span class="p">{</span>
-     <span class="k">my</span> <span class="nv">$query</span> <span class="o">=</span> <span class="nv">$_</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">selection</span><span class="p">;</span>
-     <span class="nb">open</span> <span class="p">(</span><span class="k">my</span> <span class="nv">$pipe</span><span class="p">,</span> <span class="s">&#39;| /usr/bin/xclip -in -selection clipboard&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">die</span><span class="p">;</span>
-     <span class="k">print</span> <span class="nv">$pipe</span> <span class="nv">$query</span><span class="p">;</span>
-     <span class="nb">close</span> <span class="nv">$pipe</span><span class="p">;</span>
- <span class="p">}</span>
-</code></pre></div>
+# copy text to clipbard on selection
+sub on_sel_grab {
+     my $query = $_[0]-&gt;selection;
+     open (my $pipe, '| /usr/bin/xclip -in -selection clipboard') or die;
+     print $pipe $query;
+     close $pipe;
+ }
+</code></pre>
 
 <h2>3. Modify your .Xresources</h2>
 
 <p>Add these keybindings to your <code>.Xresources</code> file:</p>
 
-<div class="codehilite"><pre><span></span><code>URxvt.keysym.Shift-Control-V: perl:clipboard:paste
+<pre><code>URxvt.keysym.Shift-Control-V: perl:clipboard:paste
 URxvt.iso14755: False
 URxvt.perl-ext-common: default,clipboard
-</code></pre></div>
+</code></pre>
 
 <p>After adding it, refresh your <code>.Xresources</code> settings:</p>
 
-<div class="codehilite"><pre><span></span><code>xrdb -merge .Xresources
-</code></pre></div>
+<pre><code>xrdb -merge .Xresources
+</code></pre>
 
 <p>Reboot your terminal and try selecting some text from your terminal using your mouse and paste it using <code>Ctrl</code>+<code>Shift</code>+<code>V</code> and it should work! </p>
 
 <p>That's it! Enjoy &#x1F603;</p>
-
-	</div>
-	<div class="article-footer">
-		<time>June 20th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/linux/">
-					Linux
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/configuring-audio-drivers-in-arch-Linux">Configuring audio drivers in Arch Linux</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Yesterday, I thought of testing my Arch Linux system's audio and turns out, I didn't even install it yet! &#x1F612;</p>
-
-<p>Well, thanks to <a href="https://wiki.archlinux.org">ArchWiki</a>, it was simple enough to install to make the audio work on my old laptop. Just install the following packages:</p>
-
-<div class="codehilite"><pre><span></span><code>pacman -S alsa-firmware alsa-lib alsa-utils
-</code></pre></div>
-
-<p>Reboot the system once you're done installing the packages. Depending on your window manager, you should be able to see your sound icon being active.</p>
-
-<h2>Bonus: Bash script to control your volume from the terminal</h2>
-
-<p>In my current laptop, I still haven't mapped out the keys to control the audio volume, so I thought of writing a small method in my <code>.bashrc</code> file, so that I can control it from my terminal.</p>
-
-<p>Open your favorite text editor and Add this method in your <code>.bashrc</code> file:</p>
-
-<div class="codehilite"><pre><span></span><code><span class="c1"># simple volume control</span>
-volume<span class="o">(){</span>
-    <span class="nv">x</span><span class="o">=</span><span class="m">5</span>
-    <span class="k">if</span> <span class="o">[</span> <span class="nv">$1</span> <span class="o">==</span> <span class="s1">&#39;up&#39;</span> <span class="o">]</span>
-    <span class="k">then</span>
-        amixer <span class="nb">set</span> Master <span class="nv">$x</span>%+ <span class="p">&amp;</span>&gt; /dev/null
-    <span class="k">elif</span> <span class="o">[</span> <span class="nv">$1</span> <span class="o">==</span> <span class="s1">&#39;down&#39;</span> <span class="o">]</span>
-    <span class="k">then</span>
-        amixer <span class="nb">set</span> Master <span class="nv">$x</span>%- <span class="p">&amp;</span>&gt; /dev/null
-    <span class="k">elif</span> <span class="o">[</span> <span class="nv">$1</span> <span class="o">==</span> <span class="s1">&#39;toggle&#39;</span> <span class="o">]</span>
-    <span class="k">then</span>
-        amixer <span class="nb">set</span> Master toggle <span class="p">&amp;</span>&gt; /dev/null
-    <span class="k">fi</span>
-<span class="o">}</span>
-</code></pre></div>
-
-<p>Save the file, close your edit and refresh your file by typing:</p>
-
-<div class="codehilite"><pre><span></span><code><span class="nb">source</span> .bashrc
-</code></pre></div>
-
-<p>Now, it should work when you type any of these commands:</p>
-
-<div class="codehilite"><pre><span></span><code>volume up
-volume down
-volume toggle
-</code></pre></div>
-
-<p>Hope this tiny script helps you out! </p>
 
 	</div>
 	<div class="article-footer">
@@ -824,6 +863,13 @@ volume toggle
 		</li>
 		
 		<li>
+			<a href="/category/travel/">
+				Travel
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/tech/">
 				Tech
 				<span class="count">1</span>
@@ -1012,7 +1058,12 @@ volume toggle
 
   gtag('config', 'UA-98290003-2');
 </script>
-
+<script src="/static/vendor/jquery-lazy/jquery.lazy.min.js"></script>
+<script>
+  $(function () {
+    $('.lazy').lazy();
+  });
+</script>
 <!-- <script>
     const darkModeButton = document.createElement('button');
     const syntaxHighlightSource = document.getElementById('syntaxHighlight');

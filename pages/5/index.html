@@ -78,6 +78,147 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/writings/posts/darklight-mode-with-css-and-javascript">Dark/Light mode with CSS and JavaScript</a></h1>
+		<p class="description">A simple guide on how to implement a dark/light theme switcher with CSS and JavaScript</p>
+	</div>
+	<div class="article-body">
+		<p>It's quite common these days that many websites let their users to decide their preferred color scheme(s). Giving this sort of customizability offers good user experience.</p>
+
+<p>In this article, I'll provide a simple step-by-step guide on how to implement a dark/light theme switcher with HTML, CSS and JavaScript.</p>
+
+<div class="post-notification warning">
+    <h3>Prerequisites</h3>
+    <p>This article assumes that the reader has a basic know-how on HTML, CSS, JavaScript and basic knowledge on using the command-line.</p>
+</div>
+
+<h2>Using CSS variables</h2>
+
+<p>I always wanted to implement one for this website too and I thought of making use of CSS variables as I found it to be quite straight forward and I don't have to worry too much about browser support.</p>
+
+<p>Try adding the below CSS to your stylesheet:</p>
+
+<pre><code>    :root {
+        --background-color: white;
+        --font-color: black;
+        --accent-color: red;
+        --alt-background-color: black;
+        --alt-font-color: white;
+        --alt-accent-color: yellow;
+    }
+
+    html {
+        background-color: var(--background-color);
+        color: var(--font-color);
+    }
+
+    a {
+        color: var(--accent-color);
+    }
+
+    html[data-theme="dark"] {
+        background-color: var(--alt-background-color);
+        color: var(--alt-font-color);
+    }
+
+    html[data-theme="dark"] a {
+        color: var(--alt-accent-color);
+    }
+   
+</code></pre>
+
+<p>The <code>:root</code> selector contains a set of default values and in this case, these are just different colors, kind of like how we initialize variables in other programming languages.</p>
+
+<p>For example, whenever the <code>data-theme</code> attribute is set to <code>dark</code>, the default values will be overidden by the <code>html[data-theme="dark"]</code> CSS rule for the theme to take effect.</p>
+
+<p>Really, it's that simple!</p>
+
+<h2>Add some markup</h2>
+
+<p>That depends on what you really want to have in your website but for this tutorial, you can just place a simple button somewhere in your navigation bar or anywhere you like:</p>
+
+<pre><code>&lt;button class="themeSwitcher"&gt;Dark/Light&lt;/button&gt;
+</code></pre>
+
+<h2>Toggle between light and dark themes</h2>
+
+<p>Yes, we are getting there and you just have to write a simple logic that checks if whether the current theme is dark or light based on the class used on the <code>&lt;body&gt;</code> element.</p>
+
+<pre><code>$('.themeSwitcher').on('click', function(){
+    switch($('body').attr('data-theme')){
+        case "dark":
+            $('body').attr('data-theme', 'dark');
+            break;
+
+        case "light":
+        default:
+            $('body').attr('data-theme', '');
+            break;
+    }
+});
+</code></pre>
+
+<h3>Save user's preference in their browser</h3>
+
+<p>If your button works as expected, good! Now, once you refresh the page, the background would return to it's default mode but that's not what we wanted, right?</p>
+
+<p>But why does it return instead of staying dark? Because your "preference" is not stored in your browser.</p>
+
+<p>Modify your code to store your preferences in your browser:</p>
+
+<pre><code>&lt;script&gt;
+$('.themeSwitcher').on('click', function(){
+    switch($('body').attr('data-theme')){
+        case "dark":
+            $('body').attr('data-theme', 'dark');
+            localStorage.setItem("theme", "dark");
+            break;
+
+        case "light":
+        default:
+            $('body').attr('data-theme', '');
+            localStorage.setItem("theme", "");
+            break;
+    }
+});
+&lt;/script&gt;
+</code></pre>
+
+<p>This should work fine but you'll want to avoid the "flickering" issue while changing themes or refreshing the page, in order to do that, make sure that you check the user preference before the page is completely loaded:</p>
+
+<pre><code>&lt;script&gt;
+    if(localStorage.theme){
+        document.documentElement.setAttribute('data-theme', localStorage.getItem("theme"));
+    }
+&lt;/script&gt;
+</code></pre>
+
+<h2>Conclusion</h2>
+
+<p>Well, if you've noticed, I wrote a simple theme switcher for my blog too. Try it out and you can inspect the code to see how it works.</p>
+
+<p>Hope you enjoyed this article!</p>
+
+<p>Stay tuned for more!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>September 9th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/tutorial/">
+					Tutorial
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/view-your-wget-progress-even-after-closing-your-ssh-session">View your wget progress even after closing your SSH session</a></h1>
 		<p class="description"></p>
 	</div>
@@ -88,8 +229,8 @@
 
 <p>So, I did a little research and found a way to view the progress, so I tried the following command:</p>
 
-<div class="codehilite"><pre><span></span><code>tail -f wget_log
-</code></pre></div>
+<pre><code>tail -f wget_log
+</code></pre>
 
 <p>And, I was able to view it's current download progress again.</p>
 
@@ -146,15 +287,15 @@
 
 <h3>1. Update remote repository URL</h3>
 
-<div class="codehilite"><pre><span></span><code>git remote set-url origin https://&lt;your_access_token&gt;@github.com/&lt;your_git_repo_url&gt;
-</code></pre></div>
+<pre><code>git remote set-url origin https://&amp;lt;your_access_token&amp;gt;@github.com/&amp;lt;your_git_repo_url&amp;gt;
+</code></pre>
 
 <h3>2. Just git pull once</h3>
 
 <p>Now, just perform <code>git pull</code> operation once and you should be good:</p>
 
-<div class="codehilite"><pre><span></span><code>git pull https://&lt;your_access_token&gt;@github.com/&lt;your_git_repo_url&gt;
-</code></pre></div>
+<pre><code>git pull https://&amp;lt;your_access_token&amp;gt;@github.com/&amp;lt;your_git_repo_url&amp;gt;
+</code></pre>
 
 <p>Hope this helps you out!</p>
 
@@ -183,33 +324,33 @@
 	<div class="article-body">
 		<p>Say, for example, you have an array of JSON objects that contains the following data:</p>
 
-<div class="codehilite"><pre><span></span><code><span class="kd">var</span> <span class="nx">arrOfObjects</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="p">{</span>
-        <span class="nx">name</span><span class="o">:</span> <span class="s2">&quot;John Doe&quot;</span><span class="p">,</span>
-        <span class="nx">age</span><span class="o">:</span> <span class="mf">20</span><span class="p">,</span>
-        <span class="nx">email</span><span class="o">:</span> <span class="s2">&quot;john.doe@email.com&quot;</span>
-    <span class="p">},</span>
-    <span class="p">{</span>
-        <span class="nx">name</span><span class="o">:</span> <span class="s2">&quot;Bob Smith&quot;</span><span class="p">,</span>
-        <span class="nx">age</span><span class="o">:</span> <span class="mf">56</span><span class="p">,</span>
-        <span class="nx">email</span><span class="o">:</span> <span class="s2">&quot;bob.smith@email.com&quot;</span>
-    <span class="p">},</span>
-<span class="p">];</span>
-</code></pre></div>
+<pre><code>var arrOfObjects = [
+    {
+        name: "John Doe",
+        age: 20,
+        email: "john.doe@email.com"
+    },
+    {
+        name: "Bob Smith",
+        age: 56,
+        email: "bob.smith@email.com"
+    },
+];
+</code></pre>
 
 <p>Hmm, that's pretty basic but how will get the information of "Bob Smith" using his email? Well, that's where the <code>Array.find()</code> method comes into the picture.</p>
 
 <p>Try reading the <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/find">Mozilla Documentation</a> on <code>Array.prototype.find()</code> and implement the following:</p>
 
-<div class="codehilite"><pre><span></span><code><span class="kd">var</span> <span class="nx">key</span> <span class="o">=</span> <span class="s2">&quot;email&quot;</span><span class="p">;</span>
-<span class="kd">var</span> <span class="nx">valueToFind</span> <span class="o">=</span> <span class="s2">&quot;bob.smith@email.com&quot;</span><span class="p">;</span>
-<span class="kd">var</span> <span class="nx">result</span> <span class="o">=</span> <span class="nx">arrOfObjects</span><span class="p">.</span><span class="nx">find</span><span class="p">(</span><span class="nx">obj</span> <span class="p">=&gt;</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="nx">obj</span><span class="p">[</span><span class="nx">key</span><span class="p">]</span> <span class="o">==</span> <span class="nx">value</span><span class="p">;</span>
-<span class="p">});</span>
+<pre><code>var key = "email";
+var valueToFind = "bob.smith@email.com";
+var result = arrOfObjects.find(obj =&amp;gt; {
+    return obj[key] == value;
+});
 
-<span class="c1">//This should give you the record of Bob Smith.</span>
-<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">result</span><span class="p">)</span> 
-</code></pre></div>
+//This should give you the record of Bob Smith.
+console.log(result) 
+</code></pre>
 
 <p>This works fine on all browsers except <strong>Internet Explorer</strong> (I mean, it sucks anyways!), which is okay!</p>
 
@@ -240,8 +381,8 @@
 	<div class="article-body">
 		<p>Sometimes, I come across situations where I would need to update a newly added in a pivot table and this query does come in handy:</p>
 
-<div class="codehilite"><pre><span></span><code><span class="k">UPDATE</span><span class="w"> </span><span class="n">table_a</span><span class="w"> </span><span class="k">INNER</span><span class="w"> </span><span class="k">JOIN</span><span class="w"> </span><span class="n">table_b</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">table_b</span><span class="p">.</span><span class="n">col_x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">table_a</span><span class="p">.</span><span class="n">col_x</span><span class="w"> </span><span class="k">SET</span><span class="w"> </span><span class="n">table_a</span><span class="p">.</span><span class="n">col_y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">table_b</span><span class="p">.</span><span class="n">col_y</span><span class="p">;</span><span class="w"></span>
-</code></pre></div>
+<pre><code>UPDATE table_a INNER JOIN table_b ON table_b.col_x = table_a.col_x SET table_a.col_y = table_b.col_y;
+</code></pre>
 
 <p>Hope you found this useful too!</p>
 
@@ -272,11 +413,11 @@
 
 <p>I did some research and found a way on how to do it. Just type <code>Ctrl+Shift+P</code> and type <code>Open Keyboard Shortcuts</code> and add these lines:</p>
 
-<div class="codehilite"><pre><span></span><code><span class="p">[</span><span class="w"></span>
-<span class="w">    </span><span class="p">{</span><span class="nt">&quot;key&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ctrl+`&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;command&quot;</span><span class="p">:</span><span class="s2">&quot;workbench.action.terminal.focus&quot;</span><span class="p">},</span><span class="w"></span>
-<span class="w">    </span><span class="p">{</span><span class="nt">&quot;key&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ctrl+`&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;command&quot;</span><span class="p">:</span><span class="s2">&quot;workbench.action.focusActiveEditorGroup&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;when&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;terminalFocus&quot;</span><span class="p">},</span><span class="w"></span>
-<span class="p">]</span><span class="w"></span>
-</code></pre></div>
+<pre><code>[
+    {"key": "ctrl+`", "command":"workbench.action.terminal.focus"},
+    {"key": "ctrl+`", "command":"workbench.action.focusActiveEditorGroup", "when": "terminalFocus"},
+]
+</code></pre>
 
 <p>Save the file and now, you'll be able to switch between the two by pressing <code>Ctrl+`</code> keys.</p>
 
@@ -309,7 +450,7 @@
 
 <p>Go to your configuration file or <code>000-default.conf</code> and modify your configuration to something like this:</p>
 
-<div class="codehilite"><pre><span></span><code>&lt;VirtualHost *:80&gt;
+<pre><code>&lt;VirtualHost *:80&gt;
     ServerName your.domain.com
     Redirect permanent / https://your.domain.com/
 &lt;/VirtualHost&gt;
@@ -317,19 +458,19 @@
 &lt;VirtualHost *:443&gt;
     ServerName your.domain.com
     SSLEngine On
-    <span class="c1"># insert code here...</span>
+    # insert code here...
 &lt;/VirtualHost&gt;
-</code></pre></div>
+</code></pre>
 
 <p>Save the file and check if the configuration is correct before your restart the server:</p>
 
-<div class="codehilite"><pre><span></span><code>sudo apachectl configtest
-</code></pre></div>
+<pre><code>sudo apachectl configtest
+</code></pre>
 
 <p>If you get the message, <code>Syntax OK</code>, then go ahead and restart the server:</p>
 
-<div class="codehilite"><pre><span></span><code>sudo systemctl restart apache2
-</code></pre></div>
+<pre><code>sudo systemctl restart apache2
+</code></pre>
 
 <p>Now, your visitors will be redirected from HTTP to HTTPS automatically!</p>
 
@@ -364,8 +505,8 @@
 
 <p>Anyway, after a little digging, I found out that adding this line to your <code>settings.json</code> file would allow you to look for files in your workspace:</p>
 
-<div class="codehilite"><pre><span></span><code><span class="nt">&quot;search.useIgnoreFiles&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="w"></span>
-</code></pre></div>
+<pre><code>"search.useIgnoreFiles": false
+</code></pre>
 
 <p>And, now try <code>Ctrl+P</code> and you'll be able to search for your file(s) easily.</p>
 
@@ -379,53 +520,6 @@
 			<li>
 				<a href="/category/vscode/">
 					VSCode
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-install-composer-manually">How to install Composer manually?</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>You may wonder <strong>"why not install Composer via apt or yum package manager?"</strong> and yes, it can be installed that way too.</p>
-
-<p>But what if you are using old composer packages or you wanted to skip the checks done during the interactive installation routine, this could be the way for you.</p>
-
-<p>I wouldn't really call it an advanced technique or something but if you know what you're doing, then you should be in the right direction.</p>
-
-<p>The below snippet will show you how to install it manually:</p>
-
-<div class="codehilite"><pre><span></span><code>wget <span class="s2">&quot;https://getcomposer.org/download/VERSION_X.X.X/composer.phar&quot;</span>
-sudo mv composer.phar /usr/local/bin/composer
-sudo chmod a+x /usr/local/bin/composer
-</code></pre></div>
-
-<h2>Yes, that's it!</h2>
-
-<p>By placing Composer in the <code>/usr/local/bin</code> directory, it will be accessible from any directory within the system and you can run it globally.</p>
-
-<p>To check if you've installed it correctly, just do the following:</p>
-
-<div class="codehilite"><pre><span></span><code>composer -V
-</code></pre></div>
-
-<p>Hope you found this tip useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>July 3rd, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/tooling/">
-					Tooling
 				</a>
 			</li>
 			
@@ -764,6 +858,13 @@ sudo chmod a+x /usr/local/bin/composer
 		</li>
 		
 		<li>
+			<a href="/category/travel/">
+				Travel
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/tech/">
 				Tech
 				<span class="count">1</span>
@@ -952,7 +1053,12 @@ sudo chmod a+x /usr/local/bin/composer
 
   gtag('config', 'UA-98290003-2');
 </script>
-
+<script src="/static/vendor/jquery-lazy/jquery.lazy.min.js"></script>
+<script>
+  $(function () {
+    $('.lazy').lazy();
+  });
+</script>
 <!-- <script>
     const darkModeButton = document.createElement('button');
     const syntaxHighlightSource = document.getElementById('syntaxHighlight');

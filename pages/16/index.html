@@ -78,6 +78,53 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-identify-the-current-target-of-an-event">How to identify the current target of an event?</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Using the <code>event.currentTarget</code> property which belongs to the <code>Event</code> interface can help you in many ways to identify target of the current event especially if you want to fetch attributes or modify the classname of an element that belongs to a group of elements sharing the same classname.</p>
+
+<p>There are many examples but I chose to write a small snippet of highlighting a tab:</p>
+
+<pre><code>function highlightTab(e){
+    // Find elements that has the classname 'active' 
+    // and remove them
+    if(document.querySelector('div.tab_item.active') !== null){
+        document.querySelector('div.tab_item.active').classList.remove('active');
+    }
+
+    // Add active class to target node
+    e.currentTarget.className += " active";
+
+    // Add active class to target's child node
+    // e.currentTarget.querySelector('a.child_anchor_link').className += " active";
+
+    // Add active class to target's parent node
+    // e.currentTarget.parentNode.className += " active";
+}
+</code></pre>
+
+<p>Read <a href="https://developer.mozilla.org/en-US/docs/Web/API/Event/currentTarget">Mozilla's official documentation</a> to know more about getting the current target of an event and it's compatibility with different web browsers.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>June 1st, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/javascript/">
+					JavaScript
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/allow-inline-elements-in-ckeditor">Allow inline elements in CKEditor</a></h1>
 		<p class="description"></p>
 	</div>
@@ -86,19 +133,19 @@
 
 <p>Well, CKEditor's <a href="https://ckeditor.com/docs/ckeditor4/latest/guide/dev_allowed_content_rules.html">documentation</a> states that you can allow it by adding this line to your configuration:</p>
 
-<div class="codehilite"><pre><span></span><code><span class="kd">var</span> <span class="nx">editor</span> <span class="o">=</span> <span class="nx">CKEDITOR</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="s1">&#39;textarea_edit&#39;</span><span class="p">,{</span>
-    <span class="nx">allowedContent</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
-<span class="p">});</span>
-</code></pre></div>
+<pre><code>var editor = CKEDITOR.replace('textarea_edit',{
+    allowedContent: true,
+});
+</code></pre>
 
 <p>After adding this line, CKEditor will stop removing those elements from your HTML content but it's also open to all tags. </p>
 
 <p>You can set rules to allow only specific ones like this:</p>
 
-<div class="codehilite"><pre><span></span><code><span class="kd">var</span> <span class="nx">editor</span> <span class="o">=</span> <span class="nx">CKEDITOR</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="s1">&#39;textarea_edit&#39;</span><span class="p">,{</span>
-    <span class="nx">allowedContent</span><span class="o">:</span> <span class="s1">&#39;span; i; ul; li; a[!href]&#39;</span>
-<span class="p">});</span>
-</code></pre></div>
+<pre><code>var editor = CKEDITOR.replace('textarea_edit',{
+    allowedContent: 'span; i; ul; li; a[!href]'
+});
+</code></pre>
 
 <p>Hope this helps you out! &#x1F60A;</p>
 
@@ -127,27 +174,27 @@
 	<div class="article-body">
 		<p>If you've ever come across this type of error when you're trying to fetch parameters of the current route:</p>
 
-<div class="codehilite"><pre><span></span><code>Symfony\Component\Debug\Exception\FatalThrowableError: Call to member function parameters() on null
-</code></pre></div>
+<pre><code>Symfony\Component\Debug\Exception\FatalThrowableError: Call to member function parameters() on null
+</code></pre>
 
 <p>It's probably because the route doesn't exist, which is why it failed to call the <code>parameters()</code> function. It can be easily resolved by checking if the route exists before calling the function:</p>
 
-<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="k">namespace</span> <span class="nx">App\Http\Controllers</span><span class="p">;</span>
-<span class="k">use</span> <span class="nx">Route</span><span class="p">;</span>
+<pre><code>&lt;?php
+namespace App\Http\Controllers;
+use Route;
 
-<span class="k">class</span> <span class="nc">FooController</span> <span class="k">extends</span> <span class="nx">Controller</span> <span class="p">{</span>
-    <span class="k">public</span> <span class="k">function</span> <span class="fm">__construct</span><span class="p">(</span><span class="nx">Request</span> <span class="nv">$request</span><span class="p">){</span>
-        <span class="c1">// insert code here...</span>
-    <span class="p">}</span>
+class FooController extends Controller {
+    public function __construct(Request $request){
+        // insert code here...
+    }
 
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">foo</span><span class="p">(</span><span class="nx">Request</span> <span class="nv">$request</span><span class="p">){</span>
-        <span class="nv">$params</span> <span class="o">=</span> <span class="nv">$request</span><span class="o">-&gt;</span><span class="na">route</span><span class="p">()</span> <span class="o">?</span> <span class="nx">Route</span><span class="o">::</span><span class="na">current</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">parameters</span><span class="p">()</span> <span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">;</span>
-        <span class="k">return</span> <span class="nv">$params</span><span class="p">;</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-<span class="cp">?&gt;</span><span class="x"></span>
-</code></pre></div>
+    public function foo(Request $request){
+        $params = $request-&gt;route() ? Route::current()-&gt;parameters() : '';
+        return $params;
+    }
+}
+?&gt;
+</code></pre>
 
 <p>Although, the sample code above is to fetch parameters of the current route, you can apply this before calling any method from the <code>Route</code> class.</p>
 
@@ -202,38 +249,38 @@
 
 <p><strong>Implementation of a standard queue using C++:</strong></p>
 
-<div class="codehilite"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">Queue</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="k">private</span><span class="o">:</span><span class="w"></span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">pos</span><span class="p">;</span><span class="w"></span>
-<span class="w">        </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">data</span><span class="p">;</span><span class="w"></span>
+<pre><code>class Queue {
+    private:
+        int pos;
+        vector&lt;int&gt; data;
 
-<span class="w">    </span><span class="k">public</span><span class="o">:</span><span class="w"></span>
-<span class="w">        </span><span class="n">Queue</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">            </span><span class="n">pos</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
-<span class="w">        </span><span class="p">}</span><span class="w"></span>
+    public:
+        Queue() {
+            pos = 0;
+        }
 
-<span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="n">enqueue</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">            </span><span class="n">data</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">value</span><span class="p">);</span><span class="w"></span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w"></span>
-<span class="w">        </span><span class="p">}</span><span class="w"></span>
+        bool enqueue(int value) {
+            data.push_back(value);
+            return true;
+        }
 
-<span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="n">dequeue</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">isEmpty</span><span class="p">()){</span><span class="w"></span>
-<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span><span class="w"></span>
-<span class="w">            </span><span class="p">}</span><span class="w"></span>
-<span class="w">            </span><span class="n">pos</span><span class="o">++</span><span class="p">;</span><span class="w"></span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w"></span>
-<span class="w">        </span><span class="p">}</span><span class="w"></span>
+        bool dequeue() {
+            if(isEmpty()){
+                return false;
+            }
+            pos++;
+            return true;
+        }
 
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">front</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="n">pos</span><span class="p">];</span><span class="w"></span>
-<span class="w">        </span><span class="p">}</span><span class="w"></span>
+        int front() {
+            return data[pos];
+        }
 
-<span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="n">isEmpty</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">pos</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"></span>
-<span class="w">        </span><span class="p">}</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
-</code></pre></div>
+        bool isEmpty() {
+            return pos &gt;= data.size();
+        }
+}
+</code></pre>
 
 <p>In terms of memory management, a standard Queue is quite inefficient and incapable of handling dynamic memory.</p>
 
@@ -256,33 +303,33 @@
 
 <p><strong>Implementation of a stack using C++:</strong></p>
 
-<div class="codehilite"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">Stack</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="k">private</span><span class="o">:</span><span class="w"></span>
-<span class="w">        </span><span class="n">vector</span><span class="o">&amp;</span><span class="n">ltint</span><span class="o">&gt;</span><span class="w"> </span><span class="n">data</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="k">public</span><span class="o">:</span><span class="w"></span>
-<span class="w">        </span><span class="kt">void</span><span class="w"> </span><span class="n">push</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">            </span><span class="n">data</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">value</span><span class="p">);</span><span class="w"></span>
-<span class="w">        </span><span class="p">}</span><span class="w"></span>
+<pre><code>class Stack {
+    private:
+        vector&amp;ltint&gt; data;
+    public:
+        void push(int value) {
+            data.push_back(value);
+        }
 
-<span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="n">isEmpty</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">empty</span><span class="p">();</span><span class="w"></span>
-<span class="w">        </span><span class="p">}</span><span class="w"></span>
+        bool isEmpty() {
+            return data.empty();
+        }
 
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">top</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">back</span><span class="p">();</span><span class="w"></span>
-<span class="w">        </span><span class="p">}</span><span class="w"></span>
+        int top() {
+            return data.back();
+        }
 
-<span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="n">pop</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">isEmpty</span><span class="p">())</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">                </span><span class="n">data</span><span class="p">.</span><span class="n">pop_back</span><span class="p">();</span><span class="w"></span>
-<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w"></span>
-<span class="w">            </span><span class="p">}</span><span class="w"></span>
-<span class="w">            </span><span class="k">else</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span><span class="w"></span>
-<span class="w">            </span><span class="p">}</span><span class="w"></span>
-<span class="w">        </span><span class="p">}</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
-</code></pre></div>
+        bool pop() {
+            if(!isEmpty()) {
+                data.pop_back();
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+}
+</code></pre>
 
 <p>Unlike queues, stacks are easier to implement and pretty efficient at managing dynamic memory.</p>
 
@@ -364,10 +411,10 @@
 	<div class="article-body">
 		<p>If you don't want the current element to be selected in an array of elements that belongs to same class or type, just use the <code>.not()</code> method like the example below:</p>
 
-<div class="codehilite"><pre><span></span><code><span class="nx">$</span><span class="p">(</span><span class="s2">&quot;.btn&quot;</span><span class="p">).</span><span class="nx">click</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
-    <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;.btn&quot;</span><span class="p">).</span><span class="nx">not</span><span class="p">(</span><span class="k">this</span><span class="p">).</span><span class="nx">text</span><span class="p">(</span><span class="s1">&#39;selected&#39;</span><span class="p">);</span>
-<span class="p">});</span>
-</code></pre></div>
+<pre><code>$(".btn").click(function(){
+    $(".btn").not(this).text('selected');
+});
+</code></pre>
 
 <p>The above code will change the text for all buttons except the current element.</p>
 
@@ -396,13 +443,13 @@
 	<div class="article-body">
 		<p>First, you need to view what's inside of the <code>.zip</code> archive:</p>
 
-<div class="codehilite"><pre><span></span><code>unzip -v archive.zip
-</code></pre></div>
+<pre><code>unzip -v archive.zip
+</code></pre>
 
 <p>Once, you've found the folder you wanted to extract, just type this:</p>
 
-<div class="codehilite"><pre><span></span><code>unzip archive.zip <span class="s2">&quot;folder_to_extract/*&quot;</span> -d .
-</code></pre></div>
+<pre><code>unzip archive.zip "folder_to_extract/*" -d .
+</code></pre>
 
 	</div>
 	<div class="article-footer">
@@ -429,22 +476,22 @@
 	<div class="article-body">
 		<p>If you wanted to remove a specific pattern in a list of files, like the ones below:</p>
 
-<div class="codehilite"><pre><span></span><code>23_2020_03_01_article-three.md
+<pre><code>23_2020_03_01_article-three.md
 22_2020_02_01_article-two.md
 21_2020_01_01_article-one.md
-</code></pre></div>
+</code></pre>
 
 <p>You can simply do that using Regular Expressions and the <code>rename</code> tool:</p>
 
-<div class="codehilite"><pre><span></span><code>rename <span class="s1">&#39;s/[0-9]+_[0-9]+_[0-9]+_[0-9]+_//&#39;</span> *.md
-</code></pre></div>
+<pre><code>rename 's/[0-9]+_[0-9]+_[0-9]+_[0-9]+_//' *.md
+</code></pre>
 
 <p>Now, the desired output should look like this:</p>
 
-<div class="codehilite"><pre><span></span><code>article-three.md
+<pre><code>article-three.md
 article-two.md
 article-one.md
-</code></pre></div>
+</code></pre>
 
 <p>This should come in handy if you're lazy to rename each file manually! :)</p>
 
@@ -456,45 +503,6 @@ article-one.md
 			<li>
 				<a href="/category/terminal/">
 					Terminal
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/rename-extensions-of-multiple-files">Rename extensions of multiple files</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>In this example, we're going to change a list of <code>.txt</code> files to <code>.md</code> files:</p>
-
-<div class="codehilite"><pre><span></span><code><span class="ch">#!/bin/bash</span>
-
-<span class="nb">shopt</span> -s nullglob
-<span class="nv">files</span><span class="o">=(</span><span class="k">$(</span>ls -v *.txt<span class="k">)</span><span class="o">)</span>
-
-<span class="k">for</span> file <span class="k">in</span> <span class="s2">&quot;</span><span class="si">${</span><span class="nv">files</span><span class="p">[@]</span><span class="si">}</span><span class="s2">&quot;</span>
-<span class="k">do</span>
-    mv <span class="si">${</span><span class="nv">file</span><span class="si">}</span> <span class="si">${</span><span class="nv">file</span><span class="si">}</span>.md
-<span class="k">done</span>
-</code></pre></div>
-
-<p>s
-You can use modify this script to rename any extension you want.</p>
-
-	</div>
-	<div class="article-footer">
-		<time>May 27th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/bash/">
-					Bash
 				</a>
 			</li>
 			
@@ -833,6 +841,13 @@ You can use modify this script to rename any extension you want.</p>
 		</li>
 		
 		<li>
+			<a href="/category/travel/">
+				Travel
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/tech/">
 				Tech
 				<span class="count">1</span>
@@ -1021,7 +1036,12 @@ You can use modify this script to rename any extension you want.</p>
 
   gtag('config', 'UA-98290003-2');
 </script>
-
+<script src="/static/vendor/jquery-lazy/jquery.lazy.min.js"></script>
+<script>
+  $(function () {
+    $('.lazy').lazy();
+  });
+</script>
 <!-- <script>
     const darkModeButton = document.createElement('button');
     const syntaxHighlightSource = document.getElementById('syntaxHighlight');

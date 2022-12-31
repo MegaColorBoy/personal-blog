@@ -105,47 +105,47 @@
 
 <p>First, you need to create a Dockerfile for your app service in your project's root directory:</p>
 
-<div class="codehilite"><pre><span></span><code>touch Dockerfile
+<pre><code>touch Dockerfile
 vim Dockerfile
-</code></pre></div>
+</code></pre>
 
 <p>In this tutorial, I'll be using PHP7.4 but you can use any version that you need. Here you go:</p>
 
-<div class="codehilite"><pre><span></span><code><span class="k">FROM</span><span class="w"> </span><span class="s">php:7.4-fpm</span>
+<pre><code>FROM php:7.4-fpm
 
-<span class="c"># Arguments defined in docker-compose.yml</span>
-<span class="k">ARG</span><span class="w"> </span><span class="k">user</span><span class="w"></span>
-<span class="s">ARG uid </span>
+# Arguments defined in docker-compose.yml
+ARG user
+ARG uid 
 
-<span class="c"># Install system dependencies</span>
-<span class="k">RUN</span><span class="w"> </span>apt-get update <span class="o">&amp;&amp;</span> apt-get install -y <span class="se">\</span>
-    git <span class="se">\</span>
-    curl <span class="se">\</span>
-    libpng-dev <span class="se">\</span>
-    libonig-dev <span class="se">\</span>
-    libxml2-dev <span class="se">\</span>
-    zip <span class="se">\</span>
+# Install system dependencies
+RUN apt-get update &amp;&amp; apt-get install -y \
+    git \
+    curl \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    zip \
     unzip
 
-<span class="c"># Clear cache</span>
-<span class="k">RUN</span><span class="w"> </span>apt-get clean <span class="o">&amp;&amp;</span> rm -rf /var/lib/apt/lists/*
+# Clear cache
+RUN apt-get clean &amp;&amp; rm -rf /var/lib/apt/lists/*
 
-<span class="c"># Install PHP extensions</span>
-<span class="k">RUN</span><span class="w"> </span>docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
+# Install PHP extensions
+RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
 
-<span class="c"># Get latest Composer</span>
-<span class="k">COPY</span><span class="w"> </span>--from<span class="o">=</span>composer:latest /usr/bin/composer /usr/bin/composer
+# Get latest Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-<span class="c"># Create system user to run Composer and Artisan Commands</span>
-<span class="k">RUN</span><span class="w"> </span>useradd -G www-data,root -u <span class="nv">$uid</span> -d /home/<span class="nv">$user</span> <span class="nv">$user</span>
-<span class="k">RUN</span><span class="w"> </span>mkdir -p /home/<span class="nv">$user</span>/.composer <span class="o">&amp;&amp;</span> <span class="se">\</span>
-    chown -R <span class="nv">$user</span>:<span class="nv">$user</span> /home/<span class="nv">$user</span>
+# Create system user to run Composer and Artisan Commands
+RUN useradd -G www-data,root -u $uid -d /home/$user $user
+RUN mkdir -p /home/$user/.composer &amp;&amp; \
+    chown -R $user:$user /home/$user
 
-<span class="c"># Set working directory</span>
-<span class="k">WORKDIR</span><span class="w"> </span><span class="s">/var/www</span>
+# Set working directory
+WORKDIR /var/www
 
-<span class="k">USER</span><span class="w"> </span><span class="s">$user</span>
-</code></pre></div>
+USER $user
+</code></pre>
 
 <p>So, what's happening in the configuration above is that, it pulls a PHP7.4-FPM image from Docker Hub. Next, it'll define the user of the service and install all the necessary dependencies that are given above and set the working directory to <code>/var/www/</code>. The last step will change to the newly created user, which would make sure that you are using the service as a normal user.</p>
 
@@ -157,51 +157,51 @@ vim Dockerfile
 
 <p>Create a directory named <code>.docker</code> in your project's root directory:</p>
 
-<div class="codehilite"><pre><span></span><code>mkdir -p .docker
-</code></pre></div>
+<pre><code>mkdir -p .docker
+</code></pre>
 
 <h3>NGINX</h3>
 
 <p>Go to <code>.docker</code> directory and create <code>nginx</code> directory:</p>
 
-<div class="codehilite"><pre><span></span><code>mkdir -p nginx
-</code></pre></div>
+<pre><code>mkdir -p nginx
+</code></pre>
 
 <p>Now let's set up the NGINX service by creating a <code>.conf</code> file:</p>
 
-<div class="codehilite"><pre><span></span><code>touch myservice.conf
-</code></pre></div>
+<pre><code>touch myservice.conf
+</code></pre>
 
 <p>Now, copy the following configuration to your <code>.conf</code> file:</p>
 
-<div class="codehilite"><pre><span></span><code>server <span class="o">{</span>
-    listen <span class="m">80</span><span class="p">;</span>
-    index index.php index.html<span class="p">;</span>
-    error_log  /var/log/nginx/error.log<span class="p">;</span>
-    access_log /var/log/nginx/access.log<span class="p">;</span>
-    root /var/www/public<span class="p">;</span>
-    location ~ <span class="se">\.</span>php$ <span class="o">{</span>
-        try_files <span class="nv">$uri</span> <span class="o">=</span><span class="m">404</span><span class="p">;</span>
-        fastcgi_split_path_info ^<span class="o">(</span>.+<span class="se">\.</span>php<span class="o">)(</span>/.+<span class="o">)</span>$<span class="p">;</span>
-        fastcgi_pass app:9000<span class="p">;</span>
-        fastcgi_index index.php<span class="p">;</span>
-        include fastcgi_params<span class="p">;</span>
-        fastcgi_param SCRIPT_FILENAME <span class="nv">$document_root$fastcgi_script_name</span><span class="p">;</span>
-        fastcgi_param PATH_INFO <span class="nv">$fastcgi_path_info</span><span class="p">;</span>
-    <span class="o">}</span>
-    location / <span class="o">{</span>
-        try_files <span class="nv">$uri</span> <span class="nv">$uri</span>/ /index.php?<span class="nv">$query_string</span><span class="p">;</span>
-        gzip_static on<span class="p">;</span>
-    <span class="o">}</span>
-<span class="o">}</span>
-</code></pre></div>
+<pre><code>server {
+    listen 80;
+    index index.php index.html;
+    error_log  /var/log/nginx/error.log;
+    access_log /var/log/nginx/access.log;
+    root /var/www/public;
+    location ~ \.php$ {
+        try_files $uri =404;
+        fastcgi_split_path_info ^(.+\.php)(/.+)$;
+        fastcgi_pass app:9000;
+        fastcgi_index index.php;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_param PATH_INFO $fastcgi_path_info;
+    }
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+        gzip_static on;
+    }
+}
+</code></pre>
 
 <h3>MySQL</h3>
 
 <p>Since this is a Laravel application, you can skip this step by running migrations and seeding your database or you can try creating a directory inside the <code>.docker</code> folder to store your MySQL related configuration:</p>
 
-<div class="codehilite"><pre><span></span><code>mkdir -p mysql
-</code></pre></div>
+<pre><code>mkdir -p mysql
+</code></pre>
 
 <p>Once created, create a file named <code>init_db.sql</code> that would contain your entire database dump to be seeded once you run your docker service.</p>
 
@@ -213,94 +213,95 @@ vim Dockerfile
 
 <p>Here is the configuration:</p>
 
-<div class="codehilite"><pre><span></span><code><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;3.8&#39;</span><span class="w"></span>
-<span class="nt">services</span><span class="p">:</span><span class="w"></span>
-<span class="w">  </span><span class="c1"># PHP Service</span><span class="w"></span>
-<span class="w">  </span><span class="nt">app</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">build</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="nt">args</span><span class="p">:</span><span class="w"></span>
-<span class="w">        </span><span class="nt">user</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">username</span><span class="w"></span>
-<span class="w">        </span><span class="nt">uid</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1000</span><span class="w"></span>
-<span class="w">      </span><span class="nt">context</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./</span><span class="w"></span>
-<span class="w">      </span><span class="nt">dockerfile</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Dockerfile</span><span class="w"></span>
-<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yourapp</span><span class="w"> </span>
-<span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yourapp-app</span><span class="w"></span>
-<span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">unless-stopped</span><span class="w"></span>
-<span class="w">    </span><span class="nt">working_dir</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/var/www/</span><span class="w"></span>
-<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./:/var/www</span><span class="w"></span>
-<span class="w">    </span><span class="nt">networks</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yourapp</span><span class="w"></span>
+<pre><code>version: '3.8'
+services:
+  # PHP Service
+  app:
+    build:
+      args:
+        user: username
+        uid: 1000
+      context: ./
+      dockerfile: Dockerfile
+    image: yourapp 
+    container_name: yourapp-app
+    restart: unless-stopped
+    working_dir: /var/www/
+    volumes:
+      - ./:/var/www
+    networks:
+      - yourapp
 
-<span class="w">  </span><span class="c1"># MySQL Service</span><span class="w"></span>
-<span class="w">  </span><span class="nt">db</span><span class="p">:</span><span class="w"> </span>
-<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mysql:8.0</span><span class="w"></span>
-<span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yourapp-db</span><span class="w"></span>
-<span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">unless-stopped</span><span class="w"></span>
-<span class="w">    </span><span class="nt">environment</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="nt">MYSQL_DATABASE</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${DB_DATABASE}</span><span class="w"></span>
-<span class="w">      </span><span class="nt">MYSQL_ROOT_PASSWORD</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${DB_PASSWORD}</span><span class="w"></span>
-<span class="w">      </span><span class="nt">MYSQL_PASSWORD</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${DB_PASSWORD}</span><span class="w"></span>
-<span class="w">      </span><span class="nt">MYSQL_USER</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${DB_USERNAME}</span><span class="w"></span>
-<span class="w">      </span><span class="nt">SERVICE_TAGS</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dev</span><span class="w"> </span>
-<span class="w">      </span><span class="nt">SERVICE_NAME</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mysql</span><span class="w"></span>
-<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./.docker/mysql:/docker-entrypoint-initdb.d</span><span class="w"></span>
-<span class="w">    </span><span class="nt">healthcheck</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="nt">test</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mysqladmin ping -h 127.0.0.1 -u ${DB_USERNAME} --password=${DB_PASSWORD}</span><span class="w"></span>
-<span class="w">      </span><span class="nt">interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5s</span><span class="w"></span>
-<span class="w">      </span><span class="nt">retries</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span><span class="w"></span>
-<span class="w">    </span><span class="nt">networks</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yourapp</span><span class="w"></span>
+  # MySQL Service
+  db: 
+    image: mysql:8.0
+    container_name: yourapp-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_USER: ${DB_USERNAME}
+      SERVICE_TAGS: dev 
+      SERVICE_NAME: mysql
+    volumes:
+      - ./.docker/mysql:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: mysqladmin ping -h 127.0.0.1 -u ${DB_USERNAME} --password=${DB_PASSWORD}
+      interval: 5s
+      retries: 10
+    networks:
+      - yourapp
 
-<span class="w">  </span><span class="c1"># NGINX Service</span><span class="w"></span>
-<span class="w">  </span><span class="nt">nginx</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nginx:alpine</span><span class="w"></span>
-<span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yourapp-nginx</span><span class="w"></span>
-<span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">unless-stopped</span><span class="w"></span>
-<span class="w">    </span><span class="nt">ports</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8000:80</span><span class="w"></span>
-<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./:/var/www</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./.docker/nginx:/etc/nginx/conf.d/</span><span class="w"></span>
-<span class="w">    </span><span class="nt">networks</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yourapp</span><span class="w"></span>
+  # NGINX Service
+  nginx:
+    image: nginx:alpine
+    container_name: yourapp-nginx
+    restart: unless-stopped
+    ports:
+      - 8000:80
+    volumes:
+      - ./:/var/www
+      - ./.docker/nginx:/etc/nginx/conf.d/
+    networks:
+      - yourapp
 
-<span class="w">  </span><span class="c1"># phpMyAdmin service</span><span class="w"></span>
-<span class="w">  </span><span class="nt">phpmyadmin</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">phpmyadmin/phpmyadmin:5</span><span class="w"></span>
-<span class="w">    </span><span class="nt">ports</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8080:80</span><span class="w"></span>
-<span class="w">    </span><span class="nt">environment</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="nt">PMA_HOST</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">db</span><span class="w"></span>
-<span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="nt">db</span><span class="p">:</span><span class="w"> </span>
-<span class="w">        </span><span class="nt">condition</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">service_healthy</span><span class="w"></span>
-<span class="w">    </span><span class="nt">networks</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yourapp</span><span class="w"></span>
+  # phpMyAdmin service
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:5
+    ports:
+      - 8080:80
+    environment:
+      PMA_HOST: db
+    depends_on:
+      db: 
+        condition: service_healthy
+    networks:
+      - yourapp
 
-<span class="nt">networks</span><span class="p">:</span><span class="w"></span>
-<span class="w">  </span><span class="nt">yourapp</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">driver</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">bridge</span><span class="w"></span>
-</code></pre></div>
+networks:
+  yourapp:
+    driver: bridge
+
+</code></pre>
 
 <h2>Configure your application</h2>
 
 <p>Open your current <code>.env</code> file of your laravel project and just add the necessary database configuration:</p>
 
-<div class="codehilite"><pre><span></span><code><span class="l l-Scalar l-Scalar-Plain">DB_HOST=yourapp-db</span><span class="w"></span>
-<span class="l l-Scalar l-Scalar-Plain">DB_PORT=3306</span><span class="w"></span>
-<span class="l l-Scalar l-Scalar-Plain">DB_DATABASE=your_database_name</span><span class="w"></span>
-<span class="l l-Scalar l-Scalar-Plain">DB_USERNAME=your_database_user_name</span><span class="w"></span>
-<span class="l l-Scalar l-Scalar-Plain">DB_PASSWORD=your_database_password</span><span class="w"></span>
-</code></pre></div>
+<pre><code>DB_HOST=yourapp-db
+DB_PORT=3306
+DB_DATABASE=your_database_name
+DB_USERNAME=your_database_user_name
+DB_PASSWORD=your_database_password
+</code></pre>
 
 <h2>Build the application image</h2>
 
 <p>After you are done with configuring, run the following command to build your application image:</p>
 
-<div class="codehilite"><pre><span></span><code>docker-compose build yourapp
-</code></pre></div>
+<pre><code>docker-compose build yourapp
+</code></pre>
 
 <p>Depending on your network speed, it might take a few minutes to build your image.</p>
 
@@ -308,29 +309,30 @@ vim Dockerfile
 
 <p>Once the build is complete, execute the following command:</p>
 
-<div class="codehilite"><pre><span></span><code>docker-compose up -d
-</code></pre></div>
+<pre><code>docker-compose up -d
+</code></pre>
 
 <p>The following command will run your containers in the background. To display your information about the state of your docker services:</p>
 
-<div class="codehilite"><pre><span></span><code>docker-compose ps
-</code></pre></div>
+<pre><code>docker-compose ps
+</code></pre>
 
 <p>Install your application's dependencies:</p>
 
-<div class="codehilite"><pre><span></span><code>docker-compose <span class="nb">exec</span> yourapp rm -rf vendor composer.lock
-docker-compose <span class="nb">exec</span> yourapp composer install
-</code></pre></div>
+<pre><code>docker-compose exec yourapp rm -rf vendor composer.lock
+docker-compose exec yourapp composer install
+</code></pre>
 
 <p>And then run the following commands to run your Laravel application:</p>
 
-<div class="codehilite"><pre><span></span><code>docker-compose <span class="nb">exec</span> yourapp php artisan key:generate
-docker-compose <span class="nb">exec</span> yourapp php artisan config:clear
-docker-compose <span class="nb">exec</span> yourapp php artisan cache:clear
-docker-compose <span class="nb">exec</span> yourapp php artisan view:clear
-docker-compose <span class="nb">exec</span> yourapp php artisan route:clear
-docker-compose <span class="nb">exec</span> yourapp php artisan storage:link 
-</code></pre></div>
+<pre><code>docker-compose exec yourapp php artisan key:generate
+docker-compose exec yourapp php artisan config:clear
+docker-compose exec yourapp php artisan cache:clear
+docker-compose exec yourapp php artisan view:clear
+docker-compose exec yourapp php artisan route:clear
+docker-compose exec yourapp php artisan storage:link 
+
+</code></pre>
 
 <p>Now, you can go to your browser, type your <code>http://localhost:8000</code> to access your application.</p>
 
@@ -415,7 +417,12 @@ docker-compose <span class="nb">exec</span> yourapp php artisan storage:link
 
   gtag('config', 'UA-98290003-2');
 </script>
-
+<script src="/static/vendor/jquery-lazy/jquery.lazy.min.js"></script>
+<script>
+  $(function () {
+    $('.lazy').lazy();
+  });
+</script>
 <!-- <script>
     const darkModeButton = document.createElement('button');
     const syntaxHighlightSource = document.getElementById('syntaxHighlight');

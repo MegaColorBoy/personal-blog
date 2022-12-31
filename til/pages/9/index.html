@@ -85,18 +85,18 @@
 
 <p>I resolved it by calling the <code>Filesystem</code> package in my controller:</p>
 
-<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="k">use</span> <span class="nx">Illuminate\Filesystem\Filesystem</span><span class="p">;</span>
-<span class="cp">?&gt;</span><span class="x"></span>
-</code></pre></div>
+<pre><code>&lt;?php
+use Illuminate\Filesystem\Filesystem;
+?&gt;
+</code></pre>
 
 <p>Then simply, create a new instance and define the directory you wanted to clear:</p>
 
-<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="nv">$folder</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Filesystem</span><span class="p">;</span>
-<span class="nv">$folder</span><span class="o">-&gt;</span><span class="na">cleanDirectory</span><span class="p">(</span><span class="s1">&#39;storage/exports&#39;</span><span class="p">);</span>
-<span class="cp">?&gt;</span><span class="x"></span>
-</code></pre></div>
+<pre><code>&lt;?php
+$folder = new Filesystem;
+$folder-&gt;cleanDirectory('storage/exports');
+?&gt;
+</code></pre>
 
 <p>Hope this helps you out!</p>
 
@@ -156,18 +156,18 @@
 
 <p>The <code>paginate()</code> method takes the following parameters by default:</p>
 
-<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="k">public</span> <span class="k">function</span> <span class="nf">paginate</span><span class="p">(</span><span class="nv">$perPage</span> <span class="o">=</span> <span class="k">null</span><span class="p">,</span> <span class="nv">$columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;*&#39;</span><span class="p">],</span> <span class="nv">$pageName</span> <span class="o">=</span> <span class="s1">&#39;page&#39;</span><span class="p">,</span> <span class="nv">$page</span> <span class="o">=</span> <span class="k">null</span><span class="p">);</span>
-<span class="cp">?&gt;</span><span class="x"></span>
-</code></pre></div>
+<pre><code>&lt;?php
+public function paginate($perPage = null, $columns = ['*'], $pageName = 'page', $page = null);
+?&gt;
+</code></pre>
 
 <p>So, if you want to fetch the pagination data of a specific page, then just write this:</p>
 
-<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="nv">$pageNumber</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span>
-<span class="nv">$data</span> <span class="o">=</span> <span class="nx">ExampleModel</span><span class="o">::</span><span class="na">paginate</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;*&#39;</span><span class="p">],</span> <span class="s1">&#39;page&#39;</span><span class="p">,</span> <span class="nv">$pageNumber</span><span class="p">);</span>
-<span class="cp">?&gt;</span><span class="x"></span>
-</code></pre></div>
+<pre><code>&lt;?php
+$pageNumber = 5;
+$data = ExampleModel::paginate(5, ['*'], 'page', $pageNumber);
+?&gt;
+</code></pre>
 
 <p>Hope you found this article useful!</p>
 
@@ -196,23 +196,23 @@
 	<div class="article-body">
 		<p>You'll get this error when you're hosting a Laravel project with using HTTPS/SSL protocol on <code>localhost</code> or <code>127.0.0.1</code>:</p>
 
-<div class="codehilite"><pre><span></span><code>cURL error 60: SSL certificate problem: unable to get local issuer certificate (see https://curl.haxx.se/libcurl/c/libcurl-errors.html)
-</code></pre></div>
+<pre><code>cURL error 60: SSL certificate problem: unable to get local issuer certificate (see https://curl.haxx.se/libcurl/c/libcurl-errors.html)
+</code></pre>
 
 <p>I read some article on trying to install <code>cacert.pem</code> authorization certificate on your WAMP/XAMPP setup but it didn't really work out for me as I was running out of time.</p>
 
 <p>So, I did a little digging and learnt that I can just modify the <code>verify</code> flag to <code>false</code> in the <code>vendor/guzzlehttp/guzzle/src/Client.php</code> file:</p>
 
-<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="nv">$defaults</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="s1">&#39;allow_redirects&#39;</span> <span class="o">=&gt;</span> <span class="nx">RedirectMiddleware</span><span class="o">::</span><span class="nv">$defaultSettings</span><span class="p">,</span>
-    <span class="s1">&#39;http_errors&#39;</span>     <span class="o">=&gt;</span> <span class="k">true</span><span class="p">,</span>
-    <span class="s1">&#39;decode_content&#39;</span>  <span class="o">=&gt;</span> <span class="k">true</span><span class="p">,</span>
-    <span class="s1">&#39;verify&#39;</span>          <span class="o">=&gt;</span> <span class="k">false</span><span class="p">,</span> <span class="c1">// changed it to false</span>
-    <span class="s1">&#39;cookies&#39;</span>         <span class="o">=&gt;</span> <span class="k">false</span>
-<span class="p">];</span>
-<span class="cp">?&gt;</span><span class="x"></span>
-</code></pre></div>
+<pre><code>&lt;?php
+$defaults = [
+    'allow_redirects' =&gt; RedirectMiddleware::$defaultSettings,
+    'http_errors'     =&gt; true,
+    'decode_content'  =&gt; true,
+    'verify'          =&gt; false, // changed it to false
+    'cookies'         =&gt; false
+];
+?&gt;
+</code></pre>
 
 <p>By changing to it <code>false</code>, you'll not face that error again but please keep in mind, you should do this only if you're developing on localhost.</p>
 
@@ -251,15 +251,15 @@
 
 <p>Just execute the following command in your root directory:</p>
 
-<div class="codehilite"><pre><span></span><code>php artisan key:generate
-</code></pre></div>
+<pre><code>php artisan key:generate
+</code></pre>
 
 <p>If the error still persists, try clearing the cache by doing the following:</p>
 
-<div class="codehilite"><pre><span></span><code>php artisan config:cache
+<pre><code>php artisan config:cache
 php artisan cache:clear
 php artisan config:clear
-</code></pre></div>
+</code></pre>
 
 <p>Hope you found this article useful!</p>
 
@@ -333,22 +333,22 @@ php artisan config:clear
 
 <p>Open your terminal or command-line prompt and navigate to the following folder:</p>
 
-<div class="codehilite"><pre><span></span><code><span class="nb">cd</span> <span class="s2">&quot;C:\Program Files\OpenSSL-Win64\bin&quot;</span>
-</code></pre></div>
+<pre><code>cd "C:\Program Files\OpenSSL-Win64\bin"
+</code></pre>
 
 <p>Next, you need to create a private key. While generating a private key, you'll have to enter a passphrase, it can be anything but make sure that you can remember it for the next step &#x1F602;.</p>
 
 <p>Execute the following command:</p>
 
-<div class="codehilite"><pre><span></span><code>openssl genrsa -aes256 -out private.key <span class="m">2048</span>
-</code></pre></div>
+<pre><code>openssl genrsa -aes256 -out private.key 2048
+</code></pre>
 
 <p>Good, now let's generate our certificate and in this step, you'll be prompted with several questions. You can fill as per your wish or just hit "Enter" to leave it as default. The only thing that matters is <strong>Common Name</strong> and this should named as <code>localhost</code></p>
 
 <p>Execute the following command:</p>
 
-<div class="codehilite"><pre><span></span><code>openssl req -new -x509 -nodes -sha1 -key private.key -out certificate.crt -days <span class="m">36500</span>
-</code></pre></div>
+<pre><code>openssl req -new -x509 -nodes -sha1 -key private.key -out certificate.crt -days 36500
+</code></pre>
 
 <h2>Move the certificate and key to Apache's directory</h2>
 
@@ -358,25 +358,25 @@ php artisan config:clear
 
 <p>You have to uncomment 3 lines from <code>C:/wamp64/bin/apache/apache2.4.41/conf/httpd.conf</code>:</p>
 
-<div class="codehilite"><pre><span></span><code><span class="nb">LoadModule</span><span class="w"> </span>ssl_module<span class="w"> </span>modules/mod_ssl.so<span class="w"></span>
-<span class="nb">Include</span><span class="w"> </span>conf/extra/httpd-ssl.conf<span class="w"></span>
-<span class="nb">LoadModule</span><span class="w"> </span>socache_shmcb_module<span class="w"> </span>modules/mod_socache_shmcb.so<span class="w"></span>
-</code></pre></div>
+<pre><code>LoadModule ssl_module modules/mod_ssl.so
+Include conf/extra/httpd-ssl.conf
+LoadModule socache_shmcb_module modules/mod_socache_shmcb.so
+</code></pre>
 
 <h2>Modify your httpd-ssl.conf file</h2>
 
 <p>Go to <code>C:/wamp64/bin/apache/apache2.4.41/conf/extra/httpd-ssl.conf</code> and modify the following parameters:</p>
 
-<div class="codehilite"><pre><span></span><code><span class="nb">DocumentRoot</span><span class="w"> </span><span class="s2">&quot;c:/wamp64/www&quot;</span><span class="w"></span>
-<span class="nb">ServerName</span><span class="w"> </span>localhost:443<span class="w"></span>
-<span class="nb">ServerAdmin</span><span class="w"> </span>admin@youremail.com<span class="w"></span>
-<span class="nb">ErrorLog</span><span class="w"> </span><span class="s2">&quot;${SRVROOT}/logs/error.log&quot;</span><span class="w"></span>
-<span class="nb">TransferLog</span><span class="w"> </span><span class="s2">&quot;${SRVROOT}/logs/access.log&quot;</span><span class="w"></span>
-<span class="nb">SSLSessionCache</span><span class="w"> </span><span class="s2">&quot;shmcb:${SRVROOT}/logs/ssl_scache(512000)&quot;</span><span class="w"></span>
-<span class="nb">SSLCertificateFile</span><span class="w"> </span><span class="s2">&quot;${SRVROOT}/conf/keys/certificate.crt&quot;</span><span class="w"></span>
-<span class="nb">SSLCertificateKeyFile</span><span class="w"> </span><span class="s2">&quot;${SRVROOT}/conf/keys/private.key&quot;</span><span class="w"></span>
-<span class="nb">CustomLog</span><span class="w"> </span><span class="s2">&quot;${SRVROOT}/logs/ssl_request.log&quot;</span><span class="w"></span>
-</code></pre></div>
+<pre><code>DocumentRoot "c:/wamp64/www"
+ServerName localhost:443
+ServerAdmin admin@youremail.com
+ErrorLog "${SRVROOT}/logs/error.log"
+TransferLog "${SRVROOT}/logs/access.log"
+SSLSessionCache "shmcb:${SRVROOT}/logs/ssl_scache(512000)"
+SSLCertificateFile "${SRVROOT}/conf/keys/certificate.crt"
+SSLCertificateKeyFile "${SRVROOT}/conf/keys/private.key"
+CustomLog "${SRVROOT}/logs/ssl_request.log"
+</code></pre>
 
 <p><code>DocumentRoot</code> is the location of where your website files are located. <code>ServerName</code> can be anything but preferable to use <code>localhost</code>.</p>
 
@@ -421,17 +421,17 @@ php artisan config:clear
 
 <p>Setting up your WAMP Server for LAN access only requires you to tweak your <strong>VirtualHosts</strong> configuration file found in <code>C:\wamp64\bin\apache\apache2.4.41\conf\extra\httpd-vhost.conf</code></p>
 
-<div class="codehilite"><pre><span></span><code><span class="nt">&lt;VirtualHost</span><span class="w"> </span><span class="s">*:80</span><span class="nt">&gt;</span><span class="w"></span>
-<span class="w">  </span><span class="nb">ServerName</span><span class="w"> </span>example.test<span class="w"></span>
-<span class="w">  </span><span class="nb">ServerAlias</span><span class="w"> </span>example.test<span class="w"></span>
-<span class="w">  </span><span class="nb">DocumentRoot</span><span class="w"> </span><span class="s2">&quot;c:/wamp64/www/yourprojectname&quot;</span><span class="w"></span>
-<span class="w">  </span><span class="nt">&lt;Directory</span><span class="w"> </span><span class="s">&quot;c:/wamp64/www/yourprojectname/&quot;</span><span class="nt">&gt;</span><span class="w"></span>
-<span class="w">    </span><span class="nb">Options</span><span class="w"> </span>+Indexes<span class="w"> </span>+Includes<span class="w"> </span>+FollowSymLinks<span class="w"> </span>+MultiViews<span class="w"></span>
-<span class="w">    </span><span class="nb">AllowOverride</span><span class="w"> </span><span class="k">All</span><span class="w"></span>
-<span class="w">    </span><span class="nb">Require</span><span class="w"> </span><span class="k">all</span><span class="w"> </span>granted<span class="w"></span>
-<span class="w">  </span><span class="nt">&lt;/Directory&gt;</span><span class="w"></span>
-<span class="nt">&lt;/VirtualHost&gt;</span><span class="w"></span>
-</code></pre></div>
+<pre><code>&lt;VirtualHost *:80&gt;
+  ServerName example.test
+  ServerAlias example.test
+  DocumentRoot "c:/wamp64/www/yourprojectname"
+  &lt;Directory "c:/wamp64/www/yourprojectname/"&gt;
+    Options +Indexes +Includes +FollowSymLinks +MultiViews
+    AllowOverride All
+    Require all granted
+  &lt;/Directory&gt;
+&lt;/VirtualHost&gt;
+</code></pre>
 
 <p>Oh, if you're using Linux, you'll find the file <code>000-default.conf</code> in <code>/etc/apache2/sites-available</code> directory.</p>
 
@@ -441,8 +441,8 @@ php artisan config:clear
 
 <p>Open the hosts file(<code>C:\Windows\System32\drivers\etc\hosts</code>) using a text editor and add this line to your <code>hosts</code> file:</p>
 
-<div class="codehilite"><pre><span></span><code>127.0.0.1   example.test
-</code></pre></div>
+<pre><code>127.0.0.1   example.test
+</code></pre>
 
 <p>Once done, save the file and restart your WAMP Server and you're all set to go!</p>
 
@@ -790,6 +790,13 @@ php artisan config:clear
 		</li>
 		
 		<li>
+			<a href="/category/travel/">
+				Travel
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/tech/">
 				Tech
 				<span class="count">1</span>
@@ -978,7 +985,12 @@ php artisan config:clear
 
   gtag('config', 'UA-98290003-2');
 </script>
-
+<script src="/static/vendor/jquery-lazy/jquery.lazy.min.js"></script>
+<script>
+  $(function () {
+    $('.lazy').lazy();
+  });
+</script>
 <!-- <script>
     const darkModeButton = document.createElement('button');
     const syntaxHighlightSource = document.getElementById('syntaxHighlight');

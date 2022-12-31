@@ -127,203 +127,203 @@
 
 <p><strong>Implementation of the method(s):</strong></p>
 
-<div class="codehilite"><pre><span></span><code><span class="c1">//Single Byte XOR V2 - a better version</span>
-<span class="n">string</span><span class="w"> </span><span class="nf">CryptoLib::singleByteXOR_V2</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="n">str</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="n">key</span><span class="p">)</span><span class="w"></span>
-<span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="c1">//Don&#39;t forget to add a NULL character to the string, it broke when I didn&#39;t add it previously.</span>
-<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">newStr</span><span class="p">(</span><span class="n">str</span><span class="p">.</span><span class="n">size</span><span class="p">(),</span><span class="err">&#39;&#39;</span><span class="p">);</span><span class="w"> </span>
+<pre><code>//Single Byte XOR V2 - a better version
+string CryptoLib::singleByteXOR_V2(string str, char key)
+{
+    //Don't forget to add a NULL character to the string, it broke when I didn't add it previously.
+    string newStr(str.size(),''); 
 
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">str</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">){</span><span class="w"></span>
-<span class="w">        </span><span class="n">newStr</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">str</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">^</span><span class="w"> </span><span class="n">key</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="p">}</span><span class="w"></span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">newStr</span><span class="p">;</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
+    for(int i=0; i&amp;lt;str.size(); ++i){
+        newStr[i] = str[i] ^ key;
+    }
+    return newStr;
+}
 
-<span class="c1">//Return the Single Byte XOR key via Bruteforce</span>
-<span class="kt">char</span><span class="w"> </span><span class="nf">CryptoLib::singleByteXOR_Bruteforce_key</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="n">cipherBlock</span><span class="p">)</span><span class="w"></span>
-<span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="n">key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">maxCount</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">decodedMessage</span><span class="p">;</span><span class="w"></span>
+//Return the Single Byte XOR key via Bruteforce
+char CryptoLib::singleByteXOR_Bruteforce_key(string cipherBlock)
+{
+    char key = 0;
+    int maxCount=0;
+    string decodedMessage;
 
-<span class="w">    </span><span class="c1">//Brute force all 256 possibilities</span>
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;=</span><span class="mi">256</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"></span>
-<span class="w">    </span><span class="p">{</span><span class="w"></span>
-<span class="w">        </span><span class="kt">char</span><span class="w"> </span><span class="n">ch</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="kt">char</span><span class="p">)</span><span class="w"> </span><span class="n">i</span><span class="p">;</span><span class="w"></span>
+    //Brute force all 256 possibilities
+    for(int i=0; i&lt;=256; i++)
+    {
+        char ch = (char) i;
 
-<span class="w">        </span><span class="c1">//Perform Single Byte XOR -- modified version</span>
-<span class="w">        </span><span class="n">string</span><span class="w"> </span><span class="n">attempt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">singleByteXOR_V2</span><span class="p">(</span><span class="n">cipherBlock</span><span class="p">,</span><span class="w"> </span><span class="n">ch</span><span class="p">);</span><span class="w"></span>
+        //Perform Single Byte XOR -- modified version
+        string attempt = singleByteXOR_V2(cipherBlock, ch);
 
-<span class="w">        </span><span class="c1">// cout &lt;&lt; &quot;Message: &quot; &lt;&lt; attempt &lt;&lt; endl;</span>
+        // cout &lt;&lt; "Message: " &lt;&lt; attempt &lt;&lt; endl;
 
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
-<span class="w">        </span><span class="cm">/*</span>
-<span class="cm">            Look for characters that are alphabetic and the space character,</span>
-<span class="cm">            if it finds, increment the counter</span>
-<span class="cm">        */</span><span class="w"></span>
-<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="n">attempt</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">)</span><span class="w"></span>
-<span class="w">        </span><span class="p">{</span><span class="w"></span>
-<span class="w">            </span><span class="k">if</span><span class="p">((</span><span class="n">attempt</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mi">65</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">attempt</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mi">122</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">attempt</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">&#39; &#39;</span><span class="p">)</span><span class="w"></span>
-<span class="w">            </span><span class="p">{</span><span class="w"></span>
-<span class="w">                </span><span class="n">count</span><span class="o">++</span><span class="p">;</span><span class="w"></span>
-<span class="w">            </span><span class="p">}</span><span class="w"></span>
-<span class="w">        </span><span class="p">}</span><span class="w"></span>
+        int count = 0;
+        /*
+            Look for characters that are alphabetic and the space character,
+            if it finds, increment the counter
+        */
+        for(int j=0; j&amp;lt;attempt.size(); j++)
+        {
+            if((attempt[j] &gt;= 65 &amp;&amp; attempt[j] &lt;= 122) || attempt[j] == ' ')
+            {
+                count++;
+            }
+        }
 
-<span class="w">        </span><span class="c1">//The one with the highest count, has the predicted key</span>
-<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">count</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">maxCount</span><span class="p">)</span><span class="w"></span>
-<span class="w">        </span><span class="p">{</span><span class="w"></span>
-<span class="w">            </span><span class="n">maxCount</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">count</span><span class="p">;</span><span class="w"></span>
-<span class="w">            </span><span class="n">key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ch</span><span class="p">;</span><span class="w"></span>
-<span class="w">            </span><span class="c1">// decrypted = attempt;</span>
-<span class="w">        </span><span class="p">}</span><span class="w"></span>
-<span class="w">    </span><span class="p">}</span><span class="w"></span>
+        //The one with the highest count, has the predicted key
+        if(count &gt; maxCount)
+        {
+            maxCount = count;
+            key = ch;
+            // decrypted = attempt;
+        }
+    }
 
-<span class="w">    </span><span class="c1">// cout &lt;&lt; &quot;KEY: &quot; &lt;&lt; key &lt;&lt; endl;</span>
-<span class="w">    </span><span class="c1">// cout &lt;&lt; &quot;MESSAGE: &quot; &lt;&lt; decrypted &lt;&lt; endl;</span>
+    // cout &lt;&lt; "KEY: " &lt;&lt; key &lt;&lt; endl;
+    // cout &lt;&lt; "MESSAGE: " &lt;&lt; decrypted &lt;&lt; endl;
 
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">key</span><span class="p">;</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
+    return key;
+}
 
-<span class="c1">//Guess Key length of the cipher</span>
-<span class="kt">int</span><span class="w"> </span><span class="nf">CryptoLib::guess_key_length</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="n">cipherText</span><span class="p">)</span><span class="w"></span>
-<span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">KEYSIZE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">leastNormalized</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">INT_MAX</span><span class="p">;</span><span class="w"></span>
+//Guess Key length of the cipher
+int CryptoLib::guess_key_length(string cipherText)
+{
+    int KEYSIZE = -1;
+    double leastNormalized = INT_MAX;
 
-<span class="w">    </span><span class="c1">//Guess a keysize from 2 to 40</span>
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">2</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;=</span><span class="mi">40</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"></span>
-<span class="w">    </span><span class="p">{</span><span class="w"></span>
-<span class="w">        </span><span class="kt">double</span><span class="w"> </span><span class="n">normalize</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0f</span><span class="p">;</span><span class="w"></span>
+    //Guess a keysize from 2 to 40
+    for(int i=2; i&lt;=40; i++)
+    {
+        double normalize = 0.0f;
 
-<span class="w">        </span><span class="c1">//Number of bytes per key size</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">bytes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cipherText</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="o">/</span><span class="n">i</span><span class="p">;</span><span class="w"></span>
+        //Number of bytes per key size
+        int bytes = cipherText.size()/i;
 
-<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="n">bytes</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">)</span><span class="w"></span>
-<span class="w">        </span><span class="p">{</span><span class="w"></span>
-<span class="w">            </span><span class="n">string</span><span class="w"> </span><span class="n">blockA</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cipherText</span><span class="p">.</span><span class="n">substr</span><span class="p">((</span><span class="n">j</span><span class="o">*</span><span class="n">i</span><span class="p">),</span><span class="w"> </span><span class="n">i</span><span class="p">);</span><span class="w"></span>
-<span class="w">            </span><span class="n">string</span><span class="w"> </span><span class="n">blockB</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cipherText</span><span class="p">.</span><span class="n">substr</span><span class="p">(((</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">i</span><span class="p">),</span><span class="w"> </span><span class="n">i</span><span class="p">);</span><span class="w"></span>
+        for(int j=0; j&amp;lt;bytes; j++)
+        {
+            string blockA = cipherText.substr((j*i), i);
+            string blockB = cipherText.substr(((j+1)*i), i);
 
-<span class="w">            </span><span class="c1">//Calculate Hamming Distance between 2 strings</span>
-<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">edit_distance</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">hamming_distance</span><span class="p">(</span><span class="n">blockA</span><span class="p">,</span><span class="w"> </span><span class="n">blockB</span><span class="p">);</span><span class="w"></span>
+            //Calculate Hamming Distance between 2 strings
+            int edit_distance = hamming_distance(blockA, blockB);
 
-<span class="w">            </span><span class="n">normalize</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="p">((</span><span class="kt">double</span><span class="p">)</span><span class="n">edit_distance</span><span class="p">)</span><span class="o">/</span><span class="p">((</span><span class="kt">double</span><span class="p">)</span><span class="n">blockA</span><span class="p">.</span><span class="n">size</span><span class="p">());</span><span class="w"></span>
-<span class="w">        </span><span class="p">}</span><span class="w"></span>
+            normalize += ((double)edit_distance)/((double)blockA.size());
+        }
 
-<span class="w">        </span><span class="c1">//Now, take an average </span>
-<span class="w">        </span><span class="n">normalize</span><span class="w"> </span><span class="o">/=</span><span class="w"> </span><span class="n">bytes</span><span class="p">;</span><span class="w"></span>
+        //Now, take an average 
+        normalize /= bytes;
 
-<span class="w">        </span><span class="c1">//The key size that has the least edit distance is the key size required</span>
-<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">normalize</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">normalize</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">leastNormalized</span><span class="p">)</span><span class="w"></span>
-<span class="w">        </span><span class="p">{</span><span class="w"></span>
-<span class="w">            </span><span class="n">leastNormalized</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">normalize</span><span class="p">;</span><span class="w"></span>
-<span class="w">            </span><span class="n">KEYSIZE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i</span><span class="p">;</span><span class="w"></span>
-<span class="w">        </span><span class="p">}</span><span class="w"></span>
-<span class="w">    </span><span class="p">}</span><span class="w"></span>
+        //The key size that has the least edit distance is the key size required
+        if(normalize &gt; 0 &amp;&amp; normalize &lt; leastNormalized)
+        {
+            leastNormalized = normalize;
+            KEYSIZE = i;
+        }
+    }
 
-<span class="w">    </span><span class="c1">//Return the key size</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">KEYSIZE</span><span class="p">;</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
-</code></pre></div>
+    //Return the key size
+    return KEYSIZE;
+}
+</code></pre>
 
 <p><strong>Final code:</strong></p>
 
-<div class="codehilite"><pre><span></span><code><span class="c1">//The Cryptopals Crypto Challenges - Set 1 Challenge 6</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;crypto.h&quot;</span><span class="cp"></span>
+<pre><code>//The Cryptopals Crypto Challenges - Set 1 Challenge 6
+#include "crypto.h"
 
-<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"></span>
-<span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="n">CryptoLib</span><span class="w"> </span><span class="n">crypt</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">message</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">binary</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">key</span><span class="p">;</span><span class="w"></span>
+int main()
+{
+    CryptoLib crypt;
+    string message;
+    string binary;
+    string key;
 
-<span class="w">    </span><span class="c1">//if this returns 37, then the function is working correct!</span>
-<span class="w">    </span><span class="c1">// cout &lt;&lt; crypt.hamming_distance(&quot;this is a test&quot;, &quot;wokka wokka!!!&quot;) &lt;&lt; endl;</span>
+    //if this returns 37, then the function is working correct!
+    // cout &lt;&lt; crypt.hamming_distance("this is a test", "wokka wokka!!!") &lt;&lt; endl;
 
-<span class="w">    </span><span class="c1">//Read the file content</span>
-<span class="w">    </span><span class="n">ifstream</span><span class="w"> </span><span class="n">infile</span><span class="p">;</span><span class="w"></span>
+    //Read the file content
+    ifstream infile;
 
-<span class="w">    </span><span class="c1">//Converted the B64 text to Hexadecimals through an online converter</span>
-<span class="w">    </span><span class="c1">//as it wasn&#39;t accurate with b64 decoder that I&#39;d built</span>
-<span class="w">    </span><span class="n">infile</span><span class="p">.</span><span class="n">open</span><span class="p">(</span><span class="s">&quot;message.txt&quot;</span><span class="p">);</span><span class="w"></span>
-<span class="w">    </span><span class="n">getline</span><span class="p">(</span><span class="n">infile</span><span class="p">,</span><span class="w"> </span><span class="n">message</span><span class="p">,</span><span class="w"> </span><span class="err">&#39;&#39;</span><span class="p">);</span><span class="w"></span>
-<span class="w">    </span><span class="n">infile</span><span class="p">.</span><span class="n">close</span><span class="p">();</span><span class="w"></span>
+    //Converted the B64 text to Hexadecimals through an online converter
+    //as it wasn't accurate with b64 decoder that I'd built
+    infile.open("message.txt");
+    getline(infile, message, '');
+    infile.close();
 
-<span class="w">    </span><span class="c1">//Convert the hexadecimal string to ASCII</span>
-<span class="w">    </span><span class="n">message</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">crypt</span><span class="p">.</span><span class="n">con_hex_2_ascii</span><span class="p">(</span><span class="n">message</span><span class="p">);</span><span class="w"></span>
+    //Convert the hexadecimal string to ASCII
+    message = crypt.con_hex_2_ascii(message);
 
-<span class="w">    </span><span class="c1">//Guess the length of the key</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">keyLength</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">crypt</span><span class="p">.</span><span class="n">guess_key_length</span><span class="p">(</span><span class="n">message</span><span class="p">);</span><span class="w"></span>
+    //Guess the length of the key
+    int keyLength = crypt.guess_key_length(message);
 
-<span class="w">    </span><span class="c1">//Transpose the message based on keysize length</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">blocks</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">message</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">keyLength</span><span class="p">;</span><span class="w"></span>
+    //Transpose the message based on keysize length
+    int blocks = message.size() / keyLength;
 
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">keyLength</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"></span>
-<span class="w">    </span><span class="p">{</span><span class="w"></span>
-<span class="w">        </span><span class="n">string</span><span class="w"> </span><span class="n">block</span><span class="p">;</span><span class="w"></span>
-<span class="w">        </span><span class="kt">char</span><span class="w"> </span><span class="n">indexKey</span><span class="o">=</span><span class="err">&#39;&#39;</span><span class="p">;</span><span class="w"></span>
+    for(int i=0; i&amp;lt;keyLength; ++i)
+    {
+        string block;
+        char indexKey='';
 
-<span class="w">        </span><span class="cm">/*</span>
-<span class="cm">            Transpose the message into blocks </span>
-<span class="cm">            based on keysize and concatenate it </span>
-<span class="cm">            into one string</span>
-<span class="cm">        */</span><span class="w"></span>
-<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="n">blocks</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">){</span><span class="w"></span>
-<span class="w">            </span><span class="n">block</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">message</span><span class="p">.</span><span class="n">substr</span><span class="p">((</span><span class="n">j</span><span class="o">*</span><span class="n">keyLength</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="mi">1</span><span class="p">);</span><span class="w"></span>
-<span class="w">        </span><span class="p">}</span><span class="w"></span>
+        /*
+            Transpose the message into blocks 
+            based on keysize and concatenate it 
+            into one string
+        */
+        for(int j=0; j&amp;lt;blocks; j++){
+            block += message.substr((j*keyLength) + i,1);
+        }
 
-<span class="w">        </span><span class="c1">//Concatenate the selected characters, which will become the predicted key</span>
-<span class="w">        </span><span class="n">key</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">crypt</span><span class="p">.</span><span class="n">singleByteXOR_Bruteforce_key</span><span class="p">(</span><span class="n">block</span><span class="p">);</span><span class="w"></span>
-<span class="w">    </span><span class="p">}</span><span class="w"></span>
+        //Concatenate the selected characters, which will become the predicted key
+        key += crypt.singleByteXOR_Bruteforce_key(block);
+    }
 
-<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;KEY: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">key</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;DECODED: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">crypt</span><span class="p">.</span><span class="n">con_hex_2_ascii</span><span class="p">(</span><span class="n">crypt</span><span class="p">.</span><span class="n">repeatingKeyXOR</span><span class="p">(</span><span class="n">message</span><span class="p">,</span><span class="w"> </span><span class="n">key</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span><span class="w"></span>
+    cout &lt;&lt; "KEY: " &lt;&lt; key &lt;&lt; endl;
+    cout &lt;&lt; "DECODED: " &lt;&lt; crypt.con_hex_2_ascii(crypt.repeatingKeyXOR(message, key)) &lt;&lt; endl;
 
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">   </span>
-<span class="p">}</span><span class="w"></span>
-</code></pre></div>
+    return 0;   
+}
+</code></pre>
 
 <p><strong><em>Note: This solution and the library named <code>crypto.h</code> was built using the C++ programming language. The source code for this solution can be found on Github.</em></strong></p>
 
 <p>When the following code is executed, the most probable <strong><em>KEYSIZE</em></strong> is <strong><em>29</em></strong> and after transposing the message and decrypting the blocks, you get a key of that length:</p>
 
-<div class="codehilite"><pre><span></span><code>Terminator X: Bring the noise
-</code></pre></div>
+<pre><code>Terminator X: Bring the noise
+</code></pre>
 
 <p>Lastly, use the <strong><em>Repeating-Key XOR</em></strong> method to decrypt the message with the cracked key (which looks like lyrics to some music track!):</p>
 
-<div class="codehilite"><pre><span></span><code>A rockin&#39; on the mike while the fly girls yell
-Well that&#39;s my DJ Deshay cuttin&#39; all them Z&#39;s
-Vanilla&#39;s on the mike, man I&#39;m not lazy. ?I&#39;m lettin&#39; my drug kick in
+<pre><code>A rockin' on the mike while the fly girls yell
+Well that's my DJ Deshay cuttin' all them Z's
+Vanilla's on the mike, man I'm not lazy. ?I'm lettin' my drug kick in
 To just let it flow, let my concepts go
-And if you don&#39;t give a damn, then
-So get off &#39;cause I control the stage
-I&#39;m in my own phase
-And I can dance better than any kid n&#39; play ?
-Stage 2 -- Yea the one ya&#39; wanna listen to
+And if you don't give a damn, then
+So get off 'cause I control the stage
+I'm in my own phase
+And I can dance better than any kid n' play ?
+Stage 2 -- Yea the one ya' wanna listen to
 So I can funk it up and make it sound good
 For good luck, I like my rhymes atrocious
-I&#39;m an effect and that you can bet
-There&#39;s no denyin&#39;, You can try to hang 
+I'm an effect and that you can bet
+There's no denyin', You can try to hang 
 Over and over, practice makes perfect
 Soon -- Oh my God, homebody, you probably eat
 Intoxicating so you stagger like a wino
-Vanilla Ice is sellin&#39; and you people are buyin&#39;
-Movin&#39; and groovin&#39; trying to sing along
-Now you&#39;re amazed by the VIP posse. ?
-Steppin&#39; so hard like a German Nazi
-There&#39;s no trippin&#39; on mine, I&#39;m just gettin&#39; down
+Vanilla Ice is sellin' and you people are buyin'
+Movin' and groovin' trying to sing along
+Now you're amazed by the VIP posse. ?
+Steppin' so hard like a German Nazi
+There's no trippin' on mine, I'm just gettin' down
 You trapped me once and I thought that
 So step down and lend me your ear 
-Your body&#39;s gettin&#39; hot, so, so I can smell it
-&#39;Cause the lyrics belong to ICE, You can call me Dad 
+Your body's gettin' hot, so, so I can smell it
+'Cause the lyrics belong to ICE, You can call me Dad 
 Let the witch doctor, Ice, do the dance to cure 
 You wanna battle me -- Anytime, anywhere ?
-You thought that I was weak, Boy, you&#39;re dead wrong 
+You thought that I was weak, Boy, you're dead wrong 
 play that funky music Go white boy, go white boy, go
 Play that funky music white boy you say it, say it 
 Play that funky music, white boy Come on, Come on, Come on
-</code></pre></div>
+</code></pre>
 
 <p>As mentioned above, this was really challenging and fun, at the same time. Although, Most people (academically) know <strong><em>"how-to"</em></strong> break a Repeating-Key XOR (Vignere Cipher) but being <strong><em>able</em></strong> to break it, is another thing.</p>
 
@@ -384,7 +384,12 @@ Play that funky music, white boy Come on, Come on, Come on
 
   gtag('config', 'UA-98290003-2');
 </script>
-
+<script src="/static/vendor/jquery-lazy/jquery.lazy.min.js"></script>
+<script>
+  $(function () {
+    $('.lazy').lazy();
+  });
+</script>
 <!-- <script>
     const darkModeButton = document.createElement('button');
     const syntaxHighlightSource = document.getElementById('syntaxHighlight');

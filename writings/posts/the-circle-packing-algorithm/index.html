@@ -101,41 +101,41 @@
 
 <p>This method will help generate valid circles with a random radius. Circles that don't overlap or collide with other circles are considered to be valid.</p>
 
-<div class="codehilite"><pre><span></span><code><span class="c1">// Generate a valid circle</span>
-<span class="kd">const</span> <span class="nx">generateCircle</span> <span class="o">=</span> <span class="p">()</span> <span class="p">=&gt;</span> <span class="p">{</span>
-    <span class="kd">let</span> <span class="nx">newCircle</span><span class="p">;</span>
-    <span class="kd">let</span> <span class="nx">isValidCircle</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+<pre><code>// Generate a valid circle
+const generateCircle = () =&gt; {
+    let newCircle;
+    let isValidCircle = false;
 
-    <span class="k">for</span><span class="p">(</span><span class="kd">let</span> <span class="nx">i</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span> <span class="nx">i</span><span class="o">&lt;</span><span class="nx">attempts</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-        <span class="nx">newCircle</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="nx">x</span><span class="o">:</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="nx">width</span><span class="p">),</span>
-            <span class="nx">y</span><span class="o">:</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="nx">width</span><span class="p">),</span>
-            <span class="nx">radius</span><span class="o">:</span> <span class="nx">minRadius</span>
-        <span class="p">};</span>
+    for(let i=0; i&lt;attempts; i++) {
+        newCircle = {
+            x: Math.floor(Math.random() * width),
+            y: Math.floor(Math.random() * width),
+            radius: minRadius
+        };
 
-        <span class="k">if</span><span class="p">(</span><span class="nx">checkForCollision</span><span class="p">(</span><span class="nx">newCircle</span><span class="p">))</span> <span class="p">{</span>
-            <span class="k">continue</span><span class="p">;</span>
-        <span class="p">}</span>
-        <span class="k">else</span> <span class="p">{</span>
-            <span class="nx">isValidCircle</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
-            <span class="k">break</span><span class="p">;</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
+        if(checkForCollision(newCircle)) {
+            continue;
+        }
+        else {
+            isValidCircle = true;
+            break;
+        }
+    }
 
-    <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">isValidCircle</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span><span class="p">;</span> <span class="p">}</span>
+    if(!isValidCircle) { return; }
 
-    <span class="k">for</span><span class="p">(</span><span class="kd">let</span> <span class="nx">i</span><span class="o">=</span><span class="nx">minRadius</span><span class="p">;</span> <span class="nx">i</span><span class="o">&lt;=</span><span class="nx">maxRadius</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-        <span class="nx">newCircle</span><span class="p">.</span><span class="nx">radius</span> <span class="o">=</span> <span class="nx">i</span><span class="p">;</span>
-        <span class="k">if</span><span class="p">(</span><span class="nx">checkForCollision</span><span class="p">(</span><span class="nx">newCircle</span><span class="p">))</span> <span class="p">{</span>
-            <span class="nx">newCircle</span><span class="p">.</span><span class="nx">radius</span><span class="o">--</span><span class="p">;</span>
-            <span class="k">break</span><span class="p">;</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
+    for(let i=minRadius; i&lt;=maxRadius; i++) {
+        newCircle.radius = i;
+        if(checkForCollision(newCircle)) {
+            newCircle.radius--;
+            break;
+        }
+    }
 
-    <span class="nx">circles</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">newCircle</span><span class="p">);</span>
-    <span class="nx">drawCircleOnCanvas</span><span class="p">(</span><span class="nx">context</span><span class="p">,</span> <span class="nx">newCircle</span><span class="p">,</span> <span class="nx">colors</span><span class="p">[</span><span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="nx">colors</span><span class="p">.</span><span class="nx">length</span><span class="p">)]);</span>
-<span class="p">}</span>
-</code></pre></div>
+    circles.push(newCircle);
+    drawCircleOnCanvas(context, newCircle, colors[Math.floor(Math.random() * colors.length)]);
+}
+</code></pre>
 
 <h2>Look for collision with other circles</h2>
 
@@ -152,52 +152,52 @@
 
 <p>If the radii is greater than or equal to the euclidean distance of both circles, then it's a valid circle with no collisions.</p>
 
-<div class="codehilite"><pre><span></span><code><span class="c1">// Check for collision in a canvas</span>
-<span class="kd">const</span> <span class="nx">checkForCollision</span> <span class="o">=</span> <span class="p">(</span><span class="nx">newCircle</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="p">{</span>
+<pre><code>// Check for collision in a canvas
+const checkForCollision = (newCircle) =&gt; {
 
-    <span class="kd">let</span> <span class="nx">x2</span> <span class="o">=</span> <span class="nx">newCircle</span><span class="p">.</span><span class="nx">x</span><span class="p">;</span>
-    <span class="kd">let</span> <span class="nx">y2</span> <span class="o">=</span> <span class="nx">newCircle</span><span class="p">.</span><span class="nx">y</span><span class="p">;</span>
-    <span class="kd">let</span> <span class="nx">r2</span> <span class="o">=</span> <span class="nx">newCircle</span><span class="p">.</span><span class="nx">radius</span><span class="p">;</span>
+    let x2 = newCircle.x;
+    let y2 = newCircle.y;
+    let r2 = newCircle.radius;
 
 
-    <span class="c1">// Determine the euclidean distance between two circle</span>
-    <span class="c1">// using Pythagorean Theorem.</span>
+    // Determine the euclidean distance between two circle
+    // using Pythagorean Theorem.
 
-    <span class="c1">// Refer to: </span>
-    <span class="c1">// https://en.wikipedia.org/wiki/Euclidean_distance</span>
+    // Refer to: 
+    // https://en.wikipedia.org/wiki/Euclidean_distance
 
-    <span class="k">for</span><span class="p">(</span><span class="kd">let</span> <span class="nx">i</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span> <span class="nx">i</span><span class="o">&lt;</span><span class="nx">circles</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+    for(let i=0; i&lt;circles.length; i++) {
 
-        <span class="kd">let</span> <span class="nx">otherCircle</span> <span class="o">=</span> <span class="nx">circles</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
-        <span class="kd">let</span> <span class="nx">r1</span> <span class="o">=</span> <span class="nx">otherCircle</span><span class="p">.</span><span class="nx">radius</span><span class="p">;</span>
-        <span class="kd">let</span> <span class="nx">x1</span> <span class="o">=</span> <span class="nx">otherCircle</span><span class="p">.</span><span class="nx">x</span><span class="p">;</span>
-        <span class="kd">let</span> <span class="nx">y1</span> <span class="o">=</span> <span class="nx">otherCircle</span><span class="p">.</span><span class="nx">y</span><span class="p">;</span>
-        <span class="kd">let</span> <span class="nx">xx</span> <span class="o">=</span> <span class="p">((</span><span class="nx">x2</span> <span class="o">-</span> <span class="nx">x1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="nx">x2</span> <span class="o">-</span> <span class="nx">x1</span><span class="p">));</span>
-        <span class="kd">let</span> <span class="nx">yy</span> <span class="o">=</span> <span class="p">((</span><span class="nx">y2</span> <span class="o">-</span> <span class="nx">y1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="nx">y2</span> <span class="o">-</span> <span class="nx">y1</span><span class="p">));</span>
-        <span class="kd">let</span> <span class="nx">radii</span> <span class="o">=</span> <span class="nx">r2</span> <span class="o">+</span> <span class="nx">r1</span><span class="p">;</span>
-        <span class="kd">let</span> <span class="nx">euclidDistance</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">sqrt</span><span class="p">(</span><span class="nx">xx</span> <span class="o">+</span> <span class="nx">yy</span><span class="p">);</span>
+        let otherCircle = circles[i];
+        let r1 = otherCircle.radius;
+        let x1 = otherCircle.x;
+        let y1 = otherCircle.y;
+        let xx = ((x2 - x1) * (x2 - x1));
+        let yy = ((y2 - y1) * (y2 - y1));
+        let radii = r2 + r1;
+        let euclidDistance = Math.sqrt(xx + yy);
 
-        <span class="k">if</span><span class="p">(</span><span class="nx">radii</span> <span class="o">&gt;=</span> <span class="nx">euclidDistance</span><span class="p">)</span> <span class="p">{</span>
-            <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
+        if(radii &gt;= euclidDistance) {
+            return true;
+        }
+    }
 
-    <span class="c1">// Check collision on top</span>
-    <span class="k">if</span><span class="p">(</span><span class="nx">x2</span> <span class="o">+</span> <span class="nx">r2</span> <span class="o">&gt;=</span> <span class="nx">width</span> <span class="o">||</span> 
-        <span class="nx">x2</span> <span class="o">-</span> <span class="nx">r2</span> <span class="o">&lt;=</span> <span class="mf">0</span><span class="p">)</span> <span class="p">{</span>
-        <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
-    <span class="p">}</span>
+    // Check collision on top
+    if(x2 + r2 &gt;= width || 
+        x2 - r2 &lt;= 0) {
+        return true;
+    }
 
-    <span class="c1">// Check collision on bottom</span>
-    <span class="k">if</span><span class="p">(</span><span class="nx">y2</span> <span class="o">+</span> <span class="nx">r2</span> <span class="o">&gt;=</span> <span class="nx">width</span> <span class="o">||</span> 
-        <span class="nx">y2</span> <span class="o">-</span> <span class="nx">r2</span> <span class="o">&lt;=</span> <span class="mf">0</span><span class="p">)</span> <span class="p">{</span>
-        <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
-    <span class="p">}</span>
+    // Check collision on bottom
+    if(y2 + r2 &gt;= width || 
+        y2 - r2 &lt;= 0) {
+        return true;
+    }
 
-    <span class="c1">//else return false</span>
-    <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>
-<span class="p">}</span>
-</code></pre></div>
+    //else return false
+    return false;
+}
+</code></pre>
 
 <h2>Conclusion</h2>
 
@@ -266,7 +266,12 @@
 
   gtag('config', 'UA-98290003-2');
 </script>
-
+<script src="/static/vendor/jquery-lazy/jquery.lazy.min.js"></script>
+<script>
+  $(function () {
+    $('.lazy').lazy();
+  });
+</script>
 <!-- <script>
     const darkModeButton = document.createElement('button');
     const syntaxHighlightSource = document.getElementById('syntaxHighlight');

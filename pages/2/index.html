@@ -78,6 +78,108 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/install-pfx-certificate-on-a-linux-server">Install PFX certificate on a Linux server</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>I would consider this as an extended post to my <a href="https://www.megacolorboy.com/til/posts/extract-private-key-and-certificate-from-pfx-file/">previous post</a> that I had written six months ago.</p>
+
+<p>A PFX Certificate usually contains the following in PKCS#12 format:</p>
+
+<ul>
+<li>The actual certificate.</li>
+<li>The private key to the certificate.</li>
+<li>The Intermediate authority certificate that ensures the trustworthiness of the certificate.</li>
+</ul>
+
+<p>To extract all those files, here are the steps that I have documented:</p>
+
+<div class="post-notification warning">
+    <h3><i class="ph-warning-light"></i> Note</h3>
+    <p>If the .PFX file prompts you for a passphrase, please check with your project manager or client regarding this information.</p>
+</div>
+
+<h2>Extract the Encrypted Private Key</h2>
+
+<pre><code>openssl pkcs12 -in &lt;filename.pfx&gt; -nocerts -out encrypted.key
+</code></pre>
+
+<h2>Extract RSA Private Key</h2>
+
+<pre><code>openssl rsa -in encrypted.key -out private.key
+</code></pre>
+
+<h2>Extract Certificate</h2>
+
+<pre><code>openssl pkcs12 -in &lt;filename.pfx&gt; -clcerts -nokeys -out certificate.crt
+</code></pre>
+
+<h2>Extract Combined Chain Certificate (Optional)</h2>
+
+<pre><code>openssl pkcs12 -in &lt;filename.pfx&gt; -cacerts -nokeys -chain | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' &gt; combined_chain_certificate.crt
+</code></pre>
+
+<p>Once you are done extracting all the required files, you can add the certificates like this:</p>
+
+<h3>Apache configuration:</h3>
+
+<pre><code>SSLCertificateFile /path/to/certificate.crt
+SSLCertificateKeyFile /path/to/private.key
+
+# Optional, if you have it, else skip.
+SSLCertificateChainFile /path/to/combined_chain_certificate.crt
+</code></pre>
+
+<p>Test if it works:</p>
+
+<pre><code>apachectl configtest
+systemctl restart httpd
+</code></pre>
+
+<h3>Nginx configuration:</h3>
+
+<pre><code># If you don't have a combined chain certificate:
+ssl_certificate /path/to/certificate.crt;
+ssl_certificate_key /path/to/private.key;
+
+# If you have a combined chain certificate:
+ssl_certificate /path/to/combined_chain_certificate.crt
+ssl_certificate_key /path/to/private.key;
+</code></pre>
+
+<p>Test if it works:</p>
+
+<pre><code>nginx -t
+systemctl restart nginx
+</code></pre>
+
+<p>Hope you found this tip useful.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>September 24th, 2022</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/install-microsoft-sql-server-driver-for-php-on-amazon-linux-2">Install Microsoft SQL Server Driver for PHP on Amazon Linux 2</a></h1>
 		<p class="description"></p>
 	</div>
@@ -99,59 +201,59 @@
 
 <p>These are the commands used to install the SQL Server driver:</p>
 
-<div class="codehilite"><pre><span></span><code>sudo su
+<pre><code>sudo su
 sudo yum-config-manager --add-repo https://packages.microsoft.com/config/rhel/7/prod.repo
 sudo yum update
-sudo <span class="nv">ACCEPT_EULA</span><span class="o">=</span>Y yum install -y msodbcsql mssql-tools unixODBC-devel re2c gcc-c++ gcc
+sudo ACCEPT_EULA=Y yum install -y msodbcsql mssql-tools unixODBC-devel re2c gcc-c++ gcc
 sudo pecl install sqlsrv
 sudo pecl install pdo_sqlsrv
-</code></pre></div>
+</code></pre>
 
 <h2>Modify php.ini</h2>
 
 <p>You can either to go to your <code>php.ini</code> file and add the <code>extension=sqlsrv</code> extension or add it like this:</p>
 
-<div class="codehilite"><pre><span></span><code><span class="nb">echo</span> <span class="s2">&quot;extension=sqlsrv&quot;</span> &gt;&gt; <span class="sb">`</span>php --ini <span class="p">|</span> grep <span class="s2">&quot;Loaded Configuration&quot;</span> <span class="p">|</span> sed -e <span class="s2">&quot;s|.*:\s*||&quot;</span><span class="sb">`</span>
-<span class="nb">echo</span> <span class="s2">&quot;extension=pdo_sqlsrv&quot;</span> &gt;&gt; /etc/php.d/30-pdo_sqlsrv.ini
-</code></pre></div>
+<pre><code>echo "extension=sqlsrv" &gt;&gt; `php --ini | grep "Loaded Configuration" | sed -e "s|.*:\s*||"`
+echo "extension=pdo_sqlsrv" &gt;&gt; /etc/php.d/30-pdo_sqlsrv.ini
+</code></pre>
 
 <h2>Restart the service</h2>
 
 <p>Ensure that the server can connect and restart the service:</p>
 
-<div class="codehilite"><pre><span></span><code>sudo setsebool -P httpd_can_network_connect_db <span class="m">1</span>
-sudo systemctl restart httpd <span class="o">&amp;&amp;</span> sudo apachectl restart
-</code></pre></div>
+<pre><code>sudo setsebool -P httpd_can_network_connect_db 1
+sudo systemctl restart httpd &amp;&amp; sudo apachectl restart
+</code></pre>
 
 <p>Next, run the following the command to see that both <code>pdo_sqlsrv</code> and <code>sqlsrv</code> are installed:</p>
 
-<div class="codehilite"><pre><span></span><code>php -m <span class="p">|</span> grep <span class="s2">&quot;sqlsrv&quot;</span><span class="sb">`</span>
-</code></pre></div>
+<pre><code>php -m | grep "sqlsrv"`
+</code></pre>
 
 <h2>Test if the driver works</h2>
 
 <p>Create a <code>test.php</code> file in your root directory and copy-paste this snippet to test if it works:</p>
 
-<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="nb">error_reporting</span><span class="p">(</span><span class="k">E_ALL</span><span class="p">);</span>
-<span class="nb">ini_set</span><span class="p">(</span><span class="s1">&#39;display_errors&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+<pre><code>&lt;?php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
-<span class="nv">$serverName</span> <span class="o">=</span> <span class="s2">&quot;YOUR_DB_HOST&quot;</span><span class="p">;</span>
-<span class="nv">$connectionOptions</span> <span class="o">=</span> <span class="k">array</span><span class="p">(</span>
-    <span class="s2">&quot;Database&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;YOUR_DB_NAME&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;Uid&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;YOUR_DB_USER&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;PWD&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;YOUR_DB_PASSWORD&quot;</span>
-<span class="p">);</span>
+$serverName = "YOUR_DB_HOST";
+$connectionOptions = array(
+    "Database" =&gt; "YOUR_DB_NAME",
+    "Uid" =&gt; "YOUR_DB_USER",
+    "PWD" =&gt; "YOUR_DB_PASSWORD"
+);
 
-<span class="nv">$conn</span> <span class="o">=</span> <span class="nb">sqlsrv_connect</span><span class="p">(</span><span class="nv">$serverName</span><span class="p">,</span> <span class="nv">$connectionOptions</span><span class="p">);</span>
+$conn = sqlsrv_connect($serverName, $connectionOptions);
 
-<span class="k">if</span><span class="p">(</span><span class="nv">$conn</span> <span class="o">===</span> <span class="k">false</span> <span class="p">)</span> <span class="p">{</span>
-    <span class="k">print</span> <span class="s2">&quot;Connected successfully.&quot;</span><span class="p">;</span> 
-<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-    <span class="k">print</span> <span class="s2">&quot;Error while connecting to server.&quot;</span><span class="p">;</span>
-<span class="p">}</span>
-<span class="cp">?&gt;</span><span class="x"></span>
-</code></pre></div>
+if($conn === false ) {
+    print "Connected successfully."; 
+} else {
+    print "Error while connecting to server.";
+}
+?&gt;
+</code></pre>
 
 <p>Hope you found this tip useful!</p>
 
@@ -322,21 +424,21 @@ sudo systemctl restart httpd <span class="o">&amp;&amp;</span> sudo apachectl re
 
 <p>This is how the syntax would look like:</p>
 
-<div class="codehilite"><pre><span></span><code><span class="c1">// ES5 Standard</span>
-<span class="kd">let</span> <span class="nx">foo</span> <span class="o">=</span> <span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
-    <span class="kd">let</span> <span class="nx">message</span> <span class="o">=</span> <span class="s2">&quot;Hello world&quot;</span>
-    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">message</span><span class="p">);</span>
-<span class="p">})();</span>
-</code></pre></div>
+<pre><code>// ES5 Standard
+let foo = (function(){
+    let message = "Hello world"
+    console.log(message);
+})();
+</code></pre>
 
 <p>They can be defined with arrow functions as well:</p>
 
-<div class="codehilite"><pre><span></span><code><span class="c1">// ES6 Standard</span>
-<span class="kd">let</span> <span class="nx">foo</span> <span class="o">=</span> <span class="p">(()</span> <span class="p">=&gt;</span> <span class="p">{</span>
-    <span class="kd">let</span> <span class="nx">message</span> <span class="o">=</span> <span class="s2">&quot;Hello world&quot;</span>
-    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">message</span><span class="p">);</span>
-<span class="p">})();</span>
-</code></pre></div>
+<pre><code>// ES6 Standard
+let foo = (() =&gt; {
+    let message = "Hello world"
+    console.log(message);
+})();
+</code></pre>
 
 <p>According to <strong>MDN Docs</strong>, it's a design pattern a.k.a Self-Executing Anonymous Function. There are two parts to this:</p>
 
@@ -404,65 +506,6 @@ sudo systemctl restart httpd <span class="o">&amp;&amp;</span> sudo apachectl re
 <li><blockquote>Every line of code is written without a reason, maintained out of weakness, and deleted by chance. &mdash; <cite><a href="https://programmingisterrible.com/post/139222674273/how-to-write-disposable-code-in-large-systems">Jean-Paul Sartre's Programming in ANSI C</a></cite></blockquote></li>
 </ul>
 
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/built-a-new-generative-art-pattern-generator">Built a new generative art pattern generator</a></h1>
-		<p class="description">Thought of giving a colorful touch to the site.</p>
-	</div>
-	<div class="article-body">
-		<p>Ten days ago, I launched a new makeover for the blog and I felt that it needed a little bit of a colorful yet unique touch.</p>
-
-<p>Recently, I started playing around with the concept of Generative Art and have been studying a lot of about various patterns like:</p>
-
-<ul>
-<li>Bauhaus</li>
-<li>Truchet Tiles</li>
-<li>Piet Mondrian</li>
-</ul>
-
-<p>So, I thought of writing a new pattern generator using CSS and JavaScript that would assign each article a unique, colorful pattern. Though, it's not yet quite complete, I would consider it to be an experimental feature to see if it goes well with the site.</p>
-
-<p>What do you think about it? Does it look good? What kind of patterns should I add to my generator?</p>
-
-<p>Interested on how it's implemented? Have a look at the <a href="/static/js/art.js">source code</a>.</p>
-
-<p>Hope you found this article to be inspiring!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>July 24th, 2022</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/update/">
-					Update
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/generative-art/">
-					Generative Art
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/css/">
-					CSS
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/javascript/">
-					JavaScript
-				</a>
-			</li>
-			
-		</ul>
-	</div>
 </div>
 
 				
@@ -784,6 +827,13 @@ sudo systemctl restart httpd <span class="o">&amp;&amp;</span> sudo apachectl re
 		</li>
 		
 		<li>
+			<a href="/category/travel/">
+				Travel
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/tech/">
 				Tech
 				<span class="count">1</span>
@@ -972,7 +1022,12 @@ sudo systemctl restart httpd <span class="o">&amp;&amp;</span> sudo apachectl re
 
   gtag('config', 'UA-98290003-2');
 </script>
-
+<script src="/static/vendor/jquery-lazy/jquery.lazy.min.js"></script>
+<script>
+  $(function () {
+    $('.lazy').lazy();
+  });
+</script>
 <!-- <script>
     const darkModeButton = document.createElement('button');
     const syntaxHighlightSource = document.getElementById('syntaxHighlight');

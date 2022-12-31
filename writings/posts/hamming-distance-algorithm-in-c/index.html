@@ -84,13 +84,13 @@
 
 <p>In <a href="http://cryptopals.com/sets/1/challenges/6">Challenge 6</a>, the first step states that you have to write a function to compute the <strong><em>edit distance/Hamming distance</em></strong> between two strings:</p>
 
-<div class="codehilite"><pre><span></span><code>this is a test
-</code></pre></div>
+<pre><code>this is a test
+</code></pre>
 
 <p>And</p>
 
-<div class="codehilite"><pre><span></span><code>wokka wokka!!!
-</code></pre></div>
+<pre><code>wokka wokka!!!
+</code></pre>
 
 <p>When this function is executed, the expected result must be <strong><em>37</em></strong>. If you we're able to make this function work, you can proceed with the next steps in the challenge.</p>
 
@@ -100,33 +100,33 @@
 
 <p>Using the example above, let's see how this works, in theory:</p>
 
-<div class="codehilite"><pre><span></span><code>ASCII Format: this is a test
+<pre><code>ASCII Format: this is a test
 Binary Format: 011101[0][0] 01101[0][0][0] 011010[0]1 011[1][0]011 0[0]10000[0] 0[1]10[1]00[1] 01110[0]11 0[0]10[0][0][0][0] 0110[0]0[0]1 0[0]10[0]0[0][0] 011[1]0[1]0[0] 0[1]100[1]01 0[1]1[1]00[1]1 0[1]1[1]0[1]0[0]
 
 ASCII Format: wokka wokka!!!
 Binary Format: 011101[1][1] 01101[1][1][1] 011010[1]1 011[0][1]011 0[1]10000[1] 0[0]10[0]00[0] 01110[1]11 0[1]10[1][1][1][1] 0110[1]0[1]1 0[1]10[1]0[1][1] 011[0]0[0]0[1] 0[0]100[0]01 0[0]1[0]00[0]1 0[0]1[0]0[0]0[1]
-</code></pre></div>
+</code></pre>
 
 <p>As per the given example, when you count the number of differing bits (the bits marked in brackets) between the two strings, the result is <strong><em>37</em></strong>.</p>
 
 <p>With help of <strong><em>Google</em></strong> and <strong><em>Wikipedia</em></strong>, I was able to build an implementation of this algorithm using the C++ programming language:</p>
 
-<div class="codehilite"><pre><span></span><code><span class="c1">//Hamming Distance</span>
-<span class="kt">int</span><span class="w"> </span><span class="nf">CryptoLib::hamming_distance</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="n">str1</span><span class="p">,</span><span class="w"> </span><span class="n">string</span><span class="w"> </span><span class="n">str2</span><span class="p">)</span><span class="w"></span>
-<span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">count</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">str1</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"></span>
-<span class="w">    </span><span class="p">{</span><span class="w"></span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">partial</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">str1</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="mh">0xFF</span><span class="p">)</span><span class="w"> </span><span class="o">^</span><span class="w"> </span><span class="p">(</span><span class="n">str2</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="mh">0xFF</span><span class="p">);</span><span class="w"></span>
-<span class="w">        </span><span class="k">while</span><span class="p">(</span><span class="n">partial</span><span class="p">)</span><span class="w"></span>
-<span class="w">        </span><span class="p">{</span><span class="w"></span>
-<span class="w">            </span><span class="n">count</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">partial</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"></span>
-<span class="w">            </span><span class="n">partial</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">partial</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="mi">1</span><span class="p">;</span><span class="w"></span>
-<span class="w">        </span><span class="p">}</span><span class="w"></span>
-<span class="w">    </span><span class="p">}</span><span class="w"></span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">count</span><span class="p">;</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
-</code></pre></div>
+<pre><code>//Hamming Distance
+int CryptoLib::hamming_distance(string str1, string str2)
+{
+    int count=0;
+    for(int i=0; i&lt;str1.size(); i++)
+    {
+        int partial = (str1[i] &amp; 0xFF) ^ (str2[i] &amp; 0xFF);
+        while(partial)
+        {
+            count += partial &amp; 1;
+            partial = partial &gt;&gt;1;
+        }
+    }
+    return count;
+}
+</code></pre>
 
 <p><strong><em>Note: This solution and the library named <code>crypto.h</code> was built using the C++ programming language. The source code for this solution can be found on Github.</em></strong></p>
 
@@ -193,7 +193,12 @@ Binary Format: 011101[1][1] 01101[1][1][1] 011010[1]1 011[0][1]011 0[1]10000[1] 
 
   gtag('config', 'UA-98290003-2');
 </script>
-
+<script src="/static/vendor/jquery-lazy/jquery.lazy.min.js"></script>
+<script>
+  $(function () {
+    $('.lazy').lazy();
+  });
+</script>
 <!-- <script>
     const darkModeButton = document.createElement('button');
     const syntaxHighlightSource = document.getElementById('syntaxHighlight');

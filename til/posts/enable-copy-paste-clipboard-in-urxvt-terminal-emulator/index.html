@@ -90,42 +90,42 @@
 
 <p>Type the following command to install the package:</p>
 
-<div class="codehilite"><pre><span></span><code>pacman -S xclip
-</code></pre></div>
+<pre><code>pacman -S xclip
+</code></pre>
 
 <h2>2. Activate Clipboard using Perl</h2>
 
 <p>Now, you have to paste these custom commands into your <code>clipboard</code> file, which is found in <code>/usr/lib/urxvt/perl</code> directory:</p>
 
-<div class="codehilite"><pre><span></span><code><span class="c1"># paste selection from clipboard</span>
-<span class="k">sub</span> <span class="nf">paste</span> <span class="p">{</span>
-     <span class="k">my</span> <span class="p">(</span><span class="nv">$self</span><span class="p">)</span> <span class="o">=</span> <span class="nv">@_</span><span class="p">;</span>
-     <span class="k">my</span> <span class="nv">$content</span> <span class="o">=</span> <span class="sb">`/usr/bin/xclip -loop 1 -out -selection clipboard`</span> <span class="p">;</span>
-     <span class="nv">$self</span><span class="o">-&gt;</span><span class="n">tt_write</span> <span class="p">(</span><span class="nv">$content</span><span class="p">);</span>
-<span class="p">}</span>
+<pre><code># paste selection from clipboard
+sub paste {
+     my ($self) = @_;
+     my $content = `/usr/bin/xclip -loop 1 -out -selection clipboard` ;
+     $self-&gt;tt_write ($content);
+}
 
-<span class="c1"># copy text to clipbard on selection</span>
-<span class="k">sub</span> <span class="nf">on_sel_grab</span> <span class="p">{</span>
-     <span class="k">my</span> <span class="nv">$query</span> <span class="o">=</span> <span class="nv">$_</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">selection</span><span class="p">;</span>
-     <span class="nb">open</span> <span class="p">(</span><span class="k">my</span> <span class="nv">$pipe</span><span class="p">,</span> <span class="s">&#39;| /usr/bin/xclip -in -selection clipboard&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">die</span><span class="p">;</span>
-     <span class="k">print</span> <span class="nv">$pipe</span> <span class="nv">$query</span><span class="p">;</span>
-     <span class="nb">close</span> <span class="nv">$pipe</span><span class="p">;</span>
- <span class="p">}</span>
-</code></pre></div>
+# copy text to clipbard on selection
+sub on_sel_grab {
+     my $query = $_[0]-&gt;selection;
+     open (my $pipe, '| /usr/bin/xclip -in -selection clipboard') or die;
+     print $pipe $query;
+     close $pipe;
+ }
+</code></pre>
 
 <h2>3. Modify your .Xresources</h2>
 
 <p>Add these keybindings to your <code>.Xresources</code> file:</p>
 
-<div class="codehilite"><pre><span></span><code>URxvt.keysym.Shift-Control-V: perl:clipboard:paste
+<pre><code>URxvt.keysym.Shift-Control-V: perl:clipboard:paste
 URxvt.iso14755: False
 URxvt.perl-ext-common: default,clipboard
-</code></pre></div>
+</code></pre>
 
 <p>After adding it, refresh your <code>.Xresources</code> settings:</p>
 
-<div class="codehilite"><pre><span></span><code>xrdb -merge .Xresources
-</code></pre></div>
+<pre><code>xrdb -merge .Xresources
+</code></pre>
 
 <p>Reboot your terminal and try selecting some text from your terminal using your mouse and paste it using <code>Ctrl</code>+<code>Shift</code>+<code>V</code> and it should work! </p>
 
@@ -184,7 +184,12 @@ URxvt.perl-ext-common: default,clipboard
 
   gtag('config', 'UA-98290003-2');
 </script>
-
+<script src="/static/vendor/jquery-lazy/jquery.lazy.min.js"></script>
+<script>
+  $(function () {
+    $('.lazy').lazy();
+  });
+</script>
 <!-- <script>
     const darkModeButton = document.createElement('button');
     const syntaxHighlightSource = document.getElementById('syntaxHighlight');

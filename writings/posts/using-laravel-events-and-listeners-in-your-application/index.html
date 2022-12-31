@@ -84,7 +84,7 @@
 
 <p>My senior developer was curious and thought of having a conversation with me that went like this:</p>
 
-<div class="codehilite"><pre><span></span><code>Senior dev: Hmm, can I have a look at your code?
+<pre><code>Senior dev: Hmm, can I have a look at your code?
 
 Me: Oh sure, here take a look.
 
@@ -94,8 +94,8 @@ Senior: So, have you ever thought of using events in your application?
 
 Me: Yeah, I wrote a custom JavaScript file to handle and fire events on the client-side like validating the forms and passing async requests to the server.
 
-Senior: Hmm, that&#39;s okay but I&#39;m talking using events in Laravel.
-</code></pre></div>
+Senior: Hmm, that's okay but I'm talking using events in Laravel.
+</code></pre>
 
 <p>At this point, I was pretty clueless and I didn't know what the heck was going on. Events in PHP? I mean, I know about it in JavaScript because of it's event-driven architecture that we are all familiar with. But in PHP? I didn't know that.</p>
 
@@ -125,42 +125,42 @@ Senior: Hmm, that&#39;s okay but I&#39;m talking using events in Laravel.
 
 <p>If you're using an MVC framework (Laravel, in our case), you'd do this in a controller with a bunch of methods like so:</p>
 
-<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="k">namespace</span> <span class="nx">App\Http\Controllers</span><span class="p">;</span>
+<pre><code>&lt;?php
+namespace App\Http\Controllers;
 
-<span class="k">use</span> <span class="nx">App\Http\Controllers\Controller</span><span class="p">;</span>
-<span class="k">use</span> <span class="nx">App\User</span><span class="p">;</span>
+use App\Http\Controllers\Controller;
+use App\User;
 
-<span class="k">class</span> <span class="nc">UserController</span> <span class="k">extends</span> <span class="nx">Controller</span> <span class="p">{</span>
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">index</span><span class="p">()</span> <span class="p">{</span>
-        <span class="c1">// insert code to view users page</span>
-    <span class="p">}</span>
+class UserController extends Controller {
+    public function index() {
+        // insert code to view users page
+    }
 
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">create</span><span class="p">(</span><span class="nx">Request</span> <span class="nv">$request</span><span class="p">)</span> <span class="p">{</span>
-        <span class="nv">$arr</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="s1">&#39;username&#39;</span> <span class="o">=&gt;</span> <span class="nv">$request</span><span class="o">-&gt;</span><span class="na">username</span><span class="p">,</span>
-            <span class="s1">&#39;email&#39;</span> <span class="o">=&gt;</span> <span class="nv">$request</span><span class="o">-&gt;</span><span class="na">email</span><span class="p">,</span>
-            <span class="s1">&#39;password&#39;</span> <span class="o">=&gt;</span> <span class="nx">bcrypt</span><span class="p">(</span><span class="s1">&#39;something&#39;</span><span class="p">)</span>
-        <span class="p">];</span>
+    public function create(Request $request) {
+        $arr = [
+            'username' =&gt; $request-&gt;username,
+            'email' =&gt; $request-&gt;email,
+            'password' =&gt; bcrypt('something')
+        ];
 
-        <span class="nv">$user</span> <span class="o">=</span> <span class="nx">User</span><span class="o">::</span><span class="na">create</span><span class="p">(</span><span class="nv">$arr</span><span class="p">);</span>
+        $user = User::create($arr);
 
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">sendConfirmationEmail</span><span class="p">(</span><span class="nv">$user</span><span class="p">);</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">subscribeToMailingList</span><span class="p">(</span><span class="nv">$user</span><span class="p">);</span>
-    <span class="p">}</span>
+        $this-&gt;sendConfirmationEmail($user);
+        $this-&gt;subscribeToMailingList($user);
+    }
 
-    <span class="c1">// Send confirmation email to user</span>
-    <span class="k">private</span> <span class="k">function</span> <span class="nf">sendConfirmationEmail</span><span class="p">(</span><span class="nv">$user</span><span class="p">)</span> <span class="p">{</span>
-        <span class="c1">// insert code</span>
-    <span class="p">}</span>
+    // Send confirmation email to user
+    private function sendConfirmationEmail($user) {
+        // insert code
+    }
 
-    <span class="c1">// Subscribe user to mailing list</span>
-    <span class="k">private</span> <span class="k">function</span> <span class="nf">subscribeToMailingList</span><span class="p">(</span><span class="nv">$user</span><span class="p">)</span> <span class="p">{</span>
-        <span class="c1">// insert code</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-<span class="cp">?&gt;</span><span class="x"></span>
-</code></pre></div>
+    // Subscribe user to mailing list
+    private function subscribeToMailingList($user) {
+        // insert code
+    }
+}
+?&gt;
+</code></pre>
 
 <p>This is approach is self-contained and simple to follow but you're also adding in a lot of responsibility to your controller.</p>
 
@@ -170,83 +170,83 @@ Senior: Hmm, that&#39;s okay but I&#39;m talking using events in Laravel.
 
 <p>Using this approach, you can split this into <mark>Event</mark> and <mark>Listener</mark> files in your application.</p>
 
-<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="k">namespace</span> <span class="nx">App\Http\Controllers</span><span class="p">;</span>
+<pre><code>&lt;?php
+namespace App\Http\Controllers;
 
-<span class="k">use</span> <span class="nx">App\Http\Controllers\Controller</span><span class="p">;</span>
-<span class="k">use</span> <span class="nx">App\User</span><span class="p">;</span>
+use App\Http\Controllers\Controller;
+use App\User;
 
-<span class="k">class</span> <span class="nc">UserController</span> <span class="k">extends</span> <span class="nx">Controller</span> <span class="p">{</span>
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">index</span><span class="p">()</span> <span class="p">{</span>
-        <span class="c1">// insert code to view users page</span>
-    <span class="p">}</span>
+class UserController extends Controller {
+    public function index() {
+        // insert code to view users page
+    }
 
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">create</span><span class="p">(</span><span class="nx">Request</span> <span class="nv">$request</span><span class="p">)</span> <span class="p">{</span>
-        <span class="nv">$arr</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="s1">&#39;username&#39;</span> <span class="o">=&gt;</span> <span class="nv">$request</span><span class="o">-&gt;</span><span class="na">username</span><span class="p">,</span>
-            <span class="s1">&#39;email&#39;</span> <span class="o">=&gt;</span> <span class="nv">$request</span><span class="o">-&gt;</span><span class="na">email</span><span class="p">,</span>
-            <span class="s1">&#39;password&#39;</span> <span class="o">=&gt;</span> <span class="nx">bcrypt</span><span class="p">(</span><span class="s1">&#39;something&#39;</span><span class="p">)</span>
-        <span class="p">];</span>
+    public function create(Request $request) {
+        $arr = [
+            'username' =&gt; $request-&gt;username,
+            'email' =&gt; $request-&gt;email,
+            'password' =&gt; bcrypt('something')
+        ];
 
-        <span class="nv">$user</span> <span class="o">=</span> <span class="nx">User</span><span class="o">::</span><span class="na">create</span><span class="p">(</span><span class="nv">$arr</span><span class="p">);</span>
+        $user = User::create($arr);
 
-        <span class="c1">// Emit event</span>
-        <span class="nx">event</span><span class="p">(</span><span class="k">new</span> <span class="nx">UserRegistered</span><span class="p">(</span><span class="nv">$user</span><span class="p">));</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-<span class="cp">?&gt;</span><span class="x"></span>
-</code></pre></div>
+        // Emit event
+        event(new UserRegistered($user));
+    }
+}
+?&gt;
+</code></pre>
 
 <p>This is how your <mark>UserRegistered</mark> event would look like:</p>
 
-<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="k">namespace</span> <span class="nx">App\Events</span><span class="p">;</span>
+<pre><code>&lt;?php
+namespace App\Events;
 
-<span class="k">use</span> <span class="nx">Illuminate\Queue\SerializeModels</span><span class="p">;</span>
-<span class="k">use</span> <span class="nx">App\User</span><span class="p">;</span>
+use Illuminate\Queue\SerializeModels;
+use App\User;
 
-<span class="k">class</span> <span class="nc">UserRegistered</span> <span class="p">{</span>
-    <span class="k">use</span> <span class="nx">SerializesModels</span><span class="p">;</span>
+class UserRegistered {
+    use SerializesModels;
 
-    <span class="k">public</span> <span class="nv">$user</span><span class="p">;</span>
+    public $user;
 
-    <span class="k">public</span> <span class="k">function</span> <span class="fm">__construct</span><span class="p">(</span><span class="nx">User</span> <span class="nv">$user</span><span class="p">)</span> <span class="p">{</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">user</span> <span class="o">=</span> <span class="nv">$user</span><span class="p">;</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-<span class="cp">?&gt;</span><span class="x"></span>
-</code></pre></div>
+    public function __construct(User $user) {
+        $this-&gt;user = $user;
+    }
+}
+?&gt;
+</code></pre>
 
 <p>And this is how your <mark>SendConfirmationEmail</mark> listener would look like:</p>
 
-<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="k">namespace</span> <span class="nx">App\Listeners</span><span class="p">;</span>
+<pre><code>&lt;?php
+namespace App\Listeners;
 
-<span class="k">use</span> <span class="nx">App\Events\UserRegistered</span><span class="p">;</span>
+use App\Events\UserRegistered;
 
-<span class="k">class</span> <span class="nc">SendConfirmationEmail</span> <span class="p">{</span>
+class SendConfirmationEmail {
 
-    <span class="k">public</span> <span class="k">function</span> <span class="fm">__construct</span><span class="p">(</span><span class="nx">User</span> <span class="nv">$user</span><span class="p">)</span> <span class="p">{</span>
-        <span class="c1">// insert code</span>
-    <span class="p">}</span>
+    public function __construct(User $user) {
+        // insert code
+    }
 
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">handle</span><span class="p">(</span><span class="nx">UserRegister</span> <span class="nv">$event</span><span class="p">)</span> <span class="p">{</span>
-        <span class="c1">// insert code</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-<span class="cp">?&gt;</span><span class="x"></span>
-</code></pre></div>
+    public function handle(UserRegister $event) {
+        // insert code
+    }
+}
+?&gt;
+</code></pre>
 
 <p>Using this approach, you can use the <mark>UserRegistered</mark> event anywhere you wanted in your application. No matter what happens, it will trigger the same actions as it was intended to do so. If you want to add a new functionality, create a new listener and register it with the event in your <mark>EventServiceProvider</mark> file like this:</p>
 
-<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="k">protected</span> <span class="nv">$listen</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="s1">&#39;App\Events\UserRegistered&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span>
-    <span class="s1">&#39;App\Listeners\SendConfirmationEmail&#39;</span><span class="p">,</span>
-    <span class="p">],</span>
-<span class="p">];</span>
-<span class="cp">?&gt;</span><span class="x"></span>
-</code></pre></div>
+<pre><code>&lt;?php
+protected $listen = [
+    'App\Events\UserRegistered' =&gt; [
+    'App\Listeners\SendConfirmationEmail',
+    ],
+];
+?&gt;
+</code></pre>
 
 <p>If you follow this approach, your logic complexity is toned down and the controller will have less responsibility.</p>
 
@@ -335,7 +335,12 @@ Senior: Hmm, that&#39;s okay but I&#39;m talking using events in Laravel.
 
   gtag('config', 'UA-98290003-2');
 </script>
-
+<script src="/static/vendor/jquery-lazy/jquery.lazy.min.js"></script>
+<script>
+  $(function () {
+    $('.lazy').lazy();
+  });
+</script>
 <!-- <script>
     const darkModeButton = document.createElement('button');
     const syntaxHighlightSource = document.getElementById('syntaxHighlight');

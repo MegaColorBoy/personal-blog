@@ -90,9 +90,9 @@
 
 <p>From what I had understood, a <strong><em>hand</em></strong> is a set of five cards and each card has a rank, which is in the order shown below:</p>
 
-<div class="codehilite"><pre><span></span><code>Cards are valued in the order of lowest to highest (Left to Right):
+<pre><code>Cards are valued in the order of lowest to highest (Left to Right):
 2, 3, 4, 5, 6, 7, 8, 9, 10, Jack, Queen, King, Ace
-</code></pre></div>
+</code></pre>
 
 <p>Based on the card pattern formed in each hand, the ranking category is determined and it's ranked within it's category based on the ranks of it's cards.</p>
 
@@ -129,13 +129,13 @@
 
 <p>This hand contains no pairs and it doesn't fall into any other category.</p>
 
-<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">high_card</span><span class="p">(</span><span class="n">hand</span><span class="p">):</span>
-    <span class="c1"># collect all faces from each card</span>
-    <span class="n">allfaces</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span><span class="p">,</span><span class="n">s</span> <span class="ow">in</span> <span class="n">hand</span><span class="p">]</span>
+<pre><code>def high_card(hand):
+    # collect all faces from each card
+    allfaces = [f for f,s in hand]
 
-    <span class="c1">#sort the faces and show the highest card</span>
-    <span class="k">return</span> <span class="s2">&quot;high_card&quot;</span><span class="p">,</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">allfaces</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">f</span><span class="p">:</span> <span class="n">allfaces</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">f</span><span class="p">),</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-</code></pre></div>
+    #sort the faces and show the highest card
+    return "high_card", sorted(allfaces, key=lambda f: allfaces.index(f), reverse=True)[0]
+</code></pre>
 
 <h3><a id="onepair"></a> One Pair</h3>
 
@@ -149,20 +149,20 @@
 
 <p>This hand contains two cards of one rank and three cards of three other ranks.</p>
 
-<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">one_pair</span><span class="p">(</span><span class="n">hand</span><span class="p">):</span>
-    <span class="n">allfaces</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span><span class="p">,</span><span class="n">s</span> <span class="ow">in</span> <span class="n">hand</span><span class="p">]</span>
-    <span class="n">allftypes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">allfaces</span><span class="p">)</span>
+<pre><code>def one_pair(hand):
+    allfaces = [f for f,s in hand]
+    allftypes = set(allfaces)
 
-    <span class="c1"># collect pairs</span>
-    <span class="n">pairs</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">allftypes</span> <span class="k">if</span> <span class="n">allfaces</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">]</span>
+    # collect pairs
+    pairs = [f for f in allftypes if allfaces.count(f) == 2]
 
-    <span class="c1"># if there&#39;s more than one pair</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">pairs</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="k">return</span> <span class="kc">False</span>
+    # if there's more than one pair
+    if len(pairs) != 1:
+        return False
 
-    <span class="n">allftypes</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">pairs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-    <span class="k">return</span> <span class="s1">&#39;one-pair&#39;</span><span class="p">,</span> <span class="n">pairs</span> <span class="o">+</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">allftypes</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">f</span><span class="p">:</span> <span class="n">face</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">f</span><span class="p">),</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</code></pre></div>
+    allftypes.remove(pairs[0])
+    return 'one-pair', pairs + sorted(allftypes, key=lambda f: face.index(f), reverse=True)
+</code></pre>
 
 <h3><a id="twopairs"></a> Two Pairs</h3>
 
@@ -176,22 +176,22 @@
 
 <p>This hand contains two cards of one rank, two cards of a second rank and one card of a third rank.</p>
 
-<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">two_pair</span><span class="p">(</span><span class="n">hand</span><span class="p">):</span>
-    <span class="n">allfaces</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span><span class="p">,</span><span class="n">s</span> <span class="ow">in</span> <span class="n">hand</span><span class="p">]</span>
-    <span class="n">allftypes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">allfaces</span><span class="p">)</span>
+<pre><code>def two_pair(hand):
+    allfaces = [f for f,s in hand]
+    allftypes = set(allfaces)
 
-    <span class="c1"># collect pairs</span>
-    <span class="n">pairs</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">allftypes</span> <span class="k">if</span> <span class="n">allfaces</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">]</span>
+    # collect pairs
+    pairs = [f for f in allftypes if allfaces.count(f) == 2]
 
-    <span class="c1"># if there are more than two pairs</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">pairs</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
-        <span class="k">return</span> <span class="kc">False</span>
+    # if there are more than two pairs
+    if len(pairs) != 2:
+        return False
 
-    <span class="n">p1</span><span class="p">,</span> <span class="n">p2</span> <span class="o">=</span> <span class="n">pairs</span>
-    <span class="c1"># get the difference using sets</span>
-    <span class="n">other_cards</span> <span class="o">=</span> <span class="p">[(</span><span class="n">allftypes</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">pairs</span><span class="p">))</span><span class="o">.</span><span class="n">pop</span><span class="p">()]</span>
-    <span class="k">return</span> <span class="s1">&#39;two-pair&#39;</span><span class="p">,</span> <span class="n">pairs</span> <span class="o">+</span> <span class="n">other_cards</span> <span class="k">if</span><span class="p">(</span><span class="n">face</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">p1</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">face</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">p2</span><span class="p">))</span> <span class="k">else</span> <span class="n">pairs</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">other_cards</span>
-</code></pre></div>
+    p1, p2 = pairs
+    # get the difference using sets
+    other_cards = [(allftypes - set(pairs)).pop()]
+    return 'two-pair', pairs + other_cards if(face.index(p1) &gt; face.index(p2)) else pairs[::-1] + other_cards
+</code></pre>
 
 <h3><a id="threeofakind"></a> Three of a Kind</h3>
 
@@ -205,21 +205,21 @@
 
 <p>This hand, also known as trips or a set, contains three cards of one rank and two cards of two other ranks.</p>
 
-<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">three_of_a_kind</span><span class="p">(</span><span class="n">hand</span><span class="p">):</span>
-    <span class="n">allfaces</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span><span class="p">,</span><span class="n">s</span> <span class="ow">in</span> <span class="n">hand</span><span class="p">]</span>
+<pre><code>def three_of_a_kind(hand):
+    allfaces = [f for f,s in hand]
 
-    <span class="n">uniqueRanks</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">allfaces</span><span class="p">)</span>
+    uniqueRanks = set(allfaces)
 
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">uniqueRanks</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
-        <span class="k">return</span> <span class="kc">False</span>
+    if len(uniqueRanks) != 3:
+        return False
 
-    <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">uniqueRanks</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">allfaces</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
-            <span class="n">uniqueRanks</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
-            <span class="k">return</span> <span class="s2">&quot;three-of-a-kind&quot;</span><span class="p">,</span> <span class="n">f</span>
+    for f in uniqueRanks:
+        if allfaces.count(f) == 3:
+            uniqueRanks.remove(f)
+            return "three-of-a-kind", f
 
-    <span class="k">return</span> <span class="kc">False</span><span class="p">;</span>
-</code></pre></div>
+    return False;
+</code></pre>
 
 <h3><a id="straight"></a> Straight</h3>
 
@@ -233,12 +233,12 @@
 
 <p>This hand contains five cards arranged in a sequential order but not all of them have same suits.</p>
 
-<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">straight</span><span class="p">(</span><span class="n">hand</span><span class="p">):</span>
-    <span class="n">ordered</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">hand</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">card</span><span class="p">:</span> <span class="p">(</span><span class="n">faces</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">card</span><span class="o">.</span><span class="n">face</span><span class="p">),</span> <span class="n">card</span><span class="o">.</span><span class="n">suit</span><span class="p">))</span>
-    <span class="k">if</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">card</span><span class="o">.</span><span class="n">face</span> <span class="k">for</span> <span class="n">card</span> <span class="ow">in</span> <span class="n">ordered</span><span class="p">)</span> <span class="ow">in</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">face</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s1">&#39;straight&#39;</span><span class="p">,</span> <span class="n">ordered</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">face</span>
-    <span class="k">return</span> <span class="kc">False</span><span class="p">;</span>
-</code></pre></div>
+<pre><code>def straight(hand):
+    ordered = sorted(hand, key=lambda card: (faces.index(card.face), card.suit))
+    if ''.join(card.face for card in ordered) in ''.join(face):
+        return 'straight', ordered[-1].face
+    return False;
+</code></pre>
 
 <h3><a id="flush"></a> Flush</h3>
 
@@ -252,17 +252,17 @@
 
 <p>This hand contains five cards of the same suit and not necessarily arranged in sequential order.</p>
 
-<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">flush</span><span class="p">(</span><span class="n">hand</span><span class="p">):</span>
-    <span class="n">allfaces</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span><span class="p">,</span><span class="n">s</span> <span class="ow">in</span> <span class="n">hand</span><span class="p">]</span>
+<pre><code>def flush(hand):
+    allfaces = [f for f,s in hand]
 
-    <span class="n">first_card</span> <span class="o">=</span> <span class="n">hand</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">other_cards</span> <span class="o">=</span> <span class="n">hand</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+    first_card = hand[0]
+    other_cards = hand[1:]
 
-    <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">first_card</span><span class="o">.</span><span class="n">suit</span> <span class="o">==</span> <span class="n">card</span><span class="o">.</span><span class="n">suit</span> <span class="k">for</span> <span class="n">card</span> <span class="ow">in</span> <span class="n">other_cards</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s1">&#39;flush&#39;</span><span class="p">,</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">allfaces</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">f</span><span class="p">:</span> <span class="n">face</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">f</span><span class="p">),</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    if all(first_card.suit == card.suit for card in other_cards):
+        return 'flush', sorted(allfaces, key=lambda f: face.index(f), reverse=True)
 
-    <span class="k">return</span> <span class="kc">False</span>
-</code></pre></div>
+    return False
+</code></pre>
 
 <h3><a id="fullhouse"></a> Full House</h3>
 
@@ -276,17 +276,17 @@
 
 <p>This hand, also known as full boat or a boat, contains three cards of one rank and two cards of another rank.</p>
 
-<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">full_house</span><span class="p">(</span><span class="n">hand</span><span class="p">):</span>
-    <span class="n">allfaces</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span><span class="p">,</span><span class="n">s</span> <span class="ow">in</span> <span class="n">hand</span><span class="p">]</span>
+<pre><code>def full_house(hand):
+    allfaces = [f for f,s in hand]
 
-    <span class="n">rankFrequency</span> <span class="o">=</span> <span class="n">pe_lib</span><span class="o">.</span><span class="n">character_frequency</span><span class="p">(</span><span class="n">allfaces</span><span class="p">)</span>
+    rankFrequency = pe_lib.character_frequency(allfaces)
 
-    <span class="c1"># if there are 2 types of ranks and there&#39;s a card with 1 pair and 3 of a kind</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">rankFrequency</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="p">(</span><span class="n">rankFrequency</span><span class="o">.</span><span class="n">values</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">rankFrequency</span><span class="o">.</span><span class="n">values</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">3</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s1">&#39;full-house&#39;</span>
+    # if there are 2 types of ranks and there's a card with 1 pair and 3 of a kind
+    if len(rankFrequency) == 2 and (rankFrequency.values()[0] == 2 and rankFrequency.values()[1] == 3):
+        return 'full-house'
 
-    <span class="k">return</span> <span class="kc">False</span>
-</code></pre></div>
+    return False
+</code></pre>
 
 <h3><a id="fourofakind"></a> Four of a Kind</h3>
 
@@ -300,24 +300,24 @@
 
 <p>This hand, also known as quads, contains four cards of one rank and one card of another rank.</p>
 
-<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">four_of_a_kind</span><span class="p">(</span><span class="n">hand</span><span class="p">):</span>
-    <span class="n">allfaces</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span><span class="p">,</span><span class="n">s</span> <span class="ow">in</span> <span class="n">hand</span><span class="p">]</span>
+<pre><code>def four_of_a_kind(hand):
+    allfaces = [f for f,s in hand]
 
-    <span class="c1"># create a unique set of ranks</span>
-    <span class="n">uniqueRanks</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">allfaces</span><span class="p">)</span>
+    # create a unique set of ranks
+    uniqueRanks = set(allfaces)
 
-    <span class="c1"># if there are more than 2 ranks, it&#39;s not four of a kind</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">uniqueRanks</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
-        <span class="k">return</span> <span class="kc">False</span>
+    # if there are more than 2 ranks, it's not four of a kind
+    if len(uniqueRanks) != 2:
+        return False
 
-    <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">uniqueRanks</span><span class="p">:</span>
-        <span class="c1"># if there are 4 faces, it is four of a kind</span>
-        <span class="k">if</span> <span class="n">allfaces</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
-            <span class="n">uniqueRanks</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
-            <span class="k">return</span> <span class="s2">&quot;four-of-a-kind&quot;</span><span class="p">,</span> <span class="n">f</span>
+    for f in uniqueRanks:
+        # if there are 4 faces, it is four of a kind
+        if allfaces.count(f) == 4:
+            uniqueRanks.remove(f)
+            return "four-of-a-kind", f
 
-    <span class="k">return</span> <span class="kc">False</span>
-</code></pre></div>
+    return False
+</code></pre>
 
 <h3><a id="straightflush"></a> Straight Flush</h3>
 
@@ -331,21 +331,21 @@
 
 <p>This hand contains five cards arranged in a sequential order with all cards having the same suit.</p>
 
-<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">straight_flush</span><span class="p">(</span><span class="n">hand</span><span class="p">):</span>
-    <span class="c1"># sort the cards based on the face rank of each card</span>
-    <span class="n">ordered</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">hand</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">card</span><span class="p">:</span> <span class="p">(</span><span class="n">faces</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">card</span><span class="o">.</span><span class="n">face</span><span class="p">),</span> <span class="n">card</span><span class="o">.</span><span class="n">suit</span><span class="p">))</span>
+<pre><code>def straight_flush(hand):
+    # sort the cards based on the face rank of each card
+    ordered = sorted(hand, key=lambda card: (faces.index(card.face), card.suit))
 
-    <span class="n">first_card</span> <span class="o">=</span> <span class="n">ordered</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">other_cards</span> <span class="o">=</span> <span class="n">ordered</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+    first_card = ordered[0]
+    other_cards = ordered[1:]
 
-    <span class="c1"># check if all are of the same suit</span>
-    <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">first_card</span><span class="o">.</span><span class="n">suit</span> <span class="o">==</span> <span class="n">card</span><span class="o">.</span><span class="n">suit</span> <span class="k">for</span> <span class="n">card</span> <span class="ow">in</span> <span class="n">other_cards</span><span class="p">):</span>
-        <span class="c1"># check if they are in sequential order</span>
-        <span class="c1"># compare the ordered faces substring with the face list (which is converted to string)</span>
-        <span class="k">if</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">card</span><span class="o">.</span><span class="n">face</span> <span class="k">for</span> <span class="n">card</span> <span class="ow">in</span> <span class="n">ordered</span><span class="p">)</span> <span class="ow">in</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">face</span><span class="p">):</span>
-            <span class="k">return</span> <span class="s1">&#39;straight-flush&#39;</span><span class="p">,</span> <span class="n">ordered</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">face</span>
-    <span class="k">return</span> <span class="kc">False</span>
-</code></pre></div>
+    # check if all are of the same suit
+    if all(first_card.suit == card.suit for card in other_cards):
+        # check if they are in sequential order
+        # compare the ordered faces substring with the face list (which is converted to string)
+        if ''.join(card.face for card in ordered) in ''.join(face):
+            return 'straight-flush', ordered[-1].face
+    return False
+</code></pre>
 
 <h3><a id="royalflush"></a> Royal Flush</h3>
 
@@ -359,22 +359,22 @@
 
 <p>This hand contains the <strong><em>royal</em></strong> ranks in sequential order in the same suit.</p>
 
-<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">royal_flush</span><span class="p">(</span><span class="n">hand</span><span class="p">):</span>
-    <span class="n">royalface</span> <span class="o">=</span> <span class="s2">&quot;TJQKA&quot;</span>
-    <span class="c1"># sort the cards based on the face rank of each card</span>
-    <span class="n">ordered</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">hand</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">card</span><span class="p">:</span> <span class="p">(</span><span class="n">faces</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">card</span><span class="o">.</span><span class="n">face</span><span class="p">),</span> <span class="n">card</span><span class="o">.</span><span class="n">suit</span><span class="p">))</span>
+<pre><code>def royal_flush(hand):
+    royalface = "TJQKA"
+    # sort the cards based on the face rank of each card
+    ordered = sorted(hand, key=lambda card: (faces.index(card.face), card.suit))
 
-    <span class="n">first_card</span> <span class="o">=</span> <span class="n">ordered</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">other_cards</span> <span class="o">=</span> <span class="n">ordered</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+    first_card = ordered[0]
+    other_cards = ordered[1:]
 
-    <span class="c1"># check if all are of the same suit</span>
-    <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">first_card</span><span class="o">.</span><span class="n">suit</span> <span class="o">==</span> <span class="n">card</span><span class="o">.</span><span class="n">suit</span> <span class="k">for</span> <span class="n">card</span> <span class="ow">in</span> <span class="n">other_cards</span><span class="p">):</span>
-        <span class="c1"># check if they are in sequential order</span>
-        <span class="c1"># compare the ordered faces substring with the face list (which is converted to string)</span>
-        <span class="k">if</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">card</span><span class="o">.</span><span class="n">face</span> <span class="k">for</span> <span class="n">card</span> <span class="ow">in</span> <span class="n">ordered</span><span class="p">)</span> <span class="ow">in</span> <span class="n">royalface</span><span class="p">:</span>
-            <span class="k">return</span> <span class="s1">&#39;royal-flush&#39;</span><span class="p">,</span> <span class="n">ordered</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">face</span>
-    <span class="k">return</span> <span class="kc">False</span>
-</code></pre></div>
+    # check if all are of the same suit
+    if all(first_card.suit == card.suit for card in other_cards):
+        # check if they are in sequential order
+        # compare the ordered faces substring with the face list (which is converted to string)
+        if ''.join(card.face for card in ordered) in royalface:
+            return 'royal-flush', ordered[-1].face
+    return False
+</code></pre>
 
 <h2>Conclusion</h2>
 
@@ -441,7 +441,12 @@
 
   gtag('config', 'UA-98290003-2');
 </script>
-
+<script src="/static/vendor/jquery-lazy/jquery.lazy.min.js"></script>
+<script>
+  $(function () {
+    $('.lazy').lazy();
+  });
+</script>
 <!-- <script>
     const darkModeButton = document.createElement('button');
     const syntaxHighlightSource = document.getElementById('syntaxHighlight');

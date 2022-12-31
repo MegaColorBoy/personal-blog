@@ -78,16 +78,43 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-resolve-the-failed-to-clear-cache-make-sure-you-have-the-appropriate-permissions-error">How to resolve the "Failed to clear cache. Make sure you have the appropriate permissions." error</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>This error is annoying and mostly happens if the <code>data</code> directory is missing under the <code>storage/framework/cache/data</code> directory. For some reason, this folder doesn't exist by default.</p>
+
+<p>To resolve it, just manually create the <code>data</code> directory under the <code>storage/framework/cache/data</code> directory and it should fix the issue.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>March 12th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/laravel/">
+					Laravel
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/how-to-exclude-certain-slugs-in-laravel">How to exclude certain slugs in Laravel</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
 		<p>Using plain Regular Expressions, you can exclude certain slug from your routes, try adding the following to your <code>routes/web.php</code> file:</p>
 
-<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
-    <span class="nx">Route</span><span class="o">::</span><span class="na">match</span><span class="p">(</span><span class="k">array</span><span class="p">(</span><span class="s1">&#39;GET&#39;</span><span class="p">,</span> <span class="s1">&#39;POST&#39;</span><span class="p">),</span> <span class="s1">&#39;/{slug}&#39;</span><span class="p">,</span> <span class="s1">&#39;YourController@index&#39;</span><span class="p">)</span><span class="o">-&gt;</span><span class="na">name</span><span class="p">(</span><span class="s1">&#39;page&#39;</span><span class="p">)</span><span class="o">-&gt;</span><span class="na">where</span><span class="p">(</span><span class="s1">&#39;slug&#39;</span><span class="p">,</span> <span class="s1">&#39;^(?!pattern).*$&#39;</span><span class="p">);</span>
-<span class="cp">?&gt;</span><span class="x"></span>
-</code></pre></div>
+<pre><code>&lt;?php
+    Route::match(array('GET', 'POST'), '/{slug}', 'YourController@index')-&gt;name('page')-&gt;where('slug', '^(?!pattern).*$');
+?&gt;
+</code></pre>
 
 <p>Hope you found this useful!</p>
 
@@ -118,12 +145,12 @@
 
 <p>Here's a sample on how you can convert to date using timestamp using Carbon:</p>
 
-<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
-    <span class="k">function</span> <span class="nf">formatDate</span><span class="p">(</span><span class="nx">Request</span> <span class="nv">$request</span><span class="p">)</span> <span class="p">{</span>
-        <span class="k">return</span> <span class="nx">\Carbon\Carbon</span><span class="o">::</span><span class="na">createFromFormat</span><span class="p">(</span><span class="s1">&#39;Y-m-d H:i:s&#39;</span><span class="p">,</span> <span class="nv">$request</span><span class="o">-&gt;</span><span class="na">date</span><span class="p">)</span><span class="o">-&gt;</span><span class="na">format</span><span class="p">(</span><span class="s1">&#39;Y-m-d&#39;</span><span class="p">);</span>
-    <span class="p">}</span>
-<span class="cp">?&gt;</span><span class="x"></span>
-</code></pre></div>
+<pre><code>&lt;?php
+    function formatDate(Request $request) {
+        return \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $request-&gt;date)-&gt;format('Y-m-d');
+    }
+?&gt;
+</code></pre>
 
 <p>Hope you found this useful!</p>
 
@@ -154,16 +181,16 @@
 
 <p>Open up <code>routes/web.php</code> and create this route:</p>
 
-<div class="codehilite"><pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="nx">Route</span><span class="o">::</span><span class="na">get</span><span class="p">(</span><span class="s1">&#39;/clearcache&#39;</span><span class="p">,</span> <span class="k">function</span><span class="p">(){</span>
-    <span class="nx">\Artisan</span><span class="o">::</span><span class="na">run</span><span class="p">(</span><span class="s1">&#39;config:clear&#39;</span><span class="p">);</span>
-    <span class="nx">\Artisan</span><span class="o">::</span><span class="na">run</span><span class="p">(</span><span class="s1">&#39;cache:clear&#39;</span><span class="p">);</span>
-    <span class="nx">\Artisan</span><span class="o">::</span><span class="na">run</span><span class="p">(</span><span class="s1">&#39;view:clear&#39;</span><span class="p">);</span>
-    <span class="nx">\Artisan</span><span class="o">::</span><span class="na">run</span><span class="p">(</span><span class="s1">&#39;route:clear&#39;</span><span class="p">);</span>
-    <span class="nx">\Artisan</span><span class="o">::</span><span class="na">run</span><span class="p">(</span><span class="s1">&#39;config:cache&#39;</span><span class="p">);</span>
-<span class="p">});</span>
-<span class="cp">?&gt;</span><span class="x"></span>
-</code></pre></div>
+<pre><code>&amp;lt;?php
+Route::get('/clearcache', function(){
+    \Artisan::run('config:clear');
+    \Artisan::run('cache:clear');
+    \Artisan::run('view:clear');
+    \Artisan::run('route:clear');
+    \Artisan::run('config:cache');
+});
+?&amp;gt;
+</code></pre>
 
 <p>Just type the URL and it will clear all existing cache from the project.</p>
 
@@ -196,15 +223,15 @@
 
 <p>Weird, so I opened up <strong>MySQL Workbench</strong> and wrote a simple query to see if the dates were being returned because who knows maybe they weren't stored at all.</p>
 
-<div class="codehilite"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="kt">YEAR</span><span class="p">(</span><span class="n">date_posted</span><span class="p">)</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">posts</span><span class="p">;</span><span class="w"></span>
-</code></pre></div>
+<pre><code>SELECT YEAR(date_posted) FROM posts;
+</code></pre>
 
 <p>The values returned were <code>null</code>. Now, that's strange because the dates were present in the column. So, I took a deep look and figured out that the dates were stored in <code>VARCHAR</code> instead of <code>DATETIME</code> data type! &#x1F614;</p>
 
 <p>Luckily, I figured that there's a way to resolve this by <code>STR_TO_DATE()</code> function:</p>
 
-<div class="codehilite"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="kt">YEAR</span><span class="p">(</span><span class="nf">STR_TO_DATE</span><span class="p">(</span><span class="n">date_posted</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;%Y-%m-%d&#39;</span><span class="p">))</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">posts</span><span class="p">;</span><span class="w"></span>
-</code></pre></div>
+<pre><code>SELECT YEAR(STR_TO_DATE(date_posted, '%Y-%m-%d')) FROM posts;
+</code></pre>
 
 <p>Bam! The results were coming now! &#x1F60C;</p>
 
@@ -238,8 +265,8 @@ So, I installed the necessary dependencies and finally installed MySQL 8.0, crea
 
 <p>Next, I typed the project URL and ran into this error:</p>
 
-<div class="codehilite"><pre><span></span><code>Unable to load plugin &#39;caching_sha2_password&#39;
-</code></pre></div>
+<pre><code>Unable to load plugin 'caching_sha2_password'
+</code></pre>
 
 <p>If you're running PHP 7.2 and facing this error, you should know that PHP 7.2 doesn't support native password authentication by default. But it's a simple fix, all you have to do is either one of the following:</p>
 
@@ -250,18 +277,18 @@ So, I installed the necessary dependencies and finally installed MySQL 8.0, crea
 
 <h2><a id="opt1"></a> Alter the current user's authentication to native password</h2>
 
-<div class="codehilite"><pre><span></span><code><span class="k">ALTER</span><span class="w"> </span><span class="k">USER</span><span class="w"> </span><span class="s1">&#39;your_user&#39;</span><span class="nv">@&#39;your_server_host&#39;</span><span class="w"> </span><span class="k">IDENTIFIED</span><span class="w"> </span><span class="k">WITH</span><span class="w"> </span><span class="n">mysql_native_password</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="s1">&#39;your_password&#39;</span><span class="p">;</span><span class="w"></span>
-</code></pre></div>
+<pre><code>ALTER USER 'your_user'@'your_server_host' IDENTIFIED WITH mysql_native_password BY 'your_password';
+</code></pre>
 
 <h2><a id="opt2"></a> Create a new user with native password authentication</h2>
 
-<div class="codehilite"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">USER</span><span class="w"> </span><span class="s1">&#39;your_user&#39;</span><span class="nv">@&#39;your_server_host &#39;</span><span class="w"> </span><span class="k">IDENTIFIED</span><span class="w"> </span><span class="k">WITH</span><span class="w"> </span><span class="n">mysql_native_password</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="s1">&#39;your_password&#39;</span><span class="w"></span>
-</code></pre></div>
+<pre><code>CREATE USER 'your_user'@'your_server_host ' IDENTIFIED WITH mysql_native_password BY 'your_password'
+</code></pre>
 
 <p>For the changes to take effect, you need to reload the privileges by typing the following:</p>
 
-<div class="codehilite"><pre><span></span><code><span class="k">FLUSH</span><span class="w"> </span><span class="k">PRIVILEGES</span><span class="p">;</span><span class="w"></span>
-</code></pre></div>
+<pre><code>FLUSH PRIVILEGES;
+</code></pre>
 
 <p>Hope this helps you out!</p>
 
@@ -299,33 +326,33 @@ So, I installed the necessary dependencies and finally installed MySQL 8.0, crea
 
 <p>Execute the following commands to install the packages mentioned above:</p>
 
-<div class="codehilite"><pre><span></span><code>composer require --dev <span class="s2">&quot;kitloong/laravel-migrations-generator&quot;</span>
+<pre><code>composer require --dev "kitloong/laravel-migrations-generator"
 composer require orangehill/iseed
-</code></pre></div>
+</code></pre>
 
 <h2>Generate migrations using existing database</h2>
 
 <p>You can generate your migrations for all tables like this:</p>
 
-<div class="codehilite"><pre><span></span><code>php artisan migrate:generate
-</code></pre></div>
+<pre><code>php artisan migrate:generate
+</code></pre>
 
 <p>Or, you can specify the tables you wish to generate:</p>
 
-<div class="codehilite"><pre><span></span><code>php artisan migrate:generate table1,table2,table3
-</code></pre></div>
+<pre><code>php artisan migrate:generate table1,table2,table3
+</code></pre>
 
 <h2>Generate new seeds using existing database</h2>
 
 <p>You can generate seeds for a single table like this:</p>
 
-<div class="codehilite"><pre><span></span><code>php artisan iseed table_name
-</code></pre></div>
+<pre><code>php artisan iseed table_name
+</code></pre>
 
 <p>And for multiple tables, you can do this:</p>
 
-<div class="codehilite"><pre><span></span><code>php artisan iseed table1,table2,table3
-</code></pre></div>
+<pre><code>php artisan iseed table1,table2,table3
+</code></pre>
 
 <p>Hope you find this tip useful!.</p>
 
@@ -354,39 +381,37 @@ composer require orangehill/iseed
 	<div class="article-body">
 		<p>Do you work on a project with multiple Git branches but don't know which one you're in? Open your <code>.bashrc</code> file and add this:</p>
 
-<div class="codehilite"><pre><span></span><code><span class="nv">force_color_prompt</span><span class="o">=</span>yes
-<span class="nv">color_prompt</span><span class="o">=</span>yes
+<pre><code>force_color_prompt=yes
+color_prompt=yes
 
-parse_git_branch<span class="o">()</span> <span class="o">{</span>
- git branch <span class="m">2</span>&gt; /dev/null <span class="p">|</span> sed -e <span class="s1">&#39;/^[^*]/d&#39;</span> -e <span class="s1">&#39;s/* \(.*\)/(\1)/&#39;</span>
-<span class="o">}</span>
+parse_git_branch() {
+ git branch 2&amp;gt; /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/(\1)/'
+}
 
-<span class="k">if</span> <span class="o">[</span> <span class="s2">&quot;</span><span class="nv">$color_prompt</span><span class="s2">&quot;</span> <span class="o">=</span> yes <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
- <span class="nv">PS1</span><span class="o">=</span><span class="s1">&#39;${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[01;31m\]$(parse_git_branch)\[\033[00m\]\$ &#39;</span>
-<span class="k">else</span>
- <span class="nv">PS1</span><span class="o">=</span><span class="s1">&#39;${debian_chroot:+($debian_chroot)}\u@\h:\w$(parse_git_branch)\$ &#39;</span>
-<span class="k">fi</span>
+if [ "$color_prompt" = yes ]; then
+ PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[01;31m\]$(parse_git_branch)\[\033[00m\]\$ '
+else
+ PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w$(parse_git_branch)\$ '
+fi
 
-<span class="nb">unset</span> color_prompt force_color_prompt
-</code></pre></div>
-
+unset color_prompt force_color_prompt
+</code></pre>
 
 <div class="post-notification info">
     <h3>Updated: November 26th, 2022</h3>
     The above script works fine for Ubuntu but doesn't work fine on other distros. Here's an alternative one that works on all distros:
-<div class="codehilite"><pre><span></span><code>parse_git_branch<span class="o">()</span> <span class="o">{</span>
-    git branch <span class="m">2</span>&gt; /dev/null <span class="p">|</span> sed -e <span class="s1">&#39;/^[^*]/d&#39;</span> -e <span class="s1">&#39;s/* \(.*\)/(\1)/&#39;</span>
-<span class="o">}</span>
+<pre><code>parse_git_branch() {
+    git branch 2&gt; /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/(\1)/'
+}
 
-<span class="nb">export</span> <span class="nv">PS1</span><span class="o">=</span><span class="s2">&quot;\u@\h \[\e[32m\]\w \[\e[91m\]\$(parse_git_branch)\[\e[00m\]</span>$<span class="s2"> &quot;</span>
-</code></pre></div>
-
+export PS1="\u@\h \[\e[32m\]\w \[\e[91m\]\$(parse_git_branch)\[\e[00m\]$ "
+</code></pre>
 </div>
 
 <p>Save the file and execute this command for your changes to take effect:</p>
 
-<div class="codehilite"><pre><span></span><code><span class="nb">source</span> ~/.bashrc
-</code></pre></div>
+<pre><code>source ~/.bashrc
+</code></pre>
 
 <p>Now, you should see your colors in your Bash prompt along with the Git branch that you're working on (<strong>Note: this will be shown if you're in a project that uses a Git repository</strong>).</p>
 
@@ -400,221 +425,6 @@ parse_git_branch<span class="o">()</span> <span class="o">{</span>
 			<li>
 				<a href="/category/bash/">
 					Bash
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/make-your-own-generative-pixel-art-in-less-than-100-lines-of-code">Make your own generative pixel art in less than 100 lines of code</a></h1>
-		<p class="description">By modifying my old random pixel generator, I was able to generate a Space Invaders-esque pixel art.</p>
-	</div>
-	<div class="article-body">
-		<p><canvas id="myCanvas" width="500" height="302" style="border:0px solid #40514e;background-color: #e4f9f5;"></canvas></p>
-
-<script defer type="text/javascript" src="/static/projects/invaders-sprites/script.js"></script>
-
-<div class="post-notification success">
-    <h3>Try it out!</h3>
-    <p>Refresh the page to generate unique Space Invader-esque patterns as the results are unpredictable!</p>
-</div>
-
-<p>Generative art is a topic that still fascinates me because of the fact that you can produce something unique by just writing few (sometimes, more) lines of code. Especially, if it's self-generating art that makes use of fixed rules and a slight dash of randomness to produce unique results.</p>
-
-<p>When it comes to writing code, it's quite straightforward. You come up with the rules and constraints and voila, you have something that works. Having said that, setting up rules for generative art can get quite tricky.</p>
-
-<p>You might have read about my previous post about <a href="/writings/posts/the-game-of-life/">The Game of Life</a>, it contains only four rules and each of them took a part in evolving the system through each generation. With generative systems like that, you can never predict the results as complex patterns will emerge due to it's randomness.</p>
-
-<p>In my view, a combination of predictability and randomness is needed in order to create a good looking generative art.</p>
-
-<h2>Why you should explore it?</h2>
-
-<p>There could be many reasons, maybe you're bored, curious or passionate to learn something new. Who knows? Open up your editor and try it for yourself.</p>
-
-<p>Exploring the craft of making generative art has allowed me to:</p>
-
-<ul>
-<li>Gain different experiences &mdash; It allows you to sharpen your algorithms &amp; data structures and maybe even, learn a new technique.</li>
-<li>Create something visually appealing &mdash; A picture is equal to a thousand words.</li>
-<li>Instant results that makes you feel good &mdash; I mean, it's hard to explain but y'know what I mean, right?</li>
-</ul>
-
-<h2>Where to start?</h2>
-
-<p>Just like any other project, you just need:</p>
-
-<ul>
-<li>An inspiration or an idea that you can work on.</li>
-<li>The right kind of technology to use.</li>
-</ul>
-
-<p>With today's article, I'll be showing you how I built a Space Invader-esque pixel art generator in JavaScript that makes use of the Canvas API.</p>
-
-<h2>Building a generator</h2>
-
-<p>I'd like to give a shout out to the <a href="https://www.erdavids.com/">person</a> who built a twitterbot that generates random sprites using Python's Pillow image library.</p>
-
-<p>I was inspired and I thought of writing it in JavaScript and as you can see above, it did turn out pretty well.</p>
-
-<p>Here's the code for your reference and please read the comments to know how it functions:</p>
-
-<div class="codehilite"><pre><span></span><code><span class="c1">// To store any used colors</span>
-<span class="kd">var</span> <span class="nx">colorStack</span> <span class="o">=</span> <span class="p">[];</span>
-
-<span class="c1">// Selected color palette</span>
-<span class="kd">var</span> <span class="nx">colors</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="s1">&#39;#30e3ca&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;#ff5a5f&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;#40514e&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;#e4f9f5&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;#40514e&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;#e4f9f5&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;#e4f9f5&#39;</span><span class="p">,</span>
-<span class="p">];</span>
-
-<span class="kd">var</span> <span class="nx">canvas</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s2">&quot;myCanvas&quot;</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">ctx</span> <span class="o">=</span> <span class="nx">canvas</span><span class="p">.</span><span class="nx">getContext</span><span class="p">(</span><span class="s1">&#39;2d&#39;</span><span class="p">);</span>
-
-<span class="kd">var</span> <span class="nx">width</span> <span class="o">=</span> <span class="nx">canvas</span><span class="p">.</span><span class="nx">width</span><span class="p">;</span>
-<span class="kd">var</span> <span class="nx">height</span> <span class="o">=</span> <span class="nx">canvas</span><span class="p">.</span><span class="nx">height</span><span class="p">;</span>
-
-<span class="kd">function</span> <span class="nx">createSquare</span><span class="p">(</span><span class="nx">squareDimensions</span><span class="p">,</span> <span class="nx">color</span><span class="p">,</span> <span class="nx">element</span><span class="p">,</span> <span class="nx">spriteDim</span><span class="p">)</span> <span class="p">{</span>
-    <span class="kd">const</span> <span class="p">{</span><span class="nx">squareX</span><span class="p">,</span> <span class="nx">squareY</span><span class="p">,</span> <span class="nx">squareWidth</span><span class="p">,</span> <span class="nx">squareHeight</span><span class="p">}</span> <span class="o">=</span> <span class="nx">squareDimensions</span><span class="p">;</span>
-
-    <span class="c1">// If it&#39;s a middle element, apply a color</span>
-    <span class="k">if</span> <span class="p">(</span><span class="nx">element</span> <span class="o">==</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">spriteDim</span><span class="o">/</span><span class="mf">2</span><span class="p">))</span> <span class="p">{</span>
-        <span class="nx">ctx</span><span class="p">.</span><span class="nx">fillStyle</span> <span class="o">=</span> <span class="nx">color</span><span class="p">;</span>
-        <span class="nx">ctx</span><span class="p">.</span><span class="nx">fillRect</span><span class="p">(</span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">squareX</span><span class="p">),</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">squareY</span><span class="p">),</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">squareWidth</span><span class="o">/</span><span class="nx">squareX</span><span class="p">)</span><span class="o">+</span><span class="mf">3</span><span class="p">,</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">squareHeight</span><span class="o">/</span><span class="nx">squareY</span><span class="p">)</span><span class="o">+</span><span class="mf">3</span><span class="p">);</span>
-    <span class="p">}</span>
-    <span class="c1">// If it&#39;s the last element, then use the color that you saved previously</span>
-    <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">colorStack</span><span class="p">.</span><span class="nx">length</span> <span class="o">==</span> <span class="nx">element</span> <span class="o">+</span> <span class="mf">1</span><span class="p">)</span> <span class="p">{</span>
-        <span class="nx">ctx</span><span class="p">.</span><span class="nx">fillStyle</span> <span class="o">=</span> <span class="nx">colorStack</span><span class="p">.</span><span class="nx">pop</span><span class="p">();</span>
-        <span class="nx">ctx</span><span class="p">.</span><span class="nx">fillRect</span><span class="p">(</span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">squareX</span><span class="p">),</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">squareY</span><span class="p">),</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">squareWidth</span><span class="o">/</span><span class="nx">squareX</span><span class="p">)</span><span class="o">+</span><span class="mf">3</span><span class="p">,</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">squareHeight</span><span class="o">/</span><span class="nx">squareY</span><span class="p">)</span><span class="o">+</span><span class="mf">3</span><span class="p">);</span>  
-    <span class="p">}</span>
-    <span class="c1">// Else, apply a color and save this for the last element.</span>
-    <span class="k">else</span> <span class="p">{</span>
-        <span class="nx">colorStack</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">color</span><span class="p">);</span>
-        <span class="nx">ctx</span><span class="p">.</span><span class="nx">fillStyle</span> <span class="o">=</span> <span class="nx">color</span><span class="p">;</span>
-        <span class="nx">ctx</span><span class="p">.</span><span class="nx">fillRect</span><span class="p">(</span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">squareX</span><span class="p">),</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">squareY</span><span class="p">),</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">squareWidth</span><span class="o">/</span><span class="nx">squareX</span><span class="p">)</span><span class="o">+</span><span class="mf">3</span><span class="p">,</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">squareHeight</span><span class="o">/</span><span class="nx">squareY</span><span class="p">)</span><span class="o">+</span><span class="mf">3</span><span class="p">);</span>      
-    <span class="p">}</span>
-<span class="p">}</span>
-
-<span class="kd">function</span> <span class="nx">createInvader</span><span class="p">(</span><span class="nx">invaderDimensions</span><span class="p">,</span> <span class="nx">spriteDim</span><span class="p">)</span> <span class="p">{</span> 
-
-    <span class="kd">var</span> <span class="p">{</span><span class="nx">posX</span><span class="p">,</span> <span class="nx">posY</span><span class="p">,</span> <span class="nx">invaderWidth</span><span class="p">,</span> <span class="nx">invaderHeight</span><span class="p">}</span> <span class="o">=</span> <span class="nx">invaderDimensions</span><span class="p">;</span>
-    <span class="kd">var</span> <span class="nx">squareSize</span> <span class="o">=</span> <span class="p">(</span><span class="nx">invaderWidth</span> <span class="o">-</span> <span class="nx">posX</span><span class="p">)</span> <span class="o">/</span> <span class="nx">spriteDim</span><span class="p">;</span>
-
-    <span class="kd">var</span> <span class="nx">cellPosition</span> <span class="o">=</span> <span class="mf">1</span><span class="p">;</span>
-    <span class="kd">var</span> <span class="nx">element</span> <span class="o">=</span> <span class="mf">0</span><span class="p">;</span>
-
-    <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">y</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span> <span class="nx">y</span><span class="o">&lt;</span><span class="nx">spriteDim</span><span class="p">;</span> <span class="nx">y</span><span class="o">++</span><span class="p">){</span>
-        <span class="c1">// Starts from the left side of the grid.</span>
-        <span class="c1">// Think of it as something like this:</span>
-        <span class="c1">// [-3,-2,-1,0,1,2,3]</span>
-        <span class="nx">cellPosition</span> <span class="o">*=</span> <span class="o">-</span><span class="mf">1</span><span class="p">;</span>
-
-        <span class="c1">// First element</span>
-        <span class="nx">element</span> <span class="o">=</span> <span class="mf">0</span><span class="p">;</span>
-
-        <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">x</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span> <span class="nx">x</span><span class="o">&lt;</span><span class="nx">spriteDim</span><span class="p">;</span> <span class="nx">x</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-            <span class="nx">squareX</span> <span class="o">=</span> <span class="nx">x</span> <span class="o">*</span> <span class="nx">squareSize</span> <span class="o">+</span> <span class="nx">posX</span><span class="p">;</span>
-            <span class="nx">squareY</span> <span class="o">=</span> <span class="nx">y</span> <span class="o">*</span> <span class="nx">squareSize</span> <span class="o">+</span> <span class="nx">posY</span><span class="p">;</span>
-            <span class="nx">squareWidth</span> <span class="o">=</span> <span class="nx">squareX</span> <span class="o">+</span> <span class="nx">squareSize</span><span class="p">;</span>
-            <span class="nx">squareHeight</span> <span class="o">=</span> <span class="nx">squareY</span> <span class="o">+</span> <span class="nx">squareSize</span><span class="p">;</span>
-
-            <span class="c1">// Pick a random color from the color palette</span>
-            <span class="kd">var</span> <span class="nx">color</span> <span class="o">=</span> <span class="nx">colors</span><span class="p">[</span><span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="nx">colors</span><span class="p">.</span><span class="nx">length</span><span class="p">)];</span>
-
-            <span class="kd">var</span> <span class="nx">squareDimensions</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="s1">&#39;squareX&#39;</span><span class="o">:</span> <span class="nx">squareX</span><span class="o">+</span><span class="mf">2</span><span class="p">,</span>
-                <span class="s1">&#39;squareY&#39;</span><span class="o">:</span><span class="nx">squareY</span><span class="o">+</span><span class="mf">2</span><span class="p">,</span>
-                <span class="s1">&#39;squareWidth&#39;</span><span class="o">:</span><span class="nx">squareWidth</span><span class="p">,</span>
-                <span class="s1">&#39;squareHeight&#39;</span><span class="o">:</span><span class="nx">squareHeight</span><span class="p">,</span>
-            <span class="p">};</span>
-
-            <span class="c1">// Create a square with a color and desired dimensions.</span>
-            <span class="nx">createSquare</span><span class="p">(</span><span class="nx">squareDimensions</span><span class="p">,</span> <span class="nx">color</span><span class="p">,</span> <span class="nx">element</span><span class="p">,</span> <span class="nx">spriteDim</span><span class="p">);</span>
-
-             <span class="c1">// If it&#39;s the middle element or the starting element, </span>
-             <span class="c1">// then shift it&#39;s position to the leftmost.</span>
-            <span class="k">if</span><span class="p">(</span><span class="nx">element</span> <span class="o">==</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">spriteDim</span><span class="o">/</span><span class="mf">2</span><span class="p">)</span> <span class="o">||</span> <span class="nx">element</span> <span class="o">==</span> <span class="mf">0</span><span class="p">)</span> <span class="p">{</span>
-                <span class="nx">cellPosition</span> <span class="o">*=</span> <span class="o">-</span><span class="mf">1</span><span class="p">;</span>
-            <span class="p">}</span>
-
-            <span class="nx">element</span> <span class="o">+=</span> <span class="nx">cellPosition</span><span class="p">;</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-
-<span class="kd">function</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">spriteDim</span> <span class="o">=</span> <span class="mf">7</span><span class="p">;</span>
-    <span class="kd">var</span> <span class="nx">numberOfInvaders</span> <span class="o">=</span> <span class="mf">15</span><span class="p">;</span>
-    <span class="kd">var</span> <span class="nx">invadersSize</span> <span class="o">=</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">width</span> <span class="o">/</span> <span class="nx">numberOfInvaders</span><span class="p">);</span>
-    <span class="kd">var</span> <span class="nx">padding</span> <span class="o">=</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">invadersSize</span> <span class="o">/</span> <span class="nx">spriteDim</span><span class="p">);</span>
-
-    <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">x</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span> <span class="nx">x</span><span class="o">&lt;</span><span class="nx">numberOfInvaders</span><span class="p">;</span> <span class="nx">x</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-        <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">y</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span> <span class="nx">y</span><span class="o">&lt;</span><span class="nx">numberOfInvaders</span><span class="p">;</span> <span class="nx">y</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-            <span class="kd">var</span> <span class="nx">posX</span> <span class="o">=</span> <span class="p">(</span><span class="nx">x</span> <span class="o">*</span> <span class="nx">invadersSize</span><span class="p">)</span> <span class="o">+</span> <span class="nx">padding</span> <span class="o">+</span> <span class="mf">2</span><span class="p">;</span>
-            <span class="kd">var</span> <span class="nx">posY</span> <span class="o">=</span> <span class="p">(</span><span class="nx">y</span> <span class="o">*</span> <span class="nx">invadersSize</span><span class="p">)</span> <span class="o">+</span> <span class="nx">padding</span> <span class="o">+</span> <span class="mf">2</span><span class="p">;</span>
-            <span class="kd">var</span> <span class="nx">invaderWidth</span> <span class="o">=</span> <span class="nx">posX</span> <span class="o">+</span> <span class="nx">invadersSize</span> <span class="o">-</span> <span class="p">(</span><span class="nx">padding</span> <span class="o">*</span> <span class="mf">3</span><span class="p">);</span>
-            <span class="kd">var</span> <span class="nx">invaderHeight</span> <span class="o">=</span> <span class="nx">posY</span> <span class="o">+</span> <span class="nx">invadersSize</span> <span class="o">-</span> <span class="p">(</span><span class="nx">padding</span> <span class="o">*</span> <span class="mf">3</span><span class="p">);</span>
-
-            <span class="kd">var</span> <span class="nx">invaderDimensions</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="s1">&#39;posX&#39;</span><span class="o">:</span> <span class="nx">posX</span><span class="p">,</span>
-                <span class="s1">&#39;posY&#39;</span><span class="o">:</span> <span class="nx">posY</span><span class="p">,</span>
-                <span class="s1">&#39;invaderWidth&#39;</span><span class="o">:</span> <span class="nx">invaderWidth</span><span class="p">,</span>
-                <span class="s1">&#39;invaderHeight&#39;</span><span class="o">:</span> <span class="nx">invaderHeight</span>
-            <span class="p">};</span>
-
-            <span class="nx">createInvader</span><span class="p">(</span><span class="nx">invaderDimensions</span><span class="p">,</span> <span class="nx">spriteDim</span><span class="p">);</span>
-        <span class="p">}</span>
-    <span class="p">}</span>   
-<span class="p">}</span>
-
-<span class="nx">main</span><span class="p">();</span>
-</code></pre></div>
-
-<p>Well, I won't say that is a perfect solution but hey, it works and yes, it doesn't take a lot of code to achieve something like this.</p>
-
-<h2>Explanation</h2>
-
-<p>I'll try my best to explain how this whole thing works.</p>
-
-<p>First, you need to initialize a <code>&lt;canvas&gt;</code> DOM element of the desired width and height. Then in the <code>main()</code> function, you determine the size of each invader by specifying the number of invaders and dividing it with the width of the canvas. These values will then be used to determine the coordinates for each invader.</p>
-
-<p>Second, the function <code>createInvader()</code> follows nearly the same process as the <code>main</code> function except that the coordinates for each pixel is determined by calculating the width of the invader and subtracting it's <code>x</code> position divided by the dimensions of each invader.</p>
-
-<p>Third, as you can see in the function <code>createSquare()</code>, it contains 3 simple rules in which all of them draws a square with a color but with an emphasis that each invader has a symmetrical pattern.</p>
-
-<p>The code looks deceptively simple but achieving this complexity did take a lot of trial and error and a little bit of simple calculus &#x1F602;.</p>
-
-<h2>Conclusion</h2>
-
-<p>Generative art might be something that you may not need to explore but it's quite fun and you may never know what you might be able to produce by combining both code and visuals.</p>
-
-<p>Hope you liked reading this article.</p>
-
-<p>Stay tuned for more! &#x1F918;</p>
-
-	</div>
-	<div class="article-footer">
-		<time>March 5th, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/generative-art/">
-					Generative Art
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/javascript/">
-					JavaScript
 				</a>
 			</li>
 			
@@ -953,6 +763,13 @@ parse_git_branch<span class="o">()</span> <span class="o">{</span>
 		</li>
 		
 		<li>
+			<a href="/category/travel/">
+				Travel
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/tech/">
 				Tech
 				<span class="count">1</span>
@@ -1141,7 +958,12 @@ parse_git_branch<span class="o">()</span> <span class="o">{</span>
 
   gtag('config', 'UA-98290003-2');
 </script>
-
+<script src="/static/vendor/jquery-lazy/jquery.lazy.min.js"></script>
+<script>
+  $(function () {
+    $('.lazy').lazy();
+  });
+</script>
 <!-- <script>
     const darkModeButton = document.createElement('button');
     const syntaxHighlightSource = document.getElementById('syntaxHighlight');
