@@ -99,57 +99,73 @@
 
 <h2>Extract the Encrypted Private Key</h2>
 
-<pre><code>openssl pkcs12 -in &lt;filename.pfx&gt; -nocerts -out encrypted.key
+<div class="codehilite">
+<pre><span></span><code>openssl<span class="w"> </span>pkcs12<span class="w"> </span>-in<span class="w"> </span>&lt;filename.pfx&gt;<span class="w"> </span>-nocerts<span class="w"> </span>-out<span class="w"> </span>encrypted.key
 </code></pre>
+</div>
 
 <h2>Extract RSA Private Key</h2>
 
-<pre><code>openssl rsa -in encrypted.key -out private.key
+<div class="codehilite">
+<pre><span></span><code>openssl<span class="w"> </span>rsa<span class="w"> </span>-in<span class="w"> </span>encrypted.key<span class="w"> </span>-out<span class="w"> </span>private.key
 </code></pre>
+</div>
 
 <h2>Extract Certificate</h2>
 
-<pre><code>openssl pkcs12 -in &lt;filename.pfx&gt; -clcerts -nokeys -out certificate.crt
+<div class="codehilite">
+<pre><span></span><code>openssl<span class="w"> </span>pkcs12<span class="w"> </span>-in<span class="w"> </span>&lt;filename.pfx&gt;<span class="w"> </span>-clcerts<span class="w"> </span>-nokeys<span class="w"> </span>-out<span class="w"> </span>certificate.crt
 </code></pre>
+</div>
 
 <h2>Extract Combined Chain Certificate (Optional)</h2>
 
-<pre><code>openssl pkcs12 -in &lt;filename.pfx&gt; -cacerts -nokeys -chain | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' &gt; combined_chain_certificate.crt
+<div class="codehilite">
+<pre><span></span><code>openssl<span class="w"> </span>pkcs12<span class="w"> </span>-in<span class="w"> </span>&lt;filename.pfx&gt;<span class="w"> </span>-cacerts<span class="w"> </span>-nokeys<span class="w"> </span>-chain<span class="w"> </span><span class="p">|</span><span class="w"> </span>sed<span class="w"> </span>-ne<span class="w"> </span><span class="s1">&#39;/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p&#39;</span><span class="w"> </span>&gt;<span class="w"> </span>combined_chain_certificate.crt
 </code></pre>
+</div>
 
 <p>Once you are done extracting all the required files, you can add the certificates like this:</p>
 
 <h3>Apache configuration:</h3>
 
-<pre><code>SSLCertificateFile /path/to/certificate.crt
-SSLCertificateKeyFile /path/to/private.key
+<div class="codehilite">
+<pre><span></span><code>SSLCertificateFile<span class="w"> </span>/path/to/certificate.crt
+SSLCertificateKeyFile<span class="w"> </span>/path/to/private.key
 
-# Optional, if you have it, else skip.
-SSLCertificateChainFile /path/to/combined_chain_certificate.crt
+<span class="c1"># Optional, if you have it, else skip.</span>
+SSLCertificateChainFile<span class="w"> </span>/path/to/combined_chain_certificate.crt
 </code></pre>
+</div>
 
 <p>Test if it works:</p>
 
-<pre><code>apachectl configtest
-systemctl restart httpd
+<div class="codehilite">
+<pre><span></span><code>apachectl<span class="w"> </span>configtest
+systemctl<span class="w"> </span>restart<span class="w"> </span>httpd
 </code></pre>
+</div>
 
 <h3>Nginx configuration:</h3>
 
-<pre><code># If you don't have a combined chain certificate:
-ssl_certificate /path/to/certificate.crt;
-ssl_certificate_key /path/to/private.key;
+<div class="codehilite">
+<pre><span></span><code><span class="c1"># If you don&#39;t have a combined chain certificate:</span>
+ssl_certificate<span class="w"> </span>/path/to/certificate.crt<span class="p">;</span>
+ssl_certificate_key<span class="w"> </span>/path/to/private.key<span class="p">;</span>
 
-# If you have a combined chain certificate:
-ssl_certificate /path/to/combined_chain_certificate.crt
-ssl_certificate_key /path/to/private.key;
+<span class="c1"># If you have a combined chain certificate:</span>
+ssl_certificate<span class="w"> </span>/path/to/combined_chain_certificate.crt
+ssl_certificate_key<span class="w"> </span>/path/to/private.key<span class="p">;</span>
 </code></pre>
+</div>
 
 <p>Test if it works:</p>
 
-<pre><code>nginx -t
-systemctl restart nginx
+<div class="codehilite">
+<pre><span></span><code>nginx<span class="w"> </span>-t
+systemctl<span class="w"> </span>restart<span class="w"> </span>nginx
 </code></pre>
+</div>
 
 <p>Hope you found this tip useful.</p>
 

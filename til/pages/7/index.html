@@ -77,16 +77,94 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-resolve-the-filegetcontents-ssl-operation-failed-error">How to resolve the "file_get_contents(): SSL operation failed" error</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>If you're facing this error while trying to download a file from your server, it's most probably the SSL certificate that has been hosted on your server isn't correctly verified or maybe, you're using OpenSSL on a server running PHP 5.6.</p>
+
+<p>As per the <a href="http://php.net/manual/en/migration56.openssl.php">documentation</a>, there are some changes that can be made to resolve it, like the following method:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="k">public</span> <span class="k">function</span> <span class="nf">foo</span><span class="p">(</span><span class="nx">Request</span> <span class="nv">$request</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nv">$arrContextOptions</span> <span class="o">=</span> <span class="k">array</span><span class="p">(</span>
+        <span class="s2">&quot;ssl&quot;</span> <span class="o">=&gt;</span> <span class="k">array</span><span class="p">(</span>
+            <span class="s2">&quot;verify_peer&quot;</span> <span class="o">=&gt;</span> <span class="k">false</span><span class="p">,</span>
+            <span class="s2">&quot;verify_peer_name&quot;</span> <span class="o">=&gt;</span> <span class="k">false</span><span class="p">,</span>
+        <span class="p">),</span>
+    <span class="p">);</span>
+    <span class="k">return</span> <span class="nx">Response</span><span class="o">::</span><span class="na">make</span><span class="p">(</span><span class="nb">file_get_contents</span><span class="p">(</span><span class="nx">asset</span><span class="p">(</span><span class="s1">&#39;pdf/file.pdf&#39;</span><span class="p">),</span> <span class="k">false</span><span class="p">,</span> <span class="nb">stream_context_create</span><span class="p">(</span><span class="nv">$arrContextOptions</span><span class="p">)),</span> <span class="mi">200</span><span class="p">,</span> <span class="p">[</span>
+        <span class="s1">&#39;Content-Type&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;application/pdf&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;Content-Disposition&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;inline; filename=&quot;file.pdf&quot;&#39;</span><span class="p">,</span>
+    <span class="p">]);</span>
+<span class="p">}</span>
+<span class="cp">?&gt;</span>
+</code></pre>
+</div>
+
+<p>Although, I won't recommend this unless you are testing it on a <code>localhost</code> environment as it's not secure and could have significant security implications because disabling verification can permit a <a href="https://en.wikipedia.org/wiki/Man-in-the-middle_attack">Man in the Middle attack</a> to take place.</p>
+
+<p>Use it at your own risk!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>March 12th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/php/">
+					PHP
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-resolve-the-failed-to-clear-cache-make-sure-you-have-the-appropriate-permissions-error">How to resolve the "Failed to clear cache. Make sure you have the appropriate permissions." error</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>This error is annoying and mostly happens if the <code>data</code> directory is missing under the <code>storage/framework/cache/data</code> directory. For some reason, this folder doesn't exist by default.</p>
+
+<p>To resolve it, just manually create the <code>data</code> directory under the <code>storage/framework/cache/data</code> directory and it should fix the issue.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>March 12th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/laravel/">
+					Laravel
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/how-to-exclude-certain-slugs-in-laravel">How to exclude certain slugs in Laravel</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
 		<p>Using plain Regular Expressions, you can exclude certain slug from your routes, try adding the following to your <code>routes/web.php</code> file:</p>
 
-<pre><code>&lt;?php
-    Route::match(array('GET', 'POST'), '/{slug}', 'YourController@index')-&gt;name('page')-&gt;where('slug', '^(?!pattern).*$');
-?&gt;
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+    <span class="nx">Route</span><span class="o">::</span><span class="na">match</span><span class="p">(</span><span class="k">array</span><span class="p">(</span><span class="s1">&#39;GET&#39;</span><span class="p">,</span> <span class="s1">&#39;POST&#39;</span><span class="p">),</span> <span class="s1">&#39;/{slug}&#39;</span><span class="p">,</span> <span class="s1">&#39;YourController@index&#39;</span><span class="p">)</span><span class="o">-&gt;</span><span class="na">name</span><span class="p">(</span><span class="s1">&#39;page&#39;</span><span class="p">)</span><span class="o">-&gt;</span><span class="na">where</span><span class="p">(</span><span class="s1">&#39;slug&#39;</span><span class="p">,</span> <span class="s1">&#39;^(?!pattern).*$&#39;</span><span class="p">);</span>
+<span class="cp">?&gt;</span>
 </code></pre>
+</div>
 
 <p>Hope you found this useful!</p>
 
@@ -117,12 +195,14 @@
 
 <p>Here's a sample on how you can convert to date using timestamp using Carbon:</p>
 
-<pre><code>&lt;?php
-    function formatDate(Request $request) {
-        return \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $request-&gt;date)-&gt;format('Y-m-d');
-    }
-?&gt;
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+    <span class="k">function</span> <span class="nf">formatDate</span><span class="p">(</span><span class="nx">Request</span> <span class="nv">$request</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">\Carbon\Carbon</span><span class="o">::</span><span class="na">createFromFormat</span><span class="p">(</span><span class="s1">&#39;Y-m-d H:i:s&#39;</span><span class="p">,</span> <span class="nv">$request</span><span class="o">-&gt;</span><span class="na">date</span><span class="p">)</span><span class="o">-&gt;</span><span class="na">format</span><span class="p">(</span><span class="s1">&#39;Y-m-d&#39;</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="cp">?&gt;</span>
 </code></pre>
+</div>
 
 <p>Hope you found this useful!</p>
 
@@ -153,16 +233,18 @@
 
 <p>Open up <code>routes/web.php</code> and create this route:</p>
 
-<pre><code>&amp;lt;?php
-Route::get('/clearcache', function(){
-    \Artisan::run('config:clear');
-    \Artisan::run('cache:clear');
-    \Artisan::run('view:clear');
-    \Artisan::run('route:clear');
-    \Artisan::run('config:cache');
-});
-?&amp;gt;
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="nx">Route</span><span class="o">::</span><span class="na">get</span><span class="p">(</span><span class="s1">&#39;/clearcache&#39;</span><span class="p">,</span> <span class="k">function</span><span class="p">(){</span>
+    <span class="nx">\Artisan</span><span class="o">::</span><span class="na">run</span><span class="p">(</span><span class="s1">&#39;config:clear&#39;</span><span class="p">);</span>
+    <span class="nx">\Artisan</span><span class="o">::</span><span class="na">run</span><span class="p">(</span><span class="s1">&#39;cache:clear&#39;</span><span class="p">);</span>
+    <span class="nx">\Artisan</span><span class="o">::</span><span class="na">run</span><span class="p">(</span><span class="s1">&#39;view:clear&#39;</span><span class="p">);</span>
+    <span class="nx">\Artisan</span><span class="o">::</span><span class="na">run</span><span class="p">(</span><span class="s1">&#39;route:clear&#39;</span><span class="p">);</span>
+    <span class="nx">\Artisan</span><span class="o">::</span><span class="na">run</span><span class="p">(</span><span class="s1">&#39;config:cache&#39;</span><span class="p">);</span>
+<span class="p">});</span>
+<span class="cp">?&gt;</span>
 </code></pre>
+</div>
 
 <p>Just type the URL and it will clear all existing cache from the project.</p>
 
@@ -195,15 +277,19 @@ Route::get('/clearcache', function(){
 
 <p>Weird, so I opened up <strong>MySQL Workbench</strong> and wrote a simple query to see if the dates were being returned because who knows maybe they weren't stored at all.</p>
 
-<pre><code>SELECT YEAR(date_posted) FROM posts;
+<div class="codehilite">
+<pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="kt">YEAR</span><span class="p">(</span><span class="n">date_posted</span><span class="p">)</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">posts</span><span class="p">;</span>
 </code></pre>
+</div>
 
 <p>The values returned were <code>null</code>. Now, that's strange because the dates were present in the column. So, I took a deep look and figured out that the dates were stored in <code>VARCHAR</code> instead of <code>DATETIME</code> data type! &#x1F614;</p>
 
 <p>Luckily, I figured that there's a way to resolve this by <code>STR_TO_DATE()</code> function:</p>
 
-<pre><code>SELECT YEAR(STR_TO_DATE(date_posted, '%Y-%m-%d')) FROM posts;
+<div class="codehilite">
+<pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="kt">YEAR</span><span class="p">(</span><span class="nf">STR_TO_DATE</span><span class="p">(</span><span class="n">date_posted</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;%Y-%m-%d&#39;</span><span class="p">))</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">posts</span><span class="p">;</span>
 </code></pre>
+</div>
 
 <p>Bam! The results were coming now! &#x1F60C;</p>
 
@@ -237,8 +323,10 @@ So, I installed the necessary dependencies and finally installed MySQL 8.0, crea
 
 <p>Next, I typed the project URL and ran into this error:</p>
 
-<pre><code>Unable to load plugin 'caching_sha2_password'
+<div class="codehilite">
+<pre><span></span><code>Unable to load plugin &#39;caching_sha2_password&#39;
 </code></pre>
+</div>
 
 <p>If you're running PHP 7.2 and facing this error, you should know that PHP 7.2 doesn't support native password authentication by default. But it's a simple fix, all you have to do is either one of the following:</p>
 
@@ -249,18 +337,24 @@ So, I installed the necessary dependencies and finally installed MySQL 8.0, crea
 
 <h2><a id="opt1"></a> Alter the current user's authentication to native password</h2>
 
-<pre><code>ALTER USER 'your_user'@'your_server_host' IDENTIFIED WITH mysql_native_password BY 'your_password';
+<div class="codehilite">
+<pre><span></span><code><span class="k">ALTER</span><span class="w"> </span><span class="k">USER</span><span class="w"> </span><span class="s1">&#39;your_user&#39;</span><span class="nv">@&#39;your_server_host&#39;</span><span class="w"> </span><span class="k">IDENTIFIED</span><span class="w"> </span><span class="k">WITH</span><span class="w"> </span><span class="n">mysql_native_password</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="s1">&#39;your_password&#39;</span><span class="p">;</span>
 </code></pre>
+</div>
 
 <h2><a id="opt2"></a> Create a new user with native password authentication</h2>
 
-<pre><code>CREATE USER 'your_user'@'your_server_host ' IDENTIFIED WITH mysql_native_password BY 'your_password'
+<div class="codehilite">
+<pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">USER</span><span class="w"> </span><span class="s1">&#39;your_user&#39;</span><span class="nv">@&#39;your_server_host &#39;</span><span class="w"> </span><span class="k">IDENTIFIED</span><span class="w"> </span><span class="k">WITH</span><span class="w"> </span><span class="n">mysql_native_password</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="s1">&#39;your_password&#39;</span>
 </code></pre>
+</div>
 
 <p>For the changes to take effect, you need to reload the privileges by typing the following:</p>
 
-<pre><code>FLUSH PRIVILEGES;
+<div class="codehilite">
+<pre><span></span><code><span class="k">FLUSH</span><span class="w"> </span><span class="k">PRIVILEGES</span><span class="p">;</span>
 </code></pre>
+</div>
 
 <p>Hope this helps you out!</p>
 
@@ -298,33 +392,43 @@ So, I installed the necessary dependencies and finally installed MySQL 8.0, crea
 
 <p>Execute the following commands to install the packages mentioned above:</p>
 
-<pre><code>composer require --dev "kitloong/laravel-migrations-generator"
-composer require orangehill/iseed
+<div class="codehilite">
+<pre><span></span><code>composer<span class="w"> </span>require<span class="w"> </span>--dev<span class="w"> </span><span class="s2">&quot;kitloong/laravel-migrations-generator&quot;</span>
+composer<span class="w"> </span>require<span class="w"> </span>orangehill/iseed
 </code></pre>
+</div>
 
 <h2>Generate migrations using existing database</h2>
 
 <p>You can generate your migrations for all tables like this:</p>
 
-<pre><code>php artisan migrate:generate
+<div class="codehilite">
+<pre><span></span><code>php<span class="w"> </span>artisan<span class="w"> </span>migrate:generate
 </code></pre>
+</div>
 
 <p>Or, you can specify the tables you wish to generate:</p>
 
-<pre><code>php artisan migrate:generate table1,table2,table3
+<div class="codehilite">
+<pre><span></span><code>php<span class="w"> </span>artisan<span class="w"> </span>migrate:generate<span class="w"> </span>table1,table2,table3
 </code></pre>
+</div>
 
 <h2>Generate new seeds using existing database</h2>
 
 <p>You can generate seeds for a single table like this:</p>
 
-<pre><code>php artisan iseed table_name
+<div class="codehilite">
+<pre><span></span><code>php<span class="w"> </span>artisan<span class="w"> </span>iseed<span class="w"> </span>table_name
 </code></pre>
+</div>
 
 <p>And for multiple tables, you can do this:</p>
 
-<pre><code>php artisan iseed table1,table2,table3
+<div class="codehilite">
+<pre><span></span><code>php<span class="w"> </span>artisan<span class="w"> </span>iseed<span class="w"> </span>table1,table2,table3
 </code></pre>
+</div>
 
 <p>Hope you find this tip useful!.</p>
 
@@ -336,99 +440,6 @@ composer require orangehill/iseed
 			<li>
 				<a href="/category/laravel/">
 					Laravel
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/show-git-branch-in-your-bash-prompt-with-colors">Show Git branch in your Bash prompt (with colors)</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Do you work on a project with multiple Git branches but don't know which one you're in? Open your <code>.bashrc</code> file and add this:</p>
-
-<pre><code>force_color_prompt=yes
-color_prompt=yes
-
-parse_git_branch() {
- git branch 2&amp;gt; /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/(\1)/'
-}
-
-if [ "$color_prompt" = yes ]; then
- PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[01;31m\]$(parse_git_branch)\[\033[00m\]\$ '
-else
- PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w$(parse_git_branch)\$ '
-fi
-
-unset color_prompt force_color_prompt
-</code></pre>
-
-<div class="post-notification info">
-    <h3>Updated: November 26th, 2022</h3>
-    The above script works fine for Ubuntu but doesn't work fine on other distros. Here's an alternative one that works on all distros:
-<pre><code>parse_git_branch() {
-    git branch 2&gt; /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/(\1)/'
-}
-
-export PS1="\u@\h \[\e[32m\]\w \[\e[91m\]\$(parse_git_branch)\[\e[00m\]$ "
-</code></pre>
-</div>
-
-<p>Save the file and execute this command for your changes to take effect:</p>
-
-<pre><code>source ~/.bashrc
-</code></pre>
-
-<p>Now, you should see your colors in your Bash prompt along with the Git branch that you're working on (<strong>Note: this will be shown if you're in a project that uses a Git repository</strong>).</p>
-
-<p>Hope this helps you out!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>March 12th, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/bash/">
-					Bash
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/resolve-the-general-error-1835-malformed-communication-packet-error">Resolve the "General error: 1835 Malformed communication packet" error</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>This happened like two days ago, when one of the client sites went down. Upon inspecting the error logs, I found this:</p>
-
-<pre><code>SQLSTATE[HY000]: General error: 1835 Malformed communication packet
-</code></pre>
-
-<p>If you got the same error as the one above, don't worry, it's not your fault. According to this <a href="https://jira.mariadb.org/browse/MDEV-24121">forum</a>, <strong>a recent MariaDB update introduced a new bug for PHP versions &lt; 7.3</strong> that uses PDO and MySQL connectors. You can easily resolve this by simply upgrading it to PHP 7.3.</p>
-
-<p>Hope this tip helps you out!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>November 7th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/php/">
-					PHP
 				</a>
 			</li>
 			
@@ -507,7 +518,7 @@ export PS1="\u@\h \[\e[32m\]\w \[\e[91m\]\$(parse_git_branch)\[\e[00m\]$ "
 		<li>
 			<a href="/category/linux/">
 				Linux
-				<span class="count">19</span>
+				<span class="count">21</span>
 			</a>
 		</li>
 		
@@ -589,6 +600,13 @@ export PS1="\u@\h \[\e[32m\]\w \[\e[91m\]\$(parse_git_branch)\[\e[00m\]$ "
 		</li>
 		
 		<li>
+			<a href="/category/productivity/">
+				Productivity
+				<span class="count">7</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/tutorial/">
 				Tutorial
 				<span class="count">6</span>
@@ -613,13 +631,6 @@ export PS1="\u@\h \[\e[32m\]\w \[\e[91m\]\$(parse_git_branch)\[\e[00m\]$ "
 			<a href="/category/essay/">
 				Essay
 				<span class="count">6</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/productivity/">
-				Productivity
-				<span class="count">5</span>
 			</a>
 		</li>
 		

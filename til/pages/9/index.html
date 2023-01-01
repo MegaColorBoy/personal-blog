@@ -77,6 +77,135 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/find-your-public-ip-address-using-the-terminal">Find your Public IP address using the Terminal</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Previously, I used to determine my Public IP address on Google Search by typing <strong><em>"What is my IP?"</em></strong> and I was good with it.</p>
+
+<p>Until, I thought of actually viewing it via the terminal itself. So, I wrote two lines of code in my <code>~/.bashrc</code> file:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">myip</span><span class="o">=</span><span class="s2">&quot;</span><span class="k">$(</span>dig<span class="w"> </span>+short<span class="w"> </span>myip.opendns.com<span class="w"> </span>@resolver1.opendns.com<span class="k">)</span><span class="s2">&quot;</span>
+<span class="nb">alias</span><span class="w"> </span><span class="nv">myip</span><span class="o">=</span><span class="s2">&quot;echo </span><span class="nv">$myip</span><span class="s2">&quot;</span>
+</code></pre>
+</div>
+
+<p>Alternatively, you could try this too:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">myip</span><span class="o">=</span><span class="s2">&quot;</span><span class="k">$(</span>dig<span class="w"> </span>TXT<span class="w"> </span>+short<span class="w"> </span>o-o.myaddr.l.google.com<span class="w"> </span>@ns1.google.com<span class="k">)</span><span class="s2">&quot;</span>
+</code></pre>
+</div>
+
+<p>Save the file and apply your new configuration by typing the following command:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nb">source</span><span class="w"> </span>~/.bashrc
+</code></pre>
+</div>
+
+<p>That's it, now all you have to do is type <code>myip</code> in your terminal and it will display your Public IP address.</p>
+
+<p>Hope you found this useful! &#x1F600;</p>
+
+	</div>
+	<div class="article-footer">
+		<time>November 3rd, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/fix-screen-tearing-in-xfce-desktop-environment">Fix screen tearing in XFCE desktop environment</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Yesterday, I decided to try XFCE desktop environment and boy, it's really faster than the GNOME desktop environment.</p>
+
+<p>As soon as I started to play around with it, I noticed a good amount of <a href="https://en.wikipedia.org/wiki/Screen_tearing">screen tearing</a> and to my surprise, I came to know that the XFCE environment is known to have such issues.</p>
+
+<p>After a few minutes of research, I was able to fix it. Here are the steps:</p>
+
+<p><strong>Note: This is done on Ubuntu 18.04 Bionic Beaver</strong></p>
+
+<p>If you dont have the package <code>inxi</code> installed in your system, do it right now:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>inxi
+</code></pre>
+</div>
+
+<p>After you're done installing, type the following command to find out which graphics you're using:</p>
+
+<div class="codehilite">
+<pre><span></span><code>inxi<span class="w"> </span>-G
+</code></pre>
+</div>
+
+<p>If you're using an Intel Graphics Driver, you'll probably get something like this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>Graphics:<span class="w">  </span>Card:<span class="w"> </span>Intel<span class="w"> </span>Device<span class="w"> </span><span class="m">5926</span>
+<span class="w">           </span>Display<span class="w"> </span>Server:<span class="w"> </span>x11<span class="w"> </span><span class="o">(</span>X.Org<span class="w"> </span><span class="m">1</span>.19.6<span class="w"> </span><span class="o">)</span><span class="w"> </span>driver:<span class="w"> </span>i915<span class="w"> </span>Resolution:<span class="w"> </span>1920x1080@60.00hz
+<span class="w">           </span>OpenGL:<span class="w"> </span>renderer:<span class="w"> </span>Mesa<span class="w"> </span>DRI<span class="w"> </span>Intel<span class="w"> </span>Iris<span class="w"> </span>Plus<span class="w"> </span>Graphics<span class="w"> </span><span class="m">640</span><span class="w"> </span><span class="o">(</span>Kaby<span class="w"> </span>Lake<span class="w"> </span>GT3e<span class="o">)</span><span class="w"> </span><span class="o">(</span>KBL<span class="w"> </span>GT3<span class="o">)</span>
+<span class="w">           </span>version:<span class="w"> </span><span class="m">4</span>.6<span class="w"> </span>Mesa<span class="w"> </span><span class="m">20</span>.0.8
+</code></pre>
+</div>
+
+<p>You can try go to <strong>Settings Manager->Window Manager Tweaks->Compositor" and enable **Synchronize drawing to the vertical blank</strong>. From <a href="https://techstop.github.io/fix-screen-tearing-xfce/">what I've read</a>, if you do that, it should stop but it didn't do anything for me.</p>
+
+<p>If the above technique didn't work, go to <code>/usr/shar/X11/xorg.conf.d/</code> and create a file for your graphics card named <code>10-intel.conf</code>.</p>
+
+<p>Copy-paste the following configuration into the file:</p>
+
+<div class="codehilite">
+<pre><span></span><code>Section<span class="w"> </span><span class="s2">&quot;Device&quot;</span>
+<span class="w">  </span>Identifier<span class="w">  </span><span class="s2">&quot;Intel Graphics&quot;</span>
+<span class="w">  </span>Driver<span class="w">      </span><span class="s2">&quot;intel&quot;</span>
+<span class="w">  </span>Option<span class="w"> </span><span class="s2">&quot;TearFree&quot;</span><span class="w"> </span><span class="s2">&quot;true&quot;</span>
+EndSection
+</code></pre>
+</div>
+
+<p>Save the file, reboot your system and look for any screen tearing issues. If you didn't face any, that means it worked! &#x1F601;</p>
+
+	</div>
+	<div class="article-footer">
+		<time>November 2nd, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/xfce/">
+					XFCE
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/clear-a-file-directory-using-filesystem-in-laravel">Clear a file directory using Filesystem in Laravel</a></h1>
 		<p class="description"></p>
 	</div>
@@ -85,18 +214,22 @@
 
 <p>I resolved it by calling the <code>Filesystem</code> package in my controller:</p>
 
-<pre><code>&lt;?php
-use Illuminate\Filesystem\Filesystem;
-?&gt;
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="k">use</span> <span class="nx">Illuminate\Filesystem\Filesystem</span><span class="p">;</span>
+<span class="cp">?&gt;</span>
 </code></pre>
+</div>
 
 <p>Then simply, create a new instance and define the directory you wanted to clear:</p>
 
-<pre><code>&lt;?php
-$folder = new Filesystem;
-$folder-&gt;cleanDirectory('storage/exports');
-?&gt;
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="nv">$folder</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Filesystem</span><span class="p">;</span>
+<span class="nv">$folder</span><span class="o">-&gt;</span><span class="na">cleanDirectory</span><span class="p">(</span><span class="s1">&#39;storage/exports&#39;</span><span class="p">);</span>
+<span class="cp">?&gt;</span>
 </code></pre>
+</div>
 
 <p>Hope this helps you out!</p>
 
@@ -156,18 +289,22 @@ $folder-&gt;cleanDirectory('storage/exports');
 
 <p>The <code>paginate()</code> method takes the following parameters by default:</p>
 
-<pre><code>&lt;?php
-public function paginate($perPage = null, $columns = ['*'], $pageName = 'page', $page = null);
-?&gt;
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="k">public</span> <span class="k">function</span> <span class="nf">paginate</span><span class="p">(</span><span class="nv">$perPage</span> <span class="o">=</span> <span class="k">null</span><span class="p">,</span> <span class="nv">$columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;*&#39;</span><span class="p">],</span> <span class="nv">$pageName</span> <span class="o">=</span> <span class="s1">&#39;page&#39;</span><span class="p">,</span> <span class="nv">$page</span> <span class="o">=</span> <span class="k">null</span><span class="p">);</span>
+<span class="cp">?&gt;</span>
 </code></pre>
+</div>
 
 <p>So, if you want to fetch the pagination data of a specific page, then just write this:</p>
 
-<pre><code>&lt;?php
-$pageNumber = 5;
-$data = ExampleModel::paginate(5, ['*'], 'page', $pageNumber);
-?&gt;
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="nv">$pageNumber</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span>
+<span class="nv">$data</span> <span class="o">=</span> <span class="nx">ExampleModel</span><span class="o">::</span><span class="na">paginate</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;*&#39;</span><span class="p">],</span> <span class="s1">&#39;page&#39;</span><span class="p">,</span> <span class="nv">$pageNumber</span><span class="p">);</span>
+<span class="cp">?&gt;</span>
 </code></pre>
+</div>
 
 <p>Hope you found this article useful!</p>
 
@@ -196,23 +333,27 @@ $data = ExampleModel::paginate(5, ['*'], 'page', $pageNumber);
 	<div class="article-body">
 		<p>You'll get this error when you're hosting a Laravel project with using HTTPS/SSL protocol on <code>localhost</code> or <code>127.0.0.1</code>:</p>
 
-<pre><code>cURL error 60: SSL certificate problem: unable to get local issuer certificate (see https://curl.haxx.se/libcurl/c/libcurl-errors.html)
+<div class="codehilite">
+<pre><span></span><code>cURL error 60: SSL certificate problem: unable to get local issuer certificate (see https://curl.haxx.se/libcurl/c/libcurl-errors.html)
 </code></pre>
+</div>
 
 <p>I read some article on trying to install <code>cacert.pem</code> authorization certificate on your WAMP/XAMPP setup but it didn't really work out for me as I was running out of time.</p>
 
 <p>So, I did a little digging and learnt that I can just modify the <code>verify</code> flag to <code>false</code> in the <code>vendor/guzzlehttp/guzzle/src/Client.php</code> file:</p>
 
-<pre><code>&lt;?php
-$defaults = [
-    'allow_redirects' =&gt; RedirectMiddleware::$defaultSettings,
-    'http_errors'     =&gt; true,
-    'decode_content'  =&gt; true,
-    'verify'          =&gt; false, // changed it to false
-    'cookies'         =&gt; false
-];
-?&gt;
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="nv">$defaults</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s1">&#39;allow_redirects&#39;</span> <span class="o">=&gt;</span> <span class="nx">RedirectMiddleware</span><span class="o">::</span><span class="nv">$defaultSettings</span><span class="p">,</span>
+    <span class="s1">&#39;http_errors&#39;</span>     <span class="o">=&gt;</span> <span class="k">true</span><span class="p">,</span>
+    <span class="s1">&#39;decode_content&#39;</span>  <span class="o">=&gt;</span> <span class="k">true</span><span class="p">,</span>
+    <span class="s1">&#39;verify&#39;</span>          <span class="o">=&gt;</span> <span class="k">false</span><span class="p">,</span> <span class="c1">// changed it to false</span>
+    <span class="s1">&#39;cookies&#39;</span>         <span class="o">=&gt;</span> <span class="k">false</span>
+<span class="p">];</span>
+<span class="cp">?&gt;</span>
 </code></pre>
+</div>
 
 <p>By changing to it <code>false</code>, you'll not face that error again but please keep in mind, you should do this only if you're developing on localhost.</p>
 
@@ -251,15 +392,19 @@ $defaults = [
 
 <p>Just execute the following command in your root directory:</p>
 
-<pre><code>php artisan key:generate
+<div class="codehilite">
+<pre><span></span><code>php<span class="w"> </span>artisan<span class="w"> </span>key:generate
 </code></pre>
+</div>
 
 <p>If the error still persists, try clearing the cache by doing the following:</p>
 
-<pre><code>php artisan config:cache
-php artisan cache:clear
-php artisan config:clear
+<div class="codehilite">
+<pre><span></span><code>php<span class="w"> </span>artisan<span class="w"> </span>config:cache
+php<span class="w"> </span>artisan<span class="w"> </span>cache:clear
+php<span class="w"> </span>artisan<span class="w"> </span>config:clear
 </code></pre>
+</div>
 
 <p>Hope you found this article useful!</p>
 
@@ -304,164 +449,6 @@ php artisan config:clear
 			<li>
 				<a href="/category/chrome-devtools/">
 					Chrome DevTools
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/enable-httpsssl-on-wamp-server">Enable HTTPS/SSL on WAMP Server</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Building a website with HTTPS/SSL in mind can help resolve a lot of problems when you're going to deploy it on production server.</p>
-
-<p>So, here's a small tutorial on how to enable HTTPS mode and install SSL certificate on your local WAMP Server.</p>
-
-<p><strong>Note: This tutorial assumes that you have a Windows PC and have installed WAMP Server 3.2.0 in your local system, if not, <a href="https://www.wampserver.com/en/">download it from here</a>.</strong></p>
-
-<h2>Download OpenSSL</h2>
-
-<p>Based on your system's architecture, you can download either a 32 or 64-bit installer. You can find the latest version of OpenSSL from here. While installing, please make sure all the options selected are default.</p>
-
-<h2>Generate SSL Key and Certificate</h2>
-
-<p>Open your terminal or command-line prompt and navigate to the following folder:</p>
-
-<pre><code>cd "C:\Program Files\OpenSSL-Win64\bin"
-</code></pre>
-
-<p>Next, you need to create a private key. While generating a private key, you'll have to enter a passphrase, it can be anything but make sure that you can remember it for the next step &#x1F602;.</p>
-
-<p>Execute the following command:</p>
-
-<pre><code>openssl genrsa -aes256 -out private.key 2048
-</code></pre>
-
-<p>Good, now let's generate our certificate and in this step, you'll be prompted with several questions. You can fill as per your wish or just hit "Enter" to leave it as default. The only thing that matters is <strong>Common Name</strong> and this should named as <code>localhost</code></p>
-
-<p>Execute the following command:</p>
-
-<pre><code>openssl req -new -x509 -nodes -sha1 -key private.key -out certificate.crt -days 36500
-</code></pre>
-
-<h2>Move the certificate and key to Apache's directory</h2>
-
-<p>Create a folder named <code>keys</code> and move both <code>private.key</code> and <code>certificate.crt</code> to this directory: <code>C:\wamp64\bin\apache\apache2.4.41\conf</code>.</p>
-
-<h2>Modify your httpd.conf file</h2>
-
-<p>You have to uncomment 3 lines from <code>C:/wamp64/bin/apache/apache2.4.41/conf/httpd.conf</code>:</p>
-
-<pre><code>LoadModule ssl_module modules/mod_ssl.so
-Include conf/extra/httpd-ssl.conf
-LoadModule socache_shmcb_module modules/mod_socache_shmcb.so
-</code></pre>
-
-<h2>Modify your httpd-ssl.conf file</h2>
-
-<p>Go to <code>C:/wamp64/bin/apache/apache2.4.41/conf/extra/httpd-ssl.conf</code> and modify the following parameters:</p>
-
-<pre><code>DocumentRoot "c:/wamp64/www"
-ServerName localhost:443
-ServerAdmin admin@youremail.com
-ErrorLog "${SRVROOT}/logs/error.log"
-TransferLog "${SRVROOT}/logs/access.log"
-SSLSessionCache "shmcb:${SRVROOT}/logs/ssl_scache(512000)"
-SSLCertificateFile "${SRVROOT}/conf/keys/certificate.crt"
-SSLCertificateKeyFile "${SRVROOT}/conf/keys/private.key"
-CustomLog "${SRVROOT}/logs/ssl_request.log"
-</code></pre>
-
-<p><code>DocumentRoot</code> is the location of where your website files are located. <code>ServerName</code> can be anything but preferable to use <code>localhost</code>.</p>
-
-<h2>Restart your WAMP Server</h2>
-
-<p>Just restart your WAMP Server for the changes to take effect. If the WAMP icon turns green, you're good else, an typo or syntax error must have occurred.</p>
-
-<p>Hope you found this tutorial useful! &#x1F600;</p>
-
-	</div>
-	<div class="article-footer">
-		<time>September 13th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/apache/">
-					Apache
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/wamp/">
-					WAMP
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/accessing-wamp-server-from-other-computers-on-lan">Accessing WAMP Server from other computers on LAN</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Whenever you develop a website using the <strong>LAMP</strong> or <strong>WAMP</strong> stack, you'll want to access the website, locally, via different systems and devices solely for testing purposes.</p>
-
-<h2>Modify your VirtualHosts configuration</h2>
-
-<p>Setting up your WAMP Server for LAN access only requires you to tweak your <strong>VirtualHosts</strong> configuration file found in <code>C:\wamp64\bin\apache\apache2.4.41\conf\extra\httpd-vhost.conf</code></p>
-
-<pre><code>&lt;VirtualHost *:80&gt;
-  ServerName example.test
-  ServerAlias example.test
-  DocumentRoot "c:/wamp64/www/yourprojectname"
-  &lt;Directory "c:/wamp64/www/yourprojectname/"&gt;
-    Options +Indexes +Includes +FollowSymLinks +MultiViews
-    AllowOverride All
-    Require all granted
-  &lt;/Directory&gt;
-&lt;/VirtualHost&gt;
-</code></pre>
-
-<p>Oh, if you're using Linux, you'll find the file <code>000-default.conf</code> in <code>/etc/apache2/sites-available</code> directory.</p>
-
-<h2>Update your hosts file</h2>
-
-<p>If you type the URL of the website that you want to visit, the computer will first refer to the <code>hosts</code> file and then it'll go out to fetch DNS information. So, if you want <code>http:\\example.test</code> url to point to your local system, you just have add it in your <code>hosts</code> file:</p>
-
-<p>Open the hosts file(<code>C:\Windows\System32\drivers\etc\hosts</code>) using a text editor and add this line to your <code>hosts</code> file:</p>
-
-<pre><code>127.0.0.1   example.test
-</code></pre>
-
-<p>Once done, save the file and restart your WAMP Server and you're all set to go!</p>
-
-<p>Hope you found this tip useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>September 13th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/apache/">
-					Apache
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/wamp/">
-					WAMP
 				</a>
 			</li>
 			
@@ -540,7 +527,7 @@ CustomLog "${SRVROOT}/logs/ssl_request.log"
 		<li>
 			<a href="/category/linux/">
 				Linux
-				<span class="count">19</span>
+				<span class="count">21</span>
 			</a>
 		</li>
 		
@@ -622,6 +609,13 @@ CustomLog "${SRVROOT}/logs/ssl_request.log"
 		</li>
 		
 		<li>
+			<a href="/category/productivity/">
+				Productivity
+				<span class="count">7</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/tutorial/">
 				Tutorial
 				<span class="count">6</span>
@@ -646,13 +640,6 @@ CustomLog "${SRVROOT}/logs/ssl_request.log"
 			<a href="/category/essay/">
 				Essay
 				<span class="count">6</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/productivity/">
-				Productivity
-				<span class="count">5</span>
 			</a>
 		</li>
 		

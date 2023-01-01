@@ -78,6 +78,121 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/forcing-http-to-https-redirect-after-enabling-ssl">Forcing HTTP to HTTPS redirect after enabling SSL</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>You can manually force HTTP to HTTPS after enabling your SSL certificate by adding the following condition at the beginning of your <code>.htaccess</code> file in your <code>public</code> directory:</p>
+
+<div class="codehilite">
+<pre><span></span><code>RewriteCond<span class="w"> </span>%<span class="o">{</span>HTTP:X-Forward-Proto<span class="o">}</span><span class="w"> </span>!<span class="o">=</span>https
+RewriteRule<span class="w"> </span>.*<span class="w"> </span>https://%<span class="o">{</span>HTTP_HOST<span class="o">}</span>%<span class="o">{</span>REQUEST_URI<span class="o">}</span><span class="w"> </span><span class="o">[</span><span class="nv">R</span><span class="o">=</span><span class="m">301</span>,L<span class="o">]</span>
+</code></pre>
+</div>
+
+<p>Save your file and restart your Apache server and now, your web application will redirect all your users to <code>https://</code> instead of <code>http://</code> URLs in the future.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>June 22nd, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/apache/">
+					Apache
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/enable-copy-paste-clipboard-in-urxvt-terminal-emulator">Enable copy-paste clipboard in URxvt Terminal Emulator</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>In my current Arch Linux installation, I decided to use a window manager called i3. It's really awesome and it comes with a really lightweight terminal emulator called <strong>urxvt</strong>. It's very minimal and I lked it but when I tried to copy-paste text from one terminal to another, I wasn't able to.</p>
+
+<p>However, thanks to the internet, I did some research and figured a way out.</p>
+
+<h2>1. Install xClip</h2>
+
+<p>First, you need to ensure that you have installed the <code>xclip</code> package, which will be used to copy-paste text in the emulator.</p>
+
+<p>Type the following command to install the package:</p>
+
+<div class="codehilite">
+<pre><span></span><code>pacman<span class="w"> </span>-S<span class="w"> </span>xclip
+</code></pre>
+</div>
+
+<h2>2. Activate Clipboard using Perl</h2>
+
+<p>Now, you have to paste these custom commands into your <code>clipboard</code> file, which is found in <code>/usr/lib/urxvt/perl</code> directory:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="c1"># paste selection from clipboard</span>
+<span class="k">sub</span><span class="w"> </span><span class="nf">paste</span><span class="w"> </span><span class="p">{</span>
+<span class="w">     </span><span class="k">my</span><span class="w"> </span><span class="p">(</span><span class="nv">$self</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">@_</span><span class="p">;</span>
+<span class="w">     </span><span class="k">my</span><span class="w"> </span><span class="nv">$content</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`/usr/bin/xclip -loop 1 -out -selection clipboard`</span><span class="w"> </span><span class="p">;</span>
+<span class="w">     </span><span class="nv">$self</span><span class="o">-&gt;</span><span class="n">tt_write</span><span class="w"> </span><span class="p">(</span><span class="nv">$content</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="c1"># copy text to clipbard on selection</span>
+<span class="k">sub</span><span class="w"> </span><span class="nf">on_sel_grab</span><span class="w"> </span><span class="p">{</span>
+<span class="w">     </span><span class="k">my</span><span class="w"> </span><span class="nv">$query</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">$_</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">selection</span><span class="p">;</span>
+<span class="w">     </span><span class="nb">open</span><span class="w"> </span><span class="p">(</span><span class="k">my</span><span class="w"> </span><span class="nv">$pipe</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;| /usr/bin/xclip -in -selection clipboard&#39;</span><span class="p">)</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="nb">die</span><span class="p">;</span>
+<span class="w">     </span><span class="k">print</span><span class="w"> </span><span class="nv">$pipe</span><span class="w"> </span><span class="nv">$query</span><span class="p">;</span>
+<span class="w">     </span><span class="nb">close</span><span class="w"> </span><span class="nv">$pipe</span><span class="p">;</span>
+<span class="w"> </span><span class="p">}</span>
+</code></pre>
+</div>
+
+<h2>3. Modify your .Xresources</h2>
+
+<p>Add these keybindings to your <code>.Xresources</code> file:</p>
+
+<div class="codehilite">
+<pre><span></span><code>URxvt.keysym.Shift-Control-V:<span class="w"> </span>perl:clipboard:paste
+URxvt.iso14755:<span class="w"> </span>False
+URxvt.perl-ext-common:<span class="w"> </span>default,clipboard
+</code></pre>
+</div>
+
+<p>After adding it, refresh your <code>.Xresources</code> settings:</p>
+
+<div class="codehilite">
+<pre><span></span><code>xrdb<span class="w"> </span>-merge<span class="w"> </span>.Xresources
+</code></pre>
+</div>
+
+<p>Reboot your terminal and try selecting some text from your terminal using your mouse and paste it using <code>Ctrl</code>+<code>Shift</code>+<code>V</code> and it should work! </p>
+
+<p>That's it! Enjoy &#x1F603;</p>
+
+	</div>
+	<div class="article-footer">
+		<time>June 20th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/configuring-audio-drivers-in-arch-Linux">Configuring audio drivers in Arch Linux</a></h1>
 		<p class="description"></p>
 	</div>
@@ -86,8 +201,10 @@
 
 <p>Well, thanks to <a href="https://wiki.archlinux.org">ArchWiki</a>, it was simple enough to install to make the audio work on my old laptop. Just install the following packages:</p>
 
-<pre><code>pacman -S alsa-firmware alsa-lib alsa-utils
+<div class="codehilite">
+<pre><span></span><code>pacman<span class="w"> </span>-S<span class="w"> </span>alsa-firmware<span class="w"> </span>alsa-lib<span class="w"> </span>alsa-utils
 </code></pre>
+</div>
 
 <p>Reboot the system once you're done installing the packages. Depending on your window manager, you should be able to see your sound icon being active.</p>
 
@@ -97,33 +214,39 @@
 
 <p>Open your favorite text editor and Add this method in your <code>.bashrc</code> file:</p>
 
-<pre><code># simple volume control
-volume(){
-    x=5
-    if [ $1 == 'up' ]
-    then
-        amixer set Master $x%+ &amp;&gt; /dev/null
-    elif [ $1 == 'down' ]
-    then
-        amixer set Master $x%- &amp;&gt; /dev/null
-    elif [ $1 == 'toggle' ]
-    then
-        amixer set Master toggle &amp;&gt; /dev/null
-    fi
-}
+<div class="codehilite">
+<pre><span></span><code><span class="c1"># simple volume control</span>
+volume<span class="o">(){</span>
+<span class="w">    </span><span class="nv">x</span><span class="o">=</span><span class="m">5</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="nv">$1</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s1">&#39;up&#39;</span><span class="w"> </span><span class="o">]</span>
+<span class="w">    </span><span class="k">then</span>
+<span class="w">        </span>amixer<span class="w"> </span><span class="nb">set</span><span class="w"> </span>Master<span class="w"> </span><span class="nv">$x</span>%+<span class="w"> </span><span class="p">&amp;</span>&gt;<span class="w"> </span>/dev/null
+<span class="w">    </span><span class="k">elif</span><span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="nv">$1</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s1">&#39;down&#39;</span><span class="w"> </span><span class="o">]</span>
+<span class="w">    </span><span class="k">then</span>
+<span class="w">        </span>amixer<span class="w"> </span><span class="nb">set</span><span class="w"> </span>Master<span class="w"> </span><span class="nv">$x</span>%-<span class="w"> </span><span class="p">&amp;</span>&gt;<span class="w"> </span>/dev/null
+<span class="w">    </span><span class="k">elif</span><span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="nv">$1</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s1">&#39;toggle&#39;</span><span class="w"> </span><span class="o">]</span>
+<span class="w">    </span><span class="k">then</span>
+<span class="w">        </span>amixer<span class="w"> </span><span class="nb">set</span><span class="w"> </span>Master<span class="w"> </span>toggle<span class="w"> </span><span class="p">&amp;</span>&gt;<span class="w"> </span>/dev/null
+<span class="w">    </span><span class="k">fi</span>
+<span class="o">}</span>
 </code></pre>
+</div>
 
 <p>Save the file, close your edit and refresh your file by typing:</p>
 
-<pre><code>source .bashrc
+<div class="codehilite">
+<pre><span></span><code><span class="nb">source</span><span class="w"> </span>.bashrc
 </code></pre>
+</div>
 
 <p>Now, it should work when you type any of these commands:</p>
 
-<pre><code>volume up
-volume down
-volume toggle
+<div class="codehilite">
+<pre><span></span><code>volume<span class="w"> </span>up
+volume<span class="w"> </span>down
+volume<span class="w"> </span>toggle
 </code></pre>
+</div>
 
 <p>Hope this tiny script helps you out! </p>
 
@@ -173,37 +296,47 @@ volume toggle
 
 <p>You can look up for your timezones by executing the following:</p>
 
-<pre><code>timedatectl list-timezones | less
+<div class="codehilite">
+<pre><span></span><code>timedatectl<span class="w"> </span>list-timezones<span class="w"> </span><span class="p">|</span><span class="w"> </span>less
 </code></pre>
+</div>
 
 <p>Once, you've found your timezone, execute the following by replacing <code>Continent/Country</code> with your timezone:</p>
 
-<pre><code>timedatectl set-timezone Continent/Country
+<div class="codehilite">
+<pre><span></span><code>timedatectl<span class="w"> </span>set-timezone<span class="w"> </span>Continent/Country
 </code></pre>
+</div>
 
 <h3>2. Manually set your local time</h3>
 
 <p>Execute the following to set up your time, locally on your system:</p>
 
-<pre><code>timedatectl set-time "yyyy-MM-dd hh:mm:ss"
+<div class="codehilite">
+<pre><span></span><code>timedatectl<span class="w"> </span>set-time<span class="w"> </span><span class="s2">&quot;yyyy-MM-dd hh:mm:ss&quot;</span>
 </code></pre>
+</div>
 
 <h3>3. Set the hardware clock from the system clock</h3>
 
 <p>The following command sets the hardware clock from the system clock:</p>
 
-<pre><code>hwclock --systohc
+<div class="codehilite">
+<pre><span></span><code>hwclock<span class="w"> </span>--systohc
 </code></pre>
+</div>
 
 <p>Now, that you've executed them, you should be able to view the correct time on your system by executing <code>timedatectl status</code> and you should see something like this:</p>
 
-<pre><code>               Local time: Sun 2020-06-14 21:04:04 +04
-           Universal time: Sun 2020-06-14 17:04:04 UTC
-                 RTC time: Sun 2020-06-14 17:04:05    
-                Time zone: Asia/Dubai (+04, +0400)    
-System clock synchronized: no                         
-              NTP service: inactive 
+<div class="codehilite">
+<pre><span></span><code><span class="w">               </span>Local<span class="w"> </span>time:<span class="w"> </span>Sun<span class="w"> </span><span class="m">2020</span>-06-14<span class="w"> </span><span class="m">21</span>:04:04<span class="w"> </span>+04
+<span class="w">           </span>Universal<span class="w"> </span>time:<span class="w"> </span>Sun<span class="w"> </span><span class="m">2020</span>-06-14<span class="w"> </span><span class="m">17</span>:04:04<span class="w"> </span>UTC
+<span class="w">                 </span>RTC<span class="w"> </span>time:<span class="w"> </span>Sun<span class="w"> </span><span class="m">2020</span>-06-14<span class="w"> </span><span class="m">17</span>:04:05<span class="w">    </span>
+<span class="w">                </span>Time<span class="w"> </span>zone:<span class="w"> </span>Asia/Dubai<span class="w"> </span><span class="o">(</span>+04,<span class="w"> </span>+0400<span class="o">)</span><span class="w">    </span>
+System<span class="w"> </span>clock<span class="w"> </span>synchronized:<span class="w"> </span>no<span class="w">                         </span>
+<span class="w">              </span>NTP<span class="w"> </span>service:<span class="w"> </span>inactive<span class="w"> </span>
 </code></pre>
+</div>
 
 <p>Although, this issue was time-related, you may face the same kind of error for various other reasons. Try reading more on how to <a href="https://support.mozilla.org/en-US/kb/troubleshoot-time-errors-secure-websites">troubleshoot</a> errors like these from Mozilla's official documentation.</p>
 
@@ -234,13 +367,17 @@ System clock synchronized: no
 
 <p>Here's a code snippet that can help you out to transfer from computer A to computer B:</p>
 
-<pre><code>scp your_local_file user@ipaddress:/directory_to_store
+<div class="codehilite">
+<pre><span></span><code>scp<span class="w"> </span>your_local_file<span class="w"> </span>user@ipaddress:/directory_to_store
 </code></pre>
+</div>
 
 <p>And transfer from computer B to computer A:</p>
 
-<pre><code>scp user@ipaddress:/directory/file_name your_local_directory
+<div class="codehilite">
+<pre><span></span><code>scp<span class="w"> </span>user@ipaddress:/directory/file_name<span class="w"> </span>your_local_directory
 </code></pre>
+</div>
 
 <p>Oh, before you transfer files to another computer, make sure that you have permissions to access it first. If you don't have one, then create a new account using <code>useradd</code> on your remote system.</p>
 
@@ -279,41 +416,53 @@ System clock synchronized: no
 
 <p>Before you begin to set up your WiFi connection from your computer, check if your network interface is being detected:</p>
 
-<pre><code>iwconfig
+<div class="codehilite">
+<pre><span></span><code>iwconfig
 </code></pre>
+</div>
 
 <p>Since it's a WiFi connection, your interface most probably must be <code>wlan0</code>. If you see it, then set the interface up:</p>
 
-<pre><code>ip link set wlan0 up
+<div class="codehilite">
+<pre><span></span><code>ip<span class="w"> </span>link<span class="w"> </span><span class="nb">set</span><span class="w"> </span>wlan0<span class="w"> </span>up
 </code></pre>
+</div>
 
 <h2>2. Scan for networks</h2>
 
 <p>Now, that your interface, use it to scan for your WiFi network:</p>
 
-<pre><code>iwlist wlan0 scan | less
+<div class="codehilite">
+<pre><span></span><code>iwlist<span class="w"> </span>wlan0<span class="w"> </span>scan<span class="w"> </span><span class="p">|</span><span class="w"> </span>less
 </code></pre>
+</div>
 
 <p>Once, you execute this command, you must be able to see your WiFi's SSID (or network name).</p>
 
 <p>Now, put your interface down for a while:</p>
 
-<pre><code>ip link set wlan0 down
+<div class="codehilite">
+<pre><span></span><code>ip<span class="w"> </span>link<span class="w"> </span><span class="nb">set</span><span class="w"> </span>wlan0<span class="w"> </span>down
 </code></pre>
+</div>
 
 <h2>3. Create a network profile</h2>
 
 <p>Alright, go to <code>/etc/netctl/examples/</code> directory and make a copy of the <code>wireless-wpa</code> file to the <code>/etc/netctl</code> directory:</p>
 
-<pre><code>cd /etc/netctl/examples
-cp /etc/netctl/examples/wireless-wpa /etc/netctl/your-wifi-name
+<div class="codehilite">
+<pre><span></span><code><span class="nb">cd</span><span class="w"> </span>/etc/netctl/examples
+cp<span class="w"> </span>/etc/netctl/examples/wireless-wpa<span class="w"> </span>/etc/netctl/your-wifi-name
 </code></pre>
+</div>
 
 <p>Now, go back to <code>/etc/netctl/</code> directory and open the <code>your-wifi-name</code> file with your preferred text editor and edit the following only:</p>
 
-<pre><code>ESSID: your-wifi-name
-key: your-wifi-password
+<div class="codehilite">
+<pre><span></span><code>ESSID:<span class="w"> </span>your-wifi-name
+key:<span class="w"> </span>your-wifi-password
 </code></pre>
+</div>
 
 <p>After you're done editing, save the file.</p>
 
@@ -321,16 +470,20 @@ key: your-wifi-password
 
 <p>To test if your profile is working, do the following:</p>
 
-<pre><code>netctl start your-wifi-name
-ping -c 3 www.google.com
+<div class="codehilite">
+<pre><span></span><code>netctl<span class="w"> </span>start<span class="w"> </span>your-wifi-name
+ping<span class="w"> </span>-c<span class="w"> </span><span class="m">3</span><span class="w"> </span>www.google.com
 </code></pre>
+</div>
 
 <p>In case, you get an error, try doing this:</p>
 
-<pre><code>ip link set dev wlan0 down
-netctl start your-wifi-name
-ping -c 3 www.google.com
+<div class="codehilite">
+<pre><span></span><code>ip<span class="w"> </span>link<span class="w"> </span><span class="nb">set</span><span class="w"> </span>dev<span class="w"> </span>wlan0<span class="w"> </span>down
+netctl<span class="w"> </span>start<span class="w"> </span>your-wifi-name
+ping<span class="w"> </span>-c<span class="w"> </span><span class="m">3</span><span class="w"> </span>www.google.com
 </code></pre>
+</div>
 
 <p>If you're able to ping, then it works. Else, edit your network profile and try connecting to it again.</p>
 
@@ -338,8 +491,10 @@ ping -c 3 www.google.com
 
 <p>If you've reached this stage that means your network profile must be working fine. Just do the following to enable the network profile to run the internet throughout the setup:</p>
 
-<pre><code>netctl enable your-wifi-name
+<div class="codehilite">
+<pre><span></span><code>netctl<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>your-wifi-name
 </code></pre>
+</div>
 
 <p>Try reading more about using <a href="https://wiki.archlinux.org/index.php/Netctl">netctl</a> in Arch Linux's official wikipage.</p>
 
@@ -382,43 +537,47 @@ ping -c 3 www.google.com
 
 <p>Before you begin writing the function, place this component in your HTML template:</p>
 
-<pre><code>&lt;div class="searchbox"&gt;
-    &lt;input id="searchinput" type="text"&gt;
-    &lt;div id="searchresults"&gt;
-        &lt;ul&gt;&lt;/ul&gt;
-    &lt;/div&gt;
-&lt;/div&gt;
+<div class="codehilite">
+<pre><span></span><code><span class="p">&lt;</span><span class="nt">div</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;searchbox&quot;</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">input</span> <span class="na">id</span><span class="o">=</span><span class="s">&quot;searchinput&quot;</span> <span class="na">type</span><span class="o">=</span><span class="s">&quot;text&quot;</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">div</span> <span class="na">id</span><span class="o">=</span><span class="s">&quot;searchresults&quot;</span><span class="p">&gt;</span>
+        <span class="p">&lt;</span><span class="nt">ul</span><span class="p">&gt;&lt;/</span><span class="nt">ul</span><span class="p">&gt;</span>
+    <span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
 </code></pre>
+</div>
 
 <p>Anyway, here's the function and you can place it directly on your template or in a separate <code>.js</code> file:</p>
 
-<pre><code>var _url = "path-of-your-file.json";
+<div class="codehilite">
+<pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">_url</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;path-of-your-file.json&quot;</span><span class="p">;</span>
 
-$(document).ready(function(){
-    $('#searchinput').keyup(function(e){
-        var keyword = $(this).val();
-        var code = e.keyCode ? e.keyCode : e.which;
+<span class="nx">$</span><span class="p">(</span><span class="nb">document</span><span class="p">).</span><span class="nx">ready</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
+<span class="w">    </span><span class="nx">$</span><span class="p">(</span><span class="s1">&#39;#searchinput&#39;</span><span class="p">).</span><span class="nx">keyup</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">){</span>
+<span class="w">        </span><span class="kd">var</span><span class="w"> </span><span class="nx">keyword</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">$</span><span class="p">(</span><span class="k">this</span><span class="p">).</span><span class="nx">val</span><span class="p">();</span>
+<span class="w">        </span><span class="kd">var</span><span class="w"> </span><span class="nx">code</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">e</span><span class="p">.</span><span class="nx">keyCode</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="nx">e</span><span class="p">.</span><span class="nx">keyCode</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="nx">e</span><span class="p">.</span><span class="nx">which</span><span class="p">;</span>
 
-        if(code == 13){
-            $.ajax({
-                url: _url,
-                type: "GET",
-                async: false,
-            }).done(function(data){
-                var results = "";
-                if(data.articles.length &gt; 0){
-                    $.each(data.articles, function(key, value){
-                        if(v.title.search(pattern) != -1 || v.category.search(pattern) != -1){
-                            results += `&lt;li&gt;&lt;a href="${v.slug}"&gt;${v.title}&lt;/a&gt;&lt;/li&gt;`;
-                        }
-                    });
-                    $("#searchresults ul").html(results);
-                }
-            });
-        }
-    });
-});
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="nx">code</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mf">13</span><span class="p">){</span>
+<span class="w">            </span><span class="nx">$</span><span class="p">.</span><span class="nx">ajax</span><span class="p">({</span>
+<span class="w">                </span><span class="nx">url</span><span class="o">:</span><span class="w"> </span><span class="nx">_url</span><span class="p">,</span>
+<span class="w">                </span><span class="nx">type</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;GET&quot;</span><span class="p">,</span>
+<span class="w">                </span><span class="k">async</span><span class="o">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">            </span><span class="p">}).</span><span class="nx">done</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">){</span>
+<span class="w">                </span><span class="kd">var</span><span class="w"> </span><span class="nx">results</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="p">;</span>
+<span class="w">                </span><span class="k">if</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">articles</span><span class="p">.</span><span class="nx">length</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">0</span><span class="p">){</span>
+<span class="w">                    </span><span class="nx">$</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">articles</span><span class="p">,</span><span class="w"> </span><span class="kd">function</span><span class="p">(</span><span class="nx">key</span><span class="p">,</span><span class="w"> </span><span class="nx">value</span><span class="p">){</span>
+<span class="w">                        </span><span class="k">if</span><span class="p">(</span><span class="nx">v</span><span class="p">.</span><span class="nx">title</span><span class="p">.</span><span class="nx">search</span><span class="p">(</span><span class="nx">pattern</span><span class="p">)</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="o">-</span><span class="mf">1</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nx">v</span><span class="p">.</span><span class="nx">category</span><span class="p">.</span><span class="nx">search</span><span class="p">(</span><span class="nx">pattern</span><span class="p">)</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="o">-</span><span class="mf">1</span><span class="p">){</span>
+<span class="w">                            </span><span class="nx">results</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="sb">`&lt;li&gt;&lt;a href=&quot;</span><span class="si">${</span><span class="nx">v</span><span class="p">.</span><span class="nx">slug</span><span class="si">}</span><span class="sb">&quot;&gt;</span><span class="si">${</span><span class="nx">v</span><span class="p">.</span><span class="nx">title</span><span class="si">}</span><span class="sb">&lt;/a&gt;&lt;/li&gt;`</span><span class="p">;</span>
+<span class="w">                        </span><span class="p">}</span>
+<span class="w">                    </span><span class="p">});</span>
+<span class="w">                    </span><span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#searchresults ul&quot;</span><span class="p">).</span><span class="nx">html</span><span class="p">(</span><span class="nx">results</span><span class="p">);</span>
+<span class="w">                </span><span class="p">}</span>
+<span class="w">            </span><span class="p">});</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">});</span>
+<span class="p">});</span>
 </code></pre>
+</div>
 
 <p>That's it! Now, when you execute your script, you should be able to view your search results just like as if it were using a database.</p>
 
@@ -455,33 +614,37 @@ $(document).ready(function(){
 
 <p>By using a <code>dict</code> object, the <code>json</code> package will transform your dictionary into a serialized JSON string.</p>
 
-<pre><code>import json
+<div class="codehilite">
+<pre><span></span><code><span class="kn">import</span> <span class="nn">json</span>
 
-dataObj = {}
-dataObj['posts'] = []
-dataObj['posts'].append({
-    'title': 'Hello world',
-    'category': 'Introduction',
-    'slug': 'hello-world'
-})
+<span class="n">dataObj</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">dataObj</span><span class="p">[</span><span class="s1">&#39;posts&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">dataObj</span><span class="p">[</span><span class="s1">&#39;posts&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+    <span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;Hello world&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;category&#39;</span><span class="p">:</span> <span class="s1">&#39;Introduction&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;slug&#39;</span><span class="p">:</span> <span class="s1">&#39;hello-world&#39;</span>
+<span class="p">})</span>
 
-with open('data.json', 'w') as file:
-    json.dump(dataObj, file)
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;data.json&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+    <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">dataObj</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span>
 </code></pre>
+</div>
 
 <h2>Reading JSON from a file</h2>
 
 <p>Reading is as easy as writing to a file. Using the same package again, we can parse the JSON string directly from the file.</p>
 
-<pre><code>import json
+<div class="codehilite">
+<pre><span></span><code><span class="kn">import</span> <span class="nn">json</span>
 
-with open('data.json', 'r') as file:
-    data = json.load(file)
-    for item in data['posts']:
-        print 'Title: ' + item['title']
-        print 'Category: ' + item['category']
-        print 'Slug: ' + item['slug']
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;data.json&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;posts&#39;</span><span class="p">]:</span>
+        <span class="nb">print</span> <span class="s1">&#39;Title: &#39;</span> <span class="o">+</span> <span class="n">item</span><span class="p">[</span><span class="s1">&#39;title&#39;</span><span class="p">]</span>
+        <span class="nb">print</span> <span class="s1">&#39;Category: &#39;</span> <span class="o">+</span> <span class="n">item</span><span class="p">[</span><span class="s1">&#39;category&#39;</span><span class="p">]</span>
+        <span class="nb">print</span> <span class="s1">&#39;Slug: &#39;</span> <span class="o">+</span> <span class="n">item</span><span class="p">[</span><span class="s1">&#39;slug&#39;</span><span class="p">]</span>
 </code></pre>
+</div>
 
 <p>I read about different package alternatives like <code>simplejson</code> but I guess for now, this is a great way to get started especially, if you're working with web applications and are interacting with a serialized JSON data on a daily basis.</p>
 
@@ -493,174 +656,6 @@ with open('data.json', 'r') as file:
 			<li>
 				<a href="/category/python/">
 					Python
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/build-a-menu-tree-using-recursion">Build a menu tree using recursion</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Hmm, what is the most efficient way to build a menu tree? &#x1F605;</p>
-
-<p>Most people would go for a brute force solution if it's a straightforward menu but would that be possible if we intend to create multiple levels of menu items?</p>
-
-<p>Sure, you could but as the number of loops increases, the complexity of time increases too. Not to forget, you'll end up writing code that'll look messy and unscalable.</p>
-
-<p>I always loved the idea and simplicity of using recursion. So, I thought of exercising my recursion skills by writing a method that can generate a dynamic menu with <strong>x</strong> number of parent and child menu items.</p>
-
-<p>The following example is written in PHP:</p>
-
-<pre><code>&lt;?php
-class FooController extends Controller {
-    protected $menuHTML = "";
-
-    private function menuItems() {
-        return [
-            [
-                'title' =&gt; 'Item 1',
-                'link' =&gt; '/item-1'
-            ],
-            [
-                'title' =&gt; 'Item 2',
-                'link' =&gt; '/item-2',
-                'child_items' =&gt; [
-                    [
-                       'title' =&gt; 'Item 2.1',
-                       'link' =&gt; '/item-2.1'
-                    ],       
-                    [
-                        'title' =&gt; 'Item 2.2',
-                        'link' =&gt; '/item-2.2'
-                    ],       
-                ]
-            ],
-            [
-                'title' =&gt; 'Item 3',
-                'link' =&gt; '/item-3'
-            ],
-            [
-                'title' =&gt; 'Item 4',
-                'link' =&gt; '/item-4'
-            ],
-        ];
-    }
-
-    // Build a menu tree
-    private function buildMenu($menu) {
-        foreach($menu as $menuItem){
-            $this-&gt;menuHTML .= '&lt;li class="item"&gt;';
-            $this-&gt;menuHTML .= '&lt;a href="'.$menuItem['link'].'"&gt;'.$menuItem['title'].'&lt;/a&gt;';
-
-            // Check if it has any child items
-            if(array_key_exists("child_items", $menuItem){
-                $this-&gt;menuHTML .= '&lt;ul class="submenu"&gt;';
-                $this-&gt;buildMenu($menuItem['child_items']);
-                $this-&gt;menuHTML .= '&lt;/ul&gt;';
-            }
-
-            $this-&gt;menuHTML .= '&lt;/li&gt;'
-        }
-    }
-
-    // Return the complete menu
-    private function getMenu($menu) {
-        $this-&gt;buildMenu($menu);
-        return '&lt;ul class="mainmenu"&gt;'.$this-&gt;menuHTML.'&lt;/ul&gt;';
-    }
-
-    public function __construct() {
-        pre($this-&gt;getMenu($this-&gt;menuItems());
-        die;
-    }
-}
-?&gt;
-</code></pre>
-
-<p>Once you run it, you'll see something like this:</p>
-
-<pre><code>&lt;ul class="mainmenu"&gt;
-    &lt;li class="item"&gt;&lt;a href="/item-1"&gt;Item 1&lt;/a&gt;&lt;/li&gt;
-    &lt;li class="item"&gt;&lt;a href="/item-2"&gt;Item 2&lt;/a&gt;
-        &lt;ul class="submenu"&gt;
-            &lt;li class="item"&gt;&lt;a href="/item-2.1"&gt;Item 2.1&lt;/a&gt;&lt;/li&gt;
-            &lt;li class="item"&gt;&lt;a href="/item-2.2"&gt;Item 2.2&lt;/a&gt;&lt;/li&gt;
-        &lt;/ul&gt;
-    &lt;/li&gt;
-    &lt;li class="item"&gt;&lt;a href="/item-3"&gt;Item 3&lt;/a&gt;&lt;/li&gt;
-    &lt;li class="item"&gt;&lt;a href="/item-4"&gt;Item 4&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-</code></pre>
-
-<p>There a lot of ways to achieve this same result using recursion but it sure is easier to read, scalable and extensible, ain't it?</p>
-
-	</div>
-	<div class="article-footer">
-		<time>June 3rd, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/algorithms/">
-					Algorithms
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/using-default-function-parameters-in-internet-explorer">Using default function parameters in Internet Explorer</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Today, I wrote a simple method that fetches images from the database via AJAX and also, I defined an empty object as a default parameter:</p>
-
-<pre><code>function fetchImages(obj={}){
-    // some code here...
-}
-
-fetchImages();
-</code></pre>
-
-<p>The default <code>obj</code> parameter would contain extra parameters like <code>id</code>, <code>slug</code> and <code>page</code>, which would be then used to fetch a particular group of images, else, it'll fetch a random set of images.</p>
-
-<p>This method worked fine in Google Chrome and Mozilla Firefox but not in Internet Explorer. I thought of inspecting the code and I was facing weird errors like <code>undefined</code> or <code>Expected: ')'</code> on the IE console.</p>
-
-<p>Luckily, I had compared it to the other methods that didn't have any default parameters, so I did a little research and turns out that according to <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/default_parameters">Mozilla's documentation</a>, default function parameters are proposed by the ES6 syntax and at this point, I realized that Internet Explorer <strong>doesn't support ES6 syntax</strong>. What a bummer! &#x1F612;</p>
-
-<p>However, there's a way to prevent this from happening by rewriting the method like this:</p>
-
-<pre><code>function fetchImages(obj){
-    // Check if obj is defined, else make it assign it as an empty object.
-    var data = obj || {};
-
-    // some code here...
-}
-</code></pre>
-
-<p>And BAM! The method worked flawlessly just as it's intended to do so. &#x1F60E;</p>
-
-<p>Addtionally, you may refer to the <a href="http://kangax.github.io/compat-table/es6/">ECMAScript 6 Compatibility table</a> that you might find it quite helpful to check browser compatiblity for Internet Explorer versions 11 and under.</p>
-
-	</div>
-	<div class="article-footer">
-		<time>June 3rd, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/javascript/">
-					JavaScript
 				</a>
 			</li>
 			
@@ -708,11 +703,11 @@ fetchImages();
 		
 	
 		
-			<a class="" href="/pages/8">...</a>
+			<a class="" href="/pages/9">...</a>
 		
 	
 		
-			<a class="" href="/pages/25">25</a>
+			<a class="" href="/pages/26">26</a>
 		
 	
 
@@ -749,7 +744,7 @@ fetchImages();
 		<li>
 			<a href="/category/linux/">
 				Linux
-				<span class="count">19</span>
+				<span class="count">21</span>
 			</a>
 		</li>
 		
@@ -831,6 +826,13 @@ fetchImages();
 		</li>
 		
 		<li>
+			<a href="/category/productivity/">
+				Productivity
+				<span class="count">7</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/tutorial/">
 				Tutorial
 				<span class="count">6</span>
@@ -855,13 +857,6 @@ fetchImages();
 			<a href="/category/essay/">
 				Essay
 				<span class="count">6</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/productivity/">
-				Productivity
-				<span class="count">5</span>
 			</a>
 		</li>
 		

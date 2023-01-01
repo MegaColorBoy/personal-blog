@@ -134,7 +134,8 @@
 
 <p>My senior developer was curious and thought of having a conversation with me that went like this:</p>
 
-<pre><code>Senior dev: Hmm, can I have a look at your code?
+<div class="codehilite">
+<pre><span></span><code>Senior dev: Hmm, can I have a look at your code?
 
 Me: Oh sure, here take a look.
 
@@ -144,8 +145,9 @@ Senior: So, have you ever thought of using events in your application?
 
 Me: Yeah, I wrote a custom JavaScript file to handle and fire events on the client-side like validating the forms and passing async requests to the server.
 
-Senior: Hmm, that's okay but I'm talking using events in Laravel.
+Senior: Hmm, that&#39;s okay but I&#39;m talking using events in Laravel.
 </code></pre>
+</div>
 
 <p>At this point, I was pretty clueless and I didn't know what the heck was going on. Events in PHP? I mean, I know about it in JavaScript because of it's event-driven architecture that we are all familiar with. But in PHP? I didn't know that.</p>
 
@@ -175,42 +177,44 @@ Senior: Hmm, that's okay but I'm talking using events in Laravel.
 
 <p>If you're using an MVC framework (Laravel, in our case), you'd do this in a controller with a bunch of methods like so:</p>
 
-<pre><code>&lt;?php
-namespace App\Http\Controllers;
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="k">namespace</span> <span class="nx">App\Http\Controllers</span><span class="p">;</span>
 
-use App\Http\Controllers\Controller;
-use App\User;
+<span class="k">use</span> <span class="nx">App\Http\Controllers\Controller</span><span class="p">;</span>
+<span class="k">use</span> <span class="nx">App\User</span><span class="p">;</span>
 
-class UserController extends Controller {
-    public function index() {
-        // insert code to view users page
-    }
+<span class="k">class</span> <span class="nc">UserController</span> <span class="k">extends</span> <span class="nx">Controller</span> <span class="p">{</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">index</span><span class="p">()</span> <span class="p">{</span>
+        <span class="c1">// insert code to view users page</span>
+    <span class="p">}</span>
 
-    public function create(Request $request) {
-        $arr = [
-            'username' =&gt; $request-&gt;username,
-            'email' =&gt; $request-&gt;email,
-            'password' =&gt; bcrypt('something')
-        ];
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">create</span><span class="p">(</span><span class="nx">Request</span> <span class="nv">$request</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nv">$arr</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s1">&#39;username&#39;</span> <span class="o">=&gt;</span> <span class="nv">$request</span><span class="o">-&gt;</span><span class="na">username</span><span class="p">,</span>
+            <span class="s1">&#39;email&#39;</span> <span class="o">=&gt;</span> <span class="nv">$request</span><span class="o">-&gt;</span><span class="na">email</span><span class="p">,</span>
+            <span class="s1">&#39;password&#39;</span> <span class="o">=&gt;</span> <span class="nx">bcrypt</span><span class="p">(</span><span class="s1">&#39;something&#39;</span><span class="p">)</span>
+        <span class="p">];</span>
 
-        $user = User::create($arr);
+        <span class="nv">$user</span> <span class="o">=</span> <span class="nx">User</span><span class="o">::</span><span class="na">create</span><span class="p">(</span><span class="nv">$arr</span><span class="p">);</span>
 
-        $this-&gt;sendConfirmationEmail($user);
-        $this-&gt;subscribeToMailingList($user);
-    }
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">sendConfirmationEmail</span><span class="p">(</span><span class="nv">$user</span><span class="p">);</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">subscribeToMailingList</span><span class="p">(</span><span class="nv">$user</span><span class="p">);</span>
+    <span class="p">}</span>
 
-    // Send confirmation email to user
-    private function sendConfirmationEmail($user) {
-        // insert code
-    }
+    <span class="c1">// Send confirmation email to user</span>
+    <span class="k">private</span> <span class="k">function</span> <span class="nf">sendConfirmationEmail</span><span class="p">(</span><span class="nv">$user</span><span class="p">)</span> <span class="p">{</span>
+        <span class="c1">// insert code</span>
+    <span class="p">}</span>
 
-    // Subscribe user to mailing list
-    private function subscribeToMailingList($user) {
-        // insert code
-    }
-}
-?&gt;
+    <span class="c1">// Subscribe user to mailing list</span>
+    <span class="k">private</span> <span class="k">function</span> <span class="nf">subscribeToMailingList</span><span class="p">(</span><span class="nv">$user</span><span class="p">)</span> <span class="p">{</span>
+        <span class="c1">// insert code</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+<span class="cp">?&gt;</span>
 </code></pre>
+</div>
 
 <p>This is approach is self-contained and simple to follow but you're also adding in a lot of responsibility to your controller.</p>
 
@@ -220,83 +224,91 @@ class UserController extends Controller {
 
 <p>Using this approach, you can split this into <mark>Event</mark> and <mark>Listener</mark> files in your application.</p>
 
-<pre><code>&lt;?php
-namespace App\Http\Controllers;
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="k">namespace</span> <span class="nx">App\Http\Controllers</span><span class="p">;</span>
 
-use App\Http\Controllers\Controller;
-use App\User;
+<span class="k">use</span> <span class="nx">App\Http\Controllers\Controller</span><span class="p">;</span>
+<span class="k">use</span> <span class="nx">App\User</span><span class="p">;</span>
 
-class UserController extends Controller {
-    public function index() {
-        // insert code to view users page
-    }
+<span class="k">class</span> <span class="nc">UserController</span> <span class="k">extends</span> <span class="nx">Controller</span> <span class="p">{</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">index</span><span class="p">()</span> <span class="p">{</span>
+        <span class="c1">// insert code to view users page</span>
+    <span class="p">}</span>
 
-    public function create(Request $request) {
-        $arr = [
-            'username' =&gt; $request-&gt;username,
-            'email' =&gt; $request-&gt;email,
-            'password' =&gt; bcrypt('something')
-        ];
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">create</span><span class="p">(</span><span class="nx">Request</span> <span class="nv">$request</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nv">$arr</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s1">&#39;username&#39;</span> <span class="o">=&gt;</span> <span class="nv">$request</span><span class="o">-&gt;</span><span class="na">username</span><span class="p">,</span>
+            <span class="s1">&#39;email&#39;</span> <span class="o">=&gt;</span> <span class="nv">$request</span><span class="o">-&gt;</span><span class="na">email</span><span class="p">,</span>
+            <span class="s1">&#39;password&#39;</span> <span class="o">=&gt;</span> <span class="nx">bcrypt</span><span class="p">(</span><span class="s1">&#39;something&#39;</span><span class="p">)</span>
+        <span class="p">];</span>
 
-        $user = User::create($arr);
+        <span class="nv">$user</span> <span class="o">=</span> <span class="nx">User</span><span class="o">::</span><span class="na">create</span><span class="p">(</span><span class="nv">$arr</span><span class="p">);</span>
 
-        // Emit event
-        event(new UserRegistered($user));
-    }
-}
-?&gt;
+        <span class="c1">// Emit event</span>
+        <span class="nx">event</span><span class="p">(</span><span class="k">new</span> <span class="nx">UserRegistered</span><span class="p">(</span><span class="nv">$user</span><span class="p">));</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+<span class="cp">?&gt;</span>
 </code></pre>
+</div>
 
 <p>This is how your <mark>UserRegistered</mark> event would look like:</p>
 
-<pre><code>&lt;?php
-namespace App\Events;
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="k">namespace</span> <span class="nx">App\Events</span><span class="p">;</span>
 
-use Illuminate\Queue\SerializeModels;
-use App\User;
+<span class="k">use</span> <span class="nx">Illuminate\Queue\SerializeModels</span><span class="p">;</span>
+<span class="k">use</span> <span class="nx">App\User</span><span class="p">;</span>
 
-class UserRegistered {
-    use SerializesModels;
+<span class="k">class</span> <span class="nc">UserRegistered</span> <span class="p">{</span>
+    <span class="k">use</span> <span class="nx">SerializesModels</span><span class="p">;</span>
 
-    public $user;
+    <span class="k">public</span> <span class="nv">$user</span><span class="p">;</span>
 
-    public function __construct(User $user) {
-        $this-&gt;user = $user;
-    }
-}
-?&gt;
+    <span class="k">public</span> <span class="k">function</span> <span class="fm">__construct</span><span class="p">(</span><span class="nx">User</span> <span class="nv">$user</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">user</span> <span class="o">=</span> <span class="nv">$user</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+<span class="cp">?&gt;</span>
 </code></pre>
+</div>
 
 <p>And this is how your <mark>SendConfirmationEmail</mark> listener would look like:</p>
 
-<pre><code>&lt;?php
-namespace App\Listeners;
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="k">namespace</span> <span class="nx">App\Listeners</span><span class="p">;</span>
 
-use App\Events\UserRegistered;
+<span class="k">use</span> <span class="nx">App\Events\UserRegistered</span><span class="p">;</span>
 
-class SendConfirmationEmail {
+<span class="k">class</span> <span class="nc">SendConfirmationEmail</span> <span class="p">{</span>
 
-    public function __construct(User $user) {
-        // insert code
-    }
+    <span class="k">public</span> <span class="k">function</span> <span class="fm">__construct</span><span class="p">(</span><span class="nx">User</span> <span class="nv">$user</span><span class="p">)</span> <span class="p">{</span>
+        <span class="c1">// insert code</span>
+    <span class="p">}</span>
 
-    public function handle(UserRegister $event) {
-        // insert code
-    }
-}
-?&gt;
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">handle</span><span class="p">(</span><span class="nx">UserRegister</span> <span class="nv">$event</span><span class="p">)</span> <span class="p">{</span>
+        <span class="c1">// insert code</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+<span class="cp">?&gt;</span>
 </code></pre>
+</div>
 
 <p>Using this approach, you can use the <mark>UserRegistered</mark> event anywhere you wanted in your application. No matter what happens, it will trigger the same actions as it was intended to do so. If you want to add a new functionality, create a new listener and register it with the event in your <mark>EventServiceProvider</mark> file like this:</p>
 
-<pre><code>&lt;?php
-protected $listen = [
-    'App\Events\UserRegistered' =&gt; [
-    'App\Listeners\SendConfirmationEmail',
-    ],
-];
-?&gt;
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="k">protected</span> <span class="nv">$listen</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s1">&#39;App\Events\UserRegistered&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span>
+    <span class="s1">&#39;App\Listeners\SendConfirmationEmail&#39;</span><span class="p">,</span>
+    <span class="p">],</span>
+<span class="p">];</span>
+<span class="cp">?&gt;</span>
 </code></pre>
+</div>
 
 <p>If you follow this approach, your logic complexity is toned down and the controller will have less responsibility.</p>
 
@@ -376,41 +388,43 @@ protected $listen = [
 
 <p>This method will help generate valid circles with a random radius. Circles that don't overlap or collide with other circles are considered to be valid.</p>
 
-<pre><code>// Generate a valid circle
-const generateCircle = () =&gt; {
-    let newCircle;
-    let isValidCircle = false;
+<div class="codehilite">
+<pre><span></span><code><span class="c1">// Generate a valid circle</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">generateCircle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nx">newCircle</span><span class="p">;</span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nx">isValidCircle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">;</span>
 
-    for(let i=0; i&lt;attempts; i++) {
-        newCircle = {
-            x: Math.floor(Math.random() * width),
-            y: Math.floor(Math.random() * width),
-            radius: minRadius
-        };
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kd">let</span><span class="w"> </span><span class="nx">i</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">&lt;</span><span class="nx">attempts</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">newCircle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">width</span><span class="p">),</span>
+<span class="w">            </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">width</span><span class="p">),</span>
+<span class="w">            </span><span class="nx">radius</span><span class="o">:</span><span class="w"> </span><span class="nx">minRadius</span>
+<span class="w">        </span><span class="p">};</span>
 
-        if(checkForCollision(newCircle)) {
-            continue;
-        }
-        else {
-            isValidCircle = true;
-            break;
-        }
-    }
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="nx">checkForCollision</span><span class="p">(</span><span class="nx">newCircle</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">continue</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nx">isValidCircle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="p">;</span>
+<span class="w">            </span><span class="k">break</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
 
-    if(!isValidCircle) { return; }
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">isValidCircle</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
 
-    for(let i=minRadius; i&lt;=maxRadius; i++) {
-        newCircle.radius = i;
-        if(checkForCollision(newCircle)) {
-            newCircle.radius--;
-            break;
-        }
-    }
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kd">let</span><span class="w"> </span><span class="nx">i</span><span class="o">=</span><span class="nx">minRadius</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">&lt;=</span><span class="nx">maxRadius</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">newCircle</span><span class="p">.</span><span class="nx">radius</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">i</span><span class="p">;</span>
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="nx">checkForCollision</span><span class="p">(</span><span class="nx">newCircle</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nx">newCircle</span><span class="p">.</span><span class="nx">radius</span><span class="o">--</span><span class="p">;</span>
+<span class="w">            </span><span class="k">break</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
 
-    circles.push(newCircle);
-    drawCircleOnCanvas(context, newCircle, colors[Math.floor(Math.random() * colors.length)]);
-}
+<span class="w">    </span><span class="nx">circles</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">newCircle</span><span class="p">);</span>
+<span class="w">    </span><span class="nx">drawCircleOnCanvas</span><span class="p">(</span><span class="nx">context</span><span class="p">,</span><span class="w"> </span><span class="nx">newCircle</span><span class="p">,</span><span class="w"> </span><span class="nx">colors</span><span class="p">[</span><span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">colors</span><span class="p">.</span><span class="nx">length</span><span class="p">)]);</span>
+<span class="p">}</span>
 </code></pre>
+</div>
 
 <h2>Look for collision with other circles</h2>
 
@@ -427,52 +441,54 @@ const generateCircle = () =&gt; {
 
 <p>If the radii is greater than or equal to the euclidean distance of both circles, then it's a valid circle with no collisions.</p>
 
-<pre><code>// Check for collision in a canvas
-const checkForCollision = (newCircle) =&gt; {
+<div class="codehilite">
+<pre><span></span><code><span class="c1">// Check for collision in a canvas</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">checkForCollision</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">newCircle</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
 
-    let x2 = newCircle.x;
-    let y2 = newCircle.y;
-    let r2 = newCircle.radius;
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nx">x2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">newCircle</span><span class="p">.</span><span class="nx">x</span><span class="p">;</span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nx">y2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">newCircle</span><span class="p">.</span><span class="nx">y</span><span class="p">;</span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nx">r2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">newCircle</span><span class="p">.</span><span class="nx">radius</span><span class="p">;</span>
 
 
-    // Determine the euclidean distance between two circle
-    // using Pythagorean Theorem.
+<span class="w">    </span><span class="c1">// Determine the euclidean distance between two circle</span>
+<span class="w">    </span><span class="c1">// using Pythagorean Theorem.</span>
 
-    // Refer to: 
-    // https://en.wikipedia.org/wiki/Euclidean_distance
+<span class="w">    </span><span class="c1">// Refer to: </span>
+<span class="w">    </span><span class="c1">// https://en.wikipedia.org/wiki/Euclidean_distance</span>
 
-    for(let i=0; i&lt;circles.length; i++) {
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kd">let</span><span class="w"> </span><span class="nx">i</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">&lt;</span><span class="nx">circles</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 
-        let otherCircle = circles[i];
-        let r1 = otherCircle.radius;
-        let x1 = otherCircle.x;
-        let y1 = otherCircle.y;
-        let xx = ((x2 - x1) * (x2 - x1));
-        let yy = ((y2 - y1) * (y2 - y1));
-        let radii = r2 + r1;
-        let euclidDistance = Math.sqrt(xx + yy);
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="nx">otherCircle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">circles</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="nx">r1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">otherCircle</span><span class="p">.</span><span class="nx">radius</span><span class="p">;</span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="nx">x1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">otherCircle</span><span class="p">.</span><span class="nx">x</span><span class="p">;</span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="nx">y1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">otherCircle</span><span class="p">.</span><span class="nx">y</span><span class="p">;</span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="nx">xx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">((</span><span class="nx">x2</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">x1</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="nx">x2</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">x1</span><span class="p">));</span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="nx">yy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">((</span><span class="nx">y2</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">y1</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="nx">y2</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">y1</span><span class="p">));</span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="nx">radii</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">r2</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">r1</span><span class="p">;</span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="nx">euclidDistance</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">Math</span><span class="p">.</span><span class="nx">sqrt</span><span class="p">(</span><span class="nx">xx</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">yy</span><span class="p">);</span>
 
-        if(radii &gt;= euclidDistance) {
-            return true;
-        }
-    }
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="nx">radii</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="nx">euclidDistance</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="kc">true</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
 
-    // Check collision on top
-    if(x2 + r2 &gt;= width || 
-        x2 - r2 &lt;= 0) {
-        return true;
-    }
+<span class="w">    </span><span class="c1">// Check collision on top</span>
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="nx">x2</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">r2</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="nx">width</span><span class="w"> </span><span class="o">||</span><span class="w"> </span>
+<span class="w">        </span><span class="nx">x2</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">r2</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mf">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="kc">true</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
 
-    // Check collision on bottom
-    if(y2 + r2 &gt;= width || 
-        y2 - r2 &lt;= 0) {
-        return true;
-    }
+<span class="w">    </span><span class="c1">// Check collision on bottom</span>
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="nx">y2</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">r2</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="nx">width</span><span class="w"> </span><span class="o">||</span><span class="w"> </span>
+<span class="w">        </span><span class="nx">y2</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">r2</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mf">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="kc">true</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
 
-    //else return false
-    return false;
-}
+<span class="w">    </span><span class="c1">//else return false</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="kc">false</span><span class="p">;</span>
+<span class="p">}</span>
 </code></pre>
+</div>
 
 <h2>Conclusion</h2>
 
@@ -542,22 +558,28 @@ const checkForCollision = (newCircle) =&gt; {
 
 <p>You can install this directly from the command line by typing the following:</p>
 
-<pre><code>sudo snap install heroku --classic
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>snap<span class="w"> </span>install<span class="w"> </span>heroku<span class="w"> </span>--classic
 </code></pre>
+</div>
 
 <h3><a id="step-2"></a> Create a Heroku repository</h3>
 
 <p>If you don't have a Heroku account yet, <a href="https://heroku.com">create an account</a> now and once you're done with that, type the following:</p>
 
-<pre><code>heroku login
+<div class="codehilite">
+<pre><span></span><code>heroku<span class="w"> </span>login
 </code></pre>
+</div>
 
 <p>Follow the login instructions from the command line prompt, fill in your login credentials and you'll be in!</p>
 
 <p>Once, you're done with that, create a repository by doing the following:</p>
 
-<pre><code>heroku create
+<div class="codehilite">
+<pre><span></span><code>heroku<span class="w"> </span>create
 </code></pre>
+</div>
 
 <p>In a few seconds, you'll get a randomly generated domain address, which is the link to your Heroku repository. If you can't remember the link, it's fine, you can make changes to it in your Heroku account.</p>
 
@@ -567,24 +589,30 @@ const checkForCollision = (newCircle) =&gt; {
 
 <p>Since our application is PHP based, we need to add some specific command that selects the server on boot, I chose Apache server for this project:</p>
 
-<pre><code>cd your_laravel_project
-touch Procfile
-echo "web: vendor/bin/heroku-php-apache2 web/" &amp;gt; Procfile
+<div class="codehilite">
+<pre><span></span><code><span class="nb">cd</span><span class="w"> </span>your_laravel_project
+touch<span class="w"> </span>Procfile
+<span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;web: vendor/bin/heroku-php-apache2 web/&quot;</span><span class="w"> </span>&gt;<span class="w"> </span>Procfile
 </code></pre>
+</div>
 
 <h3><a id="step-4"></a> Push Laravel app to repository</h3>
 
 <p>It's similar to pushing your code into your GitHub, except this time, it's your Heroku repository. Type the following in your command line:</p>
 
-<pre><code>git add .
-git commit -m "pushing application to repo"
-git push heroku master
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>add<span class="w"> </span>.
+git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;pushing application to repo&quot;</span>
+git<span class="w"> </span>push<span class="w"> </span>heroku<span class="w"> </span>master
 </code></pre>
+</div>
 
 <p>To check if your application is launched, type the following:</p>
 
-<pre><code>heroku open
+<div class="codehilite">
+<pre><span></span><code>heroku<span class="w"> </span>open
 </code></pre>
+</div>
 
 <p>At this stage, you might face <mark>Error 500</mark>, that's normal because we'll take care of that in the next step.</p>
 
@@ -592,11 +620,13 @@ git push heroku master
 
 <p>We need to add some config variables that changes the way your app behaves. So, let's start adding it:</p>
 
-<pre><code>heroku config:set APP_DEBUG=true
-heroku config:set APP_KEY=yourlaravelapplicationkey
-heroku config:set APP_URL=https://yourwebsite.herokuapp.com
-heroku config:set REDIRECT_HTTPS=true
+<div class="codehilite">
+<pre><span></span><code>heroku<span class="w"> </span>config:set<span class="w"> </span><span class="nv">APP_DEBUG</span><span class="o">=</span><span class="nb">true</span>
+heroku<span class="w"> </span>config:set<span class="w"> </span><span class="nv">APP_KEY</span><span class="o">=</span>yourlaravelapplicationkey
+heroku<span class="w"> </span>config:set<span class="w"> </span><span class="nv">APP_URL</span><span class="o">=</span>https://yourwebsite.herokuapp.com
+heroku<span class="w"> </span>config:set<span class="w"> </span><span class="nv">REDIRECT_HTTPS</span><span class="o">=</span><span class="nb">true</span>
 </code></pre>
+</div>
 
 <p>In this configuration, you have done the following:
 - Enabled debug mode
@@ -612,52 +642,62 @@ heroku config:set REDIRECT_HTTPS=true
 
 <p>Type the following in the command line:</p>
 
-<pre><code>heroku addons:create heroku-postgresql:hobby-dev
+<div class="codehilite">
+<pre><span></span><code>heroku<span class="w"> </span>addons:create<span class="w"> </span>heroku-postgresql:hobby-dev
 </code></pre>
+</div>
 
 <p>This will create a PostgreSQL database and sets a <mark>DATABASE_URL</mark>, which contains the username and password to the database. To check it, type the following:</p>
 
-<pre><code>heroku config
+<div class="codehilite">
+<pre><span></span><code>heroku<span class="w"> </span>config
 </code></pre>
+</div>
 
 <p>Now, go to your project directory and open the <mark>config/database.php</mark>  file and add the following:</p>
 
-<pre><code>&lt;?php
-// Place these variables above
-$url = parse_url(getenv("DATABASE_URL"));
-$host = $url["host"]??null;
-$username = $url["user"]??null;
-$password = $url["pass"]??null;
-$database = substr($url["path"], 1)??null;
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="c1">// Place these variables above</span>
+<span class="nv">$url</span> <span class="o">=</span> <span class="nb">parse_url</span><span class="p">(</span><span class="nb">getenv</span><span class="p">(</span><span class="s2">&quot;DATABASE_URL&quot;</span><span class="p">));</span>
+<span class="nv">$host</span> <span class="o">=</span> <span class="nv">$url</span><span class="p">[</span><span class="s2">&quot;host&quot;</span><span class="p">]</span><span class="o">??</span><span class="k">null</span><span class="p">;</span>
+<span class="nv">$username</span> <span class="o">=</span> <span class="nv">$url</span><span class="p">[</span><span class="s2">&quot;user&quot;</span><span class="p">]</span><span class="o">??</span><span class="k">null</span><span class="p">;</span>
+<span class="nv">$password</span> <span class="o">=</span> <span class="nv">$url</span><span class="p">[</span><span class="s2">&quot;pass&quot;</span><span class="p">]</span><span class="o">??</span><span class="k">null</span><span class="p">;</span>
+<span class="nv">$database</span> <span class="o">=</span> <span class="nb">substr</span><span class="p">(</span><span class="nv">$url</span><span class="p">[</span><span class="s2">&quot;path&quot;</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span><span class="o">??</span><span class="k">null</span><span class="p">;</span>
 
-// Replace the default connection
-'default' =&gt; env('DB_CONNECTION', 'pgsql_prod'),
+<span class="c1">// Replace the default connection</span>
+<span class="s1">&#39;default&#39;</span> <span class="o">=&gt;</span> <span class="nx">env</span><span class="p">(</span><span class="s1">&#39;DB_CONNECTION&#39;</span><span class="p">,</span> <span class="s1">&#39;pgsql_prod&#39;</span><span class="p">),</span>
 
-// Under the connections attribute, create a new connection called 'pgsql_prod'
-'pgsql_production' =&gt; [
-    'driver' =&gt; 'pgsql',
-    'host' =&gt; $host,
-    'database' =&gt; $database,
-    'username' =&gt; $username,
-    'password' =&gt; $password,
-    'charset' =&gt; 'utf-8',
-    'prefix' =&gt; '',
-    'schema' =&gt; 'public',
-],
-?&gt;
+<span class="c1">// Under the connections attribute, create a new connection called &#39;pgsql_prod&#39;</span>
+<span class="s1">&#39;pgsql_production&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span>
+    <span class="s1">&#39;driver&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;pgsql&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;host&#39;</span> <span class="o">=&gt;</span> <span class="nv">$host</span><span class="p">,</span>
+    <span class="s1">&#39;database&#39;</span> <span class="o">=&gt;</span> <span class="nv">$database</span><span class="p">,</span>
+    <span class="s1">&#39;username&#39;</span> <span class="o">=&gt;</span> <span class="nv">$username</span><span class="p">,</span>
+    <span class="s1">&#39;password&#39;</span> <span class="o">=&gt;</span> <span class="nv">$password</span><span class="p">,</span>
+    <span class="s1">&#39;charset&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;utf-8&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;prefix&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;schema&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;public&#39;</span><span class="p">,</span>
+<span class="p">],</span>
+<span class="cp">?&gt;</span>
 </code></pre>
+</div>
 
 <p>Push the new changes to your repository:</p>
 
-<pre><code>git add .
-git commit -m "configured database"
-git push heroku master
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>add<span class="w"> </span>.
+git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;configured database&quot;</span>
+git<span class="w"> </span>push<span class="w"> </span>heroku<span class="w"> </span>master
 </code></pre>
+</div>
 
 <p>One last step, we need to create the tables from your schema, so type the following:</p>
 
-<pre><code>heroku run php /app/artisan migrate --seed
+<div class="codehilite">
+<pre><span></span><code>heroku<span class="w"> </span>run<span class="w"> </span>php<span class="w"> </span>/app/artisan<span class="w"> </span>migrate<span class="w"> </span>--seed
 </code></pre>
+</div>
 
 <p>Follow the command line prompt and voila, you have successfully deployed your Laravel application with a database on Heroku.</p>
 
@@ -710,18 +750,24 @@ git push heroku master
 
 <p>You can install VirtualBox and Vagrant via the command-line:</p>
 
-<pre><code>sudo apt install virtualbox vagrant
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>virtualbox<span class="w"> </span>vagrant
 </code></pre>
+</div>
 
 <p>Once you're done installing them, you should add the <mark>laravel/homestead</mark> box to your Vagrant installation using the following command:</p>
 
-<pre><code>vagrant box add laravel/homestead
+<div class="codehilite">
+<pre><span></span><code>vagrant<span class="w"> </span>box<span class="w"> </span>add<span class="w"> </span>laravel/homestead
 </code></pre>
+</div>
 
 <p>To check if it has been installed, use the following command:</p>
 
-<pre><code>vagrant box list | grep "homestead"
+<div class="codehilite">
+<pre><span></span><code>vagrant<span class="w"> </span>box<span class="w"> </span>list<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s2">&quot;homestead&quot;</span>
 </code></pre>
+</div>
 
 <p>Using VirtualBox and Vagrant allows you to simulate your Laravel development environment without messing up any configurations on your hosting system. Even if you did, no worries, Vagrant boxes are disposable, so you can destroy and create a new box again in minutes.</p>
 
@@ -729,48 +775,56 @@ git push heroku master
 
 <p>You can install Homestead by cloning it's repository onto your local machine by typing the following command:</p>
 
-<pre><code>git clone https://github.com/laravel/homestead.git ~/projects/Homestead
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/laravel/homestead.git<span class="w"> </span>~/projects/Homestead
 </code></pre>
+</div>
 
 <h3>Generate configuration file</h3>
 
 <p>Once you're done cloning the repository, go inside the <mark>projects/Homestead</mark> directory and run the <mark>init.sh</mark> or <mark>init.bat</mark> (for Windows) to create the <mark>Homestead.yaml</mark> configuration file:</p>
 
-<pre><code>cd projects/Homestead
-bash init.sh
+<div class="codehilite">
+<pre><span></span><code><span class="nb">cd</span><span class="w"> </span>projects/Homestead
+bash<span class="w"> </span>init.sh
 </code></pre>
+</div>
 
 <p>Open the default <mark>Homestead.yaml</mark> file and make the following changes:</p>
 
-<pre><code>---
-ip: "192.168.10.10"
-memory: 2048
-cpus: 2
-provider: virtualbox
+<div class="codehilite">
+<pre><span></span><code><span class="nn">---</span>
+<span class="nt">ip</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;192.168.10.10&quot;</span>
+<span class="nt">memory</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2048</span>
+<span class="nt">cpus</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+<span class="nt">provider</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">virtualbox</span>
 
-authorize: ~/.ssh/id_rsa.pub
+<span class="nt">authorize</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">~/.ssh/id_rsa.pub</span>
 
-keys:
-    - ~/.ssh/id_rsa
+<span class="nt">keys</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">~/.ssh/id_rsa</span>
 
-folders:
-    - map: ~/projects/code
-      to: /home/vagrant/projects/code
+<span class="nt">folders</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">map</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">~/projects/code</span>
+<span class="w">      </span><span class="nt">to</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/home/vagrant/projects/code</span>
 
-sites:
-    - map: homestead.test
-      to: /home/vagrant/projects/code/public
+<span class="nt">sites</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">map</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">homestead.test</span>
+<span class="w">      </span><span class="nt">to</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/home/vagrant/projects/code/public</span>
 
-databases:
-    - homestead
+<span class="nt">databases</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">homestead</span>
 </code></pre>
+</div>
 
 <h3>Generate SSH key</h3>
 
 <p>The documentation for Laravel Homestead doesn't really talk about generating SSH keys used to access the Vagrant box. Use the following command to generate it using <mark>ssh-keygen</mark> on the command-line:</p>
 
-<pre><code>ssh-keygen -t rsa -C "root@homestead"
+<div class="codehilite">
+<pre><span></span><code>ssh-keygen<span class="w"> </span>-t<span class="w"> </span>rsa<span class="w"> </span>-C<span class="w"> </span><span class="s2">&quot;root@homestead&quot;</span>
 </code></pre>
+</div>
 
 <h3>Map the project's shared folder</h3>
 
@@ -780,27 +834,35 @@ databases:
 
 <p>Time to install Laravel into your virtual machine. So, get switch on your virtual machine by doing the following in the command-line:</p>
 
-<pre><code>vagrant up
+<div class="codehilite">
+<pre><span></span><code>vagrant<span class="w"> </span>up
 </code></pre>
+</div>
 
 <p>As you're switching it on for the first time, depending on your internet connection, it might take somewhere around 10-20 minutes to getting it running but it'll be fine afterwards.</p>
 
 <p>Alright, login to your Vagrant machine by doing the following the command-line:</p>
 
-<pre><code>vagrant ssh
+<div class="codehilite">
+<pre><span></span><code>vagrant<span class="w"> </span>ssh
 </code></pre>
+</div>
 
 <p>Once you're in, go to your <mark>code</mark> directory and type the following in the command-line:</p>
 
-<pre><code>composer global require laravel/installer
+<div class="codehilite">
+<pre><span></span><code>composer<span class="w"> </span>global<span class="w"> </span>require<span class="w"> </span>laravel/installer
 </code></pre>
+</div>
 
 <h2>Create a new project</h2>
 
 <p>Now, it's time to create a new Laravel project by simply typing the following command:</p>
 
-<pre><code>laravel new projectname
+<div class="codehilite">
+<pre><span></span><code>laravel<span class="w"> </span>new<span class="w"> </span>projectname
 </code></pre>
+</div>
 
 <p>It'll take some time to generate the necessary files and boilerplate code and after that, you're good to go!</p>
 
@@ -812,12 +874,14 @@ databases:
 
 <p>Open a text-editor of your choice and do the following in the <mark>etc/hosts</mark> file:</p>
 
-<pre><code>127.0.0.1   localhost
+<div class="codehilite">
+<pre><span></span><code>127.0.0.1   localhost
 ::1         localhost
 
 # Add this line (Note: It can be any URL)
 127.0.0.1   homestead.test
 </code></pre>
+</div>
 
 <p>Now, go to your browser and type <mark>homestead.test</mark> and you should be able to see your Laravel project's sample layout.</p>
 
@@ -894,7 +958,8 @@ databases:
 
 <p>This is the file structure we're going to follow in this tutorial, so create it before you proceed with the tutorial.</p>
 
-<pre><code>\blog-ssg
+<div class="codehilite">
+<pre><span></span><code>\blog-ssg
     \content
     \output
     \templates
@@ -902,101 +967,108 @@ databases:
     ssg.py
     ssglib.py
 </code></pre>
+</div>
 
 <p>Next, install the following dependencies using <mark>pip</mark>:</p>
 
-<pre><code>pip install markdown2
-pip install jinja2
+<div class="codehilite">
+<pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>markdown2
+pip<span class="w"> </span>install<span class="w"> </span>jinja2
 </code></pre>
+</div>
 
 <h3>Generate markdown files</h3>
 
 <p>Go to your <mark>make_entry.py</mark> file and copy-paste this code. This will be used to generate markdown file for you to edit instead of having to create it manually all the time.</p>
 
-<pre><code>import os, sys
-from glob import glob
-from datetime import datetime
+<div class="codehilite">
+<pre><span></span><code><span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">glob</span> <span class="kn">import</span> <span class="n">glob</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
 
-# This is the Markdown template
-TEMPLATE = """
-title: {title}
-date: {date}
-slug: {slug}
-category: Write category here.
-summary: Write summary here.
+<span class="c1"># This is the Markdown template</span>
+<span class="n">TEMPLATE</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">title: </span><span class="si">{title}</span>
+<span class="s2">date: </span><span class="si">{date}</span>
+<span class="s2">slug: </span><span class="si">{slug}</span>
+<span class="s2">category: Write category here.</span>
+<span class="s2">summary: Write summary here.</span>
 
-Write content here.
-"""
+<span class="s2">Write content here.</span>
+<span class="s2">&quot;&quot;&quot;</span>
 
-def suffix(d):
-    return 'th' if 11&lt;=d&lt;=13 else {'1':'st', '2':'nd', '3':'rd'}.get(d%10, 'th')
+<span class="k">def</span> <span class="nf">suffix</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
+    <span class="k">return</span> <span class="s1">&#39;th&#39;</span> <span class="k">if</span> <span class="mi">11</span><span class="o">&lt;=</span><span class="n">d</span><span class="o">&lt;=</span><span class="mi">13</span> <span class="k">else</span> <span class="p">{</span><span class="s1">&#39;1&#39;</span><span class="p">:</span><span class="s1">&#39;st&#39;</span><span class="p">,</span> <span class="s1">&#39;2&#39;</span><span class="p">:</span><span class="s1">&#39;nd&#39;</span><span class="p">,</span> <span class="s1">&#39;3&#39;</span><span class="p">:</span><span class="s1">&#39;rd&#39;</span><span class="p">}</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">d</span><span class="o">%</span><span class="mi">10</span><span class="p">,</span> <span class="s1">&#39;th&#39;</span><span class="p">)</span>
 
-def custom_strftime(format, t):
-    return t.strftime(format).replace('{S}', str(t.day) + suffix(t.day))
+<span class="k">def</span> <span class="nf">custom_strftime</span><span class="p">(</span><span class="nb">format</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">t</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="nb">format</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{S}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">day</span><span class="p">)</span> <span class="o">+</span> <span class="n">suffix</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">day</span><span class="p">))</span>
 
-# Generate file number by looking at the number blog articles in the directory
-def gen_file_no(file_path, existing_files):
-    """
-        If no files are found,
-        then this is the first file.
-    """
-    if not existing_files:
-        return 1
+<span class="c1"># Generate file number by looking at the number blog articles in the directory</span>
+<span class="k">def</span> <span class="nf">gen_file_no</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">existing_files</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        If no files are found,</span>
+<span class="sd">        then this is the first file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">existing_files</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">1</span>
 
-    """
-        Look for the biggest file number
-        and return the bigger one
-    """
-    prefixes = [filename.replace(file_path,"")[:2] for filename in existing_files]
-    biggest_prefix = max(prefixes, key= lambda n: int(n))
-    return int(biggest_prefix) + 1
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Look for the biggest file number</span>
+<span class="sd">        and return the bigger one</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">prefixes</span> <span class="o">=</span> <span class="p">[</span><span class="n">filename</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">)[:</span><span class="mi">2</span><span class="p">]</span> <span class="k">for</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">existing_files</span><span class="p">]</span>
+    <span class="n">biggest_prefix</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">prefixes</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span> <span class="k">lambda</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">biggest_prefix</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
 
-# Generate slug for the blog article
-def gen_slug(title):
-    title = "".join(x for x in title if x.isalnum() or x == ' ')
-    title = title.lower().strip("").replace(' ','-')
-    return title
+<span class="c1"># Generate slug for the blog article</span>
+<span class="k">def</span> <span class="nf">gen_slug</span><span class="p">(</span><span class="n">title</span><span class="p">):</span>
+    <span class="n">title</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">title</span> <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">isalnum</span><span class="p">()</span> <span class="ow">or</span> <span class="n">x</span> <span class="o">==</span> <span class="s1">&#39; &#39;</span><span class="p">)</span>
+    <span class="n">title</span> <span class="o">=</span> <span class="n">title</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span><span class="s1">&#39;-&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">title</span>
 
-# Create entry
-def make_entry(title, file_type):
-    if file_type == "articles":
-        file_path = "content/" + file_type + "/"
+<span class="c1"># Create entry</span>
+<span class="k">def</span> <span class="nf">make_entry</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">file_type</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">file_type</span> <span class="o">==</span> <span class="s2">&quot;articles&quot;</span><span class="p">:</span>
+        <span class="n">file_path</span> <span class="o">=</span> <span class="s2">&quot;content/&quot;</span> <span class="o">+</span> <span class="n">file_type</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span>
 
-        # Create folders if they didn't exist
-        if not os.path.exists(file_path):
-            os.makedirs(os.path.dirname(file_path))
+        <span class="c1"># Create folders if they didn&#39;t exist</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">file_path</span><span class="p">))</span>
 
-        today = datetime.today()
+        <span class="n">today</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">today</span><span class="p">()</span>
 
-        slug = gen_slug(title)
-        file_no = gen_file_no(file_path, existing_files=glob(file_path + "*.md"))
-        blog_file_path = file_path + "{:0&gt;2}_{}_{:0&gt;2}_{:0&gt;2}_{}.md".format(file_no, today.year, today.month, today.day, slug)
+        <span class="n">slug</span> <span class="o">=</span> <span class="n">gen_slug</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+        <span class="n">file_no</span> <span class="o">=</span> <span class="n">gen_file_no</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">existing_files</span><span class="o">=</span><span class="n">glob</span><span class="p">(</span><span class="n">file_path</span> <span class="o">+</span> <span class="s2">&quot;*.md&quot;</span><span class="p">))</span>
+        <span class="n">blog_file_path</span> <span class="o">=</span> <span class="n">file_path</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="si">{:0&gt;2}</span><span class="s2">_</span><span class="si">{}</span><span class="s2">_</span><span class="si">{:0&gt;2}</span><span class="s2">_</span><span class="si">{:0&gt;2}</span><span class="s2">_</span><span class="si">{}</span><span class="s2">.md&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">file_no</span><span class="p">,</span> <span class="n">today</span><span class="o">.</span><span class="n">year</span><span class="p">,</span> <span class="n">today</span><span class="o">.</span><span class="n">month</span><span class="p">,</span> <span class="n">today</span><span class="o">.</span><span class="n">day</span><span class="p">,</span> <span class="n">slug</span><span class="p">)</span>
 
-        post_date = datetime.strptime(str(today.date()), '%Y-%m-%d')
-        post_date = custom_strftime('%B {S}, %Y', post_date)
+        <span class="n">post_date</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">today</span><span class="o">.</span><span class="n">date</span><span class="p">()),</span> <span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">post_date</span> <span class="o">=</span> <span class="n">custom_strftime</span><span class="p">(</span><span class="s1">&#39;%B </span><span class="si">{S}</span><span class="s1">, %Y&#39;</span><span class="p">,</span> <span class="n">post_date</span><span class="p">)</span>
 
-        t = TEMPLATE.strip().format(title=title,
-            year=today.year,
-            month=today.month,
-            date=post_date,
-            slug=slug)      
+        <span class="n">t</span> <span class="o">=</span> <span class="n">TEMPLATE</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">,</span>
+            <span class="n">year</span><span class="o">=</span><span class="n">today</span><span class="o">.</span><span class="n">year</span><span class="p">,</span>
+            <span class="n">month</span><span class="o">=</span><span class="n">today</span><span class="o">.</span><span class="n">month</span><span class="p">,</span>
+            <span class="n">date</span><span class="o">=</span><span class="n">post_date</span><span class="p">,</span>
+            <span class="n">slug</span><span class="o">=</span><span class="n">slug</span><span class="p">)</span>      
 
-        with open(blog_file_path, 'w') as w:
-            w.write(t)
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">blog_file_path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">w</span><span class="p">:</span>
+            <span class="n">w</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
 
-        print blog_file_path
+        <span class="nb">print</span> <span class="n">blog_file_path</span>
 
-if __name__ == '__main__':
-    if len(sys.argv) &gt; 1:
-        make_entry(sys.argv[1], sys.argv[2])
-    else:
-    print "Enter blog title and article type"
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">make_entry</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+    <span class="nb">print</span> <span class="s2">&quot;Enter blog title and article type&quot;</span>
 </code></pre>
+</div>
 
 <p>To create a blog entry, just type this in your terminal:</p>
 
-<pre><code>python make_entry.py "Article Name" articles
+<div class="codehilite">
+<pre><span></span><code>python<span class="w"> </span>make_entry.py<span class="w"> </span><span class="s2">&quot;Article Name&quot;</span><span class="w"> </span>articles
 </code></pre>
+</div>
 
 <h3>Create a library</h3>
 
@@ -1015,36 +1087,40 @@ if __name__ == '__main__':
 
 <p>Before that, add the following lines to the file:</p>
 
-<pre><code>import os, random, sys
-from datetime import datetime
-from jinja2 import Environment, PackageLoader
-from markdown2 import markdown
-from argparse import Namespace
+<div class="codehilite">
+<pre><span></span><code><span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">random</span><span class="o">,</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span> <span class="nn">jinja2</span> <span class="kn">import</span> <span class="n">Environment</span><span class="p">,</span> <span class="n">PackageLoader</span>
+<span class="kn">from</span> <span class="nn">markdown2</span> <span class="kn">import</span> <span class="n">markdown</span>
+<span class="kn">from</span> <span class="nn">argparse</span> <span class="kn">import</span> <span class="n">Namespace</span>
 
-# Jinja2 Environment
-env = Environment(loader=PackageLoader('ssg','templates'))
+<span class="c1"># Jinja2 Environment</span>
+<span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">loader</span><span class="o">=</span><span class="n">PackageLoader</span><span class="p">(</span><span class="s1">&#39;ssg&#39;</span><span class="p">,</span><span class="s1">&#39;templates&#39;</span><span class="p">))</span>
 </code></pre>
+</div>
 
 <h4><a id="stub-1"></a> Fetch content from Markdown files</h4>
 
 <p>This method will fetch content from all of the Markdown files that resides in the <mark>content/articles</mark> folder.</p>
 
-<pre><code># Get Markdown files from content directory
-def get_markdown_files(section):
-    POSTS = {}
+<div class="codehilite">
+<pre><span></span><code><span class="c1"># Get Markdown files from content directory</span>
+<span class="k">def</span> <span class="nf">get_markdown_files</span><span class="p">(</span><span class="n">section</span><span class="p">):</span>
+    <span class="n">POSTS</span> <span class="o">=</span> <span class="p">{}</span>
 
-    file_path = 'content/'
+    <span class="n">file_path</span> <span class="o">=</span> <span class="s1">&#39;content/&#39;</span>
 
-    for md_file in os.listdir(file_path):
-        md_file_path = os.path.join(file_path, md_file)
+    <span class="k">for</span> <span class="n">md_file</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
+        <span class="n">md_file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">md_file</span><span class="p">)</span>
 
-        # if it's not a directory, read it
-        if not os.path.isdir(md_file_path):
-            with open(md_file_path, 'r') as file:
-                POSTS[md_file] = markdown(file.read(), extras=['metadata'])
+        <span class="c1"># if it&#39;s not a directory, read it</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">md_file_path</span><span class="p">):</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">md_file_path</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+                <span class="n">POSTS</span><span class="p">[</span><span class="n">md_file</span><span class="p">]</span> <span class="o">=</span> <span class="n">markdown</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">read</span><span class="p">(),</span> <span class="n">extras</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;metadata&#39;</span><span class="p">])</span>
 
-    return POSTS
+    <span class="k">return</span> <span class="n">POSTS</span>
 </code></pre>
+</div>
 
 <h4><a id="stub-2"></a> Create templates</h4>
 
@@ -1052,77 +1128,81 @@ def get_markdown_files(section):
 
 <p>This is the template for the home page of your blog and you can name this as <mark>index.html</mark>:</p>
 
-<pre><code>&lt;!DOCTYPE html&gt;
-&lt;html&gt;
-&lt;head&gt;
-    &lt;title&gt;My Blog&lt;/title&gt;
-    &lt;base href="/"/&gt;
-    &lt;meta http-equiv="Content-Type" content="text/html; charset=utf-8"&gt;
-    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
-&lt;/head&gt;
-&lt;body&gt;
-    &lt;main&gt;
-        &lt;div class="posts-list"&gt;
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;!DOCTYPE html&gt;</span>
+<span class="p">&lt;</span><span class="nt">html</span><span class="p">&gt;</span>
+<span class="p">&lt;</span><span class="nt">head</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">title</span><span class="p">&gt;</span>My Blog<span class="p">&lt;/</span><span class="nt">title</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">base</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;/&quot;</span><span class="p">/&gt;</span>
+    <span class="p">&lt;</span><span class="nt">meta</span> <span class="na">http-equiv</span><span class="o">=</span><span class="s">&quot;Content-Type&quot;</span> <span class="na">content</span><span class="o">=</span><span class="s">&quot;text/html; charset=utf-8&quot;</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">meta</span> <span class="na">name</span><span class="o">=</span><span class="s">&quot;viewport&quot;</span> <span class="na">content</span><span class="o">=</span><span class="s">&quot;width=device-width, initial-scale=1.0&quot;</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">head</span><span class="p">&gt;</span>
+<span class="p">&lt;</span><span class="nt">body</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">main</span><span class="p">&gt;</span>
+        <span class="p">&lt;</span><span class="nt">div</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;posts-list&quot;</span><span class="p">&gt;</span>
             {% for post in posts %}
-            &lt;a href="posts/{{ post.slug }}/"&gt;
-                &lt;p&gt;{{ post.date }} &amp;mdash; {{ post.title }}&lt;/p&gt;
-            &lt;/a&gt;
+            <span class="p">&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;posts/{{ post.slug }}/&quot;</span><span class="p">&gt;</span>
+                <span class="p">&lt;</span><span class="nt">p</span><span class="p">&gt;</span>{{ post.date }} <span class="ni">&amp;mdash;</span> {{ post.title }}<span class="p">&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
+            <span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;</span>
             {% endfor %}
-        &lt;/div&gt;
+        <span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
 
-        &lt;div class="paginator"&gt;
+        <span class="p">&lt;</span><span class="nt">div</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;paginator&quot;</span><span class="p">&gt;</span>
             {% if curr == 2 %}
-                &lt;a class="prev" href="/" rel="prev"&gt;Newer&lt;/a&gt;
+                <span class="p">&lt;</span><span class="nt">a</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;prev&quot;</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;/&quot;</span> <span class="na">rel</span><span class="o">=</span><span class="s">&quot;prev&quot;</span><span class="p">&gt;</span>Newer<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;</span>
             {% elif prev != 0 %}
-                &lt;a class="prev" href="/pages/{{prev}}" rel="prev"&gt;Newer&lt;/a&gt;
+                <span class="p">&lt;</span><span class="nt">a</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;prev&quot;</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;/pages/{{prev}}&quot;</span> <span class="na">rel</span><span class="o">=</span><span class="s">&quot;prev&quot;</span><span class="p">&gt;</span>Newer<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;</span>
             {% else %}
-                &lt;a class="prev inactive"&gt;Newer&lt;/a&gt;
+                <span class="p">&lt;</span><span class="nt">a</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;prev inactive&quot;</span><span class="p">&gt;</span>Newer<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;</span>
             {% endif %}
 
-            &lt;p&gt;{{curr}} &lt;span&gt;of&lt;/span&gt; {{total}}&lt;/p&gt;
+            <span class="p">&lt;</span><span class="nt">p</span><span class="p">&gt;</span>{{curr}} <span class="p">&lt;</span><span class="nt">span</span><span class="p">&gt;</span>of<span class="p">&lt;/</span><span class="nt">span</span><span class="p">&gt;</span> {{total}}<span class="p">&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
 
             {% if next != 0 %}
-                &lt;a class="next" href="/pages/{{next}}" rel="next"&gt;Older&lt;/a&gt;
+                <span class="p">&lt;</span><span class="nt">a</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;next&quot;</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;/pages/{{next}}&quot;</span> <span class="na">rel</span><span class="o">=</span><span class="s">&quot;next&quot;</span><span class="p">&gt;</span>Older<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;</span>
             {% else %}
-                &lt;a class="next inactive"&gt;Older&lt;/a&gt;
+                <span class="p">&lt;</span><span class="nt">a</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;next inactive&quot;</span><span class="p">&gt;</span>Older<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;</span>
             {% endif %}
-        &lt;/div&gt;
+        <span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
 
-    &lt;/main&gt;
-&lt;/body&gt;
-&lt;/html&gt;
+    <span class="p">&lt;/</span><span class="nt">main</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">body</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">html</span><span class="p">&gt;</span>
 </code></pre>
+</div>
 
 <p>This is the template for the article page and you can name this as <mark>article.html</mark>:</p>
 
-<pre><code>&lt;!DOCTYPE html&gt;
-&lt;html&gt;
-&lt;head&gt;
-    &lt;title&gt;{{ post.title }}&lt;/title&gt;
-    &lt;meta http-equiv="Content-Type" content="text/html; charset=utf-8"&gt;
-    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
-    &lt;meta name="author" content="Your name"&gt;
-    &lt;meta name="description" content="{{ post.summary }}."&gt;
-&lt;/head&gt;
-&lt;body&gt;
-    &lt;main class="article-main"&gt;
-        &lt;div class="article-info"&gt;
-            &lt;div&gt;
-                &lt;h5&gt;{{ post.category }}&lt;/h5&gt;
-                &lt;h1&gt;{{ post.title }}&lt;/h1&gt;
-                &lt;p&gt;{{ post.summary }}&lt;/p&gt;
-                &lt;h6&gt;Your name &amp;mdash; {{ post.date }}&lt;/h6&gt;
-            &lt;/div&gt;    
-        &lt;/div&gt;
-        &lt;article class="article-container"&gt;
-            &lt;div class="content"&gt;
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;!DOCTYPE html&gt;</span>
+<span class="p">&lt;</span><span class="nt">html</span><span class="p">&gt;</span>
+<span class="p">&lt;</span><span class="nt">head</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">title</span><span class="p">&gt;</span>{{ post.title }}<span class="p">&lt;/</span><span class="nt">title</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">meta</span> <span class="na">http-equiv</span><span class="o">=</span><span class="s">&quot;Content-Type&quot;</span> <span class="na">content</span><span class="o">=</span><span class="s">&quot;text/html; charset=utf-8&quot;</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">meta</span> <span class="na">name</span><span class="o">=</span><span class="s">&quot;viewport&quot;</span> <span class="na">content</span><span class="o">=</span><span class="s">&quot;width=device-width, initial-scale=1.0&quot;</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">meta</span> <span class="na">name</span><span class="o">=</span><span class="s">&quot;author&quot;</span> <span class="na">content</span><span class="o">=</span><span class="s">&quot;Your name&quot;</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">meta</span> <span class="na">name</span><span class="o">=</span><span class="s">&quot;description&quot;</span> <span class="na">content</span><span class="o">=</span><span class="s">&quot;{{ post.summary }}.&quot;</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">head</span><span class="p">&gt;</span>
+<span class="p">&lt;</span><span class="nt">body</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">main</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;article-main&quot;</span><span class="p">&gt;</span>
+        <span class="p">&lt;</span><span class="nt">div</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;article-info&quot;</span><span class="p">&gt;</span>
+            <span class="p">&lt;</span><span class="nt">div</span><span class="p">&gt;</span>
+                <span class="p">&lt;</span><span class="nt">h5</span><span class="p">&gt;</span>{{ post.category }}<span class="p">&lt;/</span><span class="nt">h5</span><span class="p">&gt;</span>
+                <span class="p">&lt;</span><span class="nt">h1</span><span class="p">&gt;</span>{{ post.title }}<span class="p">&lt;/</span><span class="nt">h1</span><span class="p">&gt;</span>
+                <span class="p">&lt;</span><span class="nt">p</span><span class="p">&gt;</span>{{ post.summary }}<span class="p">&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
+                <span class="p">&lt;</span><span class="nt">h6</span><span class="p">&gt;</span>Your name <span class="ni">&amp;mdash;</span> {{ post.date }}<span class="p">&lt;/</span><span class="nt">h6</span><span class="p">&gt;</span>
+            <span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>    
+        <span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+        <span class="p">&lt;</span><span class="nt">article</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;article-container&quot;</span><span class="p">&gt;</span>
+            <span class="p">&lt;</span><span class="nt">div</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;content&quot;</span><span class="p">&gt;</span>
             {{ post.content }}
-            &lt;/div&gt;
-        &lt;/article&gt;
-    &lt;/main&gt;
-&lt;/body&gt;
-&lt;/html&gt;
+            <span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+        <span class="p">&lt;/</span><span class="nt">article</span><span class="p">&gt;</span>
+    <span class="p">&lt;/</span><span class="nt">main</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">body</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">html</span><span class="p">&gt;</span>
 </code></pre>
+</div>
 
 <p>Though, this is just a bare-bone template, you can be creative and make your own changes to it by making it visually-appealing!</p>
 
@@ -1130,321 +1210,337 @@ def get_markdown_files(section):
 
 <p>This method will create your index page. The index page will contain the links for each article.</p>
 
-<pre><code>def index(POSTS, isPaginate=True):
-    posts_metadata = get_posts_metadata(POSTS)
-    if not isPaginate:
-        template = env.get_template('index-alt.html')
-        html_content = template.render(posts=posts_metadata)
-        index_path = 'output/index.html'
-        write_to_file(index_path, html_content.encode('utf-8'))
-    else:
-        args = {
-            "template": env.get_template('index.html'),
-            "posts_metadata": posts_metadata,
+<div class="codehilite">
+<pre><span></span><code><span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="n">POSTS</span><span class="p">,</span> <span class="n">isPaginate</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="n">posts_metadata</span> <span class="o">=</span> <span class="n">get_posts_metadata</span><span class="p">(</span><span class="n">POSTS</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">isPaginate</span><span class="p">:</span>
+        <span class="n">template</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s1">&#39;index-alt.html&#39;</span><span class="p">)</span>
+        <span class="n">html_content</span> <span class="o">=</span> <span class="n">template</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">posts</span><span class="o">=</span><span class="n">posts_metadata</span><span class="p">)</span>
+        <span class="n">index_path</span> <span class="o">=</span> <span class="s1">&#39;output/index.html&#39;</span>
+        <span class="n">write_to_file</span><span class="p">(</span><span class="n">index_path</span><span class="p">,</span> <span class="n">html_content</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;template&quot;</span><span class="p">:</span> <span class="n">env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s1">&#39;index.html&#39;</span><span class="p">),</span>
+            <span class="s2">&quot;posts_metadata&quot;</span><span class="p">:</span> <span class="n">posts_metadata</span><span class="p">,</span>
 
-            # Keeps tracks the current post
-            "curr_posts_index": 0,
+            <span class="c1"># Keeps tracks the current post</span>
+            <span class="s2">&quot;curr_posts_index&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
 
-            # Total number of posts
-            "total_posts": len(POSTS),
+            <span class="c1"># Total number of posts</span>
+            <span class="s2">&quot;total_posts&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">POSTS</span><span class="p">),</span>
 
-            # Number of posts per page
-            "posts_per_page": 8,
+            <span class="c1"># Number of posts per page</span>
+            <span class="s2">&quot;posts_per_page&quot;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
 
-            # Directory to hold the pages
-            "main_pages_path": "output/pages/"
-        }
-        pagination(args)
+            <span class="c1"># Directory to hold the pages</span>
+            <span class="s2">&quot;main_pages_path&quot;</span><span class="p">:</span> <span class="s2">&quot;output/pages/&quot;</span>
+        <span class="p">}</span>
+        <span class="n">pagination</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
 </code></pre>
+</div>
 
 <h4><a id="stub-4"></a> Generate articles from Markdown to HTML</h4>
 
 <p>This method will convert your Markdown content into HTML pages. One thing to note, each blog post will have it's own folder name with it's own slug and <mark>index.html</mark> file, so that it'll be easier to access the article.</p>
 
-<pre><code># Generate all posts
-def articles(POSTS, post_template):
-    for post in POSTS:
-        post_metadata = POSTS[post].metadata
-        post_data = {
-            'content': POSTS[post],
-            'slug': post_metadata['slug'],
-            'title': post_metadata['title'],
-            'summary': post_metadata['summary'],
-            'category': post_metadata['category'],
-            'date': post_metadata['date']
-        }
-        post_html_content = post_template.render(post=post_data)
-        post_file_path = 'output/posts/{slug}/index.html'.format(slug=post_metadata['slug'])
-        create_directory(post_file_path)
-        write_to_file(post_file_path, post_html_content.encode('utf-8'))
+<div class="codehilite">
+<pre><span></span><code><span class="c1"># Generate all posts</span>
+<span class="k">def</span> <span class="nf">articles</span><span class="p">(</span><span class="n">POSTS</span><span class="p">,</span> <span class="n">post_template</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">post</span> <span class="ow">in</span> <span class="n">POSTS</span><span class="p">:</span>
+        <span class="n">post_metadata</span> <span class="o">=</span> <span class="n">POSTS</span><span class="p">[</span><span class="n">post</span><span class="p">]</span><span class="o">.</span><span class="n">metadata</span>
+        <span class="n">post_data</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;content&#39;</span><span class="p">:</span> <span class="n">POSTS</span><span class="p">[</span><span class="n">post</span><span class="p">],</span>
+            <span class="s1">&#39;slug&#39;</span><span class="p">:</span> <span class="n">post_metadata</span><span class="p">[</span><span class="s1">&#39;slug&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="n">post_metadata</span><span class="p">[</span><span class="s1">&#39;title&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;summary&#39;</span><span class="p">:</span> <span class="n">post_metadata</span><span class="p">[</span><span class="s1">&#39;summary&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;category&#39;</span><span class="p">:</span> <span class="n">post_metadata</span><span class="p">[</span><span class="s1">&#39;category&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;date&#39;</span><span class="p">:</span> <span class="n">post_metadata</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">]</span>
+        <span class="p">}</span>
+        <span class="n">post_html_content</span> <span class="o">=</span> <span class="n">post_template</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">post</span><span class="o">=</span><span class="n">post_data</span><span class="p">)</span>
+        <span class="n">post_file_path</span> <span class="o">=</span> <span class="s1">&#39;output/posts/</span><span class="si">{slug}</span><span class="s1">/index.html&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">slug</span><span class="o">=</span><span class="n">post_metadata</span><span class="p">[</span><span class="s1">&#39;slug&#39;</span><span class="p">])</span>
+        <span class="n">create_directory</span><span class="p">(</span><span class="n">post_file_path</span><span class="p">)</span>
+        <span class="n">write_to_file</span><span class="p">(</span><span class="n">post_file_path</span><span class="p">,</span> <span class="n">post_html_content</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">))</span>
 </code></pre>
+</div>
 
 <h4><a id="stub-5"></a> Generate pagination module</h4>
 
 <p>Depending on the amount of blog articles you want to display, it will create <strong><em>total number of posts / article per page</em></strong> pages on the home page. They will look identical to the index page and these pages will be created in <mark>output/pages</mark> folder.</p>
 
-<pre><code># Pagination module
-def pagination(args):
+<div class="codehilite">
+<pre><span></span><code><span class="c1"># Pagination module</span>
+<span class="k">def</span> <span class="nf">pagination</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
 
-    x = Namespace(**args)
+    <span class="n">x</span> <span class="o">=</span> <span class="n">Namespace</span><span class="p">(</span><span class="o">**</span><span class="n">args</span><span class="p">)</span>
 
-    # Number of pages (for pagination)
-    num_pages = (x.total_posts/x.posts_per_page)
+    <span class="c1"># Number of pages (for pagination)</span>
+    <span class="n">num_pages</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">total_posts</span><span class="o">/</span><span class="n">x</span><span class="o">.</span><span class="n">posts_per_page</span><span class="p">)</span>
 
-    # Create a page directory, if it doesn't exist
-    create_directory(x.main_pages_path) 
+    <span class="c1"># Create a page directory, if it doesn&#39;t exist</span>
+    <span class="n">create_directory</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">main_pages_path</span><span class="p">)</span> 
 
-    for pagenum in range(0, num_pages+1):
-        # This will contain metadata of every x number of posts per page
-        page_metadata = []
-        page_path = ""
-        curr_page = pagenum+1
+    <span class="k">for</span> <span class="n">pagenum</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_pages</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+        <span class="c1"># This will contain metadata of every x number of posts per page</span>
+        <span class="n">page_metadata</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">page_path</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="n">curr_page</span> <span class="o">=</span> <span class="n">pagenum</span><span class="o">+</span><span class="mi">1</span>
 
-        if curr_page == 1:
-            page_path = "output/index.html" 
-        else:
-            page_path = "output/pages/{page}/index.html".format(page=curr_page)
+        <span class="k">if</span> <span class="n">curr_page</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">page_path</span> <span class="o">=</span> <span class="s2">&quot;output/index.html&quot;</span> 
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">page_path</span> <span class="o">=</span> <span class="s2">&quot;output/pages/</span><span class="si">{page}</span><span class="s2">/index.html&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">page</span><span class="o">=</span><span class="n">curr_page</span><span class="p">)</span>
 
-        create_directory(page_path)
+        <span class="n">create_directory</span><span class="p">(</span><span class="n">page_path</span><span class="p">)</span>
 
-        # Internal counter to keep track of posts per page
-        posts_counter = 0
+        <span class="c1"># Internal counter to keep track of posts per page</span>
+        <span class="n">posts_counter</span> <span class="o">=</span> <span class="mi">0</span>
 
-        for j in range(x.curr_posts_index, len(x.posts_metadata)):
-            page_metadata.append(x.posts_metadata[j])
-            posts_counter = posts_counter+1
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">curr_posts_index</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">posts_metadata</span><span class="p">)):</span>
+            <span class="n">page_metadata</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">posts_metadata</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+            <span class="n">posts_counter</span> <span class="o">=</span> <span class="n">posts_counter</span><span class="o">+</span><span class="mi">1</span>
 
-            # If it reached it's limit, break
-            if posts_counter == x.posts_per_page:
-                x.curr_posts_index = j+1
-                break
+            <span class="c1"># If it reached it&#39;s limit, break</span>
+            <span class="k">if</span> <span class="n">posts_counter</span> <span class="o">==</span> <span class="n">x</span><span class="o">.</span><span class="n">posts_per_page</span><span class="p">:</span>
+                <span class="n">x</span><span class="o">.</span><span class="n">curr_posts_index</span> <span class="o">=</span> <span class="n">j</span><span class="o">+</span><span class="mi">1</span>
+                <span class="k">break</span>
 
-        # Create links for previous and next pages
-        prev_page = 0 if curr_page == 1 else curr_page-1
-        next_page = 0 if curr_page == num_pages+1 else curr_page+1
+        <span class="c1"># Create links for previous and next pages</span>
+        <span class="n">prev_page</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">curr_page</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">curr_page</span><span class="o">-</span><span class="mi">1</span>
+        <span class="n">next_page</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">curr_page</span> <span class="o">==</span> <span class="n">num_pages</span><span class="o">+</span><span class="mi">1</span> <span class="k">else</span> <span class="n">curr_page</span><span class="o">+</span><span class="mi">1</span>
 
-        # Render the page
-        html_content = x.template.render(
-            posts=page_metadata, 
-            curr=curr_page,
-            prev=prev_page, 
-            next=next_page,
-            total=num_pages+1
-        )
+        <span class="c1"># Render the page</span>
+        <span class="n">html_content</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">template</span><span class="o">.</span><span class="n">render</span><span class="p">(</span>
+            <span class="n">posts</span><span class="o">=</span><span class="n">page_metadata</span><span class="p">,</span> 
+            <span class="n">curr</span><span class="o">=</span><span class="n">curr_page</span><span class="p">,</span>
+            <span class="n">prev</span><span class="o">=</span><span class="n">prev_page</span><span class="p">,</span> 
+            <span class="nb">next</span><span class="o">=</span><span class="n">next_page</span><span class="p">,</span>
+            <span class="n">total</span><span class="o">=</span><span class="n">num_pages</span><span class="o">+</span><span class="mi">1</span>
+        <span class="p">)</span>
 
-        write_to_file(page_path, html_content.encode('utf-8'))
+        <span class="n">write_to_file</span><span class="p">(</span><span class="n">page_path</span><span class="p">,</span> <span class="n">html_content</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">))</span>
 </code></pre>
+</div>
 
 <h4><a id="stub-6"></a> Generate blog</h4>
 
 <p>This is the main function that will generate the entire blog including all of the article pages.</p>
 
-<pre><code># Generate blog -- Main function
-def main(section):
-    sections = ['articles']
-    if section in sections:
-        POSTS = get_markdown_files(section)
-        if section == "articles":
-            posts_template = env.get_template('article.html')
-            index(POSTS, True)
-            articles(POSTS, posts_template)
-    else:
-        print "This section doesn't exist."
+<div class="codehilite">
+<pre><span></span><code><span class="c1"># Generate blog -- Main function</span>
+<span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">section</span><span class="p">):</span>
+    <span class="n">sections</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;articles&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">section</span> <span class="ow">in</span> <span class="n">sections</span><span class="p">:</span>
+        <span class="n">POSTS</span> <span class="o">=</span> <span class="n">get_markdown_files</span><span class="p">(</span><span class="n">section</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">section</span> <span class="o">==</span> <span class="s2">&quot;articles&quot;</span><span class="p">:</span>
+            <span class="n">posts_template</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s1">&#39;article.html&#39;</span><span class="p">)</span>
+            <span class="n">index</span><span class="p">(</span><span class="n">POSTS</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+            <span class="n">articles</span><span class="p">(</span><span class="n">POSTS</span><span class="p">,</span> <span class="n">posts_template</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span> <span class="s2">&quot;This section doesn&#39;t exist.&quot;</span>
 </code></pre>
+</div>
 
 <p>Take a look at the source code for both <mark>ssglib.py</mark> and <mark>ssg.py</mark> and feel free to tinker around with it.</p>
 
 <p><strong>Source code for</strong> <mark>ssglib.py</mark>:</p>
 
-<pre><code>#!usr/bin/python
-import os, random, sys
-from datetime import datetime
-from jinja2 import Environment, PackageLoader
-from markdown2 import markdown
-from argparse import Namespace
+<div class="codehilite">
+<pre><span></span><code><span class="ch">#!usr/bin/python</span>
+<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">random</span><span class="o">,</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span> <span class="nn">jinja2</span> <span class="kn">import</span> <span class="n">Environment</span><span class="p">,</span> <span class="n">PackageLoader</span>
+<span class="kn">from</span> <span class="nn">markdown2</span> <span class="kn">import</span> <span class="n">markdown</span>
+<span class="kn">from</span> <span class="nn">argparse</span> <span class="kn">import</span> <span class="n">Namespace</span>
 
-# Jinja2 Environment
-env = Environment(loader=PackageLoader('ssg','templates'))
+<span class="c1"># Jinja2 Environment</span>
+<span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">loader</span><span class="o">=</span><span class="n">PackageLoader</span><span class="p">(</span><span class="s1">&#39;ssg&#39;</span><span class="p">,</span><span class="s1">&#39;templates&#39;</span><span class="p">))</span>
 
-# Write to file
-def write_to_file(path, content):
-    with open(path, 'w') as file:
-        file.write(content)
-        file.close()
+<span class="c1"># Write to file</span>
+<span class="k">def</span> <span class="nf">write_to_file</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">content</span><span class="p">):</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+        <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">content</span><span class="p">)</span>
+        <span class="n">file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
-# Create directory
-def create_directory(path):
-    if not os.path.exists(path):
-        os.makedirs(os.path.dirname(path))
+<span class="c1"># Create directory</span>
+<span class="k">def</span> <span class="nf">create_directory</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
 
-# Get Markdown files from content directory
-def get_markdown_files(section):
-    POSTS = {}
+<span class="c1"># Get Markdown files from content directory</span>
+<span class="k">def</span> <span class="nf">get_markdown_files</span><span class="p">(</span><span class="n">section</span><span class="p">):</span>
+    <span class="n">POSTS</span> <span class="o">=</span> <span class="p">{}</span>
 
-    file_path = 'content/'
+    <span class="n">file_path</span> <span class="o">=</span> <span class="s1">&#39;content/&#39;</span>
 
-    for md_file in os.listdir(file_path):
-        md_file_path = os.path.join(file_path, md_file)
+    <span class="k">for</span> <span class="n">md_file</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
+        <span class="n">md_file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">md_file</span><span class="p">)</span>
 
-        # if it's not a directory, read it
-        if not os.path.isdir(md_file_path):
-            with open(md_file_path, 'r') as file:
-                POSTS[md_file] = markdown(file.read(), extras=['metadata'])
+        <span class="c1"># if it&#39;s not a directory, read it</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">md_file_path</span><span class="p">):</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">md_file_path</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+                <span class="n">POSTS</span><span class="p">[</span><span class="n">md_file</span><span class="p">]</span> <span class="o">=</span> <span class="n">markdown</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">read</span><span class="p">(),</span> <span class="n">extras</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;metadata&#39;</span><span class="p">])</span>
 
-    return POSTS
+    <span class="k">return</span> <span class="n">POSTS</span>
 
-"""
-Collect metadata of all the posts
-for home page and sort them 
-in reversed order
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Collect metadata of all the posts</span>
+<span class="sd">for home page and sort them </span>
+<span class="sd">in reversed order</span>
 
-@param: 
-    POSTS =&gt; Dictionary
-"""
-def get_posts_metadata(POSTS):
-    posts_metadata = []
-    for k,v in sorted(POSTS.items(), reverse=True):
-        posts_metadata.append(v.metadata)
-    return posts_metadata
+<span class="sd">@param: </span>
+<span class="sd">    POSTS =&gt; Dictionary</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="k">def</span> <span class="nf">get_posts_metadata</span><span class="p">(</span><span class="n">POSTS</span><span class="p">):</span>
+    <span class="n">posts_metadata</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">POSTS</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="n">posts_metadata</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">metadata</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">posts_metadata</span>
 
-"""
-    @params:
-    POSTS =&gt; Dictionary
-    template =&gt; jinja template
-    isPaginate =&gt; boolean to enable pagination
-"""
-def index(POSTS, isPaginate=True):
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    @params:</span>
+<span class="sd">    POSTS =&gt; Dictionary</span>
+<span class="sd">    template =&gt; jinja template</span>
+<span class="sd">    isPaginate =&gt; boolean to enable pagination</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="n">POSTS</span><span class="p">,</span> <span class="n">isPaginate</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 
-    posts_metadata = get_posts_metadata(POSTS)
+    <span class="n">posts_metadata</span> <span class="o">=</span> <span class="n">get_posts_metadata</span><span class="p">(</span><span class="n">POSTS</span><span class="p">)</span>
 
-    if not isPaginate:
-        template = env.get_template('index-alt.html')
-        html_content = template.render(posts=posts_metadata)
-        index_path = 'output/index.html'
-        write_to_file(index_path, html_content.encode('utf-8'))
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">isPaginate</span><span class="p">:</span>
+        <span class="n">template</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s1">&#39;index-alt.html&#39;</span><span class="p">)</span>
+        <span class="n">html_content</span> <span class="o">=</span> <span class="n">template</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">posts</span><span class="o">=</span><span class="n">posts_metadata</span><span class="p">)</span>
+        <span class="n">index_path</span> <span class="o">=</span> <span class="s1">&#39;output/index.html&#39;</span>
+        <span class="n">write_to_file</span><span class="p">(</span><span class="n">index_path</span><span class="p">,</span> <span class="n">html_content</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">))</span>
 
-    else:
-        args = {
-            "template": env.get_template('index.html'),
-            "posts_metadata": posts_metadata,
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;template&quot;</span><span class="p">:</span> <span class="n">env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s1">&#39;index.html&#39;</span><span class="p">),</span>
+            <span class="s2">&quot;posts_metadata&quot;</span><span class="p">:</span> <span class="n">posts_metadata</span><span class="p">,</span>
 
-            # Keeps tracks the current post
-            "curr_posts_index": 0,
+            <span class="c1"># Keeps tracks the current post</span>
+            <span class="s2">&quot;curr_posts_index&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
 
-            # Total number of posts
-            "total_posts": len(POSTS),
+            <span class="c1"># Total number of posts</span>
+            <span class="s2">&quot;total_posts&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">POSTS</span><span class="p">),</span>
 
-            # Number of posts per page
-            "posts_per_page": 8,
+            <span class="c1"># Number of posts per page</span>
+            <span class="s2">&quot;posts_per_page&quot;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
 
-            # Directory to hold the pages
-            "main_pages_path": "output/pages/"
-        }
+            <span class="c1"># Directory to hold the pages</span>
+            <span class="s2">&quot;main_pages_path&quot;</span><span class="p">:</span> <span class="s2">&quot;output/pages/&quot;</span>
+        <span class="p">}</span>
 
-        pagination(args)
+        <span class="n">pagination</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
 
-# Generate all posts
-def articles(POSTS, post_template):
-    for post in POSTS:
-        post_metadata = POSTS[post].metadata
-        post_data = {
-            'content': POSTS[post],
-            'slug': post_metadata['slug'],
-            'title': post_metadata['title'],
-            'summary': post_metadata['summary'],
-            'category': post_metadata['category'],
-            'date': post_metadata['date']
-        }
-        post_html_content = post_template.render(post=post_data)
-        post_file_path = 'output/posts/{slug}/index.html'.format(slug=post_metadata['slug'])
-        create_directory(post_file_path)
-        write_to_file(post_file_path, post_html_content.encode('utf-8'))
+<span class="c1"># Generate all posts</span>
+<span class="k">def</span> <span class="nf">articles</span><span class="p">(</span><span class="n">POSTS</span><span class="p">,</span> <span class="n">post_template</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">post</span> <span class="ow">in</span> <span class="n">POSTS</span><span class="p">:</span>
+        <span class="n">post_metadata</span> <span class="o">=</span> <span class="n">POSTS</span><span class="p">[</span><span class="n">post</span><span class="p">]</span><span class="o">.</span><span class="n">metadata</span>
+        <span class="n">post_data</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;content&#39;</span><span class="p">:</span> <span class="n">POSTS</span><span class="p">[</span><span class="n">post</span><span class="p">],</span>
+            <span class="s1">&#39;slug&#39;</span><span class="p">:</span> <span class="n">post_metadata</span><span class="p">[</span><span class="s1">&#39;slug&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="n">post_metadata</span><span class="p">[</span><span class="s1">&#39;title&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;summary&#39;</span><span class="p">:</span> <span class="n">post_metadata</span><span class="p">[</span><span class="s1">&#39;summary&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;category&#39;</span><span class="p">:</span> <span class="n">post_metadata</span><span class="p">[</span><span class="s1">&#39;category&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;date&#39;</span><span class="p">:</span> <span class="n">post_metadata</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">]</span>
+        <span class="p">}</span>
+        <span class="n">post_html_content</span> <span class="o">=</span> <span class="n">post_template</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">post</span><span class="o">=</span><span class="n">post_data</span><span class="p">)</span>
+        <span class="n">post_file_path</span> <span class="o">=</span> <span class="s1">&#39;output/posts/</span><span class="si">{slug}</span><span class="s1">/index.html&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">slug</span><span class="o">=</span><span class="n">post_metadata</span><span class="p">[</span><span class="s1">&#39;slug&#39;</span><span class="p">])</span>
+        <span class="n">create_directory</span><span class="p">(</span><span class="n">post_file_path</span><span class="p">)</span>
+        <span class="n">write_to_file</span><span class="p">(</span><span class="n">post_file_path</span><span class="p">,</span> <span class="n">post_html_content</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">))</span>
 
-# Generate pages
-def pagination(args):
+<span class="c1"># Generate pages</span>
+<span class="k">def</span> <span class="nf">pagination</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
 
-    x = Namespace(**args)
+    <span class="n">x</span> <span class="o">=</span> <span class="n">Namespace</span><span class="p">(</span><span class="o">**</span><span class="n">args</span><span class="p">)</span>
 
-    # Number of pages (for pagination)
-    num_pages = (x.total_posts/x.posts_per_page)
+    <span class="c1"># Number of pages (for pagination)</span>
+    <span class="n">num_pages</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">total_posts</span><span class="o">/</span><span class="n">x</span><span class="o">.</span><span class="n">posts_per_page</span><span class="p">)</span>
 
-    # Create a page directory, if it doesn't exist
-    create_directory(x.main_pages_path) 
+    <span class="c1"># Create a page directory, if it doesn&#39;t exist</span>
+    <span class="n">create_directory</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">main_pages_path</span><span class="p">)</span> 
 
-    for pagenum in range(0, num_pages+1):
-        # This will contain metadata of every x number of posts per page
-        page_metadata = []
-        page_path = ""
-        curr_page = pagenum+1
+    <span class="k">for</span> <span class="n">pagenum</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_pages</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+        <span class="c1"># This will contain metadata of every x number of posts per page</span>
+        <span class="n">page_metadata</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">page_path</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="n">curr_page</span> <span class="o">=</span> <span class="n">pagenum</span><span class="o">+</span><span class="mi">1</span>
 
-        if curr_page == 1:
-            page_path = "output/index.html" 
-        else:
-            page_path = "output/pages/{page}/index.html".format(page=curr_page)
+        <span class="k">if</span> <span class="n">curr_page</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">page_path</span> <span class="o">=</span> <span class="s2">&quot;output/index.html&quot;</span> 
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">page_path</span> <span class="o">=</span> <span class="s2">&quot;output/pages/</span><span class="si">{page}</span><span class="s2">/index.html&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">page</span><span class="o">=</span><span class="n">curr_page</span><span class="p">)</span>
 
-        create_directory(page_path)
+        <span class="n">create_directory</span><span class="p">(</span><span class="n">page_path</span><span class="p">)</span>
 
-        # Internal counter to keep track of posts per page
-        posts_counter = 0
+        <span class="c1"># Internal counter to keep track of posts per page</span>
+        <span class="n">posts_counter</span> <span class="o">=</span> <span class="mi">0</span>
 
-        for j in range(x.curr_posts_index, len(x.posts_metadata)):
-            page_metadata.append(x.posts_metadata[j])
-            posts_counter = posts_counter+1
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">curr_posts_index</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">posts_metadata</span><span class="p">)):</span>
+            <span class="n">page_metadata</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">posts_metadata</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+            <span class="n">posts_counter</span> <span class="o">=</span> <span class="n">posts_counter</span><span class="o">+</span><span class="mi">1</span>
 
-            # If it reached it's limit, break
-            if posts_counter == x.posts_per_page:
-                x.curr_posts_index = j+1
-                break
+            <span class="c1"># If it reached it&#39;s limit, break</span>
+            <span class="k">if</span> <span class="n">posts_counter</span> <span class="o">==</span> <span class="n">x</span><span class="o">.</span><span class="n">posts_per_page</span><span class="p">:</span>
+                <span class="n">x</span><span class="o">.</span><span class="n">curr_posts_index</span> <span class="o">=</span> <span class="n">j</span><span class="o">+</span><span class="mi">1</span>
+                <span class="k">break</span>
 
-        # Create links for previous and next pages
-        prev_page = 0 if curr_page == 1 else curr_page-1
-        next_page = 0 if curr_page == num_pages+1 else curr_page+1
+        <span class="c1"># Create links for previous and next pages</span>
+        <span class="n">prev_page</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">curr_page</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">curr_page</span><span class="o">-</span><span class="mi">1</span>
+        <span class="n">next_page</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">curr_page</span> <span class="o">==</span> <span class="n">num_pages</span><span class="o">+</span><span class="mi">1</span> <span class="k">else</span> <span class="n">curr_page</span><span class="o">+</span><span class="mi">1</span>
 
-        # Render the page
-        html_content = x.template.render(
-            posts=page_metadata, 
-            curr=curr_page,
-            prev=prev_page, 
-            next=next_page,
-            total=num_pages+1
-        )
-        write_to_file(page_path, html_content.encode('utf-8'))
+        <span class="c1"># Render the page</span>
+        <span class="n">html_content</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">template</span><span class="o">.</span><span class="n">render</span><span class="p">(</span>
+            <span class="n">posts</span><span class="o">=</span><span class="n">page_metadata</span><span class="p">,</span> 
+            <span class="n">curr</span><span class="o">=</span><span class="n">curr_page</span><span class="p">,</span>
+            <span class="n">prev</span><span class="o">=</span><span class="n">prev_page</span><span class="p">,</span> 
+            <span class="nb">next</span><span class="o">=</span><span class="n">next_page</span><span class="p">,</span>
+            <span class="n">total</span><span class="o">=</span><span class="n">num_pages</span><span class="o">+</span><span class="mi">1</span>
+        <span class="p">)</span>
+        <span class="n">write_to_file</span><span class="p">(</span><span class="n">page_path</span><span class="p">,</span> <span class="n">html_content</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">))</span>
 
-# Generate blog -- Main function
-def main(section):
-    sections = ['articles']
-    if section in sections:
-        POSTS = get_markdown_files(section)
-        if section == "articles":
-            posts_template = env.get_template('article.html')
-            index(POSTS, True)
-            articles(POSTS, posts_template)
-    else:
-        print "This section doesn't exist."
+<span class="c1"># Generate blog -- Main function</span>
+<span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">section</span><span class="p">):</span>
+    <span class="n">sections</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;articles&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">section</span> <span class="ow">in</span> <span class="n">sections</span><span class="p">:</span>
+        <span class="n">POSTS</span> <span class="o">=</span> <span class="n">get_markdown_files</span><span class="p">(</span><span class="n">section</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">section</span> <span class="o">==</span> <span class="s2">&quot;articles&quot;</span><span class="p">:</span>
+            <span class="n">posts_template</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s1">&#39;article.html&#39;</span><span class="p">)</span>
+            <span class="n">index</span><span class="p">(</span><span class="n">POSTS</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+            <span class="n">articles</span><span class="p">(</span><span class="n">POSTS</span><span class="p">,</span> <span class="n">posts_template</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span> <span class="s2">&quot;This section doesn&#39;t exist.&quot;</span>
 </code></pre>
+</div>
 
 <p><strong>Source code for</strong> <mark>ssglib.py</mark></p>
 
-<pre><code>import ssglib
-from ssglib import (os, random, sys, datetime, 
-Environment, PackageLoader, markdown)
+<div class="codehilite">
+<pre><span></span><code><span class="kn">import</span> <span class="nn">ssglib</span>
+<span class="kn">from</span> <span class="nn">ssglib</span> <span class="kn">import</span> <span class="p">(</span><span class="n">os</span><span class="p">,</span> <span class="n">random</span><span class="p">,</span> <span class="n">sys</span><span class="p">,</span> <span class="n">datetime</span><span class="p">,</span> 
+<span class="n">Environment</span><span class="p">,</span> <span class="n">PackageLoader</span><span class="p">,</span> <span class="n">markdown</span><span class="p">)</span>
 
-if __name__ == '__main__':
-    if len(sys.argv) &gt; 1:
-        ssglib.main(sys.argv[1])
-    else:
-        print "Enter section name you want to generate."
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">ssglib</span><span class="o">.</span><span class="n">main</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span> <span class="s2">&quot;Enter section name you want to generate.&quot;</span>
 </code></pre>
+</div>
 
 <p>To generate your blog, type the following in your command-line:</p>
 
-<pre><code>python ssg.py articles
+<div class="codehilite">
+<pre><span></span><code>python<span class="w"> </span>ssg.py<span class="w"> </span>articles
 </code></pre>
+</div>
 
 <p>Make sure you have a local HTTP server running on your computer, if you don't install this using NPM on your command-line:</p>
 
-<pre><code>npm i live-server
+<div class="codehilite">
+<pre><span></span><code>npm<span class="w"> </span>i<span class="w"> </span>live-server
 </code></pre>
+</div>
 
 <p>Alright, your blog is generated and now, it's time to launch it to the internet!</p>
 
@@ -1596,57 +1692,63 @@ if __name__ == '__main__':
 
 <p>Generating the grid is pretty much straightforward. Each cell will have an attribute named <mark>data-mine</mark> with a boolean value of <mark>true</mark> or <mark>false</mark>.</p>
 
-<pre><code>//Generate minesweeper grid
-const generateGrid = () =&gt; {
-    allowClick = true;
-    grid.innerHTML = "";
-    for(let i=0; i&amp;lt;size; i++) {
-        let row = grid.insertRow(i);
-        for(let j=0; j&amp;lt;size; j++) {
-            let cell = row.insertCell(j);
-            cell.onclick = function(){clickCell(this);}
-            let mine = document.createAttribute("data-mine");
-            mine.value = "false";
-            cell.setAttributeNode(mine);
-        }
-    }
-    setMines();
-}
+<div class="codehilite">
+<pre><span></span><code><span class="c1">//Generate minesweeper grid</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">generateGrid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">allowClick</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="p">;</span>
+<span class="w">    </span><span class="nx">grid</span><span class="p">.</span><span class="nx">innerHTML</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="p">;</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kd">let</span><span class="w"> </span><span class="nx">i</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">&lt;</span><span class="nx">size</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="nx">row</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">grid</span><span class="p">.</span><span class="nx">insertRow</span><span class="p">(</span><span class="nx">i</span><span class="p">);</span>
+<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kd">let</span><span class="w"> </span><span class="nx">j</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span><span class="w"> </span><span class="nx">j</span><span class="o">&lt;</span><span class="nx">size</span><span class="p">;</span><span class="w"> </span><span class="nx">j</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="kd">let</span><span class="w"> </span><span class="nx">cell</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">row</span><span class="p">.</span><span class="nx">insertCell</span><span class="p">(</span><span class="nx">j</span><span class="p">);</span>
+<span class="w">            </span><span class="nx">cell</span><span class="p">.</span><span class="nx">onclick</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kd">function</span><span class="p">(){</span><span class="nx">clickCell</span><span class="p">(</span><span class="k">this</span><span class="p">);}</span>
+<span class="w">            </span><span class="kd">let</span><span class="w"> </span><span class="nx">mine</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">document</span><span class="p">.</span><span class="nx">createAttribute</span><span class="p">(</span><span class="s2">&quot;data-mine&quot;</span><span class="p">);</span>
+<span class="w">            </span><span class="nx">mine</span><span class="p">.</span><span class="nx">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;false&quot;</span><span class="p">;</span>
+<span class="w">            </span><span class="nx">cell</span><span class="p">.</span><span class="nx">setAttributeNode</span><span class="p">(</span><span class="nx">mine</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="nx">setMines</span><span class="p">();</span>
+<span class="p">}</span>
 </code></pre>
+</div>
 
 <h3><a id="place-mines"></a> Placing the mines</h3>
 
 <p>After the grid is generated, a mine will be added to each random cell.</p>
 
-<pre><code>//Set mines
-const setMines = () =&gt; {
-    for(let i=0; i&amp;lt;size*2; i++) {
-        let r = Math.floor(Math.random() * size);
-        let c = Math.floor(Math.random() * size);
-        let cell = grid.rows[r].cells[c];
-        cell.setAttribute("data-mine", "true");
-        if(testMode){cell.innerHTML = "&amp;#x1f4a3;";}
-    }
-}
+<div class="codehilite">
+<pre><span></span><code><span class="c1">//Set mines</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">setMines</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kd">let</span><span class="w"> </span><span class="nx">i</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">&lt;</span><span class="nx">size</span><span class="o">*</span><span class="mf">2</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="nx">r</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">size</span><span class="p">);</span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="nx">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">size</span><span class="p">);</span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="nx">cell</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">grid</span><span class="p">.</span><span class="nx">rows</span><span class="p">[</span><span class="nx">r</span><span class="p">].</span><span class="nx">cells</span><span class="p">[</span><span class="nx">c</span><span class="p">];</span>
+<span class="w">        </span><span class="nx">cell</span><span class="p">.</span><span class="nx">setAttribute</span><span class="p">(</span><span class="s2">&quot;data-mine&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;true&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="nx">testMode</span><span class="p">){</span><span class="nx">cell</span><span class="p">.</span><span class="nx">innerHTML</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;&amp;#x1f4a3;&quot;</span><span class="p">;}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
 </code></pre>
+</div>
 
 <h3><a id="reveal-mines"></a> Reveal the mines</h3>
 
 <p>If you've clicked on a mine, every cell that has a mine will be exposed and then it's game over.</p>
 
-<pre><code>//Reveal mines
-const revealMines = () =&gt; {
-    for(let i=0; i&amp;lt;size; i++) {
-        for(let j=0; j&amp;lt;size; j++) {
-            let cell = grid.rows[i].cells[j];
-            if(cell.getAttribute("data-mine") === "true") {
-                cell.className = "mine";
-                cell.innerHTML = "&amp;#x1f4a3;";
-            }
-        }
-    }
-}
+<div class="codehilite">
+<pre><span></span><code><span class="c1">//Reveal mines</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">revealMines</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kd">let</span><span class="w"> </span><span class="nx">i</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">&lt;</span><span class="nx">size</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kd">let</span><span class="w"> </span><span class="nx">j</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span><span class="w"> </span><span class="nx">j</span><span class="o">&lt;</span><span class="nx">size</span><span class="p">;</span><span class="w"> </span><span class="nx">j</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="kd">let</span><span class="w"> </span><span class="nx">cell</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">grid</span><span class="p">.</span><span class="nx">rows</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">cells</span><span class="p">[</span><span class="nx">j</span><span class="p">];</span>
+<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="nx">cell</span><span class="p">.</span><span class="nx">getAttribute</span><span class="p">(</span><span class="s2">&quot;data-mine&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s2">&quot;true&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="nx">cell</span><span class="p">.</span><span class="nx">className</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;mine&quot;</span><span class="p">;</span>
+<span class="w">                </span><span class="nx">cell</span><span class="p">.</span><span class="nx">innerHTML</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;&amp;#x1f4a3;&quot;</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
 </code></pre>
+</div>
 
 <h3><a id="scan-mines"></a> Scan for mines</h3>
 
@@ -1685,80 +1787,82 @@ const revealMines = () =&gt; {
     </tr>
 </table>
 
-<p>If there aren't any mines adjacent to it, it'll reveal all adjacent cells via recursion.</p>
-
-<pre><code>    //Click a cell
-    const clickCell = (cell) =&gt; {
-        if(allowClick != false) {
-            //If it's a mine, game over
-            if(cell.getAttribute("data-mine") === "true") {
-                alert("game over");
-                revealMines();
-                allowClick = false;
-            }
-            //If it's not a mine, reveal the mines
-            else {
-                //Mark it as "clicked"
-                cell.className = "clicked";
-                scanForMines(cell);
-                checkGameStatus();
-            }       
-        }
-    }
-
-    //Scan for mines that are adjacent to the cell
-    const scanForMines = (cell) =&gt; {
-        let rowPos = cell.parentNode.rowIndex;
-        let colPos = cell.cellIndex;
-        let mineCount = 0;
-
-        for(let i=Math.max(rowPos-1, 0); i&amp;lt;Math.min(rowPos+1, size-1); i++) {
-            for(let j=Math.max(colPos-1, 0); j&amp;lt;Math.min(colPos+1, size-1); j++) {
-                let adjacentCell = grid.rows[i].cells[j];
-                if(adjacentCell.getAttribute("data-mine") == "true") {
-                    mineCount++;
-                }
-            }
-        }
-
-        cell.innerHTML = mineCount &gt; 0 ? mineCount : " ";
-
-        //If zero mines, then reveal all adjacent cells
-        if(mineCount == 0) {
-            for(let i=Math.max(rowPos-1, 0); i&amp;lt;Math.min(rowPos+1, size-1); i++) {
-                for(let j=Math.max(colPos-1, 0); j&amp;lt;Math.min(colPos+1, size-1); j++) {
-                    let adjacentCell = grid.rows[i].cells[j];
-                    if(adjacentCell.innerHTML == "") {
-                        clickCell(adjacentCell);
-                    }
-                }
-            }
-        }
-    }
-</code></pre>
+<p>If there aren't any mines adjacent to it, it'll reveal all adjacent cells via recursion.
+    <div class="codehilite">
+    <pre><span></span><code><span class="c1">//Click a cell</span>
+    <span class="kd">const</span><span class="w"> </span><span class="nx">clickCell</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">cell</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+    <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="nx">allowClick</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">false</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+    <span class="w">        </span><span class="c1">//If it&#39;s a mine, game over</span>
+    <span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="nx">cell</span><span class="p">.</span><span class="nx">getAttribute</span><span class="p">(</span><span class="s2">&quot;data-mine&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s2">&quot;true&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+    <span class="w">            </span><span class="nx">alert</span><span class="p">(</span><span class="s2">&quot;game over&quot;</span><span class="p">);</span>
+    <span class="w">            </span><span class="nx">revealMines</span><span class="p">();</span>
+    <span class="w">            </span><span class="nx">allowClick</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">;</span>
+    <span class="w">        </span><span class="p">}</span>
+    <span class="w">        </span><span class="c1">//If it&#39;s not a mine, reveal the mines</span>
+    <span class="w">        </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+    <span class="w">            </span><span class="c1">//Mark it as &quot;clicked&quot;</span>
+    <span class="w">            </span><span class="nx">cell</span><span class="p">.</span><span class="nx">className</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;clicked&quot;</span><span class="p">;</span>
+    <span class="w">            </span><span class="nx">scanForMines</span><span class="p">(</span><span class="nx">cell</span><span class="p">);</span>
+    <span class="w">            </span><span class="nx">checkGameStatus</span><span class="p">();</span>
+    <span class="w">        </span><span class="p">}</span><span class="w">       </span>
+    <span class="w">    </span><span class="p">}</span>
+    <span class="p">}</span>
+ <br />
+    <span class="c1">//Scan for mines that are adjacent to the cell</span>
+    <span class="kd">const</span><span class="w"> </span><span class="nx">scanForMines</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">cell</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+    <span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nx">rowPos</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">cell</span><span class="p">.</span><span class="nx">parentNode</span><span class="p">.</span><span class="nx">rowIndex</span><span class="p">;</span>
+    <span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nx">colPos</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">cell</span><span class="p">.</span><span class="nx">cellIndex</span><span class="p">;</span>
+    <span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nx">mineCount</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0</span><span class="p">;</span>
+ <br />
+    <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kd">let</span><span class="w"> </span><span class="nx">i</span><span class="o">=</span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="nx">rowPos</span><span class="o">-</span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="mf">0</span><span class="p">);</span><span class="w"> </span><span class="nx">i</span><span class="o">&lt;</span><span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(</span><span class="nx">rowPos</span><span class="o">+</span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="nx">size</span><span class="o">-</span><span class="mf">1</span><span class="p">);</span><span class="w"> </span><span class="nx">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+    <span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kd">let</span><span class="w"> </span><span class="nx">j</span><span class="o">=</span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="nx">colPos</span><span class="o">-</span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="mf">0</span><span class="p">);</span><span class="w"> </span><span class="nx">j</span><span class="o">&lt;</span><span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(</span><span class="nx">colPos</span><span class="o">+</span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="nx">size</span><span class="o">-</span><span class="mf">1</span><span class="p">);</span><span class="w"> </span><span class="nx">j</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+    <span class="w">            </span><span class="kd">let</span><span class="w"> </span><span class="nx">adjacentCell</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">grid</span><span class="p">.</span><span class="nx">rows</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">cells</span><span class="p">[</span><span class="nx">j</span><span class="p">];</span>
+    <span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="nx">adjacentCell</span><span class="p">.</span><span class="nx">getAttribute</span><span class="p">(</span><span class="s2">&quot;data-mine&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">&quot;true&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+    <span class="w">                </span><span class="nx">mineCount</span><span class="o">++</span><span class="p">;</span>
+    <span class="w">            </span><span class="p">}</span>
+    <span class="w">        </span><span class="p">}</span>
+    <span class="w">    </span><span class="p">}</span>
+ <br />
+    <span class="w">    </span><span class="nx">cell</span><span class="p">.</span><span class="nx">innerHTML</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">mineCount</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">0</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="nx">mineCount</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s2">&quot; &quot;</span><span class="p">;</span>
+ <br />
+    <span class="w">    </span><span class="c1">//If zero mines, then reveal all adjacent cells</span>
+    <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="nx">mineCount</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mf">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+    <span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kd">let</span><span class="w"> </span><span class="nx">i</span><span class="o">=</span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="nx">rowPos</span><span class="o">-</span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="mf">0</span><span class="p">);</span><span class="w"> </span><span class="nx">i</span><span class="o">&lt;</span><span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(</span><span class="nx">rowPos</span><span class="o">+</span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="nx">size</span><span class="o">-</span><span class="mf">1</span><span class="p">);</span><span class="w"> </span><span class="nx">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+    <span class="w">            </span><span class="k">for</span><span class="p">(</span><span class="kd">let</span><span class="w"> </span><span class="nx">j</span><span class="o">=</span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="nx">colPos</span><span class="o">-</span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="mf">0</span><span class="p">);</span><span class="w"> </span><span class="nx">j</span><span class="o">&lt;</span><span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(</span><span class="nx">colPos</span><span class="o">+</span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="nx">size</span><span class="o">-</span><span class="mf">1</span><span class="p">);</span><span class="w"> </span><span class="nx">j</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+    <span class="w">                </span><span class="kd">let</span><span class="w"> </span><span class="nx">adjacentCell</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">grid</span><span class="p">.</span><span class="nx">rows</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">cells</span><span class="p">[</span><span class="nx">j</span><span class="p">];</span>
+    <span class="w">                </span><span class="k">if</span><span class="p">(</span><span class="nx">adjacentCell</span><span class="p">.</span><span class="nx">innerHTML</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+    <span class="w">                    </span><span class="nx">clickCell</span><span class="p">(</span><span class="nx">adjacentCell</span><span class="p">);</span>
+    <span class="w">                </span><span class="p">}</span>
+    <span class="w">            </span><span class="p">}</span>
+    <span class="w">        </span><span class="p">}</span>
+    <span class="w">    </span><span class="p">}</span>
+    <span class="p">}</span>
+    </code></pre>
+    </div></p>
 
 <h3><a id="level-complete"></a> Level completion</h3>
 
-<p>If the player completed the game without clicking on any mine, the level is complete.</p>
-
-<pre><code>    //Check game status
-    const checkGameStatus = () =&gt; {
-        let levelComplete = true;
-        for(let i=0; i&amp;lt;size; i++) {
-            for (let j=0; j&amp;lt;size; j++) {
-                var cell = grid.rows[i].cells[j];
-                if((cell.getAttribute("data-mine") == "false") &amp;&amp; (cell.innerHTML == "")) {
-                    levelComplete = false;
-                }
-            }
-        }
-
-        if(levelComplete) {
-            alert("Congratulations, you won!");
-            revealMines();
-        }
-    }
-</code></pre>
+<p>If the player completed the game without clicking on any mine, the level is complete.
+    <div class="codehilite">
+    <pre><span></span><code><span class="c1">//Check game status</span>
+    <span class="kd">const</span><span class="w"> </span><span class="nx">checkGameStatus</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+    <span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nx">levelComplete</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="p">;</span>
+    <span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kd">let</span><span class="w"> </span><span class="nx">i</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">&lt;</span><span class="nx">size</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+    <span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kd">let</span><span class="w"> </span><span class="nx">j</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span><span class="w"> </span><span class="nx">j</span><span class="o">&lt;</span><span class="nx">size</span><span class="p">;</span><span class="w"> </span><span class="nx">j</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+    <span class="w">            </span><span class="kd">var</span><span class="w"> </span><span class="nx">cell</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">grid</span><span class="p">.</span><span class="nx">rows</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">cells</span><span class="p">[</span><span class="nx">j</span><span class="p">];</span>
+    <span class="w">            </span><span class="k">if</span><span class="p">((</span><span class="nx">cell</span><span class="p">.</span><span class="nx">getAttribute</span><span class="p">(</span><span class="s2">&quot;data-mine&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">&quot;false&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="p">(</span><span class="nx">cell</span><span class="p">.</span><span class="nx">innerHTML</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+    <span class="w">                </span><span class="nx">levelComplete</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">;</span>
+    <span class="w">            </span><span class="p">}</span>
+    <span class="w">        </span><span class="p">}</span>
+    <span class="w">    </span><span class="p">}</span>
+ <br />
+    <span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="nx">levelComplete</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+    <span class="w">        </span><span class="nx">alert</span><span class="p">(</span><span class="s2">&quot;Congratulations, you won!&quot;</span><span class="p">);</span>
+    <span class="w">        </span><span class="nx">revealMines</span><span class="p">();</span>
+    <span class="w">    </span><span class="p">}</span>
+    <span class="p">}</span>
+    </code></pre>
+    </div></p>
 
 <h2>Conclusion</h2>
 
@@ -1848,7 +1952,7 @@ const revealMines = () =&gt; {
 		<li>
 			<a href="/category/linux/">
 				Linux
-				<span class="count">19</span>
+				<span class="count">21</span>
 			</a>
 		</li>
 		
@@ -1930,6 +2034,13 @@ const revealMines = () =&gt; {
 		</li>
 		
 		<li>
+			<a href="/category/productivity/">
+				Productivity
+				<span class="count">7</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/tutorial/">
 				Tutorial
 				<span class="count">6</span>
@@ -1954,13 +2065,6 @@ const revealMines = () =&gt; {
 			<a href="/category/essay/">
 				Essay
 				<span class="count">6</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/productivity/">
-				Productivity
-				<span class="count">5</span>
 			</a>
 		</li>
 		

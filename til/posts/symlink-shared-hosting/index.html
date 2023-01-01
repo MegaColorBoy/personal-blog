@@ -87,45 +87,51 @@ But don't worry, there's another way to this. Just follow the steps below:</p>
 
 <p>In your <code>public_html/public</code> directory, remove the <code>storage</code> folder. Next, create a <code>symlink.php</code> file in your <code>public_html</code> directory and add the following code:</p>
 
-<pre><code>&lt;?php
-$targetFolder = $_SERVER['DOCUMENT_ROOT'].'/storage/app/public';
-$linkedFolder = $_SERVER['DOCUMENT_ROOT'].'/public/storage';
-symlink($targetFolder, $linkedFolder);
-echo "done";
-?&gt;
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="nv">$targetFolder</span> <span class="o">=</span> <span class="nv">$_SERVER</span><span class="p">[</span><span class="s1">&#39;DOCUMENT_ROOT&#39;</span><span class="p">]</span><span class="o">.</span><span class="s1">&#39;/storage/app/public&#39;</span><span class="p">;</span>
+<span class="nv">$linkedFolder</span> <span class="o">=</span> <span class="nv">$_SERVER</span><span class="p">[</span><span class="s1">&#39;DOCUMENT_ROOT&#39;</span><span class="p">]</span><span class="o">.</span><span class="s1">&#39;/public/storage&#39;</span><span class="p">;</span>
+<span class="nb">symlink</span><span class="p">(</span><span class="nv">$targetFolder</span><span class="p">,</span> <span class="nv">$linkedFolder</span><span class="p">);</span>
+<span class="k">echo</span> <span class="s2">&quot;done&quot;</span><span class="p">;</span>
+<span class="cp">?&gt;</span>
 </code></pre>
+</div>
 
 <h2>2. Create a custom route to access storage</h2>
 
 <p>Alright, this is kind of a hack but it works extremely fine. Just add the following route in your <code>routes/web.php</code> file:</p>
 
-<pre><code>&lt;?php
-Route::get('/storage/anyfolder/{filename}', function($filename){
-    // Your folder path
-    $folder_path = storage_path('app/public/anyfolder/'.$filename);
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="nx">Route</span><span class="o">::</span><span class="na">get</span><span class="p">(</span><span class="s1">&#39;/storage/anyfolder/{filename}&#39;</span><span class="p">,</span> <span class="k">function</span><span class="p">(</span><span class="nv">$filename</span><span class="p">){</span>
+    <span class="c1">// Your folder path</span>
+    <span class="nv">$folder_path</span> <span class="o">=</span> <span class="nx">storage_path</span><span class="p">(</span><span class="s1">&#39;app/public/anyfolder/&#39;</span><span class="o">.</span><span class="nv">$filename</span><span class="p">);</span>
 
-    // check if the file exists
-    if(!File::exists($folder_path)) {
-        abort(404);
-    }
+    <span class="c1">// check if the file exists</span>
+    <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">File</span><span class="o">::</span><span class="na">exists</span><span class="p">(</span><span class="nv">$folder_path</span><span class="p">))</span> <span class="p">{</span>
+        <span class="nx">abort</span><span class="p">(</span><span class="mi">404</span><span class="p">);</span>
+    <span class="p">}</span>
 
-    $file = File::get($folder_path);
-    $type = File::mimeType($folder_path);
+    <span class="nv">$file</span> <span class="o">=</span> <span class="nx">File</span><span class="o">::</span><span class="na">get</span><span class="p">(</span><span class="nv">$folder_path</span><span class="p">);</span>
+    <span class="nv">$type</span> <span class="o">=</span> <span class="nx">File</span><span class="o">::</span><span class="na">mimeType</span><span class="p">(</span><span class="nv">$folder_path</span><span class="p">);</span>
 
-    $response = Response::make($file, 200);
-    $response-&gt;header("Content-Type", $type);
+    <span class="nv">$response</span> <span class="o">=</span> <span class="nx">Response</span><span class="o">::</span><span class="na">make</span><span class="p">(</span><span class="nv">$file</span><span class="p">,</span> <span class="mi">200</span><span class="p">);</span>
+    <span class="nv">$response</span><span class="o">-&gt;</span><span class="na">header</span><span class="p">(</span><span class="s2">&quot;Content-Type&quot;</span><span class="p">,</span> <span class="nv">$type</span><span class="p">);</span>
 
-    return $response;
-})
-?&gt;
+    <span class="k">return</span> <span class="nv">$response</span><span class="p">;</span>
+<span class="p">})</span>
+<span class="cp">?&gt;</span>
 </code></pre>
+</div>
 
 <p>Now, you can access your images or any other assets easily using: </p>
 
-<pre><code>&lt;?php
-asset('storage/anyfolder/'.$filename)
-?&gt;
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="nx">asset</span><span class="p">(</span><span class="s1">&#39;storage/anyfolder/&#39;</span><span class="o">.</span><span class="nv">$filename</span><span class="p">)</span>
+<span class="cp">?&gt;</span>
 </code></pre>
+</div>
 
 <p>Hope this helps you out!</p>
 

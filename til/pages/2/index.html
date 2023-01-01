@@ -77,6 +77,114 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/logging-client-ip-addresses-on-apache-server">Logging client IP addresses on Apache server</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>If you want to log the actual client IP address, you need to extract the <code>X-Forward-For</code> header from the request and in order to do that, you need to make a tiny edit in your <code>httpd.conf</code> file.</p>
+
+<ol>
+<li>Go to <code>/etc/apache2/conf</code> or <code>/etc/httpd/conf</code> and open <code>httpd.conf</code> file.</li>
+<li>Search for the string that starts with: <code>LogFormat "%h %l %u %t \"%r\" %&gt;s %b \"%{Referer}i\" \"%{User-Agent}i\"" combined</code>.</li>
+<li>Modify the <code>%h</code> to <code>%{X-Forwarded-For}i</code>. Now, it should look like this: <code>LogFormat "%{X-Forwarded-For}i %l %u %t \"%r\" %&gt;s %b \"%{Referer}i\" \"%{User-Agent}i\"" combined</code>.</li>
+<li>Test the config to ensure that there are no typos by typing: <code>apachectl configtest</code>.</li>
+<li>Save and restart the service by typing: <code>systemctl restart httpd</code> or <code>systemctl restart apache2</code>.</li>
+<li>In your terminal, type <code>tail -f /var/log/httpd/access.log</code> and you'll be seeing the client IP being logged in your logs.</li>
+</ol>
+
+<p>Hope you found this tip useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>August 18th, 2022</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/apache/">
+					Apache
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/using-iife-in-javascript">Using IIFE in JavaScript</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>IIFE a.k.a Immediately-Invoked Function Expression &mdash; is a way to execute functions as soon as the function is created.</p>
+
+<p>Using IIFE, you can easily isolate declared variables away from the global scope.</p>
+
+<p>This is how the syntax would look like:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="c1">// ES5 Standard</span>
+<span class="kd">let</span><span class="w"> </span><span class="nx">foo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nx">message</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Hello world&quot;</span>
+<span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">message</span><span class="p">);</span>
+<span class="p">})();</span>
+</code></pre>
+</div>
+
+<p>They can be defined with arrow functions as well:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="c1">// ES6 Standard</span>
+<span class="kd">let</span><span class="w"> </span><span class="nx">foo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nx">message</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Hello world&quot;</span>
+<span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">message</span><span class="p">);</span>
+<span class="p">})();</span>
+</code></pre>
+</div>
+
+<p>According to <strong>MDN Docs</strong>, it's a design pattern a.k.a Self-Executing Anonymous Function. There are two parts to this:</p>
+
+<ol>
+<li><p>The function that's enclosed within the Grouping Operator <code>()</code>, which would prevent it from polluting the global space and access to the variables within it's scope.</p></li>
+<li><p>The <code>();</code> will create the Immediately Invoked Function Expression on-the-fly.</p></li>
+</ol>
+
+<h2>When to use it?</h2>
+
+<p>There are many interesting cases such as if you are following the <a href="https://www.patterns.dev/posts/classic-design-patterns/">Module Pattern</a> especially if you want to avoid polluting the global namespace or just that you don't want your code to interfere with other code thus ensures code safety.</p>
+
+<h2>Readings</h2>
+
+<ul>
+<li><a href="https://developer.mozilla.org/en-US/docs/Glossary/IIFE">IIFE - MDN Web Docs Glossary</a></li>
+</ul>
+
+	</div>
+	<div class="article-footer">
+		<time>August 10th, 2022</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/javascript/">
+					JavaScript
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/download-a-webpage-along-with-its-assets-using-wget">Download a webpage along with it's assets using wget</a></h1>
 		<p class="description"></p>
 	</div>
@@ -85,8 +193,10 @@
 
 <p>I did a little googling and thought of using <code>wget</code> to do the job and it worked. Here's the command I used:</p>
 
-<pre><code>wget -p -k -H --nd https://www.example.com
+<div class="codehilite">
+<pre><span></span><code>wget<span class="w"> </span>-p<span class="w"> </span>-k<span class="w"> </span>-H<span class="w"> </span>--nd<span class="w"> </span>https://www.example.com
 </code></pre>
+</div>
 
 <p>Let's see what do those flags mean:</p>
 
@@ -136,9 +246,11 @@
 
 <p>Here's how you can extract both private key and certificate files:</p>
 
-<pre><code>openssl pkcs12 -in file.pfx -nocerts -out privatekey.pem -nodes
-openssl pkcs12 -in file.pfx -nokeys -out certificate.crt
+<div class="codehilite">
+<pre><span></span><code>openssl<span class="w"> </span>pkcs12<span class="w"> </span>-in<span class="w"> </span>file.pfx<span class="w"> </span>-nocerts<span class="w"> </span>-out<span class="w"> </span>privatekey.pem<span class="w"> </span>-nodes
+openssl<span class="w"> </span>pkcs12<span class="w"> </span>-in<span class="w"> </span>file.pfx<span class="w"> </span>-nokeys<span class="w"> </span>-out<span class="w"> </span>certificate.crt
 </code></pre>
+</div>
 
 <p>Hope this tip helps you out!</p>
 
@@ -259,86 +371,90 @@ openssl pkcs12 -in file.pfx -nokeys -out certificate.crt
 
 <h3>Useful commands while using NSSM</h3>
 
-<pre><code># Start a service
-nssm start "servicename" 
+<div class="codehilite">
+<pre><span></span><code><span class="c1"># Start a service</span>
+nssm<span class="w"> </span>start<span class="w"> </span><span class="s2">&quot;servicename&quot;</span><span class="w"> </span>
 
-# Restart a service
-nssm restart "servicename" 
+<span class="c1"># Restart a service</span>
+nssm<span class="w"> </span>restart<span class="w"> </span><span class="s2">&quot;servicename&quot;</span><span class="w"> </span>
 
-# Stop a service
-nssm stop "servicename" 
+<span class="c1"># Stop a service</span>
+nssm<span class="w"> </span>stop<span class="w"> </span><span class="s2">&quot;servicename&quot;</span><span class="w"> </span>
 
-# Install a service
-nssm install "servicename" 
+<span class="c1"># Install a service</span>
+nssm<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;servicename&quot;</span><span class="w"> </span>
 
-# Remove/Uninstall a service
-nssm remove "servicename" 
+<span class="c1"># Remove/Uninstall a service</span>
+nssm<span class="w"> </span>remove<span class="w"> </span><span class="s2">&quot;servicename&quot;</span><span class="w"> </span>
 </code></pre>
+</div>
 
 <h3>Sample NGINX Virtual Host Configuration</h3>
 
-<pre><code>server {
+<div class="codehilite">
+<pre><span></span><code>server<span class="w"> </span><span class="o">{</span>
 
-    # Your Domain Name
-    listen 80;
-    server_name example.com;
+<span class="w">    </span><span class="c1"># Your Domain Name</span>
+<span class="w">    </span>listen<span class="w"> </span><span class="m">80</span><span class="p">;</span>
+<span class="w">    </span>server_name<span class="w"> </span>example.com<span class="p">;</span>
 
-    autoindex off;
-    add_header X-Frame-Options "SAMEORIGIN";
-    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
-    add_header X-Content-Type-Options "nosniff";
-    add_header X-XSS-Protection "1; mode=block";
-    add_header Access-Control-Allow-Origin *;
+<span class="w">    </span>autoindex<span class="w"> </span>off<span class="p">;</span>
+<span class="w">    </span>add_header<span class="w"> </span>X-Frame-Options<span class="w"> </span><span class="s2">&quot;SAMEORIGIN&quot;</span><span class="p">;</span>
+<span class="w">    </span>add_header<span class="w"> </span>Strict-Transport-Security<span class="w"> </span><span class="s2">&quot;max-age=31536000; includeSubDomains&quot;</span><span class="w"> </span>always<span class="p">;</span>
+<span class="w">    </span>add_header<span class="w"> </span>X-Content-Type-Options<span class="w"> </span><span class="s2">&quot;nosniff&quot;</span><span class="p">;</span>
+<span class="w">    </span>add_header<span class="w"> </span>X-XSS-Protection<span class="w"> </span><span class="s2">&quot;1; mode=block&quot;</span><span class="p">;</span>
+<span class="w">    </span>add_header<span class="w"> </span>Access-Control-Allow-Origin<span class="w"> </span>*<span class="p">;</span>
 
-    if (!-e $request_filename) {
-        rewrite  ^/[_0-9a-zA-Z-]+(/wp-(content|admin|includes).*) $1 break;
-        rewrite  ^/[_0-9a-zA-Z-]+(/.*\.php)$ $1 break;
-    }
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="o">(</span>!-e<span class="w"> </span><span class="nv">$request_filename</span><span class="o">)</span><span class="w"> </span><span class="o">{</span>
+<span class="w">        </span>rewrite<span class="w">  </span>^/<span class="o">[</span>_0-9a-zA-Z-<span class="o">]</span>+<span class="o">(</span>/wp-<span class="o">(</span>content<span class="p">|</span>admin<span class="p">|</span>includes<span class="o">)</span>.*<span class="o">)</span><span class="w"> </span><span class="nv">$1</span><span class="w"> </span>break<span class="p">;</span>
+<span class="w">        </span>rewrite<span class="w">  </span>^/<span class="o">[</span>_0-9a-zA-Z-<span class="o">]</span>+<span class="o">(</span>/.*<span class="se">\.</span>php<span class="o">)</span>$<span class="w"> </span><span class="nv">$1</span><span class="w"> </span>break<span class="p">;</span>
+<span class="w">    </span><span class="o">}</span>
 
-    # Uncomment these lines if SSL is provided
-    #==========================
-    #listen 443 ssl;
-    #ssl_certificate your-ssl.pem;
-    #ssl_certificate_key your-ssl.key;
-    #ssl_protocols TLSv1 TLSv1.1 TLSv1.2; 
-    #ssl_prefer_server_ciphers on;
-    #ssl_ciphers 'EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH';
-    #==========================
+<span class="w">    </span><span class="c1"># Uncomment these lines if SSL is provided</span>
+<span class="w">    </span><span class="c1">#==========================</span>
+<span class="w">    </span><span class="c1">#listen 443 ssl;</span>
+<span class="w">    </span><span class="c1">#ssl_certificate your-ssl.pem;</span>
+<span class="w">    </span><span class="c1">#ssl_certificate_key your-ssl.key;</span>
+<span class="w">    </span><span class="c1">#ssl_protocols TLSv1 TLSv1.1 TLSv1.2; </span>
+<span class="w">    </span><span class="c1">#ssl_prefer_server_ciphers on;</span>
+<span class="w">    </span><span class="c1">#ssl_ciphers &#39;EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH&#39;;</span>
+<span class="w">    </span><span class="c1">#==========================</span>
 
-    # Log files for Debugging
-    access_log logs/example-access.log;
-    error_log logs/example-error.log;
+<span class="w">    </span><span class="c1"># Log files for Debugging</span>
+<span class="w">    </span>access_log<span class="w"> </span>logs/example-access.log<span class="p">;</span>
+<span class="w">    </span>error_log<span class="w"> </span>logs/example-error.log<span class="p">;</span>
 
-    # Directory
-    root "C:/nginx/html/example.com";
-    index index.php index.html index.htm;
+<span class="w">    </span><span class="c1"># Directory</span>
+<span class="w">    </span>root<span class="w"> </span><span class="s2">&quot;C:/nginx/html/example.com&quot;</span><span class="p">;</span>
+<span class="w">    </span>index<span class="w"> </span>index.php<span class="w"> </span>index.html<span class="w"> </span>index.htm<span class="p">;</span>
 
-    location / {
-        try_files $uri $uri/ /index.php?$query_string;
-    }
+<span class="w">    </span>location<span class="w"> </span>/<span class="w"> </span><span class="o">{</span>
+<span class="w">        </span>try_files<span class="w"> </span><span class="nv">$uri</span><span class="w"> </span><span class="nv">$uri</span>/<span class="w"> </span>/index.php?<span class="nv">$query_string</span><span class="p">;</span>
+<span class="w">    </span><span class="o">}</span>
 
-    location ~ /\.(?!well-known).* {
-        deny all;
-        access_log off;
-        log_not_found off;
-    }
+<span class="w">    </span>location<span class="w"> </span>~<span class="w"> </span>/<span class="se">\.</span><span class="o">(</span>?!well-known<span class="o">)</span>.*<span class="w"> </span><span class="o">{</span>
+<span class="w">        </span>deny<span class="w"> </span>all<span class="p">;</span>
+<span class="w">        </span>access_log<span class="w"> </span>off<span class="p">;</span>
+<span class="w">        </span>log_not_found<span class="w"> </span>off<span class="p">;</span>
+<span class="w">    </span><span class="o">}</span>
 
-    # Deny yaml, twig, markdown, ini file access
-    location ~* /.+\.(markdown|md|twig|yaml|yml|ini)$ {
-        deny all;
-        access_log off;
-        log_not_found off;
-    }
+<span class="w">    </span><span class="c1"># Deny yaml, twig, markdown, ini file access</span>
+<span class="w">    </span>location<span class="w"> </span>~*<span class="w"> </span>/.+<span class="se">\.</span><span class="o">(</span>markdown<span class="p">|</span>md<span class="p">|</span>twig<span class="p">|</span>yaml<span class="p">|</span>yml<span class="p">|</span>ini<span class="o">)</span>$<span class="w"> </span><span class="o">{</span>
+<span class="w">        </span>deny<span class="w"> </span>all<span class="p">;</span>
+<span class="w">        </span>access_log<span class="w"> </span>off<span class="p">;</span>
+<span class="w">        </span>log_not_found<span class="w"> </span>off<span class="p">;</span>
+<span class="w">    </span><span class="o">}</span>
 
-    # PHP-FPM Configuration Nginx
-    location ~ \.php$ {
-        fastcgi_pass   127.0.0.1:9000;
-        fastcgi_index  index.php;
-        fastcgi_param  SCRIPT_FILENAME  $document_root$fastcgi_script_name;
-        include        fastcgi_params;
-    }
-}
+<span class="w">    </span><span class="c1"># PHP-FPM Configuration Nginx</span>
+<span class="w">    </span>location<span class="w"> </span>~<span class="w"> </span><span class="se">\.</span>php$<span class="w"> </span><span class="o">{</span>
+<span class="w">        </span>fastcgi_pass<span class="w">   </span><span class="m">127</span>.0.0.1:9000<span class="p">;</span>
+<span class="w">        </span>fastcgi_index<span class="w">  </span>index.php<span class="p">;</span>
+<span class="w">        </span>fastcgi_param<span class="w">  </span>SCRIPT_FILENAME<span class="w">  </span><span class="nv">$document_root$fastcgi_script_name</span><span class="p">;</span>
+<span class="w">        </span>include<span class="w">        </span>fastcgi_params<span class="p">;</span>
+<span class="w">    </span><span class="o">}</span>
+<span class="o">}</span>
 </code></pre>
+</div>
 
 <h2>Conclusion</h2>
 
@@ -371,13 +487,17 @@ nssm remove "servicename"
 	<div class="article-body">
 		<p>You can the count the number of matches of a pattern by using the <code>n</code> flag while using the substitute command. Try the following command:</p>
 
-<pre><code>:%s/something//gn
+<div class="codehilite">
+<pre><span></span><code>:%s/something//gn
 </code></pre>
+</div>
 
 <p>If you want to know on how many lines it matches, just omit the <code>g</code> flag:</p>
 
-<pre><code>:%s/something//n
+<div class="codehilite">
+<pre><span></span><code>:%s/something//n
 </code></pre>
+</div>
 
 <p>Hope this tip helped you out!</p>
 
@@ -408,13 +528,17 @@ nssm remove "servicename"
 
 <p>Let's say you have the following text:</p>
 
-<pre><code>The European languages are members of the same family. Their separate existence is a myth. For science, music, sport, etc, Europe uses the same vocabulary.
+<div class="codehilite">
+<pre><span></span><code>The European languages are members of the same family. Their separate existence is a myth. For science, music, sport, etc, Europe uses the same vocabulary.
 </code></pre>
+</div>
 
 <p>Now, you can use the <code>grep</code> and <code>wc</code> tool to count the number of times <code>"the"</code> appears in the file:</p>
 
-<pre><code>grep -o -i "the" file.txt | wc -l
+<div class="codehilite">
+<pre><span></span><code>grep<span class="w"> </span>-o<span class="w"> </span>-i<span class="w"> </span><span class="s2">&quot;the&quot;</span><span class="w"> </span>file.txt<span class="w"> </span><span class="p">|</span><span class="w"> </span>wc<span class="w"> </span>-l
 </code></pre>
+</div>
 
 <p>Hope this helps you out!</p>
 
@@ -460,15 +584,19 @@ nssm remove "servicename"
 
 <p>Type the following command to install the package:</p>
 
-<pre><code>sudo xbps-install -S mariadb
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>xbps-install<span class="w"> </span>-S<span class="w"> </span>mariadb
 </code></pre>
+</div>
 
 <h3>2. Initialize MySQL data directory</h3>
 
 <p>The following command will initialize a MariaDB data directory and create system tables in the MySQL database, if they are not present.</p>
 
-<pre><code>mysql_install_db --user=mysql --basedir=/usr --datadir=/var/lib/mysql
+<div class="codehilite">
+<pre><span></span><code>mysql_install_db<span class="w"> </span>--user<span class="o">=</span>mysql<span class="w"> </span>--basedir<span class="o">=</span>/usr<span class="w"> </span>--datadir<span class="o">=</span>/var/lib/mysql
 </code></pre>
+</div>
 
 <p>The options used:</p>
 
@@ -486,32 +614,42 @@ nssm remove "servicename"
 
 <p>Type the following command to enable the <code>mysqld</code> service:</p>
 
-<pre><code>sudo ln -s /etc/sv/mysqld /var/service/mysqld
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>ln<span class="w"> </span>-s<span class="w"> </span>/etc/sv/mysqld<span class="w"> </span>/var/service/mysqld
 </code></pre>
+</div>
 
 <h3>4. Start MySQL service</h3>
 
 <p>Type the following command to start the <code>mysqld</code> service:</p>
 
-<pre><code>sudo sv start mysqld
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>sv<span class="w"> </span>start<span class="w"> </span>mysqld
 </code></pre>
+</div>
 
 <p>To confirm, if the service is running, type the following:</p>
 
-<pre><code>sudo sv status mysqld
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>sv<span class="w"> </span>status<span class="w"> </span>mysqld
 </code></pre>
+</div>
 
 <p>And you'll see something like this:</p>
 
-<pre><code>run: mysqld: (pid 15136) 1116s; run: log: (pid 15025) 1172s
+<div class="codehilite">
+<pre><span></span><code>run:<span class="w"> </span>mysqld:<span class="w"> </span><span class="o">(</span>pid<span class="w"> </span><span class="m">15136</span><span class="o">)</span><span class="w"> </span>1116s<span class="p">;</span><span class="w"> </span>run:<span class="w"> </span>log:<span class="w"> </span><span class="o">(</span>pid<span class="w"> </span><span class="m">15025</span><span class="o">)</span><span class="w"> </span>1172s
 </code></pre>
+</div>
 
 <h3><a id="secure-mysql-installation"></a> 5. Secure MySQL installation</h3>
 
 <p>It's recommended to secure your installation, so type the following command:</p>
 
-<pre><code>sudo mysql_secure_installation
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>mysql_secure_installation
 </code></pre>
+</div>
 
 <p>Once the command is executed, you'll be prompted with a few questions, respond according to your needs and you're done!</p>
 
@@ -519,8 +657,10 @@ nssm remove "servicename"
 
 <p>Now, all you have to do is, try to log in to your database by typing the following:</p>
 
-<pre><code>mysql -u root -p
+<div class="codehilite">
+<pre><span></span><code>mysql<span class="w"> </span>-u<span class="w"> </span>root<span class="w"> </span>-p
 </code></pre>
+</div>
 
 <p>Once executed, it would prompt you for your password (which you must have set in the <a href="#secure-mysql-installation">previous step</a> and if you are able to log in, you are good to go!</p>
 
@@ -534,89 +674,6 @@ nssm remove "servicename"
 			<li>
 				<a href="/category/databases/">
 					Databases
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-create-an-iso-image-from-cdsdvds">How to create an ISO image from CDs/DVDs?</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>I used to create ISO images using DAEMON Tools but I wanted to try something different and see if there's a way to create it using the Linux CLI.</p>
-
-<p>Turns out, you can do in just a single line using the <code>dd</code> utility like so:</p>
-
-<pre><code>dd if=/dev/cdrom of=/path/to/your/directory/image.iso
-</code></pre>
-
-<p>The <code>if</code> stands for input file and <code>of</code> stands for output file.</p>
-
-<p>Looks like, I don't have to use DAEMON Tools for stuff like this, I guess.</p>
-
-<p>Hope you found this tip useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>October 23rd, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/linux/">
-					Linux
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/truncate-a-file-using-redirection-in-linux">Truncate a file using redirection in Linux</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Simply put, sometimes, there are situations in where you just want to clear the contents of a file without deleting it.</p>
-
-<p>This could be for many reasons like to avoid permission related issues, or maybe the file could be having useless logs that amasses to a size that measures in GBs.</p>
-
-<p>So, the easiest solution is to clear it away from a terminal is by shell redirection like so:</p>
-
-<pre><code>:&gt; filename
-</code></pre>
-
-<p>Let me break down the command here:</p>
-
-<ul>
-<li>The <code>:</code> symbol means <code>true</code> and doesn't produce any output.</li>
-<li>The '>' symbol is used for redirecting the output of the preceding command (in this case, it's empty!)</li>
-<li><code>filename</code> is the file that you want to truncate. If it doesn't exist, the file will be created.</li>
-</ul>
-
-<p>Alternatively, you can do the same by using the <code>cat</code> command to output the contents of the <code>/dev/null</code> device (which only contains a EOL character) to empty a file:</p>
-
-<pre><code>cat /dev/null &gt; filename
-</code></pre>
-
-<p>Hope this comes in handy!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>October 2nd, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/linux/">
-					Linux
 				</a>
 			</li>
 			
@@ -683,7 +740,7 @@ nssm remove "servicename"
 		<li>
 			<a href="/category/linux/">
 				Linux
-				<span class="count">19</span>
+				<span class="count">21</span>
 			</a>
 		</li>
 		
@@ -765,6 +822,13 @@ nssm remove "servicename"
 		</li>
 		
 		<li>
+			<a href="/category/productivity/">
+				Productivity
+				<span class="count">7</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/tutorial/">
 				Tutorial
 				<span class="count">6</span>
@@ -789,13 +853,6 @@ nssm remove "servicename"
 			<a href="/category/essay/">
 				Essay
 				<span class="count">6</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/productivity/">
-				Productivity
-				<span class="count">5</span>
 			</a>
 		</li>
 		

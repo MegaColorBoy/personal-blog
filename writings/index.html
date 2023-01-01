@@ -205,47 +205,51 @@
 
 <p>First, you need to create a Dockerfile for your app service in your project's root directory:</p>
 
-<pre><code>touch Dockerfile
-vim Dockerfile
+<div class="codehilite">
+<pre><span></span><code>touch<span class="w"> </span>Dockerfile
+vim<span class="w"> </span>Dockerfile
 </code></pre>
+</div>
 
 <p>In this tutorial, I'll be using PHP7.4 but you can use any version that you need. Here you go:</p>
 
-<pre><code>FROM php:7.4-fpm
+<div class="codehilite">
+<pre><span></span><code><span class="k">FROM</span><span class="w"> </span><span class="s">php:7.4-fpm</span>
 
-# Arguments defined in docker-compose.yml
-ARG user
-ARG uid 
+<span class="c"># Arguments defined in docker-compose.yml</span>
+<span class="k">ARG</span><span class="w"> </span><span class="k">user</span>
+<span class="s">ARG uid </span>
 
-# Install system dependencies
-RUN apt-get update &amp;&amp; apt-get install -y \
-    git \
-    curl \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
-    zip \
-    unzip
+<span class="c"># Install system dependencies</span>
+<span class="k">RUN</span><span class="w"> </span>apt-get<span class="w"> </span>update<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>git<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>curl<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>libpng-dev<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>libonig-dev<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>libxml2-dev<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>zip<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>unzip
 
-# Clear cache
-RUN apt-get clean &amp;&amp; rm -rf /var/lib/apt/lists/*
+<span class="c"># Clear cache</span>
+<span class="k">RUN</span><span class="w"> </span>apt-get<span class="w"> </span>clean<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>rm<span class="w"> </span>-rf<span class="w"> </span>/var/lib/apt/lists/*
 
-# Install PHP extensions
-RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
+<span class="c"># Install PHP extensions</span>
+<span class="k">RUN</span><span class="w"> </span>docker-php-ext-install<span class="w"> </span>pdo_mysql<span class="w"> </span>mbstring<span class="w"> </span>exif<span class="w"> </span>pcntl<span class="w"> </span>bcmath<span class="w"> </span>gd
 
-# Get latest Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+<span class="c"># Get latest Composer</span>
+<span class="k">COPY</span><span class="w"> </span>--from<span class="o">=</span>composer:latest<span class="w"> </span>/usr/bin/composer<span class="w"> </span>/usr/bin/composer
 
-# Create system user to run Composer and Artisan Commands
-RUN useradd -G www-data,root -u $uid -d /home/$user $user
-RUN mkdir -p /home/$user/.composer &amp;&amp; \
-    chown -R $user:$user /home/$user
+<span class="c"># Create system user to run Composer and Artisan Commands</span>
+<span class="k">RUN</span><span class="w"> </span>useradd<span class="w"> </span>-G<span class="w"> </span>www-data,root<span class="w"> </span>-u<span class="w"> </span><span class="nv">$uid</span><span class="w"> </span>-d<span class="w"> </span>/home/<span class="nv">$user</span><span class="w"> </span><span class="nv">$user</span>
+<span class="k">RUN</span><span class="w"> </span>mkdir<span class="w"> </span>-p<span class="w"> </span>/home/<span class="nv">$user</span>/.composer<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>chown<span class="w"> </span>-R<span class="w"> </span><span class="nv">$user</span>:<span class="nv">$user</span><span class="w"> </span>/home/<span class="nv">$user</span>
 
-# Set working directory
-WORKDIR /var/www
+<span class="c"># Set working directory</span>
+<span class="k">WORKDIR</span><span class="w"> </span><span class="s">/var/www</span>
 
-USER $user
+<span class="k">USER</span><span class="w"> </span><span class="s">$user</span>
 </code></pre>
+</div>
 
 <p>So, what's happening in the configuration above is that, it pulls a PHP7.4-FPM image from Docker Hub. Next, it'll define the user of the service and install all the necessary dependencies that are given above and set the working directory to <code>/var/www/</code>. The last step will change to the newly created user, which would make sure that you are using the service as a normal user.</p>
 
@@ -257,51 +261,61 @@ USER $user
 
 <p>Create a directory named <code>.docker</code> in your project's root directory:</p>
 
-<pre><code>mkdir -p .docker
+<div class="codehilite">
+<pre><span></span><code>mkdir<span class="w"> </span>-p<span class="w"> </span>.docker
 </code></pre>
+</div>
 
 <h3>NGINX</h3>
 
 <p>Go to <code>.docker</code> directory and create <code>nginx</code> directory:</p>
 
-<pre><code>mkdir -p nginx
+<div class="codehilite">
+<pre><span></span><code>mkdir<span class="w"> </span>-p<span class="w"> </span>nginx
 </code></pre>
+</div>
 
 <p>Now let's set up the NGINX service by creating a <code>.conf</code> file:</p>
 
-<pre><code>touch myservice.conf
+<div class="codehilite">
+<pre><span></span><code>touch<span class="w"> </span>myservice.conf
 </code></pre>
+</div>
 
 <p>Now, copy the following configuration to your <code>.conf</code> file:</p>
 
-<pre><code>server {
-    listen 80;
-    index index.php index.html;
-    error_log  /var/log/nginx/error.log;
-    access_log /var/log/nginx/access.log;
-    root /var/www/public;
-    location ~ \.php$ {
-        try_files $uri =404;
-        fastcgi_split_path_info ^(.+\.php)(/.+)$;
-        fastcgi_pass app:9000;
-        fastcgi_index index.php;
-        include fastcgi_params;
-        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
-        fastcgi_param PATH_INFO $fastcgi_path_info;
-    }
-    location / {
-        try_files $uri $uri/ /index.php?$query_string;
-        gzip_static on;
-    }
-}
+<div class="codehilite">
+<pre><span></span><code>server<span class="w"> </span><span class="o">{</span>
+<span class="w">    </span>listen<span class="w"> </span><span class="m">80</span><span class="p">;</span>
+<span class="w">    </span>index<span class="w"> </span>index.php<span class="w"> </span>index.html<span class="p">;</span>
+<span class="w">    </span>error_log<span class="w">  </span>/var/log/nginx/error.log<span class="p">;</span>
+<span class="w">    </span>access_log<span class="w"> </span>/var/log/nginx/access.log<span class="p">;</span>
+<span class="w">    </span>root<span class="w"> </span>/var/www/public<span class="p">;</span>
+<span class="w">    </span>location<span class="w"> </span>~<span class="w"> </span><span class="se">\.</span>php$<span class="w"> </span><span class="o">{</span>
+<span class="w">        </span>try_files<span class="w"> </span><span class="nv">$uri</span><span class="w"> </span><span class="o">=</span><span class="m">404</span><span class="p">;</span>
+<span class="w">        </span>fastcgi_split_path_info<span class="w"> </span>^<span class="o">(</span>.+<span class="se">\.</span>php<span class="o">)(</span>/.+<span class="o">)</span>$<span class="p">;</span>
+<span class="w">        </span>fastcgi_pass<span class="w"> </span>app:9000<span class="p">;</span>
+<span class="w">        </span>fastcgi_index<span class="w"> </span>index.php<span class="p">;</span>
+<span class="w">        </span>include<span class="w"> </span>fastcgi_params<span class="p">;</span>
+<span class="w">        </span>fastcgi_param<span class="w"> </span>SCRIPT_FILENAME<span class="w"> </span><span class="nv">$document_root$fastcgi_script_name</span><span class="p">;</span>
+<span class="w">        </span>fastcgi_param<span class="w"> </span>PATH_INFO<span class="w"> </span><span class="nv">$fastcgi_path_info</span><span class="p">;</span>
+<span class="w">    </span><span class="o">}</span>
+<span class="w">    </span>location<span class="w"> </span>/<span class="w"> </span><span class="o">{</span>
+<span class="w">        </span>try_files<span class="w"> </span><span class="nv">$uri</span><span class="w"> </span><span class="nv">$uri</span>/<span class="w"> </span>/index.php?<span class="nv">$query_string</span><span class="p">;</span>
+<span class="w">        </span>gzip_static<span class="w"> </span>on<span class="p">;</span>
+<span class="w">    </span><span class="o">}</span>
+<span class="o">}</span>
 </code></pre>
+</div>
 
 <h3>MySQL</h3>
 
 <p>Since this is a Laravel application, you can skip this step by running migrations and seeding your database or you can try creating a directory inside the <code>.docker</code> folder to store your MySQL related configuration:</p>
 
-<pre><code>mkdir -p mysql
+<div class="codehilite">
+<pre><span></span><code>mkdir<span class="w"> </span>-p<span class="w"> </span>mysql
 </code></pre>
+</div>
 
 <p>Once created, create a file named <code>init_db.sql</code> that would contain your entire database dump to be seeded once you run your docker service.</p>
 
@@ -313,95 +327,100 @@ USER $user
 
 <p>Here is the configuration:</p>
 
-<pre><code>version: '3.8'
-services:
-  # PHP Service
-  app:
-    build:
-      args:
-        user: username
-        uid: 1000
-      context: ./
-      dockerfile: Dockerfile
-    image: yourapp 
-    container_name: yourapp-app
-    restart: unless-stopped
-    working_dir: /var/www/
-    volumes:
-      - ./:/var/www
-    networks:
-      - yourapp
+<div class="codehilite">
+<pre><span></span><code><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;3.8&#39;</span>
+<span class="nt">services</span><span class="p">:</span>
+<span class="w">  </span><span class="c1"># PHP Service</span>
+<span class="w">  </span><span class="nt">app</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">build</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">args</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">user</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">username</span>
+<span class="w">        </span><span class="nt">uid</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1000</span>
+<span class="w">      </span><span class="nt">context</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./</span>
+<span class="w">      </span><span class="nt">dockerfile</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Dockerfile</span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yourapp</span><span class="w"> </span>
+<span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yourapp-app</span>
+<span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">unless-stopped</span>
+<span class="w">    </span><span class="nt">working_dir</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/var/www/</span>
+<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./:/var/www</span>
+<span class="w">    </span><span class="nt">networks</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yourapp</span>
 
-  # MySQL Service
-  db: 
-    image: mysql:8.0
-    container_name: yourapp-db
-    restart: unless-stopped
-    environment:
-      MYSQL_DATABASE: ${DB_DATABASE}
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
-      MYSQL_USER: ${DB_USERNAME}
-      SERVICE_TAGS: dev 
-      SERVICE_NAME: mysql
-    volumes:
-      - ./.docker/mysql:/docker-entrypoint-initdb.d
-    healthcheck:
-      test: mysqladmin ping -h 127.0.0.1 -u ${DB_USERNAME} --password=${DB_PASSWORD}
-      interval: 5s
-      retries: 10
-    networks:
-      - yourapp
+<span class="w">  </span><span class="c1"># MySQL Service</span>
+<span class="w">  </span><span class="nt">db</span><span class="p">:</span><span class="w"> </span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mysql:8.0</span>
+<span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yourapp-db</span>
+<span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">unless-stopped</span>
+<span class="w">    </span><span class="nt">environment</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">MYSQL_DATABASE</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${DB_DATABASE}</span>
+<span class="w">      </span><span class="nt">MYSQL_ROOT_PASSWORD</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${DB_PASSWORD}</span>
+<span class="w">      </span><span class="nt">MYSQL_PASSWORD</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${DB_PASSWORD}</span>
+<span class="w">      </span><span class="nt">MYSQL_USER</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${DB_USERNAME}</span>
+<span class="w">      </span><span class="nt">SERVICE_TAGS</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dev</span><span class="w"> </span>
+<span class="w">      </span><span class="nt">SERVICE_NAME</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mysql</span>
+<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./.docker/mysql:/docker-entrypoint-initdb.d</span>
+<span class="w">    </span><span class="nt">healthcheck</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">test</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mysqladmin ping -h 127.0.0.1 -u ${DB_USERNAME} --password=${DB_PASSWORD}</span>
+<span class="w">      </span><span class="nt">interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5s</span>
+<span class="w">      </span><span class="nt">retries</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span>
+<span class="w">    </span><span class="nt">networks</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yourapp</span>
 
-  # NGINX Service
-  nginx:
-    image: nginx:alpine
-    container_name: yourapp-nginx
-    restart: unless-stopped
-    ports:
-      - 8000:80
-    volumes:
-      - ./:/var/www
-      - ./.docker/nginx:/etc/nginx/conf.d/
-    networks:
-      - yourapp
+<span class="w">  </span><span class="c1"># NGINX Service</span>
+<span class="w">  </span><span class="nt">nginx</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nginx:alpine</span>
+<span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yourapp-nginx</span>
+<span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">unless-stopped</span>
+<span class="w">    </span><span class="nt">ports</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8000:80</span>
+<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./:/var/www</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./.docker/nginx:/etc/nginx/conf.d/</span>
+<span class="w">    </span><span class="nt">networks</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yourapp</span>
 
-  # phpMyAdmin service
-  phpmyadmin:
-    image: phpmyadmin/phpmyadmin:5
-    ports:
-      - 8080:80
-    environment:
-      PMA_HOST: db
-    depends_on:
-      db: 
-        condition: service_healthy
-    networks:
-      - yourapp
+<span class="w">  </span><span class="c1"># phpMyAdmin service</span>
+<span class="w">  </span><span class="nt">phpmyadmin</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">phpmyadmin/phpmyadmin:5</span>
+<span class="w">    </span><span class="nt">ports</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8080:80</span>
+<span class="w">    </span><span class="nt">environment</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">PMA_HOST</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">db</span>
+<span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">db</span><span class="p">:</span><span class="w"> </span>
+<span class="w">        </span><span class="nt">condition</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">service_healthy</span>
+<span class="w">    </span><span class="nt">networks</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yourapp</span>
 
-networks:
-  yourapp:
-    driver: bridge
-
+<span class="nt">networks</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">yourapp</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">driver</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">bridge</span>
 </code></pre>
+</div>
 
 <h2>Configure your application</h2>
 
 <p>Open your current <code>.env</code> file of your laravel project and just add the necessary database configuration:</p>
 
-<pre><code>DB_HOST=yourapp-db
-DB_PORT=3306
-DB_DATABASE=your_database_name
-DB_USERNAME=your_database_user_name
-DB_PASSWORD=your_database_password
+<div class="codehilite">
+<pre><span></span><code><span class="l l-Scalar l-Scalar-Plain">DB_HOST=yourapp-db</span>
+<span class="l l-Scalar l-Scalar-Plain">DB_PORT=3306</span>
+<span class="l l-Scalar l-Scalar-Plain">DB_DATABASE=your_database_name</span>
+<span class="l l-Scalar l-Scalar-Plain">DB_USERNAME=your_database_user_name</span>
+<span class="l l-Scalar l-Scalar-Plain">DB_PASSWORD=your_database_password</span>
 </code></pre>
+</div>
 
 <h2>Build the application image</h2>
 
 <p>After you are done with configuring, run the following command to build your application image:</p>
 
-<pre><code>docker-compose build yourapp
+<div class="codehilite">
+<pre><span></span><code>docker-compose<span class="w"> </span>build<span class="w"> </span>yourapp
 </code></pre>
+</div>
 
 <p>Depending on your network speed, it might take a few minutes to build your image.</p>
 
@@ -409,30 +428,37 @@ DB_PASSWORD=your_database_password
 
 <p>Once the build is complete, execute the following command:</p>
 
-<pre><code>docker-compose up -d
+<div class="codehilite">
+<pre><span></span><code>docker-compose<span class="w"> </span>up<span class="w"> </span>-d
 </code></pre>
+</div>
 
 <p>The following command will run your containers in the background. To display your information about the state of your docker services:</p>
 
-<pre><code>docker-compose ps
+<div class="codehilite">
+<pre><span></span><code>docker-compose<span class="w"> </span>ps
 </code></pre>
+</div>
 
 <p>Install your application's dependencies:</p>
 
-<pre><code>docker-compose exec yourapp rm -rf vendor composer.lock
-docker-compose exec yourapp composer install
+<div class="codehilite">
+<pre><span></span><code>docker-compose<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>yourapp<span class="w"> </span>rm<span class="w"> </span>-rf<span class="w"> </span>vendor<span class="w"> </span>composer.lock
+docker-compose<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>yourapp<span class="w"> </span>composer<span class="w"> </span>install
 </code></pre>
+</div>
 
 <p>And then run the following commands to run your Laravel application:</p>
 
-<pre><code>docker-compose exec yourapp php artisan key:generate
-docker-compose exec yourapp php artisan config:clear
-docker-compose exec yourapp php artisan cache:clear
-docker-compose exec yourapp php artisan view:clear
-docker-compose exec yourapp php artisan route:clear
-docker-compose exec yourapp php artisan storage:link 
-
+<div class="codehilite">
+<pre><span></span><code>docker-compose<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>yourapp<span class="w"> </span>php<span class="w"> </span>artisan<span class="w"> </span>key:generate
+docker-compose<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>yourapp<span class="w"> </span>php<span class="w"> </span>artisan<span class="w"> </span>config:clear
+docker-compose<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>yourapp<span class="w"> </span>php<span class="w"> </span>artisan<span class="w"> </span>cache:clear
+docker-compose<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>yourapp<span class="w"> </span>php<span class="w"> </span>artisan<span class="w"> </span>view:clear
+docker-compose<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>yourapp<span class="w"> </span>php<span class="w"> </span>artisan<span class="w"> </span>route:clear
+docker-compose<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>yourapp<span class="w"> </span>php<span class="w"> </span>artisan<span class="w"> </span>storage:link<span class="w"> </span>
 </code></pre>
+</div>
 
 <p>Now, you can go to your browser, type your <code>http://localhost:8000</code> to access your application.</p>
 
@@ -764,22 +790,26 @@ docker-compose exec yourapp php artisan storage:link
 
 <p>Here's a sample error that I would face sometimes while deploying a Laravel web application on CentOS 7:</p>
 
-<pre><code>[Mon May 16 11:39:32.996441 2016] [:error] [pid 2434] [client XXX.XXX.XXX.XXX:8080] PHP Fatal error:  Uncaught UnexpectedValueException: The stream or file "/var/www/html/MYSITE/storage/logs/laravel.log" could not be opened: failed to open stream: Permission denied in /var/www/html/MYSITE/bootstrap/cache/compiled.php:13701
-Stack trace:
-#0 /var/www/html/MYSITE/bootstrap/cache/compiled.php(13635): Monolog\\Handler\\StreamHandler-&gt;write(Array)
-#1 /var/www/html/MYSITE/bootstrap/cache/compiled.php(13396): Monolog\\Handler\\AbstractProcessingHandler-&gt;handle(Array)
-#2 /var/www/html/MYSITE/bootstrap/cache/compiled.php(13494): Monolog\\Logger-&gt;addRecord(400, Object(Symfony\\Component\\Debug\\Exception\\FatalErrorException), Array)
-#3 /var/www/html/MYSITE/bootstrap/cache/compiled.php(13189): Monolog\\Logger-&gt;error(Object(Symfony\\Component\\Debug\\Exception\\FatalErrorException), Array)
-#4 /var/www/html/MYSITE/bootstrap/cache/compiled.php(13160): Illuminate\\Log\\Writer-&gt;writeLog('error', Object(Symfony\\Component\\Debug\\Exception\\FatalErrorException), Array)
-# in /var/www/html/MYSITE/bootstrap/cache/compiled.php on line 13701
+<div class="codehilite">
+<pre><span></span><code><span class="o">[</span>Mon<span class="w"> </span>May<span class="w"> </span><span class="m">16</span><span class="w"> </span><span class="m">11</span>:39:32.996441<span class="w"> </span><span class="m">2016</span><span class="o">]</span><span class="w"> </span><span class="o">[</span>:error<span class="o">]</span><span class="w"> </span><span class="o">[</span>pid<span class="w"> </span><span class="m">2434</span><span class="o">]</span><span class="w"> </span><span class="o">[</span>client<span class="w"> </span>XXX.XXX.XXX.XXX:8080<span class="o">]</span><span class="w"> </span>PHP<span class="w"> </span>Fatal<span class="w"> </span>error:<span class="w">  </span>Uncaught<span class="w"> </span>UnexpectedValueException:<span class="w"> </span>The<span class="w"> </span>stream<span class="w"> </span>or<span class="w"> </span>file<span class="w"> </span><span class="s2">&quot;/var/www/html/MYSITE/storage/logs/laravel.log&quot;</span><span class="w"> </span>could<span class="w"> </span>not<span class="w"> </span>be<span class="w"> </span>opened:<span class="w"> </span>failed<span class="w"> </span>to<span class="w"> </span>open<span class="w"> </span>stream:<span class="w"> </span>Permission<span class="w"> </span>denied<span class="w"> </span><span class="k">in</span><span class="w"> </span>/var/www/html/MYSITE/bootstrap/cache/compiled.php:13701
+Stack<span class="w"> </span>trace:
+<span class="c1">#0 /var/www/html/MYSITE/bootstrap/cache/compiled.php(13635): Monolog\\Handler\\StreamHandler-&gt;write(Array)</span>
+<span class="c1">#1 /var/www/html/MYSITE/bootstrap/cache/compiled.php(13396): Monolog\\Handler\\AbstractProcessingHandler-&gt;handle(Array)</span>
+<span class="c1">#2 /var/www/html/MYSITE/bootstrap/cache/compiled.php(13494): Monolog\\Logger-&gt;addRecord(400, Object(Symfony\\Component\\Debug\\Exception\\FatalErrorException), Array)</span>
+<span class="c1">#3 /var/www/html/MYSITE/bootstrap/cache/compiled.php(13189): Monolog\\Logger-&gt;error(Object(Symfony\\Component\\Debug\\Exception\\FatalErrorException), Array)</span>
+<span class="c1">#4 /var/www/html/MYSITE/bootstrap/cache/compiled.php(13160): Illuminate\\Log\\Writer-&gt;writeLog(&#39;error&#39;, Object(Symfony\\Component\\Debug\\Exception\\FatalErrorException), Array)</span>
+<span class="c1"># in /var/www/html/MYSITE/bootstrap/cache/compiled.php on line 13701</span>
 </code></pre>
+</div>
 
 <p>By looking at this error, you do understand it's permission-related but it doesn't really indicate that it's an SELinux problem because there could be thousands of reasons why there could be such an error. And of course, when I look it up on Google, I do find many people facing the same issue due to SELinux being enabled.</p>
 
 <p>Instead of disabling it completely, I would try doing this:</p>
 
-<pre><code>chcon -R -t httpd_sys_rw_content_t storage
+<div class="codehilite">
+<pre><span></span><code>chcon<span class="w"> </span>-R<span class="w"> </span>-t<span class="w"> </span>httpd_sys_rw_content_t<span class="w"> </span>storage
 </code></pre>
+</div>
 
 <p>And off goes the error and the application didn't give any permission-related issues again.</p>
 
@@ -863,7 +893,7 @@ Stack trace:
 		<li>
 			<a href="/category/linux/">
 				Linux
-				<span class="count">19</span>
+				<span class="count">21</span>
 			</a>
 		</li>
 		
@@ -945,6 +975,13 @@ Stack trace:
 		</li>
 		
 		<li>
+			<a href="/category/productivity/">
+				Productivity
+				<span class="count">7</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/tutorial/">
 				Tutorial
 				<span class="count">6</span>
@@ -969,13 +1006,6 @@ Stack trace:
 			<a href="/category/essay/">
 				Essay
 				<span class="count">6</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/productivity/">
-				Productivity
-				<span class="count">5</span>
 			</a>
 		</li>
 		

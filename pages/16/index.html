@@ -78,6 +78,182 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/build-a-menu-tree-using-recursion">Build a menu tree using recursion</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Hmm, what is the most efficient way to build a menu tree? &#x1F605;</p>
+
+<p>Most people would go for a brute force solution if it's a straightforward menu but would that be possible if we intend to create multiple levels of menu items?</p>
+
+<p>Sure, you could but as the number of loops increases, the complexity of time increases too. Not to forget, you'll end up writing code that'll look messy and unscalable.</p>
+
+<p>I always loved the idea and simplicity of using recursion. So, I thought of exercising my recursion skills by writing a method that can generate a dynamic menu with <strong>x</strong> number of parent and child menu items.</p>
+
+<p>The following example is written in PHP:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="k">class</span> <span class="nc">FooController</span> <span class="k">extends</span> <span class="nx">Controller</span> <span class="p">{</span>
+    <span class="k">protected</span> <span class="nv">$menuHTML</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">;</span>
+
+    <span class="k">private</span> <span class="k">function</span> <span class="nf">menuItems</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="p">[</span>
+                <span class="s1">&#39;title&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;Item 1&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;link&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;/item-1&#39;</span>
+            <span class="p">],</span>
+            <span class="p">[</span>
+                <span class="s1">&#39;title&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;Item 2&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;link&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;/item-2&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;child_items&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span>
+                    <span class="p">[</span>
+                       <span class="s1">&#39;title&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;Item 2.1&#39;</span><span class="p">,</span>
+                       <span class="s1">&#39;link&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;/item-2.1&#39;</span>
+                    <span class="p">],</span>       
+                    <span class="p">[</span>
+                        <span class="s1">&#39;title&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;Item 2.2&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;link&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;/item-2.2&#39;</span>
+                    <span class="p">],</span>       
+                <span class="p">]</span>
+            <span class="p">],</span>
+            <span class="p">[</span>
+                <span class="s1">&#39;title&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;Item 3&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;link&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;/item-3&#39;</span>
+            <span class="p">],</span>
+            <span class="p">[</span>
+                <span class="s1">&#39;title&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;Item 4&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;link&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;/item-4&#39;</span>
+            <span class="p">],</span>
+        <span class="p">];</span>
+    <span class="p">}</span>
+
+    <span class="c1">// Build a menu tree</span>
+    <span class="k">private</span> <span class="k">function</span> <span class="nf">buildMenu</span><span class="p">(</span><span class="nv">$menu</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">foreach</span><span class="p">(</span><span class="nv">$menu</span> <span class="k">as</span> <span class="nv">$menuItem</span><span class="p">){</span>
+            <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">menuHTML</span> <span class="o">.=</span> <span class="s1">&#39;&lt;li class=&quot;item&quot;&gt;&#39;</span><span class="p">;</span>
+            <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">menuHTML</span> <span class="o">.=</span> <span class="s1">&#39;&lt;a href=&quot;&#39;</span><span class="o">.</span><span class="nv">$menuItem</span><span class="p">[</span><span class="s1">&#39;link&#39;</span><span class="p">]</span><span class="o">.</span><span class="s1">&#39;&quot;&gt;&#39;</span><span class="o">.</span><span class="nv">$menuItem</span><span class="p">[</span><span class="s1">&#39;title&#39;</span><span class="p">]</span><span class="o">.</span><span class="s1">&#39;&lt;/a&gt;&#39;</span><span class="p">;</span>
+
+            <span class="c1">// Check if it has any child items</span>
+            <span class="k">if</span><span class="p">(</span><span class="nb">array_key_exists</span><span class="p">(</span><span class="s2">&quot;child_items&quot;</span><span class="p">,</span> <span class="nv">$menuItem</span><span class="p">){</span>
+                <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">menuHTML</span> <span class="o">.=</span> <span class="s1">&#39;&lt;ul class=&quot;submenu&quot;&gt;&#39;</span><span class="p">;</span>
+                <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">buildMenu</span><span class="p">(</span><span class="nv">$menuItem</span><span class="p">[</span><span class="s1">&#39;child_items&#39;</span><span class="p">]);</span>
+                <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">menuHTML</span> <span class="o">.=</span> <span class="s1">&#39;&lt;/ul&gt;&#39;</span><span class="p">;</span>
+            <span class="p">}</span>
+
+            <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">menuHTML</span> <span class="o">.=</span> <span class="s1">&#39;&lt;/li&gt;&#39;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="c1">// Return the complete menu</span>
+    <span class="k">private</span> <span class="k">function</span> <span class="nf">getMenu</span><span class="p">(</span><span class="nv">$menu</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">buildMenu</span><span class="p">(</span><span class="nv">$menu</span><span class="p">);</span>
+        <span class="k">return</span> <span class="s1">&#39;&lt;ul class=&quot;mainmenu&quot;&gt;&#39;</span><span class="o">.</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">menuHTML</span><span class="o">.</span><span class="s1">&#39;&lt;/ul&gt;&#39;</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">public</span> <span class="k">function</span> <span class="fm">__construct</span><span class="p">()</span> <span class="p">{</span>
+        <span class="nx">pre</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">getMenu</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">menuItems</span><span class="p">());</span>
+        <span class="k">die</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+<span class="cp">?&gt;</span>
+</code></pre>
+</div>
+
+<p>Once you run it, you'll see something like this:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="p">&lt;</span><span class="nt">ul</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;mainmenu&quot;</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">li</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;item&quot;</span><span class="p">&gt;&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;/item-1&quot;</span><span class="p">&gt;</span>Item 1<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;&lt;/</span><span class="nt">li</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">li</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;item&quot;</span><span class="p">&gt;&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;/item-2&quot;</span><span class="p">&gt;</span>Item 2<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;</span>
+        <span class="p">&lt;</span><span class="nt">ul</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;submenu&quot;</span><span class="p">&gt;</span>
+            <span class="p">&lt;</span><span class="nt">li</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;item&quot;</span><span class="p">&gt;&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;/item-2.1&quot;</span><span class="p">&gt;</span>Item 2.1<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;&lt;/</span><span class="nt">li</span><span class="p">&gt;</span>
+            <span class="p">&lt;</span><span class="nt">li</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;item&quot;</span><span class="p">&gt;&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;/item-2.2&quot;</span><span class="p">&gt;</span>Item 2.2<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;&lt;/</span><span class="nt">li</span><span class="p">&gt;</span>
+        <span class="p">&lt;/</span><span class="nt">ul</span><span class="p">&gt;</span>
+    <span class="p">&lt;/</span><span class="nt">li</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">li</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;item&quot;</span><span class="p">&gt;&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;/item-3&quot;</span><span class="p">&gt;</span>Item 3<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;&lt;/</span><span class="nt">li</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">li</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;item&quot;</span><span class="p">&gt;&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;/item-4&quot;</span><span class="p">&gt;</span>Item 4<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;&lt;/</span><span class="nt">li</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">ul</span><span class="p">&gt;</span>
+</code></pre>
+</div>
+
+<p>There a lot of ways to achieve this same result using recursion but it sure is easier to read, scalable and extensible, ain't it?</p>
+
+	</div>
+	<div class="article-footer">
+		<time>June 3rd, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/algorithms/">
+					Algorithms
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/using-default-function-parameters-in-internet-explorer">Using default function parameters in Internet Explorer</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Today, I wrote a simple method that fetches images from the database via AJAX and also, I defined an empty object as a default parameter:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="kd">function</span><span class="w"> </span><span class="nx">fetchImages</span><span class="p">(</span><span class="nx">obj</span><span class="o">=</span><span class="p">{}){</span>
+<span class="w">    </span><span class="c1">// some code here...</span>
+<span class="p">}</span>
+
+<span class="nx">fetchImages</span><span class="p">();</span>
+</code></pre>
+</div>
+
+<p>The default <code>obj</code> parameter would contain extra parameters like <code>id</code>, <code>slug</code> and <code>page</code>, which would be then used to fetch a particular group of images, else, it'll fetch a random set of images.</p>
+
+<p>This method worked fine in Google Chrome and Mozilla Firefox but not in Internet Explorer. I thought of inspecting the code and I was facing weird errors like <code>undefined</code> or <code>Expected: ')'</code> on the IE console.</p>
+
+<p>Luckily, I had compared it to the other methods that didn't have any default parameters, so I did a little research and turns out that according to <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/default_parameters">Mozilla's documentation</a>, default function parameters are proposed by the ES6 syntax and at this point, I realized that Internet Explorer <strong>doesn't support ES6 syntax</strong>. What a bummer! &#x1F612;</p>
+
+<p>However, there's a way to prevent this from happening by rewriting the method like this:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="kd">function</span><span class="w"> </span><span class="nx">fetchImages</span><span class="p">(</span><span class="nx">obj</span><span class="p">){</span>
+<span class="w">    </span><span class="c1">// Check if obj is defined, else make it assign it as an empty object.</span>
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">obj</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="p">{};</span>
+
+<span class="w">    </span><span class="c1">// some code here...</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<p>And BAM! The method worked flawlessly just as it's intended to do so. &#x1F60E;</p>
+
+<p>Addtionally, you may refer to the <a href="http://kangax.github.io/compat-table/es6/">ECMAScript 6 Compatibility table</a> that you might find it quite helpful to check browser compatiblity for Internet Explorer versions 11 and under.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>June 3rd, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/javascript/">
+					JavaScript
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/how-to-identify-the-current-target-of-an-event">How to identify the current target of an event?</a></h1>
 		<p class="description"></p>
 	</div>
@@ -86,23 +262,25 @@
 
 <p>There are many examples but I chose to write a small snippet of highlighting a tab:</p>
 
-<pre><code>function highlightTab(e){
-    // Find elements that has the classname 'active' 
-    // and remove them
-    if(document.querySelector('div.tab_item.active') !== null){
-        document.querySelector('div.tab_item.active').classList.remove('active');
-    }
+<div class="codehilite">
+<pre><span></span><code><span class="kd">function</span><span class="w"> </span><span class="nx">highlightTab</span><span class="p">(</span><span class="nx">e</span><span class="p">){</span>
+<span class="w">    </span><span class="c1">// Find elements that has the classname &#39;active&#39; </span>
+<span class="w">    </span><span class="c1">// and remove them</span>
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="nb">document</span><span class="p">.</span><span class="nx">querySelector</span><span class="p">(</span><span class="s1">&#39;div.tab_item.active&#39;</span><span class="p">)</span><span class="w"> </span><span class="o">!==</span><span class="w"> </span><span class="kc">null</span><span class="p">){</span>
+<span class="w">        </span><span class="nb">document</span><span class="p">.</span><span class="nx">querySelector</span><span class="p">(</span><span class="s1">&#39;div.tab_item.active&#39;</span><span class="p">).</span><span class="nx">classList</span><span class="p">.</span><span class="nx">remove</span><span class="p">(</span><span class="s1">&#39;active&#39;</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
 
-    // Add active class to target node
-    e.currentTarget.className += " active";
+<span class="w">    </span><span class="c1">// Add active class to target node</span>
+<span class="w">    </span><span class="nx">e</span><span class="p">.</span><span class="nx">currentTarget</span><span class="p">.</span><span class="nx">className</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="s2">&quot; active&quot;</span><span class="p">;</span>
 
-    // Add active class to target's child node
-    // e.currentTarget.querySelector('a.child_anchor_link').className += " active";
+<span class="w">    </span><span class="c1">// Add active class to target&#39;s child node</span>
+<span class="w">    </span><span class="c1">// e.currentTarget.querySelector(&#39;a.child_anchor_link&#39;).className += &quot; active&quot;;</span>
 
-    // Add active class to target's parent node
-    // e.currentTarget.parentNode.className += " active";
-}
+<span class="w">    </span><span class="c1">// Add active class to target&#39;s parent node</span>
+<span class="w">    </span><span class="c1">// e.currentTarget.parentNode.className += &quot; active&quot;;</span>
+<span class="p">}</span>
 </code></pre>
+</div>
 
 <p>Read <a href="https://developer.mozilla.org/en-US/docs/Web/API/Event/currentTarget">Mozilla's official documentation</a> to know more about getting the current target of an event and it's compatibility with different web browsers.</p>
 
@@ -133,19 +311,23 @@
 
 <p>Well, CKEditor's <a href="https://ckeditor.com/docs/ckeditor4/latest/guide/dev_allowed_content_rules.html">documentation</a> states that you can allow it by adding this line to your configuration:</p>
 
-<pre><code>var editor = CKEDITOR.replace('textarea_edit',{
-    allowedContent: true,
-});
+<div class="codehilite">
+<pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">editor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">CKEDITOR</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="s1">&#39;textarea_edit&#39;</span><span class="p">,{</span>
+<span class="w">    </span><span class="nx">allowedContent</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="p">});</span>
 </code></pre>
+</div>
 
 <p>After adding this line, CKEditor will stop removing those elements from your HTML content but it's also open to all tags. </p>
 
 <p>You can set rules to allow only specific ones like this:</p>
 
-<pre><code>var editor = CKEDITOR.replace('textarea_edit',{
-    allowedContent: 'span; i; ul; li; a[!href]'
-});
+<div class="codehilite">
+<pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">editor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">CKEDITOR</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="s1">&#39;textarea_edit&#39;</span><span class="p">,{</span>
+<span class="w">    </span><span class="nx">allowedContent</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;span; i; ul; li; a[!href]&#39;</span>
+<span class="p">});</span>
 </code></pre>
+</div>
 
 <p>Hope this helps you out! &#x1F60A;</p>
 
@@ -174,27 +356,31 @@
 	<div class="article-body">
 		<p>If you've ever come across this type of error when you're trying to fetch parameters of the current route:</p>
 
-<pre><code>Symfony\Component\Debug\Exception\FatalThrowableError: Call to member function parameters() on null
+<div class="codehilite">
+<pre><span></span><code>Symfony\Component\Debug\Exception\FatalThrowableError: Call to member function parameters() on null
 </code></pre>
+</div>
 
 <p>It's probably because the route doesn't exist, which is why it failed to call the <code>parameters()</code> function. It can be easily resolved by checking if the route exists before calling the function:</p>
 
-<pre><code>&lt;?php
-namespace App\Http\Controllers;
-use Route;
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="k">namespace</span> <span class="nx">App\Http\Controllers</span><span class="p">;</span>
+<span class="k">use</span> <span class="nx">Route</span><span class="p">;</span>
 
-class FooController extends Controller {
-    public function __construct(Request $request){
-        // insert code here...
-    }
+<span class="k">class</span> <span class="nc">FooController</span> <span class="k">extends</span> <span class="nx">Controller</span> <span class="p">{</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="fm">__construct</span><span class="p">(</span><span class="nx">Request</span> <span class="nv">$request</span><span class="p">){</span>
+        <span class="c1">// insert code here...</span>
+    <span class="p">}</span>
 
-    public function foo(Request $request){
-        $params = $request-&gt;route() ? Route::current()-&gt;parameters() : '';
-        return $params;
-    }
-}
-?&gt;
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">foo</span><span class="p">(</span><span class="nx">Request</span> <span class="nv">$request</span><span class="p">){</span>
+        <span class="nv">$params</span> <span class="o">=</span> <span class="nv">$request</span><span class="o">-&gt;</span><span class="na">route</span><span class="p">()</span> <span class="o">?</span> <span class="nx">Route</span><span class="o">::</span><span class="na">current</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">parameters</span><span class="p">()</span> <span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">;</span>
+        <span class="k">return</span> <span class="nv">$params</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+<span class="cp">?&gt;</span>
 </code></pre>
+</div>
 
 <p>Although, the sample code above is to fetch parameters of the current route, you can apply this before calling any method from the <code>Route</code> class.</p>
 
@@ -249,38 +435,40 @@ class FooController extends Controller {
 
 <p><strong>Implementation of a standard queue using C++:</strong></p>
 
-<pre><code>class Queue {
-    private:
-        int pos;
-        vector&lt;int&gt; data;
+<div class="codehilite">
+<pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">Queue</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">private</span><span class="o">:</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">pos</span><span class="p">;</span>
+<span class="w">        </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">data</span><span class="p">;</span>
 
-    public:
-        Queue() {
-            pos = 0;
-        }
+<span class="w">    </span><span class="k">public</span><span class="o">:</span>
+<span class="w">        </span><span class="n">Queue</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">pos</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
 
-        bool enqueue(int value) {
-            data.push_back(value);
-            return true;
-        }
+<span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="n">enqueue</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">data</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">value</span><span class="p">);</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
 
-        bool dequeue() {
-            if(isEmpty()){
-                return false;
-            }
-            pos++;
-            return true;
-        }
+<span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="n">dequeue</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">isEmpty</span><span class="p">()){</span>
+<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">            </span><span class="n">pos</span><span class="o">++</span><span class="p">;</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
 
-        int front() {
-            return data[pos];
-        }
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">front</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="n">pos</span><span class="p">];</span>
+<span class="w">        </span><span class="p">}</span>
 
-        bool isEmpty() {
-            return pos &gt;= data.size();
-        }
-}
+<span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="n">isEmpty</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">pos</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="p">}</span>
 </code></pre>
+</div>
 
 <p>In terms of memory management, a standard Queue is quite inefficient and incapable of handling dynamic memory.</p>
 
@@ -303,33 +491,35 @@ class FooController extends Controller {
 
 <p><strong>Implementation of a stack using C++:</strong></p>
 
-<pre><code>class Stack {
-    private:
-        vector&amp;ltint&gt; data;
-    public:
-        void push(int value) {
-            data.push_back(value);
-        }
+<div class="codehilite">
+<pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">Stack</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">private</span><span class="o">:</span>
+<span class="w">        </span><span class="n">vector</span><span class="o">&amp;</span><span class="n">ltint</span><span class="o">&gt;</span><span class="w"> </span><span class="n">data</span><span class="p">;</span>
+<span class="w">    </span><span class="k">public</span><span class="o">:</span>
+<span class="w">        </span><span class="kt">void</span><span class="w"> </span><span class="n">push</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">data</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">value</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
 
-        bool isEmpty() {
-            return data.empty();
-        }
+<span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="n">isEmpty</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">empty</span><span class="p">();</span>
+<span class="w">        </span><span class="p">}</span>
 
-        int top() {
-            return data.back();
-        }
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">top</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">back</span><span class="p">();</span>
+<span class="w">        </span><span class="p">}</span>
 
-        bool pop() {
-            if(!isEmpty()) {
-                data.pop_back();
-                return true;
-            }
-            else {
-                return false;
-            }
-        }
-}
+<span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="n">pop</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">isEmpty</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="n">data</span><span class="p">.</span><span class="n">pop_back</span><span class="p">();</span>
+<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">            </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="p">}</span>
 </code></pre>
+</div>
 
 <p>Unlike queues, stacks are easier to implement and pretty efficient at managing dynamic memory.</p>
 
@@ -411,10 +601,12 @@ class FooController extends Controller {
 	<div class="article-body">
 		<p>If you don't want the current element to be selected in an array of elements that belongs to same class or type, just use the <code>.not()</code> method like the example below:</p>
 
-<pre><code>$(".btn").click(function(){
-    $(".btn").not(this).text('selected');
-});
+<div class="codehilite">
+<pre><span></span><code><span class="nx">$</span><span class="p">(</span><span class="s2">&quot;.btn&quot;</span><span class="p">).</span><span class="nx">click</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
+<span class="w">    </span><span class="nx">$</span><span class="p">(</span><span class="s2">&quot;.btn&quot;</span><span class="p">).</span><span class="nx">not</span><span class="p">(</span><span class="k">this</span><span class="p">).</span><span class="nx">text</span><span class="p">(</span><span class="s1">&#39;selected&#39;</span><span class="p">);</span>
+<span class="p">});</span>
 </code></pre>
+</div>
 
 <p>The above code will change the text for all buttons except the current element.</p>
 
@@ -426,83 +618,6 @@ class FooController extends Controller {
 			<li>
 				<a href="/category/jquery/">
 					jQuery
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/extract-a-specific-folder-from-a-zipped-archive">Extract a specific folder from a zipped archive</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>First, you need to view what's inside of the <code>.zip</code> archive:</p>
-
-<pre><code>unzip -v archive.zip
-</code></pre>
-
-<p>Once, you've found the folder you wanted to extract, just type this:</p>
-
-<pre><code>unzip archive.zip "folder_to_extract/*" -d .
-</code></pre>
-
-	</div>
-	<div class="article-footer">
-		<time>May 28th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/terminal/">
-					Terminal
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/remove-patterns-from-multiple-files">Remove patterns from multiple files</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>If you wanted to remove a specific pattern in a list of files, like the ones below:</p>
-
-<pre><code>23_2020_03_01_article-three.md
-22_2020_02_01_article-two.md
-21_2020_01_01_article-one.md
-</code></pre>
-
-<p>You can simply do that using Regular Expressions and the <code>rename</code> tool:</p>
-
-<pre><code>rename 's/[0-9]+_[0-9]+_[0-9]+_[0-9]+_//' *.md
-</code></pre>
-
-<p>Now, the desired output should look like this:</p>
-
-<pre><code>article-three.md
-article-two.md
-article-one.md
-</code></pre>
-
-<p>This should come in handy if you're lazy to rename each file manually! :)</p>
-
-	</div>
-	<div class="article-footer">
-		<time>May 27th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/terminal/">
-					Terminal
 				</a>
 			</li>
 			
@@ -550,11 +665,11 @@ article-one.md
 		
 	
 		
-			<a class="" href="/pages/7">...</a>
+			<a class="" href="/pages/8">...</a>
 		
 	
 		
-			<a class="" href="/pages/25">25</a>
+			<a class="" href="/pages/26">26</a>
 		
 	
 
@@ -591,7 +706,7 @@ article-one.md
 		<li>
 			<a href="/category/linux/">
 				Linux
-				<span class="count">19</span>
+				<span class="count">21</span>
 			</a>
 		</li>
 		
@@ -673,6 +788,13 @@ article-one.md
 		</li>
 		
 		<li>
+			<a href="/category/productivity/">
+				Productivity
+				<span class="count">7</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/tutorial/">
 				Tutorial
 				<span class="count">6</span>
@@ -697,13 +819,6 @@ article-one.md
 			<a href="/category/essay/">
 				Essay
 				<span class="count">6</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/productivity/">
-				Productivity
-				<span class="count">5</span>
 			</a>
 		</li>
 		

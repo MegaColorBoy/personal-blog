@@ -102,22 +102,26 @@
 
 <p>Here's a sample error that I would face sometimes while deploying a Laravel web application on CentOS 7:</p>
 
-<pre><code>[Mon May 16 11:39:32.996441 2016] [:error] [pid 2434] [client XXX.XXX.XXX.XXX:8080] PHP Fatal error:  Uncaught UnexpectedValueException: The stream or file "/var/www/html/MYSITE/storage/logs/laravel.log" could not be opened: failed to open stream: Permission denied in /var/www/html/MYSITE/bootstrap/cache/compiled.php:13701
-Stack trace:
-#0 /var/www/html/MYSITE/bootstrap/cache/compiled.php(13635): Monolog\\Handler\\StreamHandler-&gt;write(Array)
-#1 /var/www/html/MYSITE/bootstrap/cache/compiled.php(13396): Monolog\\Handler\\AbstractProcessingHandler-&gt;handle(Array)
-#2 /var/www/html/MYSITE/bootstrap/cache/compiled.php(13494): Monolog\\Logger-&gt;addRecord(400, Object(Symfony\\Component\\Debug\\Exception\\FatalErrorException), Array)
-#3 /var/www/html/MYSITE/bootstrap/cache/compiled.php(13189): Monolog\\Logger-&gt;error(Object(Symfony\\Component\\Debug\\Exception\\FatalErrorException), Array)
-#4 /var/www/html/MYSITE/bootstrap/cache/compiled.php(13160): Illuminate\\Log\\Writer-&gt;writeLog('error', Object(Symfony\\Component\\Debug\\Exception\\FatalErrorException), Array)
-# in /var/www/html/MYSITE/bootstrap/cache/compiled.php on line 13701
+<div class="codehilite">
+<pre><span></span><code><span class="o">[</span>Mon<span class="w"> </span>May<span class="w"> </span><span class="m">16</span><span class="w"> </span><span class="m">11</span>:39:32.996441<span class="w"> </span><span class="m">2016</span><span class="o">]</span><span class="w"> </span><span class="o">[</span>:error<span class="o">]</span><span class="w"> </span><span class="o">[</span>pid<span class="w"> </span><span class="m">2434</span><span class="o">]</span><span class="w"> </span><span class="o">[</span>client<span class="w"> </span>XXX.XXX.XXX.XXX:8080<span class="o">]</span><span class="w"> </span>PHP<span class="w"> </span>Fatal<span class="w"> </span>error:<span class="w">  </span>Uncaught<span class="w"> </span>UnexpectedValueException:<span class="w"> </span>The<span class="w"> </span>stream<span class="w"> </span>or<span class="w"> </span>file<span class="w"> </span><span class="s2">&quot;/var/www/html/MYSITE/storage/logs/laravel.log&quot;</span><span class="w"> </span>could<span class="w"> </span>not<span class="w"> </span>be<span class="w"> </span>opened:<span class="w"> </span>failed<span class="w"> </span>to<span class="w"> </span>open<span class="w"> </span>stream:<span class="w"> </span>Permission<span class="w"> </span>denied<span class="w"> </span><span class="k">in</span><span class="w"> </span>/var/www/html/MYSITE/bootstrap/cache/compiled.php:13701
+Stack<span class="w"> </span>trace:
+<span class="c1">#0 /var/www/html/MYSITE/bootstrap/cache/compiled.php(13635): Monolog\\Handler\\StreamHandler-&gt;write(Array)</span>
+<span class="c1">#1 /var/www/html/MYSITE/bootstrap/cache/compiled.php(13396): Monolog\\Handler\\AbstractProcessingHandler-&gt;handle(Array)</span>
+<span class="c1">#2 /var/www/html/MYSITE/bootstrap/cache/compiled.php(13494): Monolog\\Logger-&gt;addRecord(400, Object(Symfony\\Component\\Debug\\Exception\\FatalErrorException), Array)</span>
+<span class="c1">#3 /var/www/html/MYSITE/bootstrap/cache/compiled.php(13189): Monolog\\Logger-&gt;error(Object(Symfony\\Component\\Debug\\Exception\\FatalErrorException), Array)</span>
+<span class="c1">#4 /var/www/html/MYSITE/bootstrap/cache/compiled.php(13160): Illuminate\\Log\\Writer-&gt;writeLog(&#39;error&#39;, Object(Symfony\\Component\\Debug\\Exception\\FatalErrorException), Array)</span>
+<span class="c1"># in /var/www/html/MYSITE/bootstrap/cache/compiled.php on line 13701</span>
 </code></pre>
+</div>
 
 <p>By looking at this error, you do understand it's permission-related but it doesn't really indicate that it's an SELinux problem because there could be thousands of reasons why there could be such an error. And of course, when I look it up on Google, I do find many people facing the same issue due to SELinux being enabled.</p>
 
 <p>Instead of disabling it completely, I would try doing this:</p>
 
-<pre><code>chcon -R -t httpd_sys_rw_content_t storage
+<div class="codehilite">
+<pre><span></span><code>chcon<span class="w"> </span>-R<span class="w"> </span>-t<span class="w"> </span>httpd_sys_rw_content_t<span class="w"> </span>storage
 </code></pre>
+</div>
 
 <p>And off goes the error and the application didn't give any permission-related issues again.</p>
 

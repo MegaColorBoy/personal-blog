@@ -78,6 +78,106 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/resolve-curl-error-60-ssl-certificate-problem-on-localhost">Resolve cURL error 60: SSL certificate problem on localhost</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>You'll get this error when you're hosting a Laravel project with using HTTPS/SSL protocol on <code>localhost</code> or <code>127.0.0.1</code>:</p>
+
+<div class="codehilite">
+<pre><span></span><code>cURL error 60: SSL certificate problem: unable to get local issuer certificate (see https://curl.haxx.se/libcurl/c/libcurl-errors.html)
+</code></pre>
+</div>
+
+<p>I read some article on trying to install <code>cacert.pem</code> authorization certificate on your WAMP/XAMPP setup but it didn't really work out for me as I was running out of time.</p>
+
+<p>So, I did a little digging and learnt that I can just modify the <code>verify</code> flag to <code>false</code> in the <code>vendor/guzzlehttp/guzzle/src/Client.php</code> file:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="nv">$defaults</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s1">&#39;allow_redirects&#39;</span> <span class="o">=&gt;</span> <span class="nx">RedirectMiddleware</span><span class="o">::</span><span class="nv">$defaultSettings</span><span class="p">,</span>
+    <span class="s1">&#39;http_errors&#39;</span>     <span class="o">=&gt;</span> <span class="k">true</span><span class="p">,</span>
+    <span class="s1">&#39;decode_content&#39;</span>  <span class="o">=&gt;</span> <span class="k">true</span><span class="p">,</span>
+    <span class="s1">&#39;verify&#39;</span>          <span class="o">=&gt;</span> <span class="k">false</span><span class="p">,</span> <span class="c1">// changed it to false</span>
+    <span class="s1">&#39;cookies&#39;</span>         <span class="o">=&gt;</span> <span class="k">false</span>
+<span class="p">];</span>
+<span class="cp">?&gt;</span>
+</code></pre>
+</div>
+
+<p>By changing to it <code>false</code>, you'll not face that error again but please keep in mind, you should do this only if you're developing on localhost.</p>
+
+<p>Happy coding!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>September 28th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/laravel/">
+					Laravel
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-resolve-the-no-application-encryption-key-has-been-specified-error">How to resolve the "No application encryption key has been specified" error</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Are you facing the same error as this article's title? Then this article might help you out.</p>
+
+<p>If you're developing applications using HTTP/SSL Protocols (regardless, you should!) on Laravel, by default, you'll be using Laravel's encrypter but in it's <a href="https://laravel.com/docs/7.x/encryption#configuration">official documentation</a>, it says:</p>
+
+<blockquote>
+  <p>Before using Laravel's encrypter, you must set a <code>key</code> option in your <code>config/app.php</code> configuration file. You should use the <code>php artisan key:generate</code> command to generate this key since this Artisan command will use PHP's secure random bytes generator to build your key. If this value is not properly set, all values encrypted by Laravel will be insecure.</p>
+</blockquote>
+
+<p>Just execute the following command in your root directory:</p>
+
+<div class="codehilite">
+<pre><span></span><code>php<span class="w"> </span>artisan<span class="w"> </span>key:generate
+</code></pre>
+</div>
+
+<p>If the error still persists, try clearing the cache by doing the following:</p>
+
+<div class="codehilite">
+<pre><span></span><code>php<span class="w"> </span>artisan<span class="w"> </span>config:cache
+php<span class="w"> </span>artisan<span class="w"> </span>cache:clear
+php<span class="w"> </span>artisan<span class="w"> </span>config:clear
+</code></pre>
+</div>
+
+<p>Hope you found this article useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>September 19th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/laravel/">
+					Laravel
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/how-to-filter-requests-with-errors-on-chromes-devtools">How to filter requests with errors on Chrome's DevTools</a></h1>
 		<p class="description"></p>
 	</div>
@@ -129,22 +229,28 @@
 
 <p>Open your terminal or command-line prompt and navigate to the following folder:</p>
 
-<pre><code>cd "C:\Program Files\OpenSSL-Win64\bin"
+<div class="codehilite">
+<pre><span></span><code><span class="nb">cd</span><span class="w"> </span><span class="s2">&quot;C:\Program Files\OpenSSL-Win64\bin&quot;</span>
 </code></pre>
+</div>
 
 <p>Next, you need to create a private key. While generating a private key, you'll have to enter a passphrase, it can be anything but make sure that you can remember it for the next step &#x1F602;.</p>
 
 <p>Execute the following command:</p>
 
-<pre><code>openssl genrsa -aes256 -out private.key 2048
+<div class="codehilite">
+<pre><span></span><code>openssl<span class="w"> </span>genrsa<span class="w"> </span>-aes256<span class="w"> </span>-out<span class="w"> </span>private.key<span class="w"> </span><span class="m">2048</span>
 </code></pre>
+</div>
 
 <p>Good, now let's generate our certificate and in this step, you'll be prompted with several questions. You can fill as per your wish or just hit "Enter" to leave it as default. The only thing that matters is <strong>Common Name</strong> and this should named as <code>localhost</code></p>
 
 <p>Execute the following command:</p>
 
-<pre><code>openssl req -new -x509 -nodes -sha1 -key private.key -out certificate.crt -days 36500
+<div class="codehilite">
+<pre><span></span><code>openssl<span class="w"> </span>req<span class="w"> </span>-new<span class="w"> </span>-x509<span class="w"> </span>-nodes<span class="w"> </span>-sha1<span class="w"> </span>-key<span class="w"> </span>private.key<span class="w"> </span>-out<span class="w"> </span>certificate.crt<span class="w"> </span>-days<span class="w"> </span><span class="m">36500</span>
 </code></pre>
+</div>
 
 <h2>Move the certificate and key to Apache's directory</h2>
 
@@ -154,25 +260,29 @@
 
 <p>You have to uncomment 3 lines from <code>C:/wamp64/bin/apache/apache2.4.41/conf/httpd.conf</code>:</p>
 
-<pre><code>LoadModule ssl_module modules/mod_ssl.so
-Include conf/extra/httpd-ssl.conf
-LoadModule socache_shmcb_module modules/mod_socache_shmcb.so
+<div class="codehilite">
+<pre><span></span><code><span class="nb">LoadModule</span><span class="w"> </span>ssl_module<span class="w"> </span>modules/mod_ssl.so
+<span class="nb">Include</span><span class="w"> </span>conf/extra/httpd-ssl.conf
+<span class="nb">LoadModule</span><span class="w"> </span>socache_shmcb_module<span class="w"> </span>modules/mod_socache_shmcb.so
 </code></pre>
+</div>
 
 <h2>Modify your httpd-ssl.conf file</h2>
 
 <p>Go to <code>C:/wamp64/bin/apache/apache2.4.41/conf/extra/httpd-ssl.conf</code> and modify the following parameters:</p>
 
-<pre><code>DocumentRoot "c:/wamp64/www"
-ServerName localhost:443
-ServerAdmin admin@youremail.com
-ErrorLog "${SRVROOT}/logs/error.log"
-TransferLog "${SRVROOT}/logs/access.log"
-SSLSessionCache "shmcb:${SRVROOT}/logs/ssl_scache(512000)"
-SSLCertificateFile "${SRVROOT}/conf/keys/certificate.crt"
-SSLCertificateKeyFile "${SRVROOT}/conf/keys/private.key"
-CustomLog "${SRVROOT}/logs/ssl_request.log"
+<div class="codehilite">
+<pre><span></span><code><span class="nb">DocumentRoot</span><span class="w"> </span><span class="s2">&quot;c:/wamp64/www&quot;</span>
+<span class="nb">ServerName</span><span class="w"> </span>localhost:443
+<span class="nb">ServerAdmin</span><span class="w"> </span>admin@youremail.com
+<span class="nb">ErrorLog</span><span class="w"> </span><span class="s2">&quot;${SRVROOT}/logs/error.log&quot;</span>
+<span class="nb">TransferLog</span><span class="w"> </span><span class="s2">&quot;${SRVROOT}/logs/access.log&quot;</span>
+<span class="nb">SSLSessionCache</span><span class="w"> </span><span class="s2">&quot;shmcb:${SRVROOT}/logs/ssl_scache(512000)&quot;</span>
+<span class="nb">SSLCertificateFile</span><span class="w"> </span><span class="s2">&quot;${SRVROOT}/conf/keys/certificate.crt&quot;</span>
+<span class="nb">SSLCertificateKeyFile</span><span class="w"> </span><span class="s2">&quot;${SRVROOT}/conf/keys/private.key&quot;</span>
+<span class="nb">CustomLog</span><span class="w"> </span><span class="s2">&quot;${SRVROOT}/logs/ssl_request.log&quot;</span>
 </code></pre>
+</div>
 
 <p><code>DocumentRoot</code> is the location of where your website files are located. <code>ServerName</code> can be anything but preferable to use <code>localhost</code>.</p>
 
@@ -217,17 +327,19 @@ CustomLog "${SRVROOT}/logs/ssl_request.log"
 
 <p>Setting up your WAMP Server for LAN access only requires you to tweak your <strong>VirtualHosts</strong> configuration file found in <code>C:\wamp64\bin\apache\apache2.4.41\conf\extra\httpd-vhost.conf</code></p>
 
-<pre><code>&lt;VirtualHost *:80&gt;
-  ServerName example.test
-  ServerAlias example.test
-  DocumentRoot "c:/wamp64/www/yourprojectname"
-  &lt;Directory "c:/wamp64/www/yourprojectname/"&gt;
-    Options +Indexes +Includes +FollowSymLinks +MultiViews
-    AllowOverride All
-    Require all granted
-  &lt;/Directory&gt;
-&lt;/VirtualHost&gt;
+<div class="codehilite">
+<pre><span></span><code><span class="nt">&lt;VirtualHost</span><span class="w"> </span><span class="s">*:80</span><span class="nt">&gt;</span>
+<span class="w">  </span><span class="nb">ServerName</span><span class="w"> </span>example.test
+<span class="w">  </span><span class="nb">ServerAlias</span><span class="w"> </span>example.test
+<span class="w">  </span><span class="nb">DocumentRoot</span><span class="w"> </span><span class="s2">&quot;c:/wamp64/www/yourprojectname&quot;</span>
+<span class="w">  </span><span class="nt">&lt;Directory</span><span class="w"> </span><span class="s">&quot;c:/wamp64/www/yourprojectname/&quot;</span><span class="nt">&gt;</span>
+<span class="w">    </span><span class="nb">Options</span><span class="w"> </span>+Indexes<span class="w"> </span>+Includes<span class="w"> </span>+FollowSymLinks<span class="w"> </span>+MultiViews
+<span class="w">    </span><span class="nb">AllowOverride</span><span class="w"> </span><span class="k">All</span>
+<span class="w">    </span><span class="nb">Require</span><span class="w"> </span><span class="k">all</span><span class="w"> </span>granted
+<span class="w">  </span><span class="nt">&lt;/Directory&gt;</span>
+<span class="nt">&lt;/VirtualHost&gt;</span>
 </code></pre>
+</div>
 
 <p>Oh, if you're using Linux, you'll find the file <code>000-default.conf</code> in <code>/etc/apache2/sites-available</code> directory.</p>
 
@@ -237,8 +349,10 @@ CustomLog "${SRVROOT}/logs/ssl_request.log"
 
 <p>Open the hosts file(<code>C:\Windows\System32\drivers\etc\hosts</code>) using a text editor and add this line to your <code>hosts</code> file:</p>
 
-<pre><code>127.0.0.1   example.test
+<div class="codehilite">
+<pre><span></span><code>127.0.0.1   example.test
 </code></pre>
+</div>
 
 <p>Once done, save the file and restart your WAMP Server and you're all set to go!</p>
 
@@ -279,12 +393,14 @@ CustomLog "${SRVROOT}/logs/ssl_request.log"
 
 <p>But that didn't help resolve my issue, so I thought of going around with a tiny hack:</p>
 
-<pre><code>window.onpageshow = function(event) {
-    if (event.persisted) {
-        window.location.reload() 
-    }
-};
+<div class="codehilite">
+<pre><span></span><code><span class="nb">window</span><span class="p">.</span><span class="nx">onpageshow</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">event</span><span class="p">.</span><span class="nx">persisted</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="p">.</span><span class="nx">reload</span><span class="p">()</span><span class="w"> </span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">};</span>
 </code></pre>
+</div>
 
 <p>The code above will look any persistence of the <code>onpageshow</code> event. Initially, it's set to <code>false</code> and if the page is loaded from <strong>bfcache</strong>, it'll set to <code>true</code>.</p>
 
@@ -317,17 +433,21 @@ CustomLog "${SRVROOT}/logs/ssl_request.log"
 	<div class="article-body">
 		<p>If you want to reload the current page in your browser without any query string or parameters, here's how you can do it:</p>
 
-<pre><code>window.location = window.location.pathname;
+<div class="codehilite">
+<pre><span></span><code><span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="p">.</span><span class="nx">pathname</span><span class="p">;</span>
 </code></pre>
+</div>
 
 <p>By doing so, it'll preserve the HTTP/HTTPS protocols of the URL and also remove the fragments that start with a <code>#</code>.</p>
 
 <p>If you want to preserve the fragments, you can try this:</p>
 
-<pre><code>var reloadURL = window.location.pathname;
-var fragments = (window.location.part === undefined) ? "" : "#" + window.location.part;
-window.location = reloadURL + fragments;
+<div class="codehilite">
+<pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">reloadURL</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="p">.</span><span class="nx">pathname</span><span class="p">;</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">fragments</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="p">.</span><span class="nx">part</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="kc">undefined</span><span class="p">)</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;#&quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="p">.</span><span class="nx">part</span><span class="p">;</span>
+<span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">reloadURL</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">fragments</span><span class="p">;</span>
 </code></pre>
+</div>
 
 <p>Hope you found this useful!</p>
 
@@ -364,132 +484,60 @@ window.location = reloadURL + fragments;
 
 <p>Want to strip out all tags and certain characters? Try this:</p>
 
-<pre><code>&amp;lt;?php
-$str = "&amp;lt;h1&amp;gt;Hello World&amp;lt;/h1&amp;gt;";
-$filtered = filter_var($str, FILTER_SANITIZE_STRING);
-echo $filtered;
-?&amp;gt;
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="nv">$str</span> <span class="o">=</span> <span class="s2">&quot;&lt;h1&gt;Hello World&lt;/h1&gt;&quot;</span><span class="p">;</span>
+<span class="nv">$filtered</span> <span class="o">=</span> <span class="nb">filter_var</span><span class="p">(</span><span class="nv">$str</span><span class="p">,</span> <span class="nx">FILTER_SANITIZE_STRING</span><span class="p">);</span>
+<span class="k">echo</span> <span class="nv">$filtered</span><span class="p">;</span>
+<span class="cp">?&gt;</span>
 </code></pre>
+</div>
 
 <h3>Integer validation</h3>
 
 <p>You can check if the input is an integer and if it's a value between 1 and 20:</p>
 
-<pre><code>&amp;lt;?php
-$x = 10;
-$min = 1;
-$max = 20;
-$options = [
-    "min_range" =&gt; $min,
-    "max_range" =&gt; $max
-];
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="nv">$x</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+<span class="nv">$min</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="nv">$max</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>
+<span class="nv">$options</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;min_range&quot;</span> <span class="o">=&gt;</span> <span class="nv">$min</span><span class="p">,</span>
+    <span class="s2">&quot;max_range&quot;</span> <span class="o">=&gt;</span> <span class="nv">$max</span>
+<span class="p">];</span>
 
-if(!filter_var($x, FILTER_VALIDATE_INT, $options)){
-    echo "This input is invalid.";
-}
-else {
-    echo "This input is valid.";
-}
-?&amp;gt;
+<span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nb">filter_var</span><span class="p">(</span><span class="nv">$x</span><span class="p">,</span> <span class="nx">FILTER_VALIDATE_INT</span><span class="p">,</span> <span class="nv">$options</span><span class="p">)){</span>
+    <span class="k">echo</span> <span class="s2">&quot;This input is invalid.&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="k">else</span> <span class="p">{</span>
+    <span class="k">echo</span> <span class="s2">&quot;This input is valid.&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="cp">?&gt;</span>
 </code></pre>
+</div>
 
 <h3>URL validation</h3>
 
 <p>Want to check if the input is a valid URL? Try this out:</p>
 
-<pre><code>&amp;lt;?php
-// Make sure the URL is sanitized
-$url = filter_var("https://www.google.com", FILTER_SANITIZE_URL);
-if(filter_var($url, FILTER_VALIDATE_URL)){
-    echo "This URL is valid.";
-}
-else {
-    echo "This URL is invalid.";
-}
-?&amp;gt;
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="c1">// Make sure the URL is sanitized</span>
+<span class="nv">$url</span> <span class="o">=</span> <span class="nb">filter_var</span><span class="p">(</span><span class="s2">&quot;https://www.google.com&quot;</span><span class="p">,</span> <span class="nx">FILTER_SANITIZE_URL</span><span class="p">);</span>
+<span class="k">if</span><span class="p">(</span><span class="nb">filter_var</span><span class="p">(</span><span class="nv">$url</span><span class="p">,</span> <span class="nx">FILTER_VALIDATE_URL</span><span class="p">)){</span>
+    <span class="k">echo</span> <span class="s2">&quot;This URL is valid.&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="k">else</span> <span class="p">{</span>
+    <span class="k">echo</span> <span class="s2">&quot;This URL is invalid.&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="cp">?&gt;</span>
 </code></pre>
+</div>
 
 <p>Using these in-built features makes it easier for PHP developers to process data from external sources in a safer manner and also adds an extra layer of protection to your web application.</p>
 
 <p>Read more about this method in <a href="https://www.php.net/manual/en/function.filter-var.php">PHP's official documentation</a>.</p>
-
-	</div>
-	<div class="article-footer">
-		<time>August 23rd, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/php/">
-					PHP
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/extract-unique-characters-from-a-string">Extract unique characters from a string</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>I thought of getting back into competitive programming again and 
-started practicing my python coding-chops on <a href="https://www.codewars.com">Codewars</a>.</p>
-
-<p>Here's a neat trick on how to extract unique characters from a string:</p>
-
-<pre><code>from collections import OrderedDict
-
-word = "HelloWorld"
-uniq = ''.join(OrderedDict.fromkeys(word).keys())
-
-print(uniq) # prints HeloWrd
-</code></pre>
-
-<p>Using <code>OrderedDict</code> allows you to preserve the order in which the keys are inserted as a normal <code>dict</code> doesn't track the order.</p>
-
-<p>Hope you found this useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>August 23rd, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/python/">
-					Python
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/increase-execution-time-in-php">Increase execution time in PHP</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Ever process a file that's larger than 2GB and got an error that said something like this:</p>
-
-<pre><code>Maximum execution time of 30 seconds exceeded
-</code></pre>
-
-<p>Though, PHP doesn't have an efficient way of processing files of large sizes, you can prevent your web application from timing out by adding this to your code:</p>
-
-<pre><code>&lt;?php
-// 300 seconds == 5 minutes
-ini_set('max_execution_time', 300);
-?&gt;
-</code></pre>
-
-<p>Hopefully, some day, this might come in handy for you! &#128540;</p>
 
 	</div>
 	<div class="article-footer">
@@ -546,11 +594,11 @@ ini_set('max_execution_time', 300);
 		
 	
 		
-			<a class="" href="/pages/11">...</a>
+			<a class="active" href="/pages/12">...</a>
 		
 	
 		
-			<a class="" href="/pages/25">25</a>
+			<a class="" href="/pages/26">26</a>
 		
 	
 
@@ -587,7 +635,7 @@ ini_set('max_execution_time', 300);
 		<li>
 			<a href="/category/linux/">
 				Linux
-				<span class="count">19</span>
+				<span class="count">21</span>
 			</a>
 		</li>
 		
@@ -669,6 +717,13 @@ ini_set('max_execution_time', 300);
 		</li>
 		
 		<li>
+			<a href="/category/productivity/">
+				Productivity
+				<span class="count">7</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/tutorial/">
 				Tutorial
 				<span class="count">6</span>
@@ -693,13 +748,6 @@ ini_set('max_execution_time', 300);
 			<a href="/category/essay/">
 				Essay
 				<span class="count">6</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/productivity/">
-				Productivity
-				<span class="count">5</span>
 			</a>
 		</li>
 		

@@ -78,6 +78,148 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/create-migrations-and-seeds-from-an-existing-database">Create migrations and seeds from an existing database</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Up until now, I've written migrations and generated seeders for some Laravel projects that I have worked on but recently, I thought of seeing if there's a way to generate migrations and seeds from an existing database especially if it's a project that never had any migrations or seeds created before.</p>
+
+<p>Luckily, I found these two packages, which turned out to be quite productive:</p>
+
+<ol>
+<li><a href="https://github.com/kitloong/laravel-migrations-generator">kitloong/laravel-migrations-generator</a></li>
+<li><a href="https://github.com/orangehill/iseed">orangehill/iseed</a></li>
+</ol>
+
+<p>Execute the following commands to install the packages mentioned above:</p>
+
+<div class="codehilite">
+<pre><span></span><code>composer<span class="w"> </span>require<span class="w"> </span>--dev<span class="w"> </span><span class="s2">&quot;kitloong/laravel-migrations-generator&quot;</span>
+composer<span class="w"> </span>require<span class="w"> </span>orangehill/iseed
+</code></pre>
+</div>
+
+<h2>Generate migrations using existing database</h2>
+
+<p>You can generate your migrations for all tables like this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>php<span class="w"> </span>artisan<span class="w"> </span>migrate:generate
+</code></pre>
+</div>
+
+<p>Or, you can specify the tables you wish to generate:</p>
+
+<div class="codehilite">
+<pre><span></span><code>php<span class="w"> </span>artisan<span class="w"> </span>migrate:generate<span class="w"> </span>table1,table2,table3
+</code></pre>
+</div>
+
+<h2>Generate new seeds using existing database</h2>
+
+<p>You can generate seeds for a single table like this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>php<span class="w"> </span>artisan<span class="w"> </span>iseed<span class="w"> </span>table_name
+</code></pre>
+</div>
+
+<p>And for multiple tables, you can do this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>php<span class="w"> </span>artisan<span class="w"> </span>iseed<span class="w"> </span>table1,table2,table3
+</code></pre>
+</div>
+
+<p>Hope you find this tip useful!.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>March 12th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/laravel/">
+					Laravel
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/show-git-branch-in-your-bash-prompt-with-colors">Show Git branch in your Bash prompt (with colors)</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Do you work on a project with multiple Git branches but don't know which one you're in? Open your <code>.bashrc</code> file and add this:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nv">force_color_prompt</span><span class="o">=</span>yes
+<span class="nv">color_prompt</span><span class="o">=</span>yes
+
+parse_git_branch<span class="o">()</span><span class="w"> </span><span class="o">{</span>
+<span class="w"> </span>git<span class="w"> </span>branch<span class="w"> </span><span class="m">2</span>&gt;<span class="w"> </span>/dev/null<span class="w"> </span><span class="p">|</span><span class="w"> </span>sed<span class="w"> </span>-e<span class="w"> </span><span class="s1">&#39;/^[^*]/d&#39;</span><span class="w"> </span>-e<span class="w"> </span><span class="s1">&#39;s/* \(.*\)/(\1)/&#39;</span>
+<span class="o">}</span>
+
+<span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$color_prompt</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>yes<span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<span class="w"> </span><span class="nv">PS1</span><span class="o">=</span><span class="s1">&#39;${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[01;31m\]$(parse_git_branch)\[\033[00m\]\$ &#39;</span>
+<span class="k">else</span>
+<span class="w"> </span><span class="nv">PS1</span><span class="o">=</span><span class="s1">&#39;${debian_chroot:+($debian_chroot)}\u@\h:\w$(parse_git_branch)\$ &#39;</span>
+<span class="k">fi</span>
+
+<span class="nb">unset</span><span class="w"> </span>color_prompt<span class="w"> </span>force_color_prompt
+</code></pre>
+</div>
+
+<div class="post-notification info">
+    <h3>Updated: November 26th, 2022</h3>
+    The above script works fine for Ubuntu but doesn't work fine on other distros. Here's an alternative one that works on all distros:
+<div class="codehilite">
+<pre><span></span><code>parse_git_branch<span class="o">()</span><span class="w"> </span><span class="o">{</span>
+<span class="w">    </span>git<span class="w"> </span>branch<span class="w"> </span><span class="m">2</span>&gt;<span class="w"> </span>/dev/null<span class="w"> </span><span class="p">|</span><span class="w"> </span>sed<span class="w"> </span>-e<span class="w"> </span><span class="s1">&#39;/^[^*]/d&#39;</span><span class="w"> </span>-e<span class="w"> </span><span class="s1">&#39;s/* \(.*\)/(\1)/&#39;</span>
+<span class="o">}</span>
+
+<span class="nb">export</span><span class="w"> </span><span class="nv">PS1</span><span class="o">=</span><span class="s2">&quot;\u@\h \[\e[32m\]\w \[\e[91m\]\$(parse_git_branch)\[\e[00m\]</span>$<span class="s2"> &quot;</span>
+</code></pre>
+</div>
+
+<p></div></p>
+
+<p>Save the file and execute this command for your changes to take effect:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nb">source</span><span class="w"> </span>~/.bashrc
+</code></pre>
+</div>
+
+<p>Now, you should see your colors in your Bash prompt along with the Git branch that you're working on (<strong>Note: this will be shown if you're in a project that uses a Git repository</strong>).</p>
+
+<p>Hope this helps you out!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>March 12th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/bash/">
+					Bash
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/writings/posts/make-your-own-generative-pixel-art-in-less-than-100-lines-of-code">Make your own generative pixel art in less than 100 lines of code</a></h1>
 		<p class="description">By modifying my old random pixel generator, I was able to generate a Space Invaders-esque pixel art.</p>
 	</div>
@@ -130,121 +272,123 @@
 
 <p>Here's the code for your reference and please read the comments to know how it functions:</p>
 
-<pre><code>// To store any used colors
-var colorStack = [];
+<div class="codehilite">
+<pre><span></span><code><span class="c1">// To store any used colors</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">colorStack</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[];</span>
 
-// Selected color palette
-var colors = [
-    '#30e3ca',
-    '#ff5a5f',
-    '#40514e',
-    '#e4f9f5',
-    '#40514e',
-    '#e4f9f5',
-    '#e4f9f5',
-];
+<span class="c1">// Selected color palette</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">colors</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="s1">&#39;#30e3ca&#39;</span><span class="p">,</span>
+<span class="w">    </span><span class="s1">&#39;#ff5a5f&#39;</span><span class="p">,</span>
+<span class="w">    </span><span class="s1">&#39;#40514e&#39;</span><span class="p">,</span>
+<span class="w">    </span><span class="s1">&#39;#e4f9f5&#39;</span><span class="p">,</span>
+<span class="w">    </span><span class="s1">&#39;#40514e&#39;</span><span class="p">,</span>
+<span class="w">    </span><span class="s1">&#39;#e4f9f5&#39;</span><span class="p">,</span>
+<span class="w">    </span><span class="s1">&#39;#e4f9f5&#39;</span><span class="p">,</span>
+<span class="p">];</span>
 
-var canvas = document.getElementById("myCanvas");
-var ctx = canvas.getContext('2d');
+<span class="kd">var</span><span class="w"> </span><span class="nx">canvas</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s2">&quot;myCanvas&quot;</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">ctx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">canvas</span><span class="p">.</span><span class="nx">getContext</span><span class="p">(</span><span class="s1">&#39;2d&#39;</span><span class="p">);</span>
 
-var width = canvas.width;
-var height = canvas.height;
+<span class="kd">var</span><span class="w"> </span><span class="nx">width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">canvas</span><span class="p">.</span><span class="nx">width</span><span class="p">;</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">height</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">canvas</span><span class="p">.</span><span class="nx">height</span><span class="p">;</span>
 
-function createSquare(squareDimensions, color, element, spriteDim) {
-    const {squareX, squareY, squareWidth, squareHeight} = squareDimensions;
+<span class="kd">function</span><span class="w"> </span><span class="nx">createSquare</span><span class="p">(</span><span class="nx">squareDimensions</span><span class="p">,</span><span class="w"> </span><span class="nx">color</span><span class="p">,</span><span class="w"> </span><span class="nx">element</span><span class="p">,</span><span class="w"> </span><span class="nx">spriteDim</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="p">{</span><span class="nx">squareX</span><span class="p">,</span><span class="w"> </span><span class="nx">squareY</span><span class="p">,</span><span class="w"> </span><span class="nx">squareWidth</span><span class="p">,</span><span class="w"> </span><span class="nx">squareHeight</span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">squareDimensions</span><span class="p">;</span>
 
-    // If it's a middle element, apply a color
-    if (element == parseInt(spriteDim/2)) {
-        ctx.fillStyle = color;
-        ctx.fillRect(parseInt(squareX), parseInt(squareY), parseInt(squareWidth/squareX)+3, parseInt(squareHeight/squareY)+3);
-    }
-    // If it's the last element, then use the color that you saved previously
-    else if (colorStack.length == element + 1) {
-        ctx.fillStyle = colorStack.pop();
-        ctx.fillRect(parseInt(squareX), parseInt(squareY), parseInt(squareWidth/squareX)+3, parseInt(squareHeight/squareY)+3);  
-    }
-    // Else, apply a color and save this for the last element.
-    else {
-        colorStack.push(color);
-        ctx.fillStyle = color;
-        ctx.fillRect(parseInt(squareX), parseInt(squareY), parseInt(squareWidth/squareX)+3, parseInt(squareHeight/squareY)+3);      
-    }
-}
+<span class="w">    </span><span class="c1">// If it&#39;s a middle element, apply a color</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">element</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">spriteDim</span><span class="o">/</span><span class="mf">2</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">ctx</span><span class="p">.</span><span class="nx">fillStyle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">color</span><span class="p">;</span>
+<span class="w">        </span><span class="nx">ctx</span><span class="p">.</span><span class="nx">fillRect</span><span class="p">(</span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">squareX</span><span class="p">),</span><span class="w"> </span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">squareY</span><span class="p">),</span><span class="w"> </span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">squareWidth</span><span class="o">/</span><span class="nx">squareX</span><span class="p">)</span><span class="o">+</span><span class="mf">3</span><span class="p">,</span><span class="w"> </span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">squareHeight</span><span class="o">/</span><span class="nx">squareY</span><span class="p">)</span><span class="o">+</span><span class="mf">3</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="c1">// If it&#39;s the last element, then use the color that you saved previously</span>
+<span class="w">    </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">colorStack</span><span class="p">.</span><span class="nx">length</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nx">element</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">1</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">ctx</span><span class="p">.</span><span class="nx">fillStyle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">colorStack</span><span class="p">.</span><span class="nx">pop</span><span class="p">();</span>
+<span class="w">        </span><span class="nx">ctx</span><span class="p">.</span><span class="nx">fillRect</span><span class="p">(</span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">squareX</span><span class="p">),</span><span class="w"> </span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">squareY</span><span class="p">),</span><span class="w"> </span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">squareWidth</span><span class="o">/</span><span class="nx">squareX</span><span class="p">)</span><span class="o">+</span><span class="mf">3</span><span class="p">,</span><span class="w"> </span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">squareHeight</span><span class="o">/</span><span class="nx">squareY</span><span class="p">)</span><span class="o">+</span><span class="mf">3</span><span class="p">);</span><span class="w">  </span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="c1">// Else, apply a color and save this for the last element.</span>
+<span class="w">    </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">colorStack</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">color</span><span class="p">);</span>
+<span class="w">        </span><span class="nx">ctx</span><span class="p">.</span><span class="nx">fillStyle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">color</span><span class="p">;</span>
+<span class="w">        </span><span class="nx">ctx</span><span class="p">.</span><span class="nx">fillRect</span><span class="p">(</span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">squareX</span><span class="p">),</span><span class="w"> </span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">squareY</span><span class="p">),</span><span class="w"> </span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">squareWidth</span><span class="o">/</span><span class="nx">squareX</span><span class="p">)</span><span class="o">+</span><span class="mf">3</span><span class="p">,</span><span class="w"> </span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">squareHeight</span><span class="o">/</span><span class="nx">squareY</span><span class="p">)</span><span class="o">+</span><span class="mf">3</span><span class="p">);</span><span class="w">      </span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
 
-function createInvader(invaderDimensions, spriteDim) { 
+<span class="kd">function</span><span class="w"> </span><span class="nx">createInvader</span><span class="p">(</span><span class="nx">invaderDimensions</span><span class="p">,</span><span class="w"> </span><span class="nx">spriteDim</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span>
 
-    var {posX, posY, invaderWidth, invaderHeight} = invaderDimensions;
-    var squareSize = (invaderWidth - posX) / spriteDim;
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="p">{</span><span class="nx">posX</span><span class="p">,</span><span class="w"> </span><span class="nx">posY</span><span class="p">,</span><span class="w"> </span><span class="nx">invaderWidth</span><span class="p">,</span><span class="w"> </span><span class="nx">invaderHeight</span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">invaderDimensions</span><span class="p">;</span>
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">squareSize</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">invaderWidth</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">posX</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nx">spriteDim</span><span class="p">;</span>
 
-    var cellPosition = 1;
-    var element = 0;
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">cellPosition</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1</span><span class="p">;</span>
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">element</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0</span><span class="p">;</span>
 
-    for(var y=0; y&lt;spriteDim; y++){
-        // Starts from the left side of the grid.
-        // Think of it as something like this:
-        // [-3,-2,-1,0,1,2,3]
-        cellPosition *= -1;
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kd">var</span><span class="w"> </span><span class="nx">y</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span><span class="w"> </span><span class="nx">y</span><span class="o">&lt;</span><span class="nx">spriteDim</span><span class="p">;</span><span class="w"> </span><span class="nx">y</span><span class="o">++</span><span class="p">){</span>
+<span class="w">        </span><span class="c1">// Starts from the left side of the grid.</span>
+<span class="w">        </span><span class="c1">// Think of it as something like this:</span>
+<span class="w">        </span><span class="c1">// [-3,-2,-1,0,1,2,3]</span>
+<span class="w">        </span><span class="nx">cellPosition</span><span class="w"> </span><span class="o">*=</span><span class="w"> </span><span class="o">-</span><span class="mf">1</span><span class="p">;</span>
 
-        // First element
-        element = 0;
+<span class="w">        </span><span class="c1">// First element</span>
+<span class="w">        </span><span class="nx">element</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0</span><span class="p">;</span>
 
-        for(var x=0; x&lt;spriteDim; x++) {
-            squareX = x * squareSize + posX;
-            squareY = y * squareSize + posY;
-            squareWidth = squareX + squareSize;
-            squareHeight = squareY + squareSize;
+<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kd">var</span><span class="w"> </span><span class="nx">x</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span><span class="w"> </span><span class="nx">x</span><span class="o">&lt;</span><span class="nx">spriteDim</span><span class="p">;</span><span class="w"> </span><span class="nx">x</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nx">squareX</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">x</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">squareSize</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">posX</span><span class="p">;</span>
+<span class="w">            </span><span class="nx">squareY</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">y</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">squareSize</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">posY</span><span class="p">;</span>
+<span class="w">            </span><span class="nx">squareWidth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">squareX</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">squareSize</span><span class="p">;</span>
+<span class="w">            </span><span class="nx">squareHeight</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">squareY</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">squareSize</span><span class="p">;</span>
 
-            // Pick a random color from the color palette
-            var color = colors[Math.floor(Math.random() * colors.length)];
+<span class="w">            </span><span class="c1">// Pick a random color from the color palette</span>
+<span class="w">            </span><span class="kd">var</span><span class="w"> </span><span class="nx">color</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">colors</span><span class="p">[</span><span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">colors</span><span class="p">.</span><span class="nx">length</span><span class="p">)];</span>
 
-            var squareDimensions = {
-                'squareX': squareX+2,
-                'squareY':squareY+2,
-                'squareWidth':squareWidth,
-                'squareHeight':squareHeight,
-            };
+<span class="w">            </span><span class="kd">var</span><span class="w"> </span><span class="nx">squareDimensions</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="s1">&#39;squareX&#39;</span><span class="o">:</span><span class="w"> </span><span class="nx">squareX</span><span class="o">+</span><span class="mf">2</span><span class="p">,</span>
+<span class="w">                </span><span class="s1">&#39;squareY&#39;</span><span class="o">:</span><span class="nx">squareY</span><span class="o">+</span><span class="mf">2</span><span class="p">,</span>
+<span class="w">                </span><span class="s1">&#39;squareWidth&#39;</span><span class="o">:</span><span class="nx">squareWidth</span><span class="p">,</span>
+<span class="w">                </span><span class="s1">&#39;squareHeight&#39;</span><span class="o">:</span><span class="nx">squareHeight</span><span class="p">,</span>
+<span class="w">            </span><span class="p">};</span>
 
-            // Create a square with a color and desired dimensions.
-            createSquare(squareDimensions, color, element, spriteDim);
+<span class="w">            </span><span class="c1">// Create a square with a color and desired dimensions.</span>
+<span class="w">            </span><span class="nx">createSquare</span><span class="p">(</span><span class="nx">squareDimensions</span><span class="p">,</span><span class="w"> </span><span class="nx">color</span><span class="p">,</span><span class="w"> </span><span class="nx">element</span><span class="p">,</span><span class="w"> </span><span class="nx">spriteDim</span><span class="p">);</span>
 
-             // If it's the middle element or the starting element, 
-             // then shift it's position to the leftmost.
-            if(element == parseInt(spriteDim/2) || element == 0) {
-                cellPosition *= -1;
-            }
+<span class="w">             </span><span class="c1">// If it&#39;s the middle element or the starting element, </span>
+<span class="w">             </span><span class="c1">// then shift it&#39;s position to the leftmost.</span>
+<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="nx">element</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">spriteDim</span><span class="o">/</span><span class="mf">2</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nx">element</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mf">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="nx">cellPosition</span><span class="w"> </span><span class="o">*=</span><span class="w"> </span><span class="o">-</span><span class="mf">1</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span>
 
-            element += cellPosition;
-        }
-    }
-}
+<span class="w">            </span><span class="nx">element</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="nx">cellPosition</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
 
-function main() {
-    var spriteDim = 7;
-    var numberOfInvaders = 15;
-    var invadersSize = parseInt(width / numberOfInvaders);
-    var padding = parseInt(invadersSize / spriteDim);
+<span class="kd">function</span><span class="w"> </span><span class="nx">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">spriteDim</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">7</span><span class="p">;</span>
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">numberOfInvaders</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">15</span><span class="p">;</span>
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">invadersSize</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">width</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nx">numberOfInvaders</span><span class="p">);</span>
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">padding</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">invadersSize</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nx">spriteDim</span><span class="p">);</span>
 
-    for(var x=0; x&lt;numberOfInvaders; x++) {
-        for(var y=0; y&lt;numberOfInvaders; y++) {
-            var posX = (x * invadersSize) + padding + 2;
-            var posY = (y * invadersSize) + padding + 2;
-            var invaderWidth = posX + invadersSize - (padding * 3);
-            var invaderHeight = posY + invadersSize - (padding * 3);
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kd">var</span><span class="w"> </span><span class="nx">x</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span><span class="w"> </span><span class="nx">x</span><span class="o">&lt;</span><span class="nx">numberOfInvaders</span><span class="p">;</span><span class="w"> </span><span class="nx">x</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kd">var</span><span class="w"> </span><span class="nx">y</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span><span class="w"> </span><span class="nx">y</span><span class="o">&lt;</span><span class="nx">numberOfInvaders</span><span class="p">;</span><span class="w"> </span><span class="nx">y</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="kd">var</span><span class="w"> </span><span class="nx">posX</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">x</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">invadersSize</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">padding</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">2</span><span class="p">;</span>
+<span class="w">            </span><span class="kd">var</span><span class="w"> </span><span class="nx">posY</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">y</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">invadersSize</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">padding</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">2</span><span class="p">;</span>
+<span class="w">            </span><span class="kd">var</span><span class="w"> </span><span class="nx">invaderWidth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">posX</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">invadersSize</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="p">(</span><span class="nx">padding</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">3</span><span class="p">);</span>
+<span class="w">            </span><span class="kd">var</span><span class="w"> </span><span class="nx">invaderHeight</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">posY</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">invadersSize</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="p">(</span><span class="nx">padding</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">3</span><span class="p">);</span>
 
-            var invaderDimensions = {
-                'posX': posX,
-                'posY': posY,
-                'invaderWidth': invaderWidth,
-                'invaderHeight': invaderHeight
-            };
+<span class="w">            </span><span class="kd">var</span><span class="w"> </span><span class="nx">invaderDimensions</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="s1">&#39;posX&#39;</span><span class="o">:</span><span class="w"> </span><span class="nx">posX</span><span class="p">,</span>
+<span class="w">                </span><span class="s1">&#39;posY&#39;</span><span class="o">:</span><span class="w"> </span><span class="nx">posY</span><span class="p">,</span>
+<span class="w">                </span><span class="s1">&#39;invaderWidth&#39;</span><span class="o">:</span><span class="w"> </span><span class="nx">invaderWidth</span><span class="p">,</span>
+<span class="w">                </span><span class="s1">&#39;invaderHeight&#39;</span><span class="o">:</span><span class="w"> </span><span class="nx">invaderHeight</span>
+<span class="w">            </span><span class="p">};</span>
 
-            createInvader(invaderDimensions, spriteDim);
-        }
-    }   
-}
+<span class="w">            </span><span class="nx">createInvader</span><span class="p">(</span><span class="nx">invaderDimensions</span><span class="p">,</span><span class="w"> </span><span class="nx">spriteDim</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span><span class="w">   </span>
+<span class="p">}</span>
 
-main();
+<span class="nx">main</span><span class="p">();</span>
 </code></pre>
+</div>
 
 <p>Well, I won't say that is a perfect solution but hey, it works and yes, it doesn't take a lot of code to achieve something like this.</p>
 
@@ -352,8 +496,10 @@ main();
 	<div class="article-body">
 		<p>This happened like two days ago, when one of the client sites went down. Upon inspecting the error logs, I found this:</p>
 
-<pre><code>SQLSTATE[HY000]: General error: 1835 Malformed communication packet
+<div class="codehilite">
+<pre><span></span><code>SQLSTATE[HY000]: General error: 1835 Malformed communication packet
 </code></pre>
+</div>
 
 <p>If you got the same error as the one above, don't worry, it's not your fault. According to this <a href="https://jira.mariadb.org/browse/MDEV-24121">forum</a>, <strong>a recent MariaDB update introduced a new bug for PHP versions &lt; 7.3</strong> that uses PDO and MySQL connectors. You can easily resolve this by simply upgrading it to PHP 7.3.</p>
 
@@ -384,12 +530,15 @@ main();
 	<div class="article-body">
 		<p>Open up your text editor and use the following RegEx pattern to find and remove the duplicate lines:</p>
 
-<pre><code>^(.*)(\r?\n\1)+$
+<div class="codehilite">
+<pre><span></span><code>^(.*)(\r?\n\1)+$
 </code></pre>
+</div>
 
 <p>I found this technique on <a href="http://www.regular-expressions.info/duplicatelines.html">Regular-Expressions.info</a> and I'm going to quote their explanation over here:</p>
 
-<pre><code>The caret will match only at the start of a line. So the regex engine will only attempt to match the remainder of the regex there. The dot and star combination simply matches an entire line, whatever its contents, if any. The parentheses store the matched line into the first backreference.
+<div class="codehilite">
+<pre><span></span><code>The caret will match only at the start of a line. So the regex engine will only attempt to match the remainder of the regex there. The dot and star combination simply matches an entire line, whatever its contents, if any. The parentheses store the matched line into the first backreference.
 
 Next we will match the line separator. I put the question mark into `\r?\n` to make this regex work with both Windows `(\r\n)` and UNIX `(\n)` text files. So up to this point we matched a line and the following line break.
 
@@ -401,6 +550,7 @@ Therefore, we now check if it is also followed by a line break or if it is at th
 
 The entire match becomes `line\nline` (or `line\nline\nline` etc.). Because we are doing a search and replace, the line, its duplicates, and the line breaks in between them, are all deleted from the file. Since we want to keep the original line, but not the duplicates, we use `\1` as the replacement text to put the original line back in.
 </code></pre>
+</div>
 
 <p>Hope you found this tip useful!</p>
 
@@ -429,8 +579,10 @@ The entire match becomes `line\nline` (or `line\nline\nline` etc.). Because we a
 	<div class="article-body">
 		<p>If you want to turn your <code>.scss</code> files to minified <code>.css</code> files but without using Webpack or Gulp, just install the <code>node-sass</code> package using <code>npm</code> package manager and then run this on your terminal:</p>
 
-<pre><code>sass scss/style.scss css/style.css --style compressed
+<div class="codehilite">
+<pre><span></span><code>sass<span class="w"> </span>scss/style.scss<span class="w"> </span>css/style.css<span class="w"> </span>--style<span class="w"> </span>compressed
 </code></pre>
+</div>
 
 <p>And now, you can use your <code>style.css</code> file on production! &#x1F606;</p>
 
@@ -469,43 +621,53 @@ The entire match becomes `line\nline` (or `line\nline\nline` etc.). Because we a
 
 <p>First off, create the following directory:</p>
 
-<pre><code>mkdir app/Constants
+<div class="codehilite">
+<pre><span></span><code>mkdir<span class="w"> </span>app/Constants
 </code></pre>
+</div>
 
 <p>Next, create a file named <code>MyConstants.php</code> in the <code>app/Constants</code> directory and copy-paste the following code:</p>
 
-<pre><code>&lt;?php
-namespace App\Constants;
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="k">namespace</span> <span class="nx">App\Constants</span><span class="p">;</span>
 
-class MyConstants {
-    const HELLO = 'hello';
-}
-?&gt;
+<span class="k">class</span> <span class="nc">MyConstants</span> <span class="p">{</span>
+    <span class="k">const</span> <span class="no">HELLO</span> <span class="o">=</span> <span class="s1">&#39;hello&#39;</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="cp">?&gt;</span>
 </code></pre>
+</div>
 
 <p>Then, go to the <code>config/app.php</code> file and define your new alias:</p>
 
-<pre><code>&lt;?php
-'aliases' =&gt; [
-    // previously defined aliases...
-    'MyConstants' =&gt; App\Constants\MyConstants::class,
-]
-?&gt;
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="s1">&#39;aliases&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span>
+    <span class="c1">// previously defined aliases...</span>
+    <span class="s1">&#39;MyConstants&#39;</span> <span class="o">=&gt;</span> <span class="nx">App\Constants\MyConstants</span><span class="o">::</span><span class="na">class</span><span class="p">,</span>
+<span class="p">]</span>
+<span class="cp">?&gt;</span>
 </code></pre>
+</div>
 
 <p>Lastly, execute the following commands to update your app's configuration:</p>
 
-<pre><code>php artisan config:clear
-composer dump-autoload
-php artisan config:cache
+<div class="codehilite">
+<pre><span></span><code>php<span class="w"> </span>artisan<span class="w"> </span>config:clear
+composer<span class="w"> </span>dump-autoload
+php<span class="w"> </span>artisan<span class="w"> </span>config:cache
 </code></pre>
+</div>
 
 <p>After that, you can use your new constants anywhere (Controllers, Models or Blades) like this:</p>
 
-<pre><code>&lt;?php
-echo MyConstants::HELLO;
-?&gt;
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="k">echo</span> <span class="nx">MyConstants</span><span class="o">::</span><span class="na">HELLO</span><span class="p">;</span>
+<span class="cp">?&gt;</span>
 </code></pre>
+</div>
 
 <p>Learning this new technique helps me keep the code clean and makes it easier to trace the constants.</p>
 
@@ -519,106 +681,6 @@ echo MyConstants::HELLO;
 			<li>
 				<a href="/category/laravel/">
 					Laravel
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/rename-a-git-branch">Rename a Git Branch</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Using branches are one of the most powerful features of Git and becomes a part of the software development process.</p>
-
-<p>Last night, I came across an issue where I created a new branch and committed my changes until the <code>git</code> tool rejected it because the branch was already created by someone else in the repository.</p>
-
-<p>Luckily, I was able to resolve this issue by renaming my branch using <code>git branch -m</code> command.</p>
-
-<p>Here's a short guide on how you can do that too!</p>
-
-<h2>1. Switch to the remote branch you want to rename</h2>
-
-<pre><code>git checkout &amp;lt;your_old_branch&amp;gt;
-</code></pre>
-
-<h2>2. Rename the current remote branch</h2>
-
-<pre><code>git branch -m &amp;lt;your_new_branch&amp;gt;
-</code></pre>
-
-<p>Proceed to the next step, if you've pushed your old branch to the remote repository.</p>
-
-<h2>3. Push the renamed remote branch</h2>
-
-<pre><code>git push origin -u &amp;lt;your_new_branch&amp;gt;
-</code></pre>
-
-<h2>4. Delete the old remote branch</h2>
-
-<pre><code>git push origin --delete &amp;lt;your_old_branch&amp;gt;
-</code></pre>
-
-<p>If you've come this far without any issues, you've successfully renamed your local and remote Git branch.</p>
-
-<p>Hope you found this useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>November 4th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/git/">
-					Git
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/import-and-export-mysql-database-via-terminal">Import and Export MySQL database via Terminal</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Sometimes, phpMyAdmin can be painful to use especially when you want to import/export a MySQL database.</p>
-
-<p>If you're not afraid of using the Terminal, try these commands to save your time:</p>
-
-<h2>Import MySQL database</h2>
-
-<pre><code>mysql -u username -p database_name &lt; your_sql_file.sql
-</code></pre>
-
-<p>Before you run this command, please make sure that you've created the <code>database_name</code> schema in your database or else, you might get an error especially if the <code>.sql</code> file doesn't have a <code>CREATE DATABASE</code> statement.</p>
-
-<h2>Export MySQL database</h2>
-
-<pre><code>mysqldump -u username -p database_name &gt; your_sql_file.sql
-</code></pre>
-
-<p>This command will export your database with the file name <code>your_sql_file.sql</code> to your current path.</p>
-
-<p>Hope this helps you out!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>November 4th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/mysql/">
-					MySQL
 				</a>
 			</li>
 			
@@ -666,11 +728,11 @@ echo MyConstants::HELLO;
 		
 	
 		
-			<a class="" href="/pages/13">...</a>
+			<a class="" href="/pages/14">...</a>
 		
 	
 		
-			<a class="" href="/pages/25">25</a>
+			<a class="" href="/pages/26">26</a>
 		
 	
 
@@ -707,7 +769,7 @@ echo MyConstants::HELLO;
 		<li>
 			<a href="/category/linux/">
 				Linux
-				<span class="count">19</span>
+				<span class="count">21</span>
 			</a>
 		</li>
 		
@@ -789,6 +851,13 @@ echo MyConstants::HELLO;
 		</li>
 		
 		<li>
+			<a href="/category/productivity/">
+				Productivity
+				<span class="count">7</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/tutorial/">
 				Tutorial
 				<span class="count">6</span>
@@ -813,13 +882,6 @@ echo MyConstants::HELLO;
 			<a href="/category/essay/">
 				Essay
 				<span class="count">6</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/productivity/">
-				Productivity
-				<span class="count">5</span>
 			</a>
 		</li>
 		
