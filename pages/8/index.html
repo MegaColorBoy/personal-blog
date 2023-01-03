@@ -78,6 +78,61 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-recover-from-an-errorneous-forced-git-commit">How to recover from an errorneous forced git commit?</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>If you're the type of person who types <code>git push -f origin master</code>, please don't do that as it might overwrite your entire branch. I'm saying this because I did this once and I thought I lost all the files.</p>
+
+<p>Luckily, I was a bit relieved as <code>git</code> is a VCS (Version Control Software), which means the files are most likely not <strong>deleted</strong>. This is when I came across <code>git reflog</code> command.</p>
+
+<p>According to the <a href="https://git-scm.com/docs/git-reflog">Git manual</a>, this is what it does:</p>
+
+<blockquote>
+  <p>Reference logs, or "reflogs", record when the tips of branches and other references were updated in the local repository.</p>
+</blockquote>
+
+<p>This is a life-saver especially if you wanted to return back to the previous point in time. Here's how I recovered my files back again:</p>
+
+<ol>
+<li>Type <code>git reflog show remotes/origin/master</code></li>
+<li>Find and make note of the previous commit hash.</li>
+<li>Create a new branch with using the previous commit hash like this: <code>git branch &lt;new_branch_name&gt; &lt;previous_commit_hash&gt;</code></li>
+<li>Then finally, push the files to the new branch: <code>git add . &amp;&amp; git commit -m "pushing recovered files" &amp;&amp; git push origin &lt;new_branch_name&gt;</code></li>
+<li>Checkout to the newly created branch: <code>git checkout &lt;new_branch_name&gt;</code></li>
+<li>Delete the corrupted branch and replace it with the newly created branch that contains your restored files.</li>
+</ol>
+
+<p>If I didn't discover this, I don't really know what I would have done to recover those files.</p>
+
+<h2>References</h2>
+
+<ul>
+<li><a href="https://git-scm.com/docs/git-reflog">Git reflog documentation</a></li>
+<li><a href="https://stackoverflow.com/questions/3973994/how-can-i-recover-from-an-erronous-git-push-f-origin-master">How can I recover from an erronous git push -f origin master?</a></li>
+</ul>
+
+<p>Hope this helps you out!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>April 10th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/git/">
+					Git
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/how-to-resolve-the-fatal-refusing-to-merge-unrelated-histories-git-error">How to resolve the "fatal: refusing to merge unrelated histories" Git error?</a></h1>
 		<p class="description"></p>
 	</div>
@@ -365,77 +420,6 @@ find<span class="w"> </span>.<span class="w"> </span>-maxdepth<span class="w"> <
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-resolve-the-issue-of-not-receiving-emails-on-the-same-domain">How to resolve the issue of not receiving emails on the same domain?</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Recently, we hosted our company's redesigned website on GoDaddy, which offers cPanel to manage your website. I was dealing with an annoying email bug in which I was able to send/receive emails to any account except the ones that share the company domain.</p>
-
-<p>The company's current email setup makes use of Google Workspace and since we're using a Shared Hosting account, GoDaddy allows you to use their SMTP relay and prohibits the use of third-party SMTP services such as Google Workspace, Outlook, etc.</p>
-
-<p>After configuring it with Google's MX records in the DNS settings, I wasn't receiving any email on my own company email yet I was able to receive on other email accounts that didn't share the company's domain.</p>
-
-<p>I did a little R&amp;D and ran into this documentation about <a href="https://docs.cpanel.net/cpanel/email/email-routing/">email routing</a> and figured out that there could be an issue with it's configuration.</p>
-
-<p>Here's what I did:</p>
-
-<ol>
-<li>Open cPanel </li>
-<li>Search or look for <strong>Email Routing</strong></li>
-<li>Click on <strong>Email Routing</strong></li>
-<li>If your MX records are not pointing to the IP address of the hosting server, then select <strong>Remote Mail Exchanger</strong></li>
-<li>Save changes</li>
-</ol>
-
-<p>After following these steps, I was able to receive mails on the same domain!</p>
-
-<h2>So what really caused the issue?</h2>
-
-<p>Since, we didn't have a default email address set up in cPanel, the current mode to send all unrouted emails was set to <code>:blackhole:</code>, by default. I guess, it's set up that way to prevent the server from sending/receiving spam mails from the domain.</p>
-
-<p>This makes sense because:</p>
-
-<ol>
-<li>The MX records are not pointing to the current server</li>
-<li>There are no email accounts created for the domain on cPanel</li>
-<li>By setting the mode to <code>:blackhole</code>, all emails with the same domain are being discarded or rejected</li>
-</ol>
-
-<p>Not really sure if this is what caused the issue but judging from the facts, I was able to reach to this conclusion.</p>
-
-<p>Hope you found this tip useful.</p>
-
-<h2>Reference</h2>
-
-<ul>
-<li><a href="https://stackoverflow.com/questions/1107730/cant-send-email-to-addresses-at-my-own-domain">Can't send email to addresses at my own domain</a></li>
-</ul>
-
-	</div>
-	<div class="article-footer">
-		<time>March 12th, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/cpanel/">
-					cPanel
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/email/">
-					Email
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -661,6 +645,13 @@ find<span class="w"> </span>.<span class="w"> </span>-maxdepth<span class="w"> <
 		</li>
 		
 		<li>
+			<a href="/category/python/">
+				Python
+				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/regular-expressions/">
 				Regular Expressions
 				<span class="count">3</span>
@@ -754,13 +745,6 @@ find<span class="w"> </span>.<span class="w"> </span>-maxdepth<span class="w"> <
 		<li>
 			<a href="/category/wamp/">
 				WAMP
-				<span class="count">2</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/python/">
-				Python
 				<span class="count">2</span>
 			</a>
 		</li>

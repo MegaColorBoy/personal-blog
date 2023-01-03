@@ -78,6 +78,77 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-resolve-the-issue-of-not-receiving-emails-on-the-same-domain">How to resolve the issue of not receiving emails on the same domain?</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Recently, we hosted our company's redesigned website on GoDaddy, which offers cPanel to manage your website. I was dealing with an annoying email bug in which I was able to send/receive emails to any account except the ones that share the company domain.</p>
+
+<p>The company's current email setup makes use of Google Workspace and since we're using a Shared Hosting account, GoDaddy allows you to use their SMTP relay and prohibits the use of third-party SMTP services such as Google Workspace, Outlook, etc.</p>
+
+<p>After configuring it with Google's MX records in the DNS settings, I wasn't receiving any email on my own company email yet I was able to receive on other email accounts that didn't share the company's domain.</p>
+
+<p>I did a little R&amp;D and ran into this documentation about <a href="https://docs.cpanel.net/cpanel/email/email-routing/">email routing</a> and figured out that there could be an issue with it's configuration.</p>
+
+<p>Here's what I did:</p>
+
+<ol>
+<li>Open cPanel </li>
+<li>Search or look for <strong>Email Routing</strong></li>
+<li>Click on <strong>Email Routing</strong></li>
+<li>If your MX records are not pointing to the IP address of the hosting server, then select <strong>Remote Mail Exchanger</strong></li>
+<li>Save changes</li>
+</ol>
+
+<p>After following these steps, I was able to receive mails on the same domain!</p>
+
+<h2>So what really caused the issue?</h2>
+
+<p>Since, we didn't have a default email address set up in cPanel, the current mode to send all unrouted emails was set to <code>:blackhole:</code>, by default. I guess, it's set up that way to prevent the server from sending/receiving spam mails from the domain.</p>
+
+<p>This makes sense because:</p>
+
+<ol>
+<li>The MX records are not pointing to the current server</li>
+<li>There are no email accounts created for the domain on cPanel</li>
+<li>By setting the mode to <code>:blackhole</code>, all emails with the same domain are being discarded or rejected</li>
+</ol>
+
+<p>Not really sure if this is what caused the issue but judging from the facts, I was able to reach to this conclusion.</p>
+
+<p>Hope you found this tip useful.</p>
+
+<h2>Reference</h2>
+
+<ul>
+<li><a href="https://stackoverflow.com/questions/1107730/cant-send-email-to-addresses-at-my-own-domain">Can't send email to addresses at my own domain</a></li>
+</ul>
+
+	</div>
+	<div class="article-footer">
+		<time>March 12th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/cpanel/">
+					cPanel
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/email/">
+					Email
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/convert-string-to-variable-in-php">Convert string to variable in PHP</a></h1>
 		<p class="description"></p>
 	</div>
@@ -351,69 +422,6 @@
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/use-mysql-80-with-native-password-authentication">Use MySQL 8.0 with Native Password Authentication</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Last month, I was configuring an Ubuntu Server to deploy a client's project that uses MySQL 8.0 and PHP 7.2.
-So, I installed the necessary dependencies and finally installed MySQL 8.0, created a new schema and imported the database tables required for the project.</p>
-
-<p>Next, I typed the project URL and ran into this error:</p>
-
-<div class="codehilite">
-<pre><span></span><code>Unable to load plugin &#39;caching_sha2_password&#39;
-</code></pre>
-</div>
-
-<p>If you're running PHP 7.2 and facing this error, you should know that PHP 7.2 doesn't support native password authentication by default. But it's a simple fix, all you have to do is either one of the following:</p>
-
-<ol>
-<li><a href="#opt1">Alter the current user's authentication to native password</a></li>
-<li><a href="#opt2">Create a new user with native password authentication</a></li>
-</ol>
-
-<h2><a id="opt1"></a> Alter the current user's authentication to native password</h2>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">ALTER</span><span class="w"> </span><span class="k">USER</span><span class="w"> </span><span class="s1">&#39;your_user&#39;</span><span class="nv">@&#39;your_server_host&#39;</span><span class="w"> </span><span class="k">IDENTIFIED</span><span class="w"> </span><span class="k">WITH</span><span class="w"> </span><span class="n">mysql_native_password</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="s1">&#39;your_password&#39;</span><span class="p">;</span>
-</code></pre>
-</div>
-
-<h2><a id="opt2"></a> Create a new user with native password authentication</h2>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">USER</span><span class="w"> </span><span class="s1">&#39;your_user&#39;</span><span class="nv">@&#39;your_server_host &#39;</span><span class="w"> </span><span class="k">IDENTIFIED</span><span class="w"> </span><span class="k">WITH</span><span class="w"> </span><span class="n">mysql_native_password</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="s1">&#39;your_password&#39;</span>
-</code></pre>
-</div>
-
-<p>For the changes to take effect, you need to reload the privileges by typing the following:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">FLUSH</span><span class="w"> </span><span class="k">PRIVILEGES</span><span class="p">;</span>
-</code></pre>
-</div>
-
-<p>Hope this helps you out!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>March 12th, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/mysql/">
-					MySQL
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -639,6 +647,13 @@ So, I installed the necessary dependencies and finally installed MySQL 8.0, crea
 		</li>
 		
 		<li>
+			<a href="/category/python/">
+				Python
+				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/regular-expressions/">
 				Regular Expressions
 				<span class="count">3</span>
@@ -732,13 +747,6 @@ So, I installed the necessary dependencies and finally installed MySQL 8.0, crea
 		<li>
 			<a href="/category/wamp/">
 				WAMP
-				<span class="count">2</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/python/">
-				Python
 				<span class="count">2</span>
 			</a>
 		</li>

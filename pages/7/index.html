@@ -78,6 +78,169 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/writings/posts/understanding-spf-dkim-and-dmarc-protocols">Understanding SPF, DKIM and DMARC protocols</a></h1>
+		<p class="description">An insight into the three main email security protocols that protects your email from malicious attackers.</p>
+	</div>
+	<div class="article-body">
+		<p>Today, email spam is one of the most common cyberattacks conducted by people with malicious intent intending to steal your passwords and personal credentials, leading users to phishing sites to steal bank account details, identity theft and so on.</p>
+
+<p>Because of this, ISPs and email providers such as Gmail and Office 365 are taking anti-spam measures by enforcing stricter protocols in the type of emails that they receive, so it's good to implement those protocols and ensure that your email gets delivered and not delayed or worse, rejected by the mail servers.</p>
+
+<h2>So, what are those protocols?</h2>
+
+<p><a href="#spf-record">SPF</a>, <a href="#dkim-record">DKIM</a> and <a href="#dmarc-record">DMARC</a> are the three main secure protocols used to authenticate your mail server and this will prove the ISPs and other mail service providers that the mail being sent is legitimate and authorized.</p>
+
+<h2><a id="spf-record"></a> What is SPF?</h2>
+
+<p>It's an acronym for <strong>Sender Policy Framework</strong>. SPF is nothing but a DNS TXT record that specifies the server(s) and IP addresses that are allowed to send email from a specific domain.</p>
+
+<p>Assuming you are the sender, just think of sending a postcard to your friend in which you add your address as well, so that your friend knows who the recipient is and he/she would most likely open it because they trust it.</p>
+
+<p>But in technical terms, the actual recipient is not the user but rather the mail server that receives the mail.</p>
+
+<h3>Create an SPF record</h3>
+
+<p>An SPF record is a very simple string and it can be easily created. However, there are a few parts to it:</p>
+
+<ol>
+<li>Version of SPF used.</li>
+<li>IP addresses that are authorized to send emails.</li>
+<li>Third party domain(s) that are authorized to send emails.</li>
+<li>An ending tag named "all" which tells the receiving server on what policy to apply if the sending server is not a part of the SPF record.</li>
+</ol>
+
+<p>So, let's what does it look like and what each part of it does:</p>
+
+<div class="codehilite">
+<pre><span></span><code>v=spf1 ip4:111.111.111.111 include:example-domain.com -all
+</code></pre>
+</div>
+
+<p><code>v=spf1</code> states the SPF version being implemented. Currently, there's no any other version at this point. So, it should always stay as this version until another version is released.</p>
+
+<p><code>ip4:111.111.111.111</code> is the IP address of the mail server/domain that's authorized to send emails for that domain. You can use multiple IP addresses and can be listed individually like this <code>ip4:111.111.111.111 ip4:222.222.222.222</code> or through a <a href="https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing">CIDR</a> like <code>ip4:111.111.111.0/20</code>. If both IPv4 and IPv6 addresses are being used by mail server, make sure that both of those addresses are being listed.</p>
+
+<p><code>include:example-domain.com</code> is a secondary domain that's authorized to send emails on behalf of the primary mail domain(s) listed. Just like the previous rule above, you can add multiple secondary domains but bear in mind that only a maximum of 10 domains are allowed for any sending domain.</p>
+
+<p><code>-all</code> is a tag that instructs the receiving server on how to handle messages from a domain that isn't a part of the SPF record. There are some options and they are all dictated by a single character that precedes the <code>all</code> keyword. The options are:</p>
+
+<ul>
+<li><code>-all</code> means hard fail. The receiving server should reject the email if the sender domain is not authorized.</li>
+<li><code>~all</code> means soft fail. The receiving server can flag it as a possible spam if the sender domain is not authorized. </li>
+<li><code>+all</code> means authorized. The receiving server allows the email even if the sender domain is not authorized. Now, this is not recommended and please do not use this option.</li>
+</ul>
+
+<h2><a id="dkim-record"></a> What is DKIM?</h2>
+
+<p>It's an acronym for <strong>DomainKeys Identified Mail</strong> a.k.a Email signing. Just like <a href="#spf-record">SPF</a>, DKIM is also a simple DNS TXT record that tells the receiving server that the mail is certified which allows to build a trust between both the sending and receiving servers.</p>
+
+<p>To handle this trust, DKIM makes uses of an RSA cryptographic algorithm to create a pair of <strong>public</strong> and <strong>private</strong> encryption keys. The private key will remain on the server (i.e. the mail server) whereas the public key is placed in your DNS records.</p>
+
+<h2>How to create a DKIM record?</h2>
+
+<p>Depending on your mail provider, it can be easily generated by tools provided by them and once generated, it can be copy-pasted to the DNS records.</p>
+
+<p>This is how a typical DKIM record would look like:</p>
+
+<div class="codehilite">
+<pre><span></span><code>v=DKIM1; k=rsa;
+p=iHeFQ+7rCiSQs3DPjR2eUSZSv4i/Kp+sipRfVH7BGf+SxcwOkX7X8R1RVObMQsFcbIxnrq7Ba2QCf0YZlL9iqJf32V+baDI8IykuDztuoNUF2Kk0pawZkbSPNHYRtLxV2CTOtc+x4eIeSeYptaiu7g7GupekLZ2DE1ODHhuP4I=
+</code></pre>
+</div>
+
+<p>Regardless of how it's being generated, this is what each part of the header means:</p>
+
+<p><code>v=DKIM1</code> is the DKIM protocol version used.</p>
+
+<p><code>p=</code> is the Base64 encoded public key generated.</p>
+
+<p><code>k=</code> is the mechanism used to decode the DKIM signature. The encryption key is usually based on <code>rsa-sha1</code> or <code>rsa-sha256</code> signing algorithm.</p>
+
+<p>You can use DMARC analyzer's <a href="https://dmarcanalyzer.com/dkim/dkim-checker">DKIM checker</a> to check if your DKIM record is valid.</p>
+
+<h2><a id="dmarc-record"></a> What is DMARC?</h2>
+
+<p>It's an acronym for <strong>Domain-based Message Authentication, Reporting and Conformance</strong>. This protocol is built around SPF and DKIM and it ensures the following:</p>
+
+<ol>
+<li>Verifies that the sender's email is protected by SPF and DKIM protocols.</li>
+<li>Instructs the receiving mail server on what to do if the authentication fails.</li>
+<li>Provides a way for the receiving server to send a report to the sender about the DMARC evaluation i.e. whether it passed or failed.</li>
+</ol>
+
+<p>If you have come this far in the article, you might have understood why both <a href="#spf-record">SPF</a> and <a href="#dkim-record">DKIM</a> were explained and why they are quite necessary.</p>
+
+<h2>How to create a DMARC record?</h2>
+
+<p>Once you have both SPF and DKIM records in place, then it's easy to create your DMARC record. There are many sites and I would recommend you to try MXToolbox's <a href="https://mxtoolbox.com/DMARCRecordGenerator.aspx">DMARC Record Generator</a>.</p>
+
+<p>This is how a DMARC record would look like:</p>
+
+<div class="codehilite">
+<pre><span></span><code>v=DMARC1; p=none; fo=1; rua=mailto:address@example.com;
+</code></pre>
+</div>
+
+<p>And here's what each part of the header translates to:</p>
+
+<p><code>v</code> is the version tag, similar to the SPF record. It should always be <code>DMARC1</code> in the record.</p>
+
+<p><code>p</code> is the policy tag. <code>none</code> means to not do anything to the email, <code>quarantine</code> means to flag it as spam and <code>reject</code> means to reject the email.</p>
+
+<p><code>fo</code> is the tag that lets the receiving servers know that failed messages must be returned to the sender or not. There are four values for this tag:</p>
+
+<ul>
+<li><code>0</code>: Generate a report if both DKIM and SPF produce a "Pass" result.</li>
+<li><code>1</code>: Generate a report if both DKIM and SPF produce a result other than "Pass".</li>
+<li><code>d</code>: Generate a report if the email had failed the DKIM evaluation.</li>
+<li><code>s</code>: Generate a report if the email had failed the SPF evaluation.</li>
+</ul>
+
+<p>It's actually recommended to use <code>fo=1</code> which can help you look for any email delivery issues.</p>
+
+<p><code>rua</code> tells the receiving server on where to send the aggregate reports. This could provide insights into the health of the email server and can help identify any malicious activities.</p>
+
+<p>There are many optional tags that can be used but these are the tags are most commonly used by default.</p>
+
+<h2>Conclusion</h2>
+
+<p>With the increase in spam emails, it's good to take such preventive measures to ensure that you are following best practices and doing your part to prevent malicious emails and other security related issues.</p>
+
+<p>If you want to read more about these protocols, you can read the following links recommended below:</p>
+
+<ul>
+<li><a href="https://dmarcanalyzer.com/spf/">Sender Policy Framework (SPF)</a></li>
+<li><a href="https://dkim.org">DomainKeys Identified Mail</a></li>
+<li><a href="https://dmarc.org">Domain-based Message Authentication, Reporting and Conformance</a></li>
+</ul>
+
+<p>Hope you liked reading this article! &#x1F604;</p>
+
+	</div>
+	<div class="article-footer">
+		<time>April 10th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/email/">
+					Email
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/security/">
+					Security
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/find-directories-created-within-a-date-range">Find directories created within a date range</a></h1>
 		<p class="description"></p>
 	</div>
@@ -321,61 +484,6 @@ git<span class="w"> </span>checkout<span class="w"> </span>&lt;your_branch_name&
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-recover-from-an-errorneous-forced-git-commit">How to recover from an errorneous forced git commit?</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>If you're the type of person who types <code>git push -f origin master</code>, please don't do that as it might overwrite your entire branch. I'm saying this because I did this once and I thought I lost all the files.</p>
-
-<p>Luckily, I was a bit relieved as <code>git</code> is a VCS (Version Control Software), which means the files are most likely not <strong>deleted</strong>. This is when I came across <code>git reflog</code> command.</p>
-
-<p>According to the <a href="https://git-scm.com/docs/git-reflog">Git manual</a>, this is what it does:</p>
-
-<blockquote>
-  <p>Reference logs, or "reflogs", record when the tips of branches and other references were updated in the local repository.</p>
-</blockquote>
-
-<p>This is a life-saver especially if you wanted to return back to the previous point in time. Here's how I recovered my files back again:</p>
-
-<ol>
-<li>Type <code>git reflog show remotes/origin/master</code></li>
-<li>Find and make note of the previous commit hash.</li>
-<li>Create a new branch with using the previous commit hash like this: <code>git branch &lt;new_branch_name&gt; &lt;previous_commit_hash&gt;</code></li>
-<li>Then finally, push the files to the new branch: <code>git add . &amp;&amp; git commit -m "pushing recovered files" &amp;&amp; git push origin &lt;new_branch_name&gt;</code></li>
-<li>Checkout to the newly created branch: <code>git checkout &lt;new_branch_name&gt;</code></li>
-<li>Delete the corrupted branch and replace it with the newly created branch that contains your restored files.</li>
-</ol>
-
-<p>If I didn't discover this, I don't really know what I would have done to recover those files.</p>
-
-<h2>References</h2>
-
-<ul>
-<li><a href="https://git-scm.com/docs/git-reflog">Git reflog documentation</a></li>
-<li><a href="https://stackoverflow.com/questions/3973994/how-can-i-recover-from-an-erronous-git-push-f-origin-master">How can I recover from an erronous git push -f origin master?</a></li>
-</ul>
-
-<p>Hope this helps you out!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>April 10th, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/git/">
-					Git
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -601,6 +709,13 @@ git<span class="w"> </span>checkout<span class="w"> </span>&lt;your_branch_name&
 		</li>
 		
 		<li>
+			<a href="/category/python/">
+				Python
+				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/regular-expressions/">
 				Regular Expressions
 				<span class="count">3</span>
@@ -694,13 +809,6 @@ git<span class="w"> </span>checkout<span class="w"> </span>&lt;your_branch_name&
 		<li>
 			<a href="/category/wamp/">
 				WAMP
-				<span class="count">2</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/python/">
-				Python
 				<span class="count">2</span>
 			</a>
 		</li>
