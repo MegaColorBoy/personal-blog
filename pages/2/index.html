@@ -78,6 +78,114 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/temporarily-disable-ipv6-protocol-on-ubuntu">Temporarily disable IPV6 protocol on Ubuntu</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Few days ago, I resolved an issue that I faced on an Ubuntu server that was related to SMTP not working, as a result, the server was always throwing a <code>504 Gateway Timeout</code> error.</p>
+
+<p>During troubleshooting, I found out that <code>telnet smtp.office365.com 587</code> was not giving any response and thought that the port was blocked on the client's network but no, it wasn't.</p>
+
+<p>I did a little digging and learnt that it could be due to the fact that SMTP traffic over IPV6 might be blocked on the client's network.</p>
+
+<p>So, I tried executing the following commands to disable IPV6 temporarily:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>sysctl<span class="w"> </span>-w<span class="w"> </span>net.ipv6.conf.all.disable_ipv6<span class="o">=</span><span class="m">1</span>
+sudo<span class="w"> </span>sysctl<span class="w"> </span>-w<span class="w"> </span>net.ipv6.conf.default.disable_ipv6<span class="o">=</span><span class="m">1</span>
+</code></pre>
+</div>
+
+<p>And voila, the mails were going and SMTP traffic was working over IPV4.</p>
+
+<p>If you want to enable it again, try the following:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>sysctl<span class="w"> </span>-w<span class="w"> </span>net.ipv6.conf.all.disable_ipv6<span class="o">=</span><span class="m">0</span>
+sudo<span class="w"> </span>sysctl<span class="w"> </span>-w<span class="w"> </span>net.ipv6.conf.default.disable_ipv6<span class="o">=</span><span class="m">0</span>
+</code></pre>
+</div>
+
+<p>Hope you found this tip useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>November 27th, 2022</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/ubuntu/">
+					Ubuntu
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/view-list-of-services-in-linux">View list of services in Linux</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>If you wanted to see a list of services available on your Linux server/desktop, try the following command:</p>
+
+<div class="codehilite">
+<pre><span></span><code>systemctl<span class="w"> </span>list-unit-files<span class="w"> </span>--type<span class="o">=</span>service
+</code></pre>
+</div>
+
+<p>Upon executing this command, you'll be able to see a list of services along with their statuses i.e whether the service is enabled or disabled.</p>
+
+<p>This can come in handy if you want to know the status of a specific service like <code>nginx</code>:</p>
+
+<div class="codehilite">
+<pre><span></span><code>systemctl<span class="w"> </span>list-unit-files<span class="w"> </span>--type<span class="o">=</span>service<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s2">&quot;nginx&quot;</span>
+</code></pre>
+</div>
+
+<p>Hope you found this tip useful.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>November 27th, 2022</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/writings/posts/containerize-your-laravel-application-for-development">Containerize your Laravel application for Development</a></h1>
 		<p class="description">A short tutorial on how to containerize your Laravel application and use it for testing and development purposes.</p>
 	</div>
@@ -873,114 +981,6 @@ sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class=
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/logging-client-ip-addresses-on-apache-server">Logging client IP addresses on Apache server</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>If you want to log the actual client IP address, you need to extract the <code>X-Forward-For</code> header from the request and in order to do that, you need to make a tiny edit in your <code>httpd.conf</code> file.</p>
-
-<ol>
-<li>Go to <code>/etc/apache2/conf</code> or <code>/etc/httpd/conf</code> and open <code>httpd.conf</code> file.</li>
-<li>Search for the string that starts with: <code>LogFormat "%h %l %u %t \"%r\" %&gt;s %b \"%{Referer}i\" \"%{User-Agent}i\"" combined</code>.</li>
-<li>Modify the <code>%h</code> to <code>%{X-Forwarded-For}i</code>. Now, it should look like this: <code>LogFormat "%{X-Forwarded-For}i %l %u %t \"%r\" %&gt;s %b \"%{Referer}i\" \"%{User-Agent}i\"" combined</code>.</li>
-<li>Test the config to ensure that there are no typos by typing: <code>apachectl configtest</code>.</li>
-<li>Save and restart the service by typing: <code>systemctl restart httpd</code> or <code>systemctl restart apache2</code>.</li>
-<li>In your terminal, type <code>tail -f /var/log/httpd/access.log</code> and you'll be seeing the client IP being logged in your logs.</li>
-</ol>
-
-<p>Hope you found this tip useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>August 18th, 2022</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/devops/">
-					DevOps
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/apache/">
-					Apache
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/using-iife-in-javascript">Using IIFE in JavaScript</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>IIFE a.k.a Immediately-Invoked Function Expression &mdash; is a way to execute functions as soon as the function is created.</p>
-
-<p>Using IIFE, you can easily isolate declared variables away from the global scope.</p>
-
-<p>This is how the syntax would look like:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="c1">// ES5 Standard</span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">foo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
-<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nx">message</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Hello world&quot;</span>
-<span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">message</span><span class="p">);</span>
-<span class="p">})();</span>
-</code></pre>
-</div>
-
-<p>They can be defined with arrow functions as well:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="c1">// ES6 Standard</span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">foo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nx">message</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Hello world&quot;</span>
-<span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">message</span><span class="p">);</span>
-<span class="p">})();</span>
-</code></pre>
-</div>
-
-<p>According to <strong>MDN Docs</strong>, it's a design pattern a.k.a Self-Executing Anonymous Function. There are two parts to this:</p>
-
-<ol>
-<li><p>The function that's enclosed within the Grouping Operator <code>()</code>, which would prevent it from polluting the global space and access to the variables within it's scope.</p></li>
-<li><p>The <code>();</code> will create the Immediately Invoked Function Expression on-the-fly.</p></li>
-</ol>
-
-<h2>When to use it?</h2>
-
-<p>There are many interesting cases such as if you are following the <a href="https://www.patterns.dev/posts/classic-design-patterns/">Module Pattern</a> especially if you want to avoid polluting the global namespace or just that you don't want your code to interfere with other code thus ensures code safety.</p>
-
-<h2>Readings</h2>
-
-<ul>
-<li><a href="https://developer.mozilla.org/en-US/docs/Glossary/IIFE">IIFE - MDN Web Docs Glossary</a></li>
-</ul>
-
-	</div>
-	<div class="article-footer">
-		<time>August 10th, 2022</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/javascript/">
-					JavaScript
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -1049,7 +1049,7 @@ sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class=
 		<li>
 			<a href="/category/linux/">
 				Linux
-				<span class="count">21</span>
+				<span class="count">22</span>
 			</a>
 		</li>
 		
@@ -1063,7 +1063,7 @@ sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class=
 		<li>
 			<a href="/category/devops/">
 				DevOps
-				<span class="count">13</span>
+				<span class="count">14</span>
 			</a>
 		</li>
 		
@@ -1117,6 +1117,13 @@ sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class=
 		</li>
 		
 		<li>
+			<a href="/category/productivity/">
+				Productivity
+				<span class="count">8</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/vim/">
 				VIM
 				<span class="count">8</span>
@@ -1127,13 +1134,6 @@ sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class=
 			<a href="/category/unix/">
 				UNIX
 				<span class="count">8</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/productivity/">
-				Productivity
-				<span class="count">7</span>
 			</a>
 		</li>
 		
@@ -1295,6 +1295,13 @@ sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class=
 			<a href="/category/wamp/">
 				WAMP
 				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/image-manipulation/">
+				Image Manipulation
+				<span class="count">1</span>
 			</a>
 		</li>
 		

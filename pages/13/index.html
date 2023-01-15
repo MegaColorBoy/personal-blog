@@ -78,6 +78,93 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/prevent-loading-webpage-from-backforward-cache">Prevent loading a webpage from Back-Forward cache</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>I'm working on an eCommerce project and I encountered a really weird problem, whenever I saved items into my cart and proceed to the checkout page and then go back to previous page, my cart isn't updated until I refresh the page.</p>
+
+<p>Honestly, I thought this was a bug until I came around to learn about <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Firefox/Releases/1.5/Using_Firefox_1.5_caching">Back-Forward Caching</a> a.k.a <strong>bfcache</strong>, which allows the user to navigate between pages faster. That's a good thing, though!</p>
+
+<p>But that didn't help resolve my issue, so I thought of going around with a tiny hack:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nb">window</span><span class="p">.</span><span class="nx">onpageshow</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">event</span><span class="p">.</span><span class="nx">persisted</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="p">.</span><span class="nx">reload</span><span class="p">()</span><span class="w"> </span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">};</span>
+</code></pre>
+</div>
+
+<p>The code above will look any persistence of the <code>onpageshow</code> event. Initially, it's set to <code>false</code> and if the page is loaded from <strong>bfcache</strong>, it'll set to <code>true</code>.</p>
+
+<p>I wouldn't really consider this as a solution as it only worked on Safari instead of Chrome or Firefox.</p>
+
+<p>But hey, it gets the job done! &#x1F602;</p>
+
+	</div>
+	<div class="article-footer">
+		<time>August 30th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/javascript/">
+					JavaScript
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/refresh-browser-window-without-query-parameters">Refresh browser window without query parameters</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>If you want to reload the current page in your browser without any query string or parameters, here's how you can do it:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="p">.</span><span class="nx">pathname</span><span class="p">;</span>
+</code></pre>
+</div>
+
+<p>By doing so, it'll preserve the HTTP/HTTPS protocols of the URL and also remove the fragments that start with a <code>#</code>.</p>
+
+<p>If you want to preserve the fragments, you can try this:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">reloadURL</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="p">.</span><span class="nx">pathname</span><span class="p">;</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">fragments</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="p">.</span><span class="nx">part</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="kc">undefined</span><span class="p">)</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;#&quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="p">.</span><span class="nx">part</span><span class="p">;</span>
+<span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">reloadURL</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">fragments</span><span class="p">;</span>
+</code></pre>
+</div>
+
+<p>Hope you found this useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>August 29th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/javascript/">
+					JavaScript
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/input-sanitization-with-php">Input sanitization with PHP</a></h1>
 		<p class="description"></p>
 	</div>
@@ -499,111 +586,6 @@ sudo<span class="w"> </span>mv<span class="w"> </span>go<span class="w"> </span>
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-delete-files-inside-a-zip-file">How to delete files inside a zip file?</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Ever compressed your project directory but forgot to delete that useless file or folder and turns out the compresed file is larger than it's supposed to be? </p>
-
-<p>Here's a quick solution you can try:</p>
-
-<p>If you want to delete a file inside a <code>.zip</code> file, try this:</p>
-
-<div class="codehilite">
-<pre><span></span><code>zip<span class="w"> </span>--delete<span class="w"> </span>file.zip<span class="w"> </span><span class="s2">&quot;file.ext&quot;</span>
-</code></pre>
-</div>
-
-<p>And if you want to delete a folder, try this:</p>
-
-<div class="codehilite">
-<pre><span></span><code>zip<span class="w"> </span>--delete<span class="w"> </span>file.zip<span class="w"> </span><span class="s2">&quot;folder/*&quot;</span>
-</code></pre>
-</div>
-
-<p>Hope this helps you out!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>July 21st, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/terminal/">
-					Terminal
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/find-the-difference-between-two-arrays">Find the difference between two arrays</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Finding the difference between two sets i.e. Set A and Set B is basically returning a new set that contains values of Set A that don't exist in Set B or vice-versa.</p>
-
-<p>Here's an example:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="mf">1</span><span class="p">,</span><span class="mf">2</span><span class="p">,</span><span class="mf">3</span><span class="p">,</span><span class="mf">4</span><span class="p">,</span><span class="mf">5</span><span class="p">];</span>
-<span class="kd">var</span><span class="w"> </span><span class="nx">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="mf">1</span><span class="p">,</span><span class="mf">1</span><span class="p">,</span><span class="mf">2</span><span class="p">,</span><span class="mf">3</span><span class="p">,</span><span class="mf">4</span><span class="p">];</span>
-</code></pre>
-</div>
-
-<p>I wrote a shorter implementation using JavaScript's <code>.filter()</code> method:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="kd">function</span><span class="w"> </span><span class="nx">array_diff</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span><span class="nx">b</span><span class="p">){</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">a</span><span class="p">.</span><span class="nx">filter</span><span class="p">(</span><span class="nx">i</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">b</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="o">-</span><span class="mf">1</span><span class="p">);</span>
-<span class="p">}</span><span class="w">    </span>
-</code></pre>
-</div>
-
-<p>Once you execute this method, you'll get the following as a result:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">array_diff</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span><span class="nx">b</span><span class="p">);</span>
-<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">c</span><span class="p">)</span><span class="w"> </span><span class="c1">// returns [5]</span>
-</code></pre>
-</div>
-
-<h2>BONUS: What does the .filter() method do?</h2>
-
-<p>This method returns a new array with elements that pass the conditions provided by a callback function.</p>
-
-<p>If the conditions aren't passed, you'll receive an empty array.</p>
-
-<p>In this article, <code>(i =&gt; b.indexOf(i) === -1)</code> is considered as the callback function in which the <code>i</code> refers to the index of the current element of array A and is then used as a parameter to check if the element doesn't exist in array B.</p>
-
-<p>The neat thing about this method is that it doesn't mutate on the array that it's being called from.</p>
-
-<p>Read more about <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter">Array.prototype.filter()</a> on Mozilla's developer documentation.</p>
-
-	</div>
-	<div class="article-footer">
-		<time>July 18th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/javascript/">
-					JavaScript
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -684,7 +666,7 @@ sudo<span class="w"> </span>mv<span class="w"> </span>go<span class="w"> </span>
 		<li>
 			<a href="/category/linux/">
 				Linux
-				<span class="count">21</span>
+				<span class="count">22</span>
 			</a>
 		</li>
 		
@@ -698,7 +680,7 @@ sudo<span class="w"> </span>mv<span class="w"> </span>go<span class="w"> </span>
 		<li>
 			<a href="/category/devops/">
 				DevOps
-				<span class="count">13</span>
+				<span class="count">14</span>
 			</a>
 		</li>
 		
@@ -752,6 +734,13 @@ sudo<span class="w"> </span>mv<span class="w"> </span>go<span class="w"> </span>
 		</li>
 		
 		<li>
+			<a href="/category/productivity/">
+				Productivity
+				<span class="count">8</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/vim/">
 				VIM
 				<span class="count">8</span>
@@ -762,13 +751,6 @@ sudo<span class="w"> </span>mv<span class="w"> </span>go<span class="w"> </span>
 			<a href="/category/unix/">
 				UNIX
 				<span class="count">8</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/productivity/">
-				Productivity
-				<span class="count">7</span>
 			</a>
 		</li>
 		
@@ -930,6 +912,13 @@ sudo<span class="w"> </span>mv<span class="w"> </span>go<span class="w"> </span>
 			<a href="/category/wamp/">
 				WAMP
 				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/image-manipulation/">
+				Image Manipulation
+				<span class="count">1</span>
 			</a>
 		</li>
 		

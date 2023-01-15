@@ -77,6 +77,160 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-setup-rsync-with-passwordless-ssh-on-unixlinux">How to setup rsync with passwordless SSH on UNIX/Linux?</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Tired of ensuring if whether each file in every server is synced? Planning on doing automated backups? If so, then this technique should come in handy for you.</p>
+
+<p>Interested? Then follow the steps below:</p>
+
+<h2>Check if rsync over SSH works</h2>
+
+<p>Before you start, please ensure that you can <code>rsync</code> to your intended server over <code>ssh</code> using a password.
+With the following example, you can just send a simple file over to the intended server and see if it works or not:</p>
+
+<div class="codehilite">
+<pre><span></span><code>rsync<span class="w"> </span>-avz<span class="w"> </span>-e<span class="w"> </span>ssh<span class="w"> </span>test.txt<span class="w"> </span>username@REMOTE_SERVER_IP_OR_DOMAIN:/path/to/folder/
+</code></pre>
+</div>
+
+<p>Once you execute this command on the terminal, it'll prompt you for a password on the remote server, if it does, then it works.</p>
+
+<h2>Generate SSH Keys</h2>
+
+<p>If you want to do a passwordless SSH, you need to generate public and private SSH keys on the local server by typing the following command on the terminal:</p>
+
+<div class="codehilite">
+<pre><span></span><code>ssh-keygen
+Enter<span class="w"> </span>passphrase<span class="w"> </span><span class="o">(</span>empty<span class="w"> </span><span class="k">for</span><span class="w"> </span>no<span class="w"> </span>passphrase<span class="o">)</span>:
+Enter<span class="w"> </span>same<span class="w"> </span>passphrase<span class="w"> </span>again:
+</code></pre>
+</div>
+
+<p>If you're prompted to enter a passphrase, just hit <code>Enter</code> and proceed until the key is generated. Once the keys are generated, they'll be in the <code>~/.ssh</code> directory on your local server.</p>
+
+<h2>Copy public key to remote server</h2>
+
+<p>Using <code>ssh-copy-id</code>, you can copy the public key to the remote server:</p>
+
+<div class="codehilite">
+<pre><span></span><code>ssh-copy-id<span class="w"> </span>-i<span class="w"> </span>~/.ssh/id_rsa.pub<span class="w"> </span>REMOTE_SERVER_IP_OR_DOMAIN
+</code></pre>
+</div>
+
+<p>Once executed, you'll be prompted to enter the password of the account on the remote server and if successful, the public key will be copied to the remote server and will be stored in it's appropriate location.</p>
+
+<h2>Perform Rsync over passwordless SSH</h2>
+
+<p>If you've come this far, then you should be able to SSH to the remote server without entering the password:</p>
+
+<div class="codehilite">
+<pre><span></span><code>ssh<span class="w"> </span>REMOTE_SERVER_IP_OR_DOMAIN
+</code></pre>
+</div>
+
+<p>If it works, then perform the <code>rsync</code> operation again <a href="#rsync-operation">(above)</a> and this time, it shouldn't prompt you to enter any password.</p>
+
+<p>Hope you liked reading this short article!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>July 3rd, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/render-a-simple-rgb-colored-image-in-c">Render a simple RGB colored image in C++</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p><img src="../../../static/til_images/rgb-colored-spectrum.png" style="width: 500px; height: 300px;" /></p>
+
+<p>Recently, I started reading a book called <a href="https://graphicscodex.courses.nvidia.com/app.html">The Graphics Codex</a>, it's an amazing book about Computer Graphics covering a lot of content and I find it quite resourceful. I wanted to build my own toy raytracer for the sake of exploring, so that's why I started to refresh my graphics coding knowledge a bit.</p>
+
+<p>Just like any graphics renderer, in order to view your image. you must be able to write your image to a file, right?</p>
+
+<p>Below, I wrote a really simple code to generate the entire RGB colored spectrum from top to bottom:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">800</span><span class="p">;</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">height</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">800</span><span class="p">;</span>
+
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;P3</span><span class="se">\n</span><span class="s">&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">width</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">height</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">255</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="n">height</span><span class="mi">-1</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&gt;=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">--</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">width</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">auto</span><span class="w"> </span><span class="n">r</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kt">double</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="n">width</span><span class="mi">-1</span><span class="p">);</span>
+<span class="w">            </span><span class="k">auto</span><span class="w"> </span><span class="n">g</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kt">double</span><span class="p">(</span><span class="n">j</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="n">height</span><span class="mi">-1</span><span class="p">);</span>
+<span class="w">            </span><span class="k">auto</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.25</span><span class="p">;</span>
+
+<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">ir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="mf">255.999</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">r</span><span class="p">);</span>
+<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">ig</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="mf">255.999</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">g</span><span class="p">);</span>
+<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">ib</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="mf">255.999</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">b</span><span class="p">);</span>
+
+<span class="w">            </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">ir</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">ig</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">ib</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<p>You can generate it by simply creating an executable like this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>g++<span class="w"> </span>-o<span class="w"> </span>pixels<span class="w"> </span>pixels.cpp
+</code></pre>
+</div>
+
+<p>Now, when you execute it by typing <code>./pixels</code>, you'll get a list of numbers that's pretty much a combination and permutation of RGB color values.</p>
+
+<p>Lastly, to generate a colored image, like the one above, just redirect the output to an image format, in this example, I used PPM image format:</p>
+
+<div class="codehilite">
+<pre><span></span><code>./pixels<span class="w"> </span>&gt;<span class="w"> </span>image.ppm<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>xdg-open<span class="w"> </span>image.ppm
+</code></pre>
+</div>
+
+<p>And that's it, you have generated your own colored image! &#x1F601;</p>
+
+<p>Hope you found this useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>June 11th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/graphics/">
+					Graphics
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/find-directories-created-within-a-date-range">Find directories created within a date range</a></h1>
 		<p class="description"></p>
 	</div>
@@ -277,104 +431,6 @@ git<span class="w"> </span>checkout<span class="w"> </span>&lt;your_branch_name&
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-perform-mysqldump-without-a-password-prompt">How to perform mysqldump without a password prompt?</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>If you're performing a mass database backup using <code>mysqldump</code>, you'll pretty much find it annoying to type in the password every single time.</p>
-
-<p>To get rid of it, open <code>/etc/mysql/my.cnf</code> configuration file and add your database credentials:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="err">[</span><span class="n">mysqldump</span><span class="err">]</span>
-<span class="k">user</span><span class="o">=</span><span class="s2">&quot;your_username&quot;</span>
-<span class="k">password</span><span class="o">=</span><span class="s2">&quot;your_password&quot;</span>
-</code></pre>
-</div>
-
-<p>Once done, save the <code>my.cnf</code> configuration file and now, you can try exporting your database without a hassle like this:</p>
-
-<div class="codehilite">
-<pre><span></span><code>mysqldump<span class="w"> </span>-u<span class="w"> </span>your_username<span class="w"> </span>database_name<span class="w"> </span>&gt;<span class="w"> </span>database.sql
-</code></pre>
-</div>
-
-<p>Hope this trick helps you out!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>April 10th, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/unix/">
-					UNIX
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-recover-from-an-errorneous-forced-git-commit">How to recover from an errorneous forced git commit?</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>If you're the type of person who types <code>git push -f origin master</code>, please don't do that as it might overwrite your entire branch. I'm saying this because I did this once and I thought I lost all the files.</p>
-
-<p>Luckily, I was a bit relieved as <code>git</code> is a VCS (Version Control Software), which means the files are most likely not <strong>deleted</strong>. This is when I came across <code>git reflog</code> command.</p>
-
-<p>According to the <a href="https://git-scm.com/docs/git-reflog">Git manual</a>, this is what it does:</p>
-
-<blockquote>
-  <p>Reference logs, or "reflogs", record when the tips of branches and other references were updated in the local repository.</p>
-</blockquote>
-
-<p>This is a life-saver especially if you wanted to return back to the previous point in time. Here's how I recovered my files back again:</p>
-
-<ol>
-<li>Type <code>git reflog show remotes/origin/master</code></li>
-<li>Find and make note of the previous commit hash.</li>
-<li>Create a new branch with using the previous commit hash like this: <code>git branch &lt;new_branch_name&gt; &lt;previous_commit_hash&gt;</code></li>
-<li>Then finally, push the files to the new branch: <code>git add . &amp;&amp; git commit -m "pushing recovered files" &amp;&amp; git push origin &lt;new_branch_name&gt;</code></li>
-<li>Checkout to the newly created branch: <code>git checkout &lt;new_branch_name&gt;</code></li>
-<li>Delete the corrupted branch and replace it with the newly created branch that contains your restored files.</li>
-</ol>
-
-<p>If I didn't discover this, I don't really know what I would have done to recover those files.</p>
-
-<h2>References</h2>
-
-<ul>
-<li><a href="https://git-scm.com/docs/git-reflog">Git reflog documentation</a></li>
-<li><a href="https://stackoverflow.com/questions/3973994/how-can-i-recover-from-an-erronous-git-push-f-origin-master">How can I recover from an erronous git push -f origin master?</a></li>
-</ul>
-
-<p>Hope this helps you out!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>April 10th, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/git/">
-					Git
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -445,7 +501,7 @@ git<span class="w"> </span>checkout<span class="w"> </span>&lt;your_branch_name&
 		<li>
 			<a href="/category/linux/">
 				Linux
-				<span class="count">21</span>
+				<span class="count">22</span>
 			</a>
 		</li>
 		
@@ -459,7 +515,7 @@ git<span class="w"> </span>checkout<span class="w"> </span>&lt;your_branch_name&
 		<li>
 			<a href="/category/devops/">
 				DevOps
-				<span class="count">13</span>
+				<span class="count">14</span>
 			</a>
 		</li>
 		
@@ -513,6 +569,13 @@ git<span class="w"> </span>checkout<span class="w"> </span>&lt;your_branch_name&
 		</li>
 		
 		<li>
+			<a href="/category/productivity/">
+				Productivity
+				<span class="count">8</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/vim/">
 				VIM
 				<span class="count">8</span>
@@ -523,13 +586,6 @@ git<span class="w"> </span>checkout<span class="w"> </span>&lt;your_branch_name&
 			<a href="/category/unix/">
 				UNIX
 				<span class="count">8</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/productivity/">
-				Productivity
-				<span class="count">7</span>
 			</a>
 		</li>
 		
@@ -691,6 +747,13 @@ git<span class="w"> </span>checkout<span class="w"> </span>&lt;your_branch_name&
 			<a href="/category/wamp/">
 				WAMP
 				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/image-manipulation/">
+				Image Manipulation
+				<span class="count">1</span>
 			</a>
 		</li>
 		

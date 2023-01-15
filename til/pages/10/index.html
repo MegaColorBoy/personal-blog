@@ -77,6 +77,106 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/resolve-curl-error-60-ssl-certificate-problem-on-localhost">Resolve cURL error 60: SSL certificate problem on localhost</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>You'll get this error when you're hosting a Laravel project with using HTTPS/SSL protocol on <code>localhost</code> or <code>127.0.0.1</code>:</p>
+
+<div class="codehilite">
+<pre><span></span><code>cURL error 60: SSL certificate problem: unable to get local issuer certificate (see https://curl.haxx.se/libcurl/c/libcurl-errors.html)
+</code></pre>
+</div>
+
+<p>I read some article on trying to install <code>cacert.pem</code> authorization certificate on your WAMP/XAMPP setup but it didn't really work out for me as I was running out of time.</p>
+
+<p>So, I did a little digging and learnt that I can just modify the <code>verify</code> flag to <code>false</code> in the <code>vendor/guzzlehttp/guzzle/src/Client.php</code> file:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="nv">$defaults</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s1">&#39;allow_redirects&#39;</span> <span class="o">=&gt;</span> <span class="nx">RedirectMiddleware</span><span class="o">::</span><span class="nv">$defaultSettings</span><span class="p">,</span>
+    <span class="s1">&#39;http_errors&#39;</span>     <span class="o">=&gt;</span> <span class="k">true</span><span class="p">,</span>
+    <span class="s1">&#39;decode_content&#39;</span>  <span class="o">=&gt;</span> <span class="k">true</span><span class="p">,</span>
+    <span class="s1">&#39;verify&#39;</span>          <span class="o">=&gt;</span> <span class="k">false</span><span class="p">,</span> <span class="c1">// changed it to false</span>
+    <span class="s1">&#39;cookies&#39;</span>         <span class="o">=&gt;</span> <span class="k">false</span>
+<span class="p">];</span>
+<span class="cp">?&gt;</span>
+</code></pre>
+</div>
+
+<p>By changing to it <code>false</code>, you'll not face that error again but please keep in mind, you should do this only if you're developing on localhost.</p>
+
+<p>Happy coding!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>September 28th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/laravel/">
+					Laravel
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-resolve-the-no-application-encryption-key-has-been-specified-error">How to resolve the "No application encryption key has been specified" error</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Are you facing the same error as this article's title? Then this article might help you out.</p>
+
+<p>If you're developing applications using HTTP/SSL Protocols (regardless, you should!) on Laravel, by default, you'll be using Laravel's encrypter but in it's <a href="https://laravel.com/docs/7.x/encryption#configuration">official documentation</a>, it says:</p>
+
+<blockquote>
+  <p>Before using Laravel's encrypter, you must set a <code>key</code> option in your <code>config/app.php</code> configuration file. You should use the <code>php artisan key:generate</code> command to generate this key since this Artisan command will use PHP's secure random bytes generator to build your key. If this value is not properly set, all values encrypted by Laravel will be insecure.</p>
+</blockquote>
+
+<p>Just execute the following command in your root directory:</p>
+
+<div class="codehilite">
+<pre><span></span><code>php<span class="w"> </span>artisan<span class="w"> </span>key:generate
+</code></pre>
+</div>
+
+<p>If the error still persists, try clearing the cache by doing the following:</p>
+
+<div class="codehilite">
+<pre><span></span><code>php<span class="w"> </span>artisan<span class="w"> </span>config:cache
+php<span class="w"> </span>artisan<span class="w"> </span>cache:clear
+php<span class="w"> </span>artisan<span class="w"> </span>config:clear
+</code></pre>
+</div>
+
+<p>Hope you found this article useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>September 19th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/laravel/">
+					Laravel
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/how-to-filter-requests-with-errors-on-chromes-devtools">How to filter requests with errors on Chrome's DevTools</a></h1>
 		<p class="description"></p>
 	</div>
@@ -454,90 +554,6 @@
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/extract-unique-characters-from-a-string">Extract unique characters from a string</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>I thought of getting back into competitive programming again and 
-started practicing my python coding-chops on <a href="https://www.codewars.com">Codewars</a>.</p>
-
-<p>Here's a neat trick on how to extract unique characters from a string:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
-
-<span class="n">word</span> <span class="o">=</span> <span class="s2">&quot;HelloWorld&quot;</span>
-<span class="n">uniq</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">OrderedDict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">word</span><span class="p">)</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="n">uniq</span><span class="p">)</span> <span class="c1"># prints HeloWrd</span>
-</code></pre>
-</div>
-
-<p>Using <code>OrderedDict</code> allows you to preserve the order in which the keys are inserted as a normal <code>dict</code> doesn't track the order.</p>
-
-<p>Hope you found this useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>August 23rd, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/python/">
-					Python
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/increase-execution-time-in-php">Increase execution time in PHP</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Ever process a file that's larger than 2GB and got an error that said something like this:</p>
-
-<div class="codehilite">
-<pre><span></span><code>Maximum execution time of 30 seconds exceeded
-</code></pre>
-</div>
-
-<p>Though, PHP doesn't have an efficient way of processing files of large sizes, you can prevent your web application from timing out by adding this to your code:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="c1">// 300 seconds == 5 minutes</span>
-<span class="nb">ini_set</span><span class="p">(</span><span class="s1">&#39;max_execution_time&#39;</span><span class="p">,</span> <span class="mi">300</span><span class="p">);</span>
-<span class="cp">?&gt;</span>
-</code></pre>
-</div>
-
-<p>Hopefully, some day, this might come in handy for you! &#128540;</p>
-
-	</div>
-	<div class="article-footer">
-		<time>August 23rd, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/php/">
-					PHP
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -608,7 +624,7 @@ started practicing my python coding-chops on <a href="https://www.codewars.com">
 		<li>
 			<a href="/category/linux/">
 				Linux
-				<span class="count">21</span>
+				<span class="count">22</span>
 			</a>
 		</li>
 		
@@ -622,7 +638,7 @@ started practicing my python coding-chops on <a href="https://www.codewars.com">
 		<li>
 			<a href="/category/devops/">
 				DevOps
-				<span class="count">13</span>
+				<span class="count">14</span>
 			</a>
 		</li>
 		
@@ -676,6 +692,13 @@ started practicing my python coding-chops on <a href="https://www.codewars.com">
 		</li>
 		
 		<li>
+			<a href="/category/productivity/">
+				Productivity
+				<span class="count">8</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/vim/">
 				VIM
 				<span class="count">8</span>
@@ -686,13 +709,6 @@ started practicing my python coding-chops on <a href="https://www.codewars.com">
 			<a href="/category/unix/">
 				UNIX
 				<span class="count">8</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/productivity/">
-				Productivity
-				<span class="count">7</span>
 			</a>
 		</li>
 		
@@ -854,6 +870,13 @@ started practicing my python coding-chops on <a href="https://www.codewars.com">
 			<a href="/category/wamp/">
 				WAMP
 				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/image-manipulation/">
+				Image Manipulation
+				<span class="count">1</span>
 			</a>
 		</li>
 		

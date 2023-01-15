@@ -76,6 +76,114 @@
 			<div class="articles">
 				
 					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/logging-client-ip-addresses-on-apache-server">Logging client IP addresses on Apache server</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>If you want to log the actual client IP address, you need to extract the <code>X-Forward-For</code> header from the request and in order to do that, you need to make a tiny edit in your <code>httpd.conf</code> file.</p>
+
+<ol>
+<li>Go to <code>/etc/apache2/conf</code> or <code>/etc/httpd/conf</code> and open <code>httpd.conf</code> file.</li>
+<li>Search for the string that starts with: <code>LogFormat "%h %l %u %t \"%r\" %&gt;s %b \"%{Referer}i\" \"%{User-Agent}i\"" combined</code>.</li>
+<li>Modify the <code>%h</code> to <code>%{X-Forwarded-For}i</code>. Now, it should look like this: <code>LogFormat "%{X-Forwarded-For}i %l %u %t \"%r\" %&gt;s %b \"%{Referer}i\" \"%{User-Agent}i\"" combined</code>.</li>
+<li>Test the config to ensure that there are no typos by typing: <code>apachectl configtest</code>.</li>
+<li>Save and restart the service by typing: <code>systemctl restart httpd</code> or <code>systemctl restart apache2</code>.</li>
+<li>In your terminal, type <code>tail -f /var/log/httpd/access.log</code> and you'll be seeing the client IP being logged in your logs.</li>
+</ol>
+
+<p>Hope you found this tip useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>August 18th, 2022</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/apache/">
+					Apache
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/using-iife-in-javascript">Using IIFE in JavaScript</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>IIFE a.k.a Immediately-Invoked Function Expression &mdash; is a way to execute functions as soon as the function is created.</p>
+
+<p>Using IIFE, you can easily isolate declared variables away from the global scope.</p>
+
+<p>This is how the syntax would look like:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="c1">// ES5 Standard</span>
+<span class="kd">let</span><span class="w"> </span><span class="nx">foo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nx">message</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Hello world&quot;</span>
+<span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">message</span><span class="p">);</span>
+<span class="p">})();</span>
+</code></pre>
+</div>
+
+<p>They can be defined with arrow functions as well:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="c1">// ES6 Standard</span>
+<span class="kd">let</span><span class="w"> </span><span class="nx">foo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nx">message</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Hello world&quot;</span>
+<span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">message</span><span class="p">);</span>
+<span class="p">})();</span>
+</code></pre>
+</div>
+
+<p>According to <strong>MDN Docs</strong>, it's a design pattern a.k.a Self-Executing Anonymous Function. There are two parts to this:</p>
+
+<ol>
+<li><p>The function that's enclosed within the Grouping Operator <code>()</code>, which would prevent it from polluting the global space and access to the variables within it's scope.</p></li>
+<li><p>The <code>();</code> will create the Immediately Invoked Function Expression on-the-fly.</p></li>
+</ol>
+
+<h2>When to use it?</h2>
+
+<p>There are many interesting cases such as if you are following the <a href="https://www.patterns.dev/posts/classic-design-patterns/">Module Pattern</a> especially if you want to avoid polluting the global namespace or just that you don't want your code to interfere with other code thus ensures code safety.</p>
+
+<h2>Readings</h2>
+
+<ul>
+<li><a href="https://developer.mozilla.org/en-US/docs/Glossary/IIFE">IIFE - MDN Web Docs Glossary</a></li>
+</ul>
+
+	</div>
+	<div class="article-footer">
+		<time>August 10th, 2022</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/javascript/">
+					JavaScript
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
 <div class="day article">
 	<h2><a href="/blogmarks/posts/9th-august-2022">9th August 2022 &mdash; Blogmarks</a></h2>
 	<ul>
@@ -234,91 +342,6 @@
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/a-new-makeover-for-2022">A new makeover for 2022</a></h1>
-		<p class="description">Function over fashion. Minimal. Scraped out the redundant and added some new features.</p>
-	</div>
-	<div class="article-body">
-		<p>I have been reading a lot of articles and blogs than writing these days, thanks to my hectic schedule, I barely get the time to work on my blog.</p>
-
-<p>Initially, I thought of porting my blog to Django or Hugo but I decided to tune up my blog engine by adding new features like Tags/Categories and Archives, optimizing the time-taken to convert Markdown to HTML files and making it more flexible for the future.</p>
-
-<p>Also, I revamped the entire blog's layout by writing a new theme and making it a bit more responsive than it previously was. However, I retained the colors and the fonts used. Thank you <a href="https://rsms.me">Rasmus</a> for the amazing <a href="https://rsms.me/inter">Inter</a> font ❤.</p>
-
-<h2>Still got some work to do</h2>
-
-<p>Yes, new layout and all but there's still few left in pending and hopefully, I'd complete it by the end of July 2022. But here's what's left:</p>
-
-<ul>
-<li>Thanks to <a href="https://simonwillison.net">Simon Willison's Blog</a>, I took the idea of <strong>Blogmarks</strong> and it's basically a collection of articles and quotes that I find interesting and would share it here.</li>
-<li>Planning to move all project/widget based posts to a section called "Projects", which would also have a different layout.</li>
-<li>Book reviews and a new resume template</li>
-<li>Dark theme with a better color palette (I wasn't happy with the color scheme that I wrote previously.)</li>
-</ul>
-
-<h2>Wait, where's megacolorboy?</h2>
-
-<p>For the time being, I thought of removing my username "megacolorboy" from the Masthead for the sake of professionalism and hey, I ain't a kid no more, so time to grow up, you know?</p>
-
-<p>I'd like to thank my beautiful wife for letting me work on my passion even though it might annoy her at times, I love her for that ❤!</p>
-
-<p>Hope you like the new makeover!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>July 14th, 2022</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/update/">
-					Update
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/extract-private-key-and-certificate-from-pfx-file">Extract private key and certificate from .pfx file</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Ever wondered what's a <code>.pfx</code> file? It's just a combination of both private key and the certificate and this file is usually used in Microsoft IIS Servers.</p>
-
-<p>However, you can't use this file in Linux servers as both private key and the certificate are supposed to be individual files.</p>
-
-<p>Here's how you can extract both private key and certificate files:</p>
-
-<div class="codehilite">
-<pre><span></span><code>openssl<span class="w"> </span>pkcs12<span class="w"> </span>-in<span class="w"> </span>file.pfx<span class="w"> </span>-nocerts<span class="w"> </span>-out<span class="w"> </span>privatekey.pem<span class="w"> </span>-nodes
-openssl<span class="w"> </span>pkcs12<span class="w"> </span>-in<span class="w"> </span>file.pfx<span class="w"> </span>-nokeys<span class="w"> </span>-out<span class="w"> </span>certificate.crt
-</code></pre>
-</div>
-
-<p>Hope this tip helps you out!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>March 12th, 2022</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/devops/">
-					DevOps
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -391,7 +414,7 @@ openssl<span class="w"> </span>pkcs12<span class="w"> </span>-in<span class="w">
 		<li>
 			<a href="/category/linux/">
 				Linux
-				<span class="count">21</span>
+				<span class="count">22</span>
 			</a>
 		</li>
 		
@@ -405,7 +428,7 @@ openssl<span class="w"> </span>pkcs12<span class="w"> </span>-in<span class="w">
 		<li>
 			<a href="/category/devops/">
 				DevOps
-				<span class="count">13</span>
+				<span class="count">14</span>
 			</a>
 		</li>
 		
@@ -459,6 +482,13 @@ openssl<span class="w"> </span>pkcs12<span class="w"> </span>-in<span class="w">
 		</li>
 		
 		<li>
+			<a href="/category/productivity/">
+				Productivity
+				<span class="count">8</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/vim/">
 				VIM
 				<span class="count">8</span>
@@ -469,13 +499,6 @@ openssl<span class="w"> </span>pkcs12<span class="w"> </span>-in<span class="w">
 			<a href="/category/unix/">
 				UNIX
 				<span class="count">8</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/productivity/">
-				Productivity
-				<span class="count">7</span>
 			</a>
 		</li>
 		
@@ -637,6 +660,13 @@ openssl<span class="w"> </span>pkcs12<span class="w"> </span>-in<span class="w">
 			<a href="/category/wamp/">
 				WAMP
 				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/image-manipulation/">
+				Image Manipulation
+				<span class="count">1</span>
 			</a>
 		</li>
 		

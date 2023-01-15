@@ -78,6 +78,645 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/writings/posts/stripes-scrolling-bubble-header">Stripe's Scrolling Bubble Header</a></h1>
+		<p class="description">An insight into Stripe's interesting use of animated elements.</p>
+	</div>
+	<div class="article-body">
+		<p><link rel="stylesheet" type="text/css" href="/static/projects/stripe-bubbles/index.css"/></p>
+
+<script defer type="text/javascript" src="/static/projects/stripe-bubbles/perlin.js"></script>
+
+<script defer type="text/javascript" src="/static/projects/stripe-bubbles/script.js"></script>
+
+<div id="bubbleWrapper">
+    <div class="stripe-bubbles"></div>
+</div>
+
+<p>Want to know how to make it on your own? Read the article below!</p>
+
+<p>If you're a UI/UX developer, you've probably heard about <a href="https://www.stripe.com">Stripe.com</a> and their uses of motion and design with their targeted audience in mind.</p>
+
+<p>As I was exploring their website, I discovered their <a href="https://stripe.com/customers">customers</a> page and instantly, I was intrigued by their smooth scrolling bubble header and the concept was interesting enought that it caught my attention.</p>
+
+<p>In this article, I'll explain on how I had attempted to recreate their scrolling bubble header.</p>
+
+<h2>Analysis</h2>
+
+<p>The mechanics are pretty simple to understand, these are the following:</p>
+
+<ul>
+<li>The bubbles are randomly generated and placed on page load</li>
+<li>Smooth animation of the up and down movements</li>
+<li>Infinite animation loop</li>
+</ul>
+
+<p>A trivial problem, isn't it? Time to see if we can recreate it!</p>
+
+<h2>Step 1: Create the bubble</h2>
+
+<p>Let's write the CSS to create a simple bubble with a <mark>width</mark> and <mark>height</mark> of 150px and by giving it a <mark>border-radius</mark> of 50%.</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="p">.</span><span class="nc">stripe-bubble</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">width</span><span class="p">:</span><span class="w"> </span><span class="mi">150</span><span class="kt">px</span><span class="p">;</span>
+<span class="w">    </span><span class="k">height</span><span class="p">:</span><span class="w"> </span><span class="mi">150</span><span class="kt">px</span><span class="p">;</span>
+<span class="w">    </span><span class="k">border-radius</span><span class="p">:</span><span class="w"> </span><span class="mi">50</span><span class="kt">%</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<p>As for the logo, I inspected their code and figured out that Stripe combined all of their customer logos into a single image, also known as, CSS Spritesheet.</p>
+
+<figure>
+    <img src="/static/images/stripe-customer-logos.png"/>
+</figure>
+
+<p>Performance-wise, it's a clever technique used to reduce the number of HTTP requests that your internet browser has to make on every page request.</p>
+
+<p>Let's give the CSS spritesheet as a background-image property and adjust it enough to fit the size of one bubble.</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="p">.</span><span class="nc">stripe-bubble</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">position</span><span class="p">:</span><span class="w"> </span><span class="kc">absolute</span><span class="p">;</span>
+<span class="w">    </span><span class="k">width</span><span class="p">:</span><span class="w"> </span><span class="mi">150</span><span class="kt">px</span><span class="p">;</span>
+<span class="w">    </span><span class="k">height</span><span class="p">:</span><span class="w"> </span><span class="mi">150</span><span class="kt">px</span><span class="p">;</span>
+<span class="w">    </span><span class="k">border-radius</span><span class="p">:</span><span class="w"> </span><span class="mi">50</span><span class="kt">%</span><span class="p">;</span>
+<span class="w">    </span><span class="k">background-image</span><span class="p">:</span><span class="w"> </span><span class="nb">url</span><span class="p">(</span><span class="s1">&#39;https://www.stripe.com/img/v3/customers/logos/header-logos.png&#39;</span><span class="p">);</span>
+<span class="w">    </span><span class="k">box-shadow</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">15</span><span class="kt">px</span><span class="w"> </span><span class="mi">35</span><span class="kt">px</span><span class="w"> </span><span class="nb">rgba</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.1</span><span class="p">),</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">3</span><span class="kt">px</span><span class="w"> </span><span class="mi">10</span><span class="kt">px</span><span class="w"> </span><span class="nb">rgba</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.1</span><span class="p">);</span>
+<span class="w">    </span><span class="k">background-size</span><span class="p">:</span><span class="w"> </span><span class="mi">1076</span><span class="kt">px</span><span class="w"> </span><span class="mi">1076</span><span class="kt">px</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<p>There are about 43 logos, which means you'll have to create different logos by adjusting the background position property.</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="p">.</span><span class="nc">logo-1</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">background-position</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="p">.</span><span class="nc">logo-2</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">background-position</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">-154</span><span class="kt">px</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="p">.</span><span class="nc">logo-3</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">background-position</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">-308</span><span class="kt">px</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<p>In the next step, using JavaScript, we'll create the classes for the bubbles and the header.</p>
+
+<h2>Step 2: Create a class for Bubble</h2>
+
+<p>Before we get in deep, let's create the foundation for our code, so that it'll make things neat and tidy and easier on the go. Below, I have created two classes: one is for the bubble and the other is for the bubble wrapper (no puns):</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="kd">class</span><span class="w"> </span><span class="nx">Bubble</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kr">constructor</span><span class="p">(){}</span>
+<span class="w">    </span><span class="nx">update</span><span class="p">(){}</span>
+<span class="p">}</span>
+
+<span class="kd">class</span><span class="w"> </span><span class="nx">BubbleMarquee</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kr">constructor</span><span class="p">(){}</span>
+<span class="w">    </span><span class="nx">update</span><span class="p">(){}</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<p>Great, you have created the classes, we can now use these to generate the bubbles dynamically in the next step.</p>
+
+<h2>Step 3: Bubble's scale and position</h2>
+
+<figure>
+    <img src="/static/images/stripe-bubbles.png"/>
+</figure>
+
+<p>As you see in the image above, the logos are randomly placed and scaled. It's clear that there has to be some sort of a pattern, so I decided to take a look into their code:</p>
+
+<figure>
+    <img src="/static/images/stripe-bubble-code.png"/>
+</figure>
+
+<p>Aha! I discovered that the positioning and scaling of the bubbles are hard-coded and then the logos order are randomly shuffled. I won't be adding a randomizer but for now, let's add the bubbles with it's specifications and respective logos.</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">bubbleSettings</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgAffirm&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">s</span><span class="o">:</span><span class="w"> </span><span class="mf">.6</span><span class="p">,</span><span class="w"> </span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="mf">77</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="mf">1134</span><span class="w"> </span><span class="p">},</span><span class="w"> </span>
+<span class="w">    </span><span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgAllianz&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">s</span><span class="o">:</span><span class="w"> </span><span class="mf">.6</span><span class="p">,</span><span class="w"> </span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="mf">271</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="mf">1620</span><span class="w"> </span><span class="p">},</span><span class="w"> </span>
+<span class="w">    </span><span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgAmazon &#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">s</span><span class="o">:</span><span class="w"> </span><span class="mf">.6</span><span class="p">,</span><span class="w"> </span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="mf">372</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="mf">1761</span><span class="w"> </span><span class="p">},</span><span class="w"> </span>
+<span class="w">    </span><span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgBookingCom&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">s</span><span class="o">:</span><span class="w"> </span><span class="mf">.6</span><span class="p">,</span><span class="w"> </span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="mf">79</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="mf">2499</span><span class="w"> </span><span class="p">},</span><span class="w"> </span>
+<span class="w">    </span><span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgCatawiki&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">s</span><span class="o">:</span><span class="w"> </span><span class="mf">.6</span><span class="p">,</span><span class="w"> </span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="mf">334</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="mf">2704</span><span class="w"> </span><span class="p">},</span><span class="w"> </span>
+<span class="w">    </span><span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgCityofBoston&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">s</span><span class="o">:</span><span class="w"> </span><span class="mf">.6</span><span class="p">,</span><span class="w"> </span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="mf">356</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="mf">2271</span><span class="w"> </span><span class="p">},</span><span class="w"> </span>
+<span class="w">    </span><span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgDeliveroo&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">s</span><span class="o">:</span><span class="w"> </span><span class="mf">.6</span><span class="p">,</span><span class="w"> </span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="mf">226</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="mf">795</span><span class="w"> </span><span class="p">},</span><span class="w"> </span>
+<span class="w">    </span><span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgDoordash&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">s</span><span class="o">:</span><span class="w"> </span><span class="mf">.6</span><span class="p">,</span><span class="w"> </span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="mf">256</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="mf">276</span><span class="w"> </span><span class="p">},</span><span class="w"> </span>
+<span class="w">    </span><span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgExpedia&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">s</span><span class="o">:</span><span class="w"> </span><span class="mf">.6</span><span class="p">,</span><span class="w"> </span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="mf">365</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="mf">1210</span><span class="w"> </span><span class="p">},</span><span class="w"> </span>
+<span class="w">    </span><span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgFitbit&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">s</span><span class="o">:</span><span class="w"> </span><span class="mf">.6</span><span class="p">,</span><span class="w"> </span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="mf">193</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="mf">444</span><span class="w"> </span><span class="p">},</span><span class="w"> </span>
+<span class="w">    </span><span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgGoogle&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">s</span><span class="o">:</span><span class="w"> </span><span class="mf">.6</span><span class="p">,</span><span class="w"> </span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="mf">387</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="mf">2545</span><span class="w"> </span><span class="p">},</span><span class="w"> </span>
+<span class="w">    </span><span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgIndiegogo&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">s</span><span class="o">:</span><span class="w"> </span><span class="mf">.7</span><span class="p">,</span><span class="w"> </span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="mf">193</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="mf">1303</span><span class="w"> </span><span class="p">},</span><span class="w"> </span>
+<span class="w">    </span><span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgInstacart&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">s</span><span class="o">:</span><span class="w"> </span><span class="mf">.7</span><span class="p">,</span><span class="w"> </span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="mf">88</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="mf">907</span><span class="w"> </span><span class="p">},</span><span class="w"> </span>
+<span class="w">    </span><span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgKickstarter&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">s</span><span class="o">:</span><span class="w"> </span><span class="mf">.7</span><span class="p">,</span><span class="w"> </span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="mf">320</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="mf">633</span><span class="w"> </span><span class="p">},</span><span class="w"> </span>
+<span class="w">    </span><span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgLyft&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">s</span><span class="o">:</span><span class="w"> </span><span class="mf">.7</span><span class="p">,</span><span class="w"> </span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="mf">76</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="mf">323</span><span class="w"> </span><span class="p">},</span><span class="w"> </span>
+<span class="w">    </span><span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgNasdaq&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">s</span><span class="o">:</span><span class="w"> </span><span class="mf">.7</span><span class="p">,</span><span class="w"> </span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="mf">357</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="mf">129</span><span class="w"> </span><span class="p">},</span><span class="w"> </span>
+<span class="w">    </span><span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgNat-Geo &#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">s</span><span class="o">:</span><span class="w"> </span><span class="mf">.7</span><span class="p">,</span><span class="w"> </span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="mf">342</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="mf">1440</span><span class="w"> </span><span class="p">},</span><span class="w"> </span>
+<span class="w">    </span><span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgRackspace&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">s</span><span class="o">:</span><span class="w"> </span><span class="mf">.7</span><span class="p">,</span><span class="w"> </span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="mf">293</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="mf">1929</span><span class="w"> </span><span class="p">},</span><span class="w"> </span>
+<span class="w">    </span><span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgReddit&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">s</span><span class="o">:</span><span class="w"> </span><span class="mf">.7</span><span class="p">,</span><span class="w"> </span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="mf">198</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="mf">2135</span><span class="w"> </span><span class="p">},</span><span class="w"> </span>
+<span class="w">    </span><span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgSalesforce&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">s</span><span class="o">:</span><span class="w"> </span><span class="mf">.7</span><span class="p">,</span><span class="w"> </span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="mf">82</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="mf">2276</span><span class="w"> </span><span class="p">},</span><span class="w"> </span>
+<span class="w">    </span><span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgShopify&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">s</span><span class="o">:</span><span class="w"> </span><span class="mf">.7</span><span class="p">,</span><span class="w"> </span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="mf">182</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="mf">2654</span><span class="w"> </span><span class="p">},</span><span class="w"> </span>
+<span class="w">    </span><span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgSlack&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">s</span><span class="o">:</span><span class="w"> </span><span class="mf">.7</span><span class="p">,</span><span class="w"> </span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="mf">75</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="mf">2783</span><span class="w"> </span><span class="p">},</span><span class="w"> </span>
+<span class="w">    </span><span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgSpotify&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">s</span><span class="o">:</span><span class="w"> </span><span class="mf">.7</span><span class="p">,</span><span class="w"> </span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="mf">118</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="mf">1519</span><span class="w"> </span><span class="p">},</span><span class="w"> </span>
+<span class="w">    </span><span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgSquarespace&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">s</span><span class="o">:</span><span class="w"> </span><span class="mf">.7</span><span class="p">,</span><span class="w"> </span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="mf">233</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="mf">1071</span><span class="w"> </span><span class="p">},</span><span class="w"> </span>
+<span class="w">    </span><span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgTarget&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">s</span><span class="o">:</span><span class="w"> </span><span class="mf">.7</span><span class="p">,</span><span class="w"> </span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="mf">148</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="mf">1773</span><span class="w"> </span><span class="p">},</span><span class="w"> </span>
+<span class="w">    </span><span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgTed&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">s</span><span class="o">:</span><span class="w"> </span><span class="mf">.7</span><span class="p">,</span><span class="w"> </span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="mf">385</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="mf">2098</span><span class="w"> </span><span class="p">},</span><span class="w"> </span>
+<span class="w">    </span><span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgTheGuardian&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">s</span><span class="o">:</span><span class="w"> </span><span class="mf">.7</span><span class="p">,</span><span class="w"> </span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="mf">244</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="mf">2423</span><span class="w"> </span><span class="p">},</span><span class="w"> </span>
+<span class="w">    </span><span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgTwitch&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">s</span><span class="o">:</span><span class="w"> </span><span class="mf">.7</span><span class="p">,</span><span class="w"> </span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="mf">385</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="mf">901</span><span class="w"> </span><span class="p">},</span><span class="w"> </span>
+<span class="w">    </span><span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgUber&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">s</span><span class="o">:</span><span class="w"> </span><span class="mf">.7</span><span class="p">,</span><span class="w"> </span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="mf">111</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="mf">624</span><span class="w"> </span><span class="p">},</span><span class="w"> </span>
+<span class="w">    </span><span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgWeTransfer&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">s</span><span class="o">:</span><span class="w"> </span><span class="mf">.7</span><span class="p">,</span><span class="w"> </span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="mf">103</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="mf">145</span><span class="w"> </span><span class="p">},</span><span class="w"> </span>
+<span class="w">    </span><span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgWish&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">s</span><span class="o">:</span><span class="w"> </span><span class="mf">.7</span><span class="p">,</span><span class="w"> </span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="mf">367</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="mf">413</span><span class="w"> </span><span class="p">},</span><span class="w"> </span>
+<span class="w">    </span><span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgXero&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">s</span><span class="o">:</span><span class="w"> </span><span class="mf">.7</span><span class="p">,</span><span class="w"> </span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="mf">251</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="mf">2805</span><span class="w"> </span><span class="p">},</span><span class="w"> </span>
+<span class="w">    </span><span class="p">{</span><span class="nx">cssClass</span><span class="o">:</span><span class="s1">&#39;logo-imgYelp&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">s</span><span class="o">:</span><span class="w"> </span><span class="mf">.7</span><span class="p">,</span><span class="w"> </span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="mf">75</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="mf">1990</span><span class="w"> </span><span class="p">}</span>
+<span class="p">];</span>
+
+<span class="kd">class</span><span class="w"> </span><span class="nx">Bubble</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kr">constructor</span><span class="p">(</span><span class="nx">index</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="nx">cssClass</span><span class="p">,</span><span class="w"> </span><span class="nx">x</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="p">,</span><span class="w"> </span><span class="nx">s</span><span class="o">=</span><span class="mf">.9</span><span class="p">}){</span>
+<span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="nx">index</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">index</span><span class="p">;</span>
+<span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="nx">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">x</span><span class="p">;</span>
+<span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="nx">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">y</span><span class="p">;</span>
+<span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="nx">scale</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">s</span><span class="p">;</span>
+<span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="nx">cssClass</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">cssClass</span><span class="p">;</span>
+
+<span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="nx">el</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">document</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s2">&quot;div&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="nx">el</span><span class="p">.</span><span class="nx">className</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`stripe-bubble </span><span class="si">${</span><span class="k">this</span><span class="p">.</span><span class="nx">cssClass</span><span class="si">}</span><span class="sb">`</span><span class="p">;</span>
+
+<span class="w">        </span><span class="nx">marqueeEl</span><span class="p">.</span><span class="nx">appendChild</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">el</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="nx">update</span><span class="p">(){}</span>
+<span class="p">}</span>
+
+<span class="kd">class</span><span class="w"> </span><span class="nx">BubbleMarquee</span><span class="p">{</span>
+<span class="w">    </span><span class="kr">constructor</span><span class="p">(</span><span class="nx">settings</span><span class="p">){</span>
+<span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="nx">bubbles</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[];</span>
+
+<span class="w">        </span><span class="nx">settings</span><span class="p">.</span><span class="nx">forEach</span><span class="p">((</span><span class="nx">setting</span><span class="p">,</span><span class="w"> </span><span class="nx">index</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;{</span>
+<span class="w">            </span><span class="k">this</span><span class="p">.</span><span class="nx">bubbles</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="ow">new</span><span class="w"> </span><span class="nx">Bubble</span><span class="p">(</span><span class="nx">index</span><span class="p">,</span><span class="w"> </span><span class="nx">setting</span><span class="p">));</span>
+<span class="w">        </span><span class="p">});</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="nx">update</span><span class="p">(){}</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<p>Okay, now off to animating the bubbles!</p>
+
+<h2>Step 4: Animation</h2>
+
+<p>You could use absolute positioning properties like <mark>top</mark> and <mark>left</mark> but it'd be really expensive in terms of calculations, instead of that, you could use <mark>transform</mark> to move the elements.</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">this</span><span class="p">.</span><span class="nx">el</span><span class="p">.</span><span class="nx">style</span><span class="p">.</span><span class="nx">transform</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`translate(</span><span class="si">${</span><span class="k">this</span><span class="p">.</span><span class="nx">x</span><span class="si">}</span><span class="sb">px, </span><span class="si">${</span><span class="k">this</span><span class="p">.</span><span class="nx">y</span><span class="si">}</span><span class="sb">px) scale(</span><span class="si">${</span><span class="k">this</span><span class="p">.</span><span class="nx">scale</span><span class="si">}</span><span class="sb">)`</span><span class="p">;</span>
+</code></pre>
+</div>
+
+<p>As for the animation, you could use <mark>setInterval</mark> but don't do that, stop here and read about <a href="https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame">requestAnimationFrame</a>.</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="kr">constructor</span><span class="p">(</span><span class="nx">settings</span><span class="p">){</span>
+<span class="w">    </span><span class="k">this</span><span class="p">.</span><span class="nx">bubbles</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[];</span>
+
+<span class="w">    </span><span class="nx">settings</span><span class="p">.</span><span class="nx">forEach</span><span class="p">((</span><span class="nx">setting</span><span class="p">,</span><span class="w"> </span><span class="nx">index</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;{</span>
+<span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="nx">bubbles</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="ow">new</span><span class="w"> </span><span class="nx">Bubble</span><span class="p">(</span><span class="nx">index</span><span class="p">,</span><span class="w"> </span><span class="nx">setting</span><span class="p">));</span>
+<span class="w">    </span><span class="p">});</span>
+
+<span class="w">    </span><span class="nx">requestAnimationFrame</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">update</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">));</span>
+<span class="p">}</span>
+
+<span class="nx">update</span><span class="p">(){</span>
+<span class="w">    </span><span class="k">this</span><span class="p">.</span><span class="nx">bubbles</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="nx">bubble</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">bubble</span><span class="p">.</span><span class="nx">update</span><span class="p">());</span>
+<span class="w">    </span><span class="k">this</span><span class="p">.</span><span class="nx">raf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">requestAnimationFrame</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">update</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">));</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<p>Alright, you've done it! It's animating and looks cool but hey, did you notice that there animation doesn't look stale but is more organic-like? That's because they have added some random movement to each bubble.</p>
+
+<p>I took another peek at their code, I found out that they were using <a href="https://en.wikipedia.org/wiki/Perlin_noise">Perlin noise</a> to smoothen the animation movements. Unlike, <mark>Math.random()</mark>, I got to know that it's an algorithm used to generate a sequence of randomness that has some order, which helps create a smooth, organic movement.</p>
+
+<p>I didn't implement the algorithm instead I made use of an existing <a href="https://github.com/josephg/noisejs">implementation</a> written by <a href="https://github.com/josephg">Seph Gentle</a> found on GitHub.</p>
+
+<p>This is how your <mark>update()</mark> method should look like after adding the Perlin Noise:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nx">update</span><span class="p">(){</span>
+<span class="w">    </span><span class="k">this</span><span class="p">.</span><span class="nx">noiseSeedX</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="nx">noise_speed</span><span class="p">;</span>
+<span class="w">    </span><span class="k">this</span><span class="p">.</span><span class="nx">noiseSeedY</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="nx">noise_speed</span><span class="p">;</span>
+
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">randomXPos</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">noise</span><span class="p">.</span><span class="nx">simplex2</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">noiseSeedX</span><span class="p">,</span><span class="w"> </span><span class="mf">0</span><span class="p">);</span>
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">randomYPos</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">noise</span><span class="p">.</span><span class="nx">simplex2</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">noiseSeedY</span><span class="p">,</span><span class="w"> </span><span class="mf">0</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">this</span><span class="p">.</span><span class="nx">y</span><span class="w"> </span><span class="o">-=</span><span class="w"> </span><span class="nx">scrollingSpeed</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">this</span><span class="p">.</span><span class="nx">xNoisePos</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">this</span><span class="p">.</span><span class="nx">x</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="p">(</span><span class="nx">randomXPos</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">noise_amnt</span><span class="p">);</span><span class="w"> </span>
+<span class="w">    </span><span class="k">this</span><span class="p">.</span><span class="nx">yNoisePos</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">this</span><span class="p">.</span><span class="nx">y</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="p">(</span><span class="nx">randomYPos</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">noise_amnt</span><span class="p">);</span><span class="w"> </span>
+
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">y</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="o">-</span><span class="mf">500</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="nx">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">canvas_width</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">this</span><span class="p">.</span><span class="nx">el</span><span class="p">.</span><span class="nx">style</span><span class="p">.</span><span class="nx">transform</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`translate(</span><span class="si">${</span><span class="k">this</span><span class="p">.</span><span class="nx">xNoisePos</span><span class="si">}</span><span class="sb">px, </span><span class="si">${</span><span class="k">this</span><span class="p">.</span><span class="nx">yNoisePos</span><span class="si">}</span><span class="sb">px) scale(</span><span class="si">${</span><span class="k">this</span><span class="p">.</span><span class="nx">scale</span><span class="si">}</span><span class="sb">)`</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<p>After adding that, you have finally achieved what you wanted! Oh, you can find the source code for this project on my <a href="https://github.com/MegaColorBoy/BlogProjects/tree/master/stripe-bubbles">GitHub</a> repository.</p>
+
+<h2>Conclusion</h2>
+
+<p>I hope you enjoyed reading this blog article and learnt something new. If you have questions, please send me your <a href="mailto:megacolorboy@gmail.com">thoughts</a> and I would be happy to help you out!</p>
+
+<p>Thank you for reading!</p>
+
+<p>Stay tuned for more!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>April 6th, 2019</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/user-interface/">
+					User Interface
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/user-experience/">
+					User Experience
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/writings/posts/poker-hand-analyser-in-python">Poker Hand Analyser in Python</a></h1>
+		<p class="description">An algorithm that parses a five-card poker hand and determines it's rank.</p>
+	</div>
+	<div class="article-body">
+		<p><link href="/static/css/playing_cards.css" rel="stylesheet" type="text/css"/></p>
+
+<p>I've never played Poker and don't think I ever will because I'm not a fan of gambling and placing bets. However, I ran into an interesting problem on <a href="https://projecteuler.net/problem=54">Project Euler</a> that led me to write a poker hand analyser to determine the rank of each hand.</p>
+
+<p>Before writing this article, I didn't know anything about cards or Poker, I had to do some research on Wikipedia about it. So, forgive me if there's any information that's not accurate in the article.</p>
+
+<h2>Poker Hands</h2>
+
+<p>From what I had understood, a <strong><em>hand</em></strong> is a set of five cards and each card has a rank, which is in the order shown below:</p>
+
+<div class="codehilite">
+<pre><span></span><code>Cards are valued in the order of lowest to highest (Left to Right):
+2, 3, 4, 5, 6, 7, 8, 9, 10, Jack, Queen, King, Ace
+</code></pre>
+</div>
+
+<p>Based on the card pattern formed in each hand, the ranking category is determined and it's ranked within it's category based on the ranks of it's cards.</p>
+
+<h2>Hand Ranking Categories</h2>
+
+<p>In Poker, there are about 10 ranking categories from lowest to highest:</p>
+
+<ul>
+<li><a href="#highcard">High Card</a></li>
+<li><a href="#onepair">One Pair</a></li>
+<li><a href="#twopairs">Two Pairs</a></li>
+<li><a href="#threeofakind">Three of a Kind</a></li>
+<li><a href="#straight">Straight</a></li>
+<li><a href="#flush">Flush</a></li>
+<li><a href="#fullhouse">Full House</a></li>
+<li><a href="#fourofakind">Four of a Kind</a></li>
+<li><a href="#straightflush">Straight Flush</a></li>
+<li><a href="#royalflush">Royal Flush</a></li>
+</ul>
+
+<p>Before diving into the code snippets, I wrote a library named <a href="https://github.com/megacolorboy/ProjectEuler/blob/master/poker_lib.py">poker_lib.py</a> which contains all the methods used in the code snippets.</p>
+
+<p>To make things simple, I created a class named <strong><em>Card</em></strong> that has two attributes, <strong><em>face</em></strong> and <strong><em>suit</em></strong>, with <strong><em>namedtuple()</em></strong> as it's datatype.</p>
+
+<h3><a id="highcard"></a> High Card</h3>
+
+<figure style="text-align: left;">
+    <div class="playing_card king_diamonds"></div>
+    <div class="playing_card queen_diamonds"></div>
+    <div class="playing_card seven_spades"></div>
+    <div class="playing_card four_spades"></div>
+    <div class="playing_card three_hearts"></div>
+</figure>
+
+<p>This hand contains no pairs and it doesn't fall into any other category.</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">def</span> <span class="nf">high_card</span><span class="p">(</span><span class="n">hand</span><span class="p">):</span>
+    <span class="c1"># collect all faces from each card</span>
+    <span class="n">allfaces</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span><span class="p">,</span><span class="n">s</span> <span class="ow">in</span> <span class="n">hand</span><span class="p">]</span>
+
+    <span class="c1">#sort the faces and show the highest card</span>
+    <span class="k">return</span> <span class="s2">&quot;high_card&quot;</span><span class="p">,</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">allfaces</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">f</span><span class="p">:</span> <span class="n">allfaces</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">f</span><span class="p">),</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+</code></pre>
+</div>
+
+<h3><a id="onepair"></a> One Pair</h3>
+
+<figure style="text-align: left;">
+    <div class="playing_card ten_spades"></div>
+    <div class="playing_card ten_hearts"></div>
+    <div class="playing_card eight_spades"></div>
+    <div class="playing_card seven_hearts"></div>
+    <div class="playing_card four_clubs"></div>
+</figure>
+
+<p>This hand contains two cards of one rank and three cards of three other ranks.</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">def</span> <span class="nf">one_pair</span><span class="p">(</span><span class="n">hand</span><span class="p">):</span>
+    <span class="n">allfaces</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span><span class="p">,</span><span class="n">s</span> <span class="ow">in</span> <span class="n">hand</span><span class="p">]</span>
+    <span class="n">allftypes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">allfaces</span><span class="p">)</span>
+
+    <span class="c1"># collect pairs</span>
+    <span class="n">pairs</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">allftypes</span> <span class="k">if</span> <span class="n">allfaces</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">]</span>
+
+    <span class="c1"># if there&#39;s more than one pair</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">pairs</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="n">allftypes</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">pairs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">return</span> <span class="s1">&#39;one-pair&#39;</span><span class="p">,</span> <span class="n">pairs</span> <span class="o">+</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">allftypes</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">f</span><span class="p">:</span> <span class="n">face</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">f</span><span class="p">),</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<h3><a id="twopairs"></a> Two Pairs</h3>
+
+<figure style="text-align: left;">
+    <div class="playing_card jack_hearts"></div>
+    <div class="playing_card jack_spades"></div>
+    <div class="playing_card three_clubs"></div>
+    <div class="playing_card three_spades"></div>
+    <div class="playing_card two_hearts"></div>
+</figure>
+
+<p>This hand contains two cards of one rank, two cards of a second rank and one card of a third rank.</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">def</span> <span class="nf">two_pair</span><span class="p">(</span><span class="n">hand</span><span class="p">):</span>
+    <span class="n">allfaces</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span><span class="p">,</span><span class="n">s</span> <span class="ow">in</span> <span class="n">hand</span><span class="p">]</span>
+    <span class="n">allftypes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">allfaces</span><span class="p">)</span>
+
+    <span class="c1"># collect pairs</span>
+    <span class="n">pairs</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">allftypes</span> <span class="k">if</span> <span class="n">allfaces</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">]</span>
+
+    <span class="c1"># if there are more than two pairs</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">pairs</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="n">p1</span><span class="p">,</span> <span class="n">p2</span> <span class="o">=</span> <span class="n">pairs</span>
+    <span class="c1"># get the difference using sets</span>
+    <span class="n">other_cards</span> <span class="o">=</span> <span class="p">[(</span><span class="n">allftypes</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">pairs</span><span class="p">))</span><span class="o">.</span><span class="n">pop</span><span class="p">()]</span>
+    <span class="k">return</span> <span class="s1">&#39;two-pair&#39;</span><span class="p">,</span> <span class="n">pairs</span> <span class="o">+</span> <span class="n">other_cards</span> <span class="k">if</span><span class="p">(</span><span class="n">face</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">p1</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">face</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">p2</span><span class="p">))</span> <span class="k">else</span> <span class="n">pairs</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">other_cards</span>
+</code></pre>
+</div>
+
+<h3><a id="threeofakind"></a> Three of a Kind</h3>
+
+<figure style="text-align: left;">
+    <div class="playing_card queen_clubs"></div>
+    <div class="playing_card queen_spades"></div>
+    <div class="playing_card queen_hearts"></div>
+    <div class="playing_card nine_hearts"></div>
+    <div class="playing_card two_spades"></div>
+</figure>
+
+<p>This hand, also known as trips or a set, contains three cards of one rank and two cards of two other ranks.</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">def</span> <span class="nf">three_of_a_kind</span><span class="p">(</span><span class="n">hand</span><span class="p">):</span>
+    <span class="n">allfaces</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span><span class="p">,</span><span class="n">s</span> <span class="ow">in</span> <span class="n">hand</span><span class="p">]</span>
+
+    <span class="n">uniqueRanks</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">allfaces</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">uniqueRanks</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">uniqueRanks</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">allfaces</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">uniqueRanks</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            <span class="k">return</span> <span class="s2">&quot;three-of-a-kind&quot;</span><span class="p">,</span> <span class="n">f</span>
+
+    <span class="k">return</span> <span class="kc">False</span><span class="p">;</span>
+</code></pre>
+</div>
+
+<h3><a id="straight"></a> Straight</h3>
+
+<figure style="text-align: left;">
+    <div class="playing_card ten_diamonds"></div>
+    <div class="playing_card nine_spades"></div>
+    <div class="playing_card eight_hearts"></div>
+    <div class="playing_card seven_diamonds"></div>
+    <div class="playing_card six_clubs"></div>
+</figure>
+
+<p>This hand contains five cards arranged in a sequential order but not all of them have same suits.</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">def</span> <span class="nf">straight</span><span class="p">(</span><span class="n">hand</span><span class="p">):</span>
+    <span class="n">ordered</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">hand</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">card</span><span class="p">:</span> <span class="p">(</span><span class="n">faces</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">card</span><span class="o">.</span><span class="n">face</span><span class="p">),</span> <span class="n">card</span><span class="o">.</span><span class="n">suit</span><span class="p">))</span>
+    <span class="k">if</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">card</span><span class="o">.</span><span class="n">face</span> <span class="k">for</span> <span class="n">card</span> <span class="ow">in</span> <span class="n">ordered</span><span class="p">)</span> <span class="ow">in</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">face</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;straight&#39;</span><span class="p">,</span> <span class="n">ordered</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">face</span>
+    <span class="k">return</span> <span class="kc">False</span><span class="p">;</span>
+</code></pre>
+</div>
+
+<h3><a id="flush"></a> Flush</h3>
+
+<figure style="text-align: left;">
+    <div class="playing_card jack_diamonds"></div>
+    <div class="playing_card nine_diamonds"></div>
+    <div class="playing_card eight_diamonds"></div>
+    <div class="playing_card four_diamonds"></div>
+    <div class="playing_card three_diamonds"></div>
+</figure>
+
+<p>This hand contains five cards of the same suit and not necessarily arranged in sequential order.</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">def</span> <span class="nf">flush</span><span class="p">(</span><span class="n">hand</span><span class="p">):</span>
+    <span class="n">allfaces</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span><span class="p">,</span><span class="n">s</span> <span class="ow">in</span> <span class="n">hand</span><span class="p">]</span>
+
+    <span class="n">first_card</span> <span class="o">=</span> <span class="n">hand</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">other_cards</span> <span class="o">=</span> <span class="n">hand</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+
+    <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">first_card</span><span class="o">.</span><span class="n">suit</span> <span class="o">==</span> <span class="n">card</span><span class="o">.</span><span class="n">suit</span> <span class="k">for</span> <span class="n">card</span> <span class="ow">in</span> <span class="n">other_cards</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;flush&#39;</span><span class="p">,</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">allfaces</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">f</span><span class="p">:</span> <span class="n">face</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">f</span><span class="p">),</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="kc">False</span>
+</code></pre>
+</div>
+
+<h3><a id="fullhouse"></a> Full House</h3>
+
+<figure style="text-align: left;">
+    <div class="playing_card six_spades"></div>
+    <div class="playing_card six_hearts"></div>
+    <div class="playing_card six_diamonds"></div>
+    <div class="playing_card king_clubs"></div>
+    <div class="playing_card king_hearts"></div>
+</figure>
+
+<p>This hand, also known as full boat or a boat, contains three cards of one rank and two cards of another rank.</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">def</span> <span class="nf">full_house</span><span class="p">(</span><span class="n">hand</span><span class="p">):</span>
+    <span class="n">allfaces</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span><span class="p">,</span><span class="n">s</span> <span class="ow">in</span> <span class="n">hand</span><span class="p">]</span>
+
+    <span class="n">rankFrequency</span> <span class="o">=</span> <span class="n">pe_lib</span><span class="o">.</span><span class="n">character_frequency</span><span class="p">(</span><span class="n">allfaces</span><span class="p">)</span>
+
+    <span class="c1"># if there are 2 types of ranks and there&#39;s a card with 1 pair and 3 of a kind</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">rankFrequency</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="p">(</span><span class="n">rankFrequency</span><span class="o">.</span><span class="n">values</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">rankFrequency</span><span class="o">.</span><span class="n">values</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">3</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;full-house&#39;</span>
+
+    <span class="k">return</span> <span class="kc">False</span>
+</code></pre>
+</div>
+
+<h3><a id="fourofakind"></a> Four of a Kind</h3>
+
+<figure style="text-align: left;">
+    <div class="playing_card five_clubs"></div>
+    <div class="playing_card five_spades"></div>
+    <div class="playing_card five_diamonds"></div>
+    <div class="playing_card five_hearts"></div>
+    <div class="playing_card two_diamonds"></div>
+</figure>
+
+<p>This hand, also known as quads, contains four cards of one rank and one card of another rank.</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">def</span> <span class="nf">four_of_a_kind</span><span class="p">(</span><span class="n">hand</span><span class="p">):</span>
+    <span class="n">allfaces</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span><span class="p">,</span><span class="n">s</span> <span class="ow">in</span> <span class="n">hand</span><span class="p">]</span>
+
+    <span class="c1"># create a unique set of ranks</span>
+    <span class="n">uniqueRanks</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">allfaces</span><span class="p">)</span>
+
+    <span class="c1"># if there are more than 2 ranks, it&#39;s not four of a kind</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">uniqueRanks</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">uniqueRanks</span><span class="p">:</span>
+        <span class="c1"># if there are 4 faces, it is four of a kind</span>
+        <span class="k">if</span> <span class="n">allfaces</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="n">uniqueRanks</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            <span class="k">return</span> <span class="s2">&quot;four-of-a-kind&quot;</span><span class="p">,</span> <span class="n">f</span>
+
+    <span class="k">return</span> <span class="kc">False</span>
+</code></pre>
+</div>
+
+<h3><a id="straightflush"></a> Straight Flush</h3>
+
+<figure style="text-align: left;">
+    <div class="playing_card jack_clubs"></div>
+    <div class="playing_card ten_clubs"></div>
+    <div class="playing_card nine_clubs"></div>
+    <div class="playing_card eight_clubs"></div>
+    <div class="playing_card seven_clubs"></div>
+</figure>
+
+<p>This hand contains five cards arranged in a sequential order with all cards having the same suit.</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">def</span> <span class="nf">straight_flush</span><span class="p">(</span><span class="n">hand</span><span class="p">):</span>
+    <span class="c1"># sort the cards based on the face rank of each card</span>
+    <span class="n">ordered</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">hand</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">card</span><span class="p">:</span> <span class="p">(</span><span class="n">faces</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">card</span><span class="o">.</span><span class="n">face</span><span class="p">),</span> <span class="n">card</span><span class="o">.</span><span class="n">suit</span><span class="p">))</span>
+
+    <span class="n">first_card</span> <span class="o">=</span> <span class="n">ordered</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">other_cards</span> <span class="o">=</span> <span class="n">ordered</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+
+    <span class="c1"># check if all are of the same suit</span>
+    <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">first_card</span><span class="o">.</span><span class="n">suit</span> <span class="o">==</span> <span class="n">card</span><span class="o">.</span><span class="n">suit</span> <span class="k">for</span> <span class="n">card</span> <span class="ow">in</span> <span class="n">other_cards</span><span class="p">):</span>
+        <span class="c1"># check if they are in sequential order</span>
+        <span class="c1"># compare the ordered faces substring with the face list (which is converted to string)</span>
+        <span class="k">if</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">card</span><span class="o">.</span><span class="n">face</span> <span class="k">for</span> <span class="n">card</span> <span class="ow">in</span> <span class="n">ordered</span><span class="p">)</span> <span class="ow">in</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">face</span><span class="p">):</span>
+            <span class="k">return</span> <span class="s1">&#39;straight-flush&#39;</span><span class="p">,</span> <span class="n">ordered</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">face</span>
+    <span class="k">return</span> <span class="kc">False</span>
+</code></pre>
+</div>
+
+<h3><a id="royalflush"></a> Royal Flush</h3>
+
+<figure style="text-align: left;">
+    <div class="playing_card ten_hearts"></div>
+    <div class="playing_card jack_hearts"></div>
+    <div class="playing_card queen_hearts"></div>
+    <div class="playing_card king_hearts"></div>
+    <div class="playing_card ace_hearts"></div>
+</figure>
+
+<p>This hand contains the <strong><em>royal</em></strong> ranks in sequential order in the same suit.</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">def</span> <span class="nf">royal_flush</span><span class="p">(</span><span class="n">hand</span><span class="p">):</span>
+    <span class="n">royalface</span> <span class="o">=</span> <span class="s2">&quot;TJQKA&quot;</span>
+    <span class="c1"># sort the cards based on the face rank of each card</span>
+    <span class="n">ordered</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">hand</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">card</span><span class="p">:</span> <span class="p">(</span><span class="n">faces</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">card</span><span class="o">.</span><span class="n">face</span><span class="p">),</span> <span class="n">card</span><span class="o">.</span><span class="n">suit</span><span class="p">))</span>
+
+    <span class="n">first_card</span> <span class="o">=</span> <span class="n">ordered</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">other_cards</span> <span class="o">=</span> <span class="n">ordered</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+
+    <span class="c1"># check if all are of the same suit</span>
+    <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">first_card</span><span class="o">.</span><span class="n">suit</span> <span class="o">==</span> <span class="n">card</span><span class="o">.</span><span class="n">suit</span> <span class="k">for</span> <span class="n">card</span> <span class="ow">in</span> <span class="n">other_cards</span><span class="p">):</span>
+        <span class="c1"># check if they are in sequential order</span>
+        <span class="c1"># compare the ordered faces substring with the face list (which is converted to string)</span>
+        <span class="k">if</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">card</span><span class="o">.</span><span class="n">face</span> <span class="k">for</span> <span class="n">card</span> <span class="ow">in</span> <span class="n">ordered</span><span class="p">)</span> <span class="ow">in</span> <span class="n">royalface</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;royal-flush&#39;</span><span class="p">,</span> <span class="n">ordered</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">face</span>
+    <span class="k">return</span> <span class="kc">False</span>
+</code></pre>
+</div>
+
+<h2>Conclusion</h2>
+
+<p>It was a fun project to work on and I learnt new styles of array and string manipulation techniques using Python.</p>
+
+<p>Inspired by this, I'm planning to create an interactive version of this project using Javascript and talk about it on another article.</p>
+
+<p>The code for this program can be found in my <a href="https://github.com/MegaColorBoy/ProjectEuler">GitHub repository</a>.</p>
+
+<p>Hope you liked reading this article!</p>
+
+<p>Stay tuned for more!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>March 30th, 2019</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/algorithms/">
+					Algorithms
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/writings/posts/project-euler-solutions">Project Euler solutions</a></h1>
 		<p class="description">A collection of Project Euler solutions</p>
 	</div>
@@ -950,241 +1589,6 @@ questions from the exercises section of this chapter.</p>
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/built-a-2048-clone-in-15-minutes">Built a 2048 clone in 15 minutes</a></h1>
-		<p class="description">An implementation of the famous 2048 game using JavaScript and HTML5 Canvas.</p>
-	</div>
-	<div class="article-body">
-		<script defer src="/static/projects/2048/script.js"></script>
-
-<figure>
-    <canvas id="game-grid" width="500" height="500"></canvas>
-</figure>
-
-<p>Before you read more about this article, play with the above game. You
-can move the tiles around using your <kbd>&uarr;</kbd><kbd>&larr;</kbd><kbd>&darr;</kbd><kbd>&rarr;</kbd>
-or <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> keys. The rule is simple, when two tiles with the same
-number touch, they merge into one tile. Press the <kbd>R</kbd> key to restart
-the game.</p>
-
-<p>Please make sure that you have JavaScript enabled and running in your
-browser, otherwise you won't be able to play this game. Oh, just a
-little heads up, it might get a little buggy and freeze your browser
-window, so keep calm and play patiently.</p>
-
-<p>As for the source code, you can view it in my <a href="https://www.github.com/megacolorboy">GitHub
-repository</a> or can be found near
-the end of this article.</p>
-
-<h2>Background</h2>
-
-<p>I was always fond of puzzle games and <strong>2048</strong> is one of them. The first
-time I got to play this game was back in 2014 and I would play it on my
-iPhone during my train commute to university.</p>
-
-<p>Yesterday, I thought of building a clone and turns out it wasn't as hard
-as I had expected it to be, in fact, I was able to build a functional
-version in just 15 minutes.</p>
-
-<h2>What are the game mechanics?</h2>
-
-<p>The sliding-puzzle game is played on a <strong>four-by-four</strong> grid with
-numbered tiles that is moved by the player in all four directions.</p>
-
-<p>In every move, a new tile would randomly appear in an empty spot in the
-grid with a value that consists of <strong>2</strong> or <strong>4</strong>. These tiles are moved
-towards any direction as far as it could and if there are two tiles that
-collide with the same value, they merge into one tile and as a result,
-the score is updated.</p>
-
-<p>The player wins the game once the tile of <strong>2048</strong> appears on the grid,
-thus is the name of the game.</p>
-
-<h2>Source code</h2>
-
-<script src="https://gist.github.com/MegaColorBoy/fcce2a2029a1b0352884cbbc1f059cb1.js"></script>
-
-<p>Well then, that's all for the game. Just like the previous ones, I had
-fun building this sliding-puzzle game. I'm looking forward to building
-more puzzle games and talking about them in my blog.</p>
-
-<p>Hope you guys liked reading this article and have fun playing the game
-as many times as you like!</p>
-
-<p>Stay tuned for more!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>August 21st, 2018</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/personal-challenge/">
-					Personal Challenge
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/can-we-eliminate-traffic-congestion-with-the-help-of-computer-vision">Can we eliminate traffic congestion with the help of Computer Vision?</a></h1>
-		<p class="description">Writing out my thoughts on eradicating traffic congestion in highly populated cities.</p>
-	</div>
-	<div class="article-body">
-		<p>Whether it's being implemented or not, I have been thinking on how we
-could use <strong><em>Computer Vision</em></strong> to solve traffic congestion.</p>
-
-<p>Since, I live in the <strong><em>United Arab Emirates</em></strong>, I have always observed
-that people who commute from <strong><em>Sharjah</em></strong> to <strong><em>Dubai</em></strong> and vice-versa
-face a lot of traffic jams despite all the new roads and toll-gates
-(yes, I don't seem to understand how does that solve the problem).</p>
-
-<figure>
-    <img src="https://images.khaleejtimes.com/storyimage/KT/20160203/ARTICLE/302039854/AR/0/AR-302039854.jpg&MaxW=780&imageVersion=16by9&NCS_modified=20160203204300"/>
-    <figcaption>
-        Traffic in Al Ittihad Highway.
-    </figcaption>
-</figure>
-
-<p>Well, the problem is not only faced in this country but many countries
-such as China, Indonesia and so on.</p>
-
-<h2>What are the causes of traffic congestion?</h2>
-
-<p>Anyways, I jotted down some facts to consider what causes traffic
-congestion in the first place:</p>
-
-<ul>
-<li>Tail-gating</li>
-<li>Inconsistent travel speeds</li>
-<li>Uneven vehicular distances</li>
-<li>Spontaneous accidents and road rages</li>
-<li>Changing from one lane to another</li>
-<li>Increase in car population</li>
-<li>Peak hours i.e. people going to work and leaving from work</li>
-</ul>
-
-<p>I'm sure that there could be more but these are the facts that I can
-come up with for now.</p>
-
-<h2>How can Computer Vision solve this problem?</h2>
-
-<p><a href="https://en.wikipedia.org/wiki/Computer_vision">Computer Vision</a> is a
-field that intersects with multiple areas of technologies in which it
-aims to develop an understanding of objects by extracting information
-from various digital media sources like images and videos and automate
-those tasks that a normal human would do in their daily lives.</p>
-
-<figure>
-    <img src="https://www.onlinebooksreview.com/uploads/blog_images/2018/04/16_computer_vision.jpg"/>
-    <figcaption>
-        Visualization of Computer Vision.
-    </figcaption>
-</figure>
-
-<p>There are various types of problems that Computer Vision algorithms are
-able to solve but not limited to:</p>
-
-<ul>
-<li>Object Recognition or Object Classification</li>
-<li>Identification of Objects</li>
-<li>Object Detection</li>
-<li>Analysis of Motion</li>
-</ul>
-
-<p>Now, it's not only about implementing these <strong><em>CNN</em></strong>-based
-(<a href="https://en.wikipedia.org/wiki/Convolutional_neural_network">Convolutional Neural
-Network</a>)
-algorithms but you also need hardware to be able to compute and process
-data. </p>
-
-<h2>How would this work?</h2>
-
-<p>There are two scenarios that I had thought while writing this article
-and I hope that I'm able to translate my thoughts into accurate
-examples.</p>
-
-<p>Let's pretend we have four car drivers: Alex, Bob, Charlie and Dylan.</p>
-
-<h3>Speed-Distance equilibrium</h3>
-
-<p>Alex, Bob and Charlie are driving on the same lane. Alex hits the brake
-slowly to shift to another lane, the sensors of Bob's car detects a
-change in speed in Alex's car, Bob's car adjusts it's speed to match
-Alex's current speed based on the variables of distance and travel time,
-Charlie's car adapts the changes of Bob's car and thus, it's a chain
-reaction.</p>
-
-<h3>Shifting from one lane to another</h3>
-
-<p>Alex is driving in Lane A and Dylan is driving in Lane B. Alex wants to
-shift to Lane B, so he switches on the indicator and Dylan's car sensors
-identify that Alex's car wants to change lanes. So Dylan's car slows
-down and Alex is able to shift lanes with ease. I thought of it to be
-some sort of a <strong><em>"elastic"</em></strong> effect when this occurs.</p>
-
-<p>Well, you might argue that some cars have a system called <strong><em>"Cruise
-Control"</em></strong> but here's the part that I'm trying to pitch, as I had
-mentioned above, I just wanted to integrate sensors to the front and
-rear sides of a vehicle, which means that these sensors can be
-integrated in almost any vehicle.</p>
-
-<h2>How is this going to be helpful?</h2>
-
-<p>For starters, traffic congestion will gradually reduce, if not, be
-eliminated but there are other beneficial factors to it, such as:</p>
-
-<ul>
-<li>Less fuel consumption</li>
-<li>Less time is required to reach a destination</li>
-<li>No tail-gating</li>
-<li>Could prevent major road accidents</li>
-</ul>
-
-<p>However, if the sensors fail to work, the car driver will still be safe
-because it's surrounded by other cars that have the sensors. This made
-me think of another question, does that mean do all cars require sensors
-or only a few? I find it quite intriguing.</p>
-
-<h2>Conclusion</h2>
-
-<p>Although, these sensors might require a vehicle to have some intelligent
-capabilities, it may not require the type of network found in an
-autonomous vehicle.</p>
-
-<figure>
-    <img src="https://i.pinimg.com/originals/b4/7c/00/b47c00d89eb8527be3f47578958f691e.gif"/>
-</figure>
-
-<p>The idea of placing sensors in the front and rear of a vehicle can
-optimize the flow of traffic and thus, it might help eliminate traffic
-congestion.</p>
-
-<p>Hope you liked reading this article!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>August 19th, 2018</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/essay/">
-					Essay
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -1265,7 +1669,7 @@ congestion.</p>
 		<li>
 			<a href="/category/linux/">
 				Linux
-				<span class="count">21</span>
+				<span class="count">22</span>
 			</a>
 		</li>
 		
@@ -1279,7 +1683,7 @@ congestion.</p>
 		<li>
 			<a href="/category/devops/">
 				DevOps
-				<span class="count">13</span>
+				<span class="count">14</span>
 			</a>
 		</li>
 		
@@ -1333,6 +1737,13 @@ congestion.</p>
 		</li>
 		
 		<li>
+			<a href="/category/productivity/">
+				Productivity
+				<span class="count">8</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/vim/">
 				VIM
 				<span class="count">8</span>
@@ -1343,13 +1754,6 @@ congestion.</p>
 			<a href="/category/unix/">
 				UNIX
 				<span class="count">8</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/productivity/">
-				Productivity
-				<span class="count">7</span>
 			</a>
 		</li>
 		
@@ -1511,6 +1915,13 @@ congestion.</p>
 			<a href="/category/wamp/">
 				WAMP
 				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/image-manipulation/">
+				Image Manipulation
+				<span class="count">1</span>
 			</a>
 		</li>
 		

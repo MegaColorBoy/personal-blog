@@ -77,6 +77,164 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/enable-copy-paste-clipboard-in-urxvt-terminal-emulator">Enable copy-paste clipboard in URxvt Terminal Emulator</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>In my current Arch Linux installation, I decided to use a window manager called i3. It's really awesome and it comes with a really lightweight terminal emulator called <strong>urxvt</strong>. It's very minimal and I lked it but when I tried to copy-paste text from one terminal to another, I wasn't able to.</p>
+
+<p>However, thanks to the internet, I did some research and figured a way out.</p>
+
+<h2>1. Install xClip</h2>
+
+<p>First, you need to ensure that you have installed the <code>xclip</code> package, which will be used to copy-paste text in the emulator.</p>
+
+<p>Type the following command to install the package:</p>
+
+<div class="codehilite">
+<pre><span></span><code>pacman<span class="w"> </span>-S<span class="w"> </span>xclip
+</code></pre>
+</div>
+
+<h2>2. Activate Clipboard using Perl</h2>
+
+<p>Now, you have to paste these custom commands into your <code>clipboard</code> file, which is found in <code>/usr/lib/urxvt/perl</code> directory:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="c1"># paste selection from clipboard</span>
+<span class="k">sub</span><span class="w"> </span><span class="nf">paste</span><span class="w"> </span><span class="p">{</span>
+<span class="w">     </span><span class="k">my</span><span class="w"> </span><span class="p">(</span><span class="nv">$self</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">@_</span><span class="p">;</span>
+<span class="w">     </span><span class="k">my</span><span class="w"> </span><span class="nv">$content</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`/usr/bin/xclip -loop 1 -out -selection clipboard`</span><span class="w"> </span><span class="p">;</span>
+<span class="w">     </span><span class="nv">$self</span><span class="o">-&gt;</span><span class="n">tt_write</span><span class="w"> </span><span class="p">(</span><span class="nv">$content</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="c1"># copy text to clipbard on selection</span>
+<span class="k">sub</span><span class="w"> </span><span class="nf">on_sel_grab</span><span class="w"> </span><span class="p">{</span>
+<span class="w">     </span><span class="k">my</span><span class="w"> </span><span class="nv">$query</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">$_</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">selection</span><span class="p">;</span>
+<span class="w">     </span><span class="nb">open</span><span class="w"> </span><span class="p">(</span><span class="k">my</span><span class="w"> </span><span class="nv">$pipe</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;| /usr/bin/xclip -in -selection clipboard&#39;</span><span class="p">)</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="nb">die</span><span class="p">;</span>
+<span class="w">     </span><span class="k">print</span><span class="w"> </span><span class="nv">$pipe</span><span class="w"> </span><span class="nv">$query</span><span class="p">;</span>
+<span class="w">     </span><span class="nb">close</span><span class="w"> </span><span class="nv">$pipe</span><span class="p">;</span>
+<span class="w"> </span><span class="p">}</span>
+</code></pre>
+</div>
+
+<h2>3. Modify your .Xresources</h2>
+
+<p>Add these keybindings to your <code>.Xresources</code> file:</p>
+
+<div class="codehilite">
+<pre><span></span><code>URxvt.keysym.Shift-Control-V:<span class="w"> </span>perl:clipboard:paste
+URxvt.iso14755:<span class="w"> </span>False
+URxvt.perl-ext-common:<span class="w"> </span>default,clipboard
+</code></pre>
+</div>
+
+<p>After adding it, refresh your <code>.Xresources</code> settings:</p>
+
+<div class="codehilite">
+<pre><span></span><code>xrdb<span class="w"> </span>-merge<span class="w"> </span>.Xresources
+</code></pre>
+</div>
+
+<p>Reboot your terminal and try selecting some text from your terminal using your mouse and paste it using <code>Ctrl</code>+<code>Shift</code>+<code>V</code> and it should work! </p>
+
+<p>That's it! Enjoy &#x1F603;</p>
+
+	</div>
+	<div class="article-footer">
+		<time>June 20th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/configuring-audio-drivers-in-arch-Linux">Configuring audio drivers in Arch Linux</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Yesterday, I thought of testing my Arch Linux system's audio and turns out, I didn't even install it yet! &#x1F612;</p>
+
+<p>Well, thanks to <a href="https://wiki.archlinux.org">ArchWiki</a>, it was simple enough to install to make the audio work on my old laptop. Just install the following packages:</p>
+
+<div class="codehilite">
+<pre><span></span><code>pacman<span class="w"> </span>-S<span class="w"> </span>alsa-firmware<span class="w"> </span>alsa-lib<span class="w"> </span>alsa-utils
+</code></pre>
+</div>
+
+<p>Reboot the system once you're done installing the packages. Depending on your window manager, you should be able to see your sound icon being active.</p>
+
+<h2>Bonus: Bash script to control your volume from the terminal</h2>
+
+<p>In my current laptop, I still haven't mapped out the keys to control the audio volume, so I thought of writing a small method in my <code>.bashrc</code> file, so that I can control it from my terminal.</p>
+
+<p>Open your favorite text editor and Add this method in your <code>.bashrc</code> file:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="c1"># simple volume control</span>
+volume<span class="o">(){</span>
+<span class="w">    </span><span class="nv">x</span><span class="o">=</span><span class="m">5</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="nv">$1</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s1">&#39;up&#39;</span><span class="w"> </span><span class="o">]</span>
+<span class="w">    </span><span class="k">then</span>
+<span class="w">        </span>amixer<span class="w"> </span><span class="nb">set</span><span class="w"> </span>Master<span class="w"> </span><span class="nv">$x</span>%+<span class="w"> </span><span class="p">&amp;</span>&gt;<span class="w"> </span>/dev/null
+<span class="w">    </span><span class="k">elif</span><span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="nv">$1</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s1">&#39;down&#39;</span><span class="w"> </span><span class="o">]</span>
+<span class="w">    </span><span class="k">then</span>
+<span class="w">        </span>amixer<span class="w"> </span><span class="nb">set</span><span class="w"> </span>Master<span class="w"> </span><span class="nv">$x</span>%-<span class="w"> </span><span class="p">&amp;</span>&gt;<span class="w"> </span>/dev/null
+<span class="w">    </span><span class="k">elif</span><span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="nv">$1</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s1">&#39;toggle&#39;</span><span class="w"> </span><span class="o">]</span>
+<span class="w">    </span><span class="k">then</span>
+<span class="w">        </span>amixer<span class="w"> </span><span class="nb">set</span><span class="w"> </span>Master<span class="w"> </span>toggle<span class="w"> </span><span class="p">&amp;</span>&gt;<span class="w"> </span>/dev/null
+<span class="w">    </span><span class="k">fi</span>
+<span class="o">}</span>
+</code></pre>
+</div>
+
+<p>Save the file, close your edit and refresh your file by typing:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nb">source</span><span class="w"> </span>.bashrc
+</code></pre>
+</div>
+
+<p>Now, it should work when you type any of these commands:</p>
+
+<div class="codehilite">
+<pre><span></span><code>volume<span class="w"> </span>up
+volume<span class="w"> </span>down
+volume<span class="w"> </span>toggle
+</code></pre>
+</div>
+
+<p>Hope this tiny script helps you out! </p>
+
+	</div>
+	<div class="article-footer">
+		<time>June 20th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/troubleshoot-time-related-ssl-errors-on-secure-websites">Troubleshoot time-related SSL errors on secure websites</a></h1>
 		<p class="description"></p>
 	</div>
@@ -592,111 +750,6 @@ ping<span class="w"> </span>-c<span class="w"> </span><span class="m">3</span><s
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/using-default-function-parameters-in-internet-explorer">Using default function parameters in Internet Explorer</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Today, I wrote a simple method that fetches images from the database via AJAX and also, I defined an empty object as a default parameter:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="kd">function</span><span class="w"> </span><span class="nx">fetchImages</span><span class="p">(</span><span class="nx">obj</span><span class="o">=</span><span class="p">{}){</span>
-<span class="w">    </span><span class="c1">// some code here...</span>
-<span class="p">}</span>
-
-<span class="nx">fetchImages</span><span class="p">();</span>
-</code></pre>
-</div>
-
-<p>The default <code>obj</code> parameter would contain extra parameters like <code>id</code>, <code>slug</code> and <code>page</code>, which would be then used to fetch a particular group of images, else, it'll fetch a random set of images.</p>
-
-<p>This method worked fine in Google Chrome and Mozilla Firefox but not in Internet Explorer. I thought of inspecting the code and I was facing weird errors like <code>undefined</code> or <code>Expected: ')'</code> on the IE console.</p>
-
-<p>Luckily, I had compared it to the other methods that didn't have any default parameters, so I did a little research and turns out that according to <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/default_parameters">Mozilla's documentation</a>, default function parameters are proposed by the ES6 syntax and at this point, I realized that Internet Explorer <strong>doesn't support ES6 syntax</strong>. What a bummer! &#x1F612;</p>
-
-<p>However, there's a way to prevent this from happening by rewriting the method like this:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="kd">function</span><span class="w"> </span><span class="nx">fetchImages</span><span class="p">(</span><span class="nx">obj</span><span class="p">){</span>
-<span class="w">    </span><span class="c1">// Check if obj is defined, else make it assign it as an empty object.</span>
-<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">obj</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="p">{};</span>
-
-<span class="w">    </span><span class="c1">// some code here...</span>
-<span class="p">}</span>
-</code></pre>
-</div>
-
-<p>And BAM! The method worked flawlessly just as it's intended to do so. &#x1F60E;</p>
-
-<p>Addtionally, you may refer to the <a href="http://kangax.github.io/compat-table/es6/">ECMAScript 6 Compatibility table</a> that you might find it quite helpful to check browser compatiblity for Internet Explorer versions 11 and under.</p>
-
-	</div>
-	<div class="article-footer">
-		<time>June 3rd, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/javascript/">
-					JavaScript
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-identify-the-current-target-of-an-event">How to identify the current target of an event?</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Using the <code>event.currentTarget</code> property which belongs to the <code>Event</code> interface can help you in many ways to identify target of the current event especially if you want to fetch attributes or modify the classname of an element that belongs to a group of elements sharing the same classname.</p>
-
-<p>There are many examples but I chose to write a small snippet of highlighting a tab:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="kd">function</span><span class="w"> </span><span class="nx">highlightTab</span><span class="p">(</span><span class="nx">e</span><span class="p">){</span>
-<span class="w">    </span><span class="c1">// Find elements that has the classname &#39;active&#39; </span>
-<span class="w">    </span><span class="c1">// and remove them</span>
-<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="nb">document</span><span class="p">.</span><span class="nx">querySelector</span><span class="p">(</span><span class="s1">&#39;div.tab_item.active&#39;</span><span class="p">)</span><span class="w"> </span><span class="o">!==</span><span class="w"> </span><span class="kc">null</span><span class="p">){</span>
-<span class="w">        </span><span class="nb">document</span><span class="p">.</span><span class="nx">querySelector</span><span class="p">(</span><span class="s1">&#39;div.tab_item.active&#39;</span><span class="p">).</span><span class="nx">classList</span><span class="p">.</span><span class="nx">remove</span><span class="p">(</span><span class="s1">&#39;active&#39;</span><span class="p">);</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="c1">// Add active class to target node</span>
-<span class="w">    </span><span class="nx">e</span><span class="p">.</span><span class="nx">currentTarget</span><span class="p">.</span><span class="nx">className</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="s2">&quot; active&quot;</span><span class="p">;</span>
-
-<span class="w">    </span><span class="c1">// Add active class to target&#39;s child node</span>
-<span class="w">    </span><span class="c1">// e.currentTarget.querySelector(&#39;a.child_anchor_link&#39;).className += &quot; active&quot;;</span>
-
-<span class="w">    </span><span class="c1">// Add active class to target&#39;s parent node</span>
-<span class="w">    </span><span class="c1">// e.currentTarget.parentNode.className += &quot; active&quot;;</span>
-<span class="p">}</span>
-</code></pre>
-</div>
-
-<p>Read <a href="https://developer.mozilla.org/en-US/docs/Web/API/Event/currentTarget">Mozilla's official documentation</a> to know more about getting the current target of an event and it's compatibility with different web browsers.</p>
-
-	</div>
-	<div class="article-footer">
-		<time>June 1st, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/javascript/">
-					JavaScript
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -763,7 +816,7 @@ ping<span class="w"> </span>-c<span class="w"> </span><span class="m">3</span><s
 		<li>
 			<a href="/category/linux/">
 				Linux
-				<span class="count">21</span>
+				<span class="count">22</span>
 			</a>
 		</li>
 		
@@ -777,7 +830,7 @@ ping<span class="w"> </span>-c<span class="w"> </span><span class="m">3</span><s
 		<li>
 			<a href="/category/devops/">
 				DevOps
-				<span class="count">13</span>
+				<span class="count">14</span>
 			</a>
 		</li>
 		
@@ -831,6 +884,13 @@ ping<span class="w"> </span>-c<span class="w"> </span><span class="m">3</span><s
 		</li>
 		
 		<li>
+			<a href="/category/productivity/">
+				Productivity
+				<span class="count">8</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/vim/">
 				VIM
 				<span class="count">8</span>
@@ -841,13 +901,6 @@ ping<span class="w"> </span>-c<span class="w"> </span><span class="m">3</span><s
 			<a href="/category/unix/">
 				UNIX
 				<span class="count">8</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/productivity/">
-				Productivity
-				<span class="count">7</span>
 			</a>
 		</li>
 		
@@ -1009,6 +1062,13 @@ ping<span class="w"> </span>-c<span class="w"> </span><span class="m">3</span><s
 			<a href="/category/wamp/">
 				WAMP
 				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/image-manipulation/">
+				Image Manipulation
+				<span class="count">1</span>
 			</a>
 		</li>
 		

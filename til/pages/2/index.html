@@ -77,6 +77,192 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/resolve-permission-error-while-sshing-to-aws-ec2-instance-from-a-linux-machine">Resolve permission error while SSH-ing to AWS EC2 instance from a Linux machine</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>If you are someone who's trying to access a AWS EC2 instance via SSH using a private key from a linux machine, you might have or will come across this error:</p>
+
+<div class="codehilite">
+<pre><span></span><code>@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@         WARNING: UNPROTECTED PRIVATE KEY FILE!          @
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+Permissions 0644 for &#39;your-aws-private-key.pem&#39; are too open.
+It is recommended that your private key files are NOT accessible by others.
+This private key will be ignored.
+bad permissions: ignore key: your-aws-private-key.pem
+Permission denied (publickey).
+</code></pre>
+</div>
+
+<h2>Why am I getting this?</h2>
+
+<p>From what I have read, EC2 instances will simply not accept a private key that are publicly visible to others especially if it's somewhere stored in your Desktop or Downloads folder.</p>
+
+<p>So basically, your private key should be accessible to others.</p>
+
+<h2>Oh, how can I fix it?</h2>
+
+<p>It's pretty straightforward, you just have to make sure that the private key is <strong>read-only</strong> like this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>chmod<span class="w"> </span><span class="m">400</span><span class="w"> </span>your-aws-private-key.pem
+</code></pre>
+</div>
+
+<p>After that, try connecting again and it should work fine!</p>
+
+<p>Hope you found this tip useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>September 24th, 2022</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/aws/">
+					AWS
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/ssh/">
+					SSH
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/install-pfx-certificate-on-a-linux-server">Install PFX certificate on a Linux server</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>I would consider this as an extended post to my <a href="https://www.megacolorboy.com/til/posts/extract-private-key-and-certificate-from-pfx-file/">previous post</a> that I had written six months ago.</p>
+
+<p>A PFX Certificate usually contains the following in PKCS#12 format:</p>
+
+<ul>
+<li>The actual certificate.</li>
+<li>The private key to the certificate.</li>
+<li>The Intermediate authority certificate that ensures the trustworthiness of the certificate.</li>
+</ul>
+
+<p>To extract all those files, here are the steps that I have documented:</p>
+
+<div class="post-notification warning">
+    <h3><i class="ph-warning-light"></i> Note</h3>
+    <p>If the .PFX file prompts you for a passphrase, please check with your project manager or client regarding this information.</p>
+</div>
+
+<h2>Extract the Encrypted Private Key</h2>
+
+<div class="codehilite">
+<pre><span></span><code>openssl<span class="w"> </span>pkcs12<span class="w"> </span>-in<span class="w"> </span>&lt;filename.pfx&gt;<span class="w"> </span>-nocerts<span class="w"> </span>-out<span class="w"> </span>encrypted.key
+</code></pre>
+</div>
+
+<h2>Extract RSA Private Key</h2>
+
+<div class="codehilite">
+<pre><span></span><code>openssl<span class="w"> </span>rsa<span class="w"> </span>-in<span class="w"> </span>encrypted.key<span class="w"> </span>-out<span class="w"> </span>private.key
+</code></pre>
+</div>
+
+<h2>Extract Certificate</h2>
+
+<div class="codehilite">
+<pre><span></span><code>openssl<span class="w"> </span>pkcs12<span class="w"> </span>-in<span class="w"> </span>&lt;filename.pfx&gt;<span class="w"> </span>-clcerts<span class="w"> </span>-nokeys<span class="w"> </span>-out<span class="w"> </span>certificate.crt
+</code></pre>
+</div>
+
+<h2>Extract Combined Chain Certificate (Optional)</h2>
+
+<div class="codehilite">
+<pre><span></span><code>openssl<span class="w"> </span>pkcs12<span class="w"> </span>-in<span class="w"> </span>&lt;filename.pfx&gt;<span class="w"> </span>-cacerts<span class="w"> </span>-nokeys<span class="w"> </span>-chain<span class="w"> </span><span class="p">|</span><span class="w"> </span>sed<span class="w"> </span>-ne<span class="w"> </span><span class="s1">&#39;/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p&#39;</span><span class="w"> </span>&gt;<span class="w"> </span>combined_chain_certificate.crt
+</code></pre>
+</div>
+
+<p>Once you are done extracting all the required files, you can add the certificates like this:</p>
+
+<h3>Apache configuration:</h3>
+
+<div class="codehilite">
+<pre><span></span><code>SSLCertificateFile<span class="w"> </span>/path/to/certificate.crt
+SSLCertificateKeyFile<span class="w"> </span>/path/to/private.key
+
+<span class="c1"># Optional, if you have it, else skip.</span>
+SSLCertificateChainFile<span class="w"> </span>/path/to/combined_chain_certificate.crt
+</code></pre>
+</div>
+
+<p>Test if it works:</p>
+
+<div class="codehilite">
+<pre><span></span><code>apachectl<span class="w"> </span>configtest
+systemctl<span class="w"> </span>restart<span class="w"> </span>httpd
+</code></pre>
+</div>
+
+<h3>Nginx configuration:</h3>
+
+<div class="codehilite">
+<pre><span></span><code><span class="c1"># If you don&#39;t have a combined chain certificate:</span>
+ssl_certificate<span class="w"> </span>/path/to/certificate.crt<span class="p">;</span>
+ssl_certificate_key<span class="w"> </span>/path/to/private.key<span class="p">;</span>
+
+<span class="c1"># If you have a combined chain certificate:</span>
+ssl_certificate<span class="w"> </span>/path/to/combined_chain_certificate.crt
+ssl_certificate_key<span class="w"> </span>/path/to/private.key<span class="p">;</span>
+</code></pre>
+</div>
+
+<p>Test if it works:</p>
+
+<div class="codehilite">
+<pre><span></span><code>nginx<span class="w"> </span>-t
+systemctl<span class="w"> </span>restart<span class="w"> </span>nginx
+</code></pre>
+</div>
+
+<p>Hope you found this tip useful.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>September 24th, 2022</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/install-microsoft-sql-server-driver-for-php-on-amazon-linux-2">Install Microsoft SQL Server Driver for PHP on Amazon Linux 2</a></h1>
 		<p class="description"></p>
 	</div>
@@ -596,86 +782,6 @@ nssm<span class="w"> </span>remove<span class="w"> </span><span class="s2">&quot
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/count-the-number-of-matches-of-a-pattern-in-vim">Count the number of matches of a pattern in VIM</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>You can the count the number of matches of a pattern by using the <code>n</code> flag while using the substitute command. Try the following command:</p>
-
-<div class="codehilite">
-<pre><span></span><code>:%s/something//gn
-</code></pre>
-</div>
-
-<p>If you want to know on how many lines it matches, just omit the <code>g</code> flag:</p>
-
-<div class="codehilite">
-<pre><span></span><code>:%s/something//n
-</code></pre>
-</div>
-
-<p>Hope this tip helped you out!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>January 16th, 2022</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/vim/">
-					VIM
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/count-the-number-of-word-occurences-in-a-text-file-using-grep">Count the number of word occurences in a text file using grep</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>If you are using a GUI based application like Microsoft Word of Google Docs, it would be easier for you to know the number of word occurences in a file. But what if you are in a terminal? That's where both <code>grep</code> and <code>wc</code> comes handy tools.</p>
-
-<p>Let's say you have the following text:</p>
-
-<div class="codehilite">
-<pre><span></span><code>The European languages are members of the same family. Their separate existence is a myth. For science, music, sport, etc, Europe uses the same vocabulary.
-</code></pre>
-</div>
-
-<p>Now, you can use the <code>grep</code> and <code>wc</code> tool to count the number of times <code>"the"</code> appears in the file:</p>
-
-<div class="codehilite">
-<pre><span></span><code>grep<span class="w"> </span>-o<span class="w"> </span>-i<span class="w"> </span><span class="s2">&quot;the&quot;</span><span class="w"> </span>file.txt<span class="w"> </span><span class="p">|</span><span class="w"> </span>wc<span class="w"> </span>-l
-</code></pre>
-</div>
-
-<p>Hope this helps you out!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>January 16th, 2022</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/terminal/">
-					Terminal
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -734,7 +840,7 @@ nssm<span class="w"> </span>remove<span class="w"> </span><span class="s2">&quot
 		<li>
 			<a href="/category/linux/">
 				Linux
-				<span class="count">21</span>
+				<span class="count">22</span>
 			</a>
 		</li>
 		
@@ -748,7 +854,7 @@ nssm<span class="w"> </span>remove<span class="w"> </span><span class="s2">&quot
 		<li>
 			<a href="/category/devops/">
 				DevOps
-				<span class="count">13</span>
+				<span class="count">14</span>
 			</a>
 		</li>
 		
@@ -802,6 +908,13 @@ nssm<span class="w"> </span>remove<span class="w"> </span><span class="s2">&quot
 		</li>
 		
 		<li>
+			<a href="/category/productivity/">
+				Productivity
+				<span class="count">8</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/vim/">
 				VIM
 				<span class="count">8</span>
@@ -812,13 +925,6 @@ nssm<span class="w"> </span>remove<span class="w"> </span><span class="s2">&quot
 			<a href="/category/unix/">
 				UNIX
 				<span class="count">8</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/productivity/">
-				Productivity
-				<span class="count">7</span>
 			</a>
 		</li>
 		
@@ -980,6 +1086,13 @@ nssm<span class="w"> </span>remove<span class="w"> </span><span class="s2">&quot
 			<a href="/category/wamp/">
 				WAMP
 				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/image-manipulation/">
+				Image Manipulation
+				<span class="count">1</span>
 			</a>
 		</li>
 		

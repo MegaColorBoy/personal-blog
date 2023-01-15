@@ -78,6 +78,210 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/playing-around-with-imagemagick">Playing around with ImageMagick</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>ImageMagick is not a new tool for me but I haven't really talked about how it comes in handy whenever I wanted to resize and/or compress images efficiently using the terminal instead of using some image conversion service found for free online.</p>
+
+<p>To get started, make sure you install ImageMagick on your machine. This is the command I use for Fedora Linux:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>dnf<span class="w"> </span>install<span class="w"> </span>ImageMagick
+</code></pre>
+</div>
+
+<p>For example, if you wanted to compress an image's quality to 80%, here's you can do it:</p>
+
+<div class="codehilite">
+<pre><span></span><code>convert<span class="w"> </span>-quality<span class="w"> </span><span class="m">80</span>%<span class="w"> </span>src.png<span class="w"> </span>dest.png
+</code></pre>
+</div>
+
+<p>Great! What if you want to do it for hundreds of images in a directory, then you can easily do something like this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>find<span class="w"> </span>.<span class="w"> </span>-type<span class="w"> </span>f<span class="w"> </span>-name<span class="w"> </span><span class="s1">&#39;*.png&#39;</span><span class="w"> </span>-exec<span class="w"> </span>bash<span class="w"> </span>-c<span class="w"> </span><span class="s1">&#39;convert -quality 80% &quot;$1&quot; &quot;${1%}_compressed.png&quot; &#39;</span><span class="w"> </span>bash<span class="w">  </span><span class="o">{}</span><span class="w"> </span><span class="se">\;</span>
+</code></pre>
+</div>
+
+<p>You can do the same to resize the images while keeping original aspect ratio intact:</p>
+
+<div class="codehilite">
+<pre><span></span><code>convert<span class="w"> </span>-resize<span class="w"> </span>450x450<span class="w"> </span>src.png<span class="w"> </span>dest.png
+</code></pre>
+</div>
+
+<p>And similar to the one above, you can do the same for multiple images like so:</p>
+
+<div class="codehilite">
+<pre><span></span><code>find<span class="w"> </span>.<span class="w"> </span>-type<span class="w"> </span>f<span class="w"> </span>-name<span class="w"> </span><span class="s1">&#39;*.png&#39;</span><span class="w"> </span>-exec<span class="w"> </span>bash<span class="w"> </span>-c<span class="w"> </span><span class="s1">&#39;convert -resize 450x450 &quot;$1&quot; &quot;${1%}_resized.png&quot; &#39;</span><span class="w"> </span>bash<span class="w">  </span><span class="o">{}</span><span class="w"> </span><span class="se">\;</span>
+</code></pre>
+</div>
+
+<p>I have just scraped the surface of this image manipulation tool and if you are interested to know more, read the official <a href="https://linux.die.net/man/1/imagemagick">manpage</a> on how to use it.</p>
+
+<p>Hope you found this tip useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>January 15th, 2023</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/image-manipulation/">
+					Image Manipulation
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/install-cisco-anyconnect-client-on-fedora-linux">Install Cisco Anyconnect Client on Fedora Linux</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Cisco Anyconnect Client is a SSL VPN Client with VPN functionalites that enables an organization to secure its endpoints. Although, I use it a lot at office, I have only used it on Windows 10 so far.</p>
+
+<p>One day, when I was on my vacation, I had to connect to a server remotely but this time, I tried doing it via Linux and it worked well!</p>
+
+<h2>Download Cisco AnyConnect Client for Linux</h2>
+
+<p>Fortunately, the client is available for Windows, macOS and Linux.  You can go to the <a href="https://software.cisco.com/download/home/286281283/type/282364313/release/4.10.06079">Downloads</a> page and download the tarball archive for Linux.</p>
+
+<p>After downloading, you can extract the tarball file:</p>
+
+<div class="codehilite">
+<pre><span></span><code>tar<span class="w"> </span>-xvf<span class="w"> </span>anyconnect-linux64-4.10.00093-predeploy-k9.tar.gz
+</code></pre>
+</div>
+
+<h2>Install Cisco AnyConnect Client for Linux</h2>
+
+<p>Now that the file has been extracted, you can navigate to the <code>vpn</code> directory in <code>anyconnect-linux64-*</code> directory:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nb">cd</span><span class="w"> </span>anyconnect-linux64-*/vpn/
+</code></pre>
+</div>
+
+<p>Execute the <code>vpn_install.sh</code> script:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>./vpn_install.sh
+</code></pre>
+</div>
+
+<p>Follow the instruction steps and you're ready to use it.</p>
+
+<h2>Connect to VPN via Terminal</h2>
+
+<p>The GUI version was crashing on both KDE and GNOME desktop environments. Whereas, it was a smooth experience when connecting via the Terminal.</p>
+
+<p>For easy access, you can create an alias in your <code>.bashrc</code> file:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nb">alias</span><span class="w"> </span><span class="nv">anyconnectvpn</span><span class="o">=</span><span class="s2">&quot;/opt/cisco/anyconnect/bin/vpn&quot;</span>
+</code></pre>
+</div>
+
+<p>Save and restart your terminal for the changes to take effect.</p>
+
+<p>After that, you can connect to VPN like this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>anyconnectvpn<span class="w"> </span>-s<span class="w"> </span>connect<span class="w"> </span>&lt;IP_ADDRESS&gt;
+</code></pre>
+</div>
+
+<p>Once executed, you'll be prompted to enter your credentials and if all goes fine, you should be connected.</p>
+
+<h2>Disconnect VPN via the Terminal</h2>
+
+<p>You can execute the following command to disconnect:</p>
+
+<div class="codehilite">
+<pre><span></span><code>anyconnectvpn<span class="w"> </span>-s<span class="w"> </span>disconnect<span class="w"> </span>&lt;IP_ADDRESS&gt;
+</code></pre>
+</div>
+
+<h2>Configuring your VPN connection</h2>
+
+<p>Sometimes, it can be tedious to write these commands all the time especially when you're in a rush, this can really get in your way.</p>
+
+<p>To solve that, you can easily store your credentials in a file like <code>.my_vpn_creds</code> in your home directory:</p>
+
+<div class="codehilite">
+<pre><span></span><code>y
+&lt;username&gt;
+&lt;password&gt;
+</code></pre>
+</div>
+
+<p>Save the file and create another file named <code>my_vpn_connect.sh</code>:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="ch">#!/bin/bash</span>
+
+<span class="nv">VPN_SERVER</span><span class="o">=</span><span class="s2">&quot;&lt;IP_ADDRESS&gt;&quot;</span>
+
+<span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Connecting to VPN..&quot;</span>
+/opt/cisco/anyconnect/bin/vpn<span class="w"> </span>-s<span class="w">  </span>&lt;<span class="w"> </span>~/.my_vpn_creds<span class="w"> </span>connect<span class="w"> </span><span class="si">${</span><span class="nv">VPN_SERVER</span><span class="si">}</span>
+</code></pre>
+</div>
+
+<p>Save the file and make the file executable:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>chmod<span class="w"> </span>+x<span class="w"> </span>my_vpn_connect.sh
+</code></pre>
+</div>
+
+<p>Now, you'll be connected to the VPN automatically by just executing this script:</p>
+
+<div class="codehilite">
+<pre><span></span><code>./my_vpn_connect.sh
+</code></pre>
+</div>
+
+<p>This saved me a lot of time and I hope it does the same for you as well! 🤗</p>
+
+	</div>
+	<div class="article-footer">
+		<time>January 15th, 2023</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/productivity/">
+					Productivity
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/setup-a-virtual-environment-for-python-development">Setup a virtual environment for Python development</a></h1>
 		<p class="description"></p>
 	</div>
@@ -412,114 +616,6 @@
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/temporarily-disable-ipv6-protocol-on-ubuntu">Temporarily disable IPV6 protocol on Ubuntu</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Few days ago, I resolved an issue that I faced on an Ubuntu server that was related to SMTP not working, as a result, the server was always throwing a <code>504 Gateway Timeout</code> error.</p>
-
-<p>During troubleshooting, I found out that <code>telnet smtp.office365.com 587</code> was not giving any response and thought that the port was blocked on the client's network but no, it wasn't.</p>
-
-<p>I did a little digging and learnt that it could be due to the fact that SMTP traffic over IPV6 might be blocked on the client's network.</p>
-
-<p>So, I tried executing the following commands to disable IPV6 temporarily:</p>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>sysctl<span class="w"> </span>-w<span class="w"> </span>net.ipv6.conf.all.disable_ipv6<span class="o">=</span><span class="m">1</span>
-sudo<span class="w"> </span>sysctl<span class="w"> </span>-w<span class="w"> </span>net.ipv6.conf.default.disable_ipv6<span class="o">=</span><span class="m">1</span>
-</code></pre>
-</div>
-
-<p>And voila, the mails were going and SMTP traffic was working over IPV4.</p>
-
-<p>If you want to enable it again, try the following:</p>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>sysctl<span class="w"> </span>-w<span class="w"> </span>net.ipv6.conf.all.disable_ipv6<span class="o">=</span><span class="m">0</span>
-sudo<span class="w"> </span>sysctl<span class="w"> </span>-w<span class="w"> </span>net.ipv6.conf.default.disable_ipv6<span class="o">=</span><span class="m">0</span>
-</code></pre>
-</div>
-
-<p>Hope you found this tip useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>November 27th, 2022</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/devops/">
-					DevOps
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/linux/">
-					Linux
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/ubuntu/">
-					Ubuntu
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/view-list-of-services-in-linux">View list of services in Linux</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>If you wanted to see a list of services available on your Linux server/desktop, try the following command:</p>
-
-<div class="codehilite">
-<pre><span></span><code>systemctl<span class="w"> </span>list-unit-files<span class="w"> </span>--type<span class="o">=</span>service
-</code></pre>
-</div>
-
-<p>Upon executing this command, you'll be able to see a list of services along with their statuses i.e whether the service is enabled or disabled.</p>
-
-<p>This can come in handy if you want to know the status of a specific service like <code>nginx</code>:</p>
-
-<div class="codehilite">
-<pre><span></span><code>systemctl<span class="w"> </span>list-unit-files<span class="w"> </span>--type<span class="o">=</span>service<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s2">&quot;nginx&quot;</span>
-</code></pre>
-</div>
-
-<p>Hope you found this tip useful.</p>
-
-	</div>
-	<div class="article-footer">
-		<time>November 27th, 2022</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/linux/">
-					Linux
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/devops/">
-					DevOps
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -580,7 +676,7 @@ sudo<span class="w"> </span>sysctl<span class="w"> </span>-w<span class="w"> </s
 		<li>
 			<a href="/category/linux/">
 				Linux
-				<span class="count">21</span>
+				<span class="count">22</span>
 			</a>
 		</li>
 		
@@ -594,7 +690,7 @@ sudo<span class="w"> </span>sysctl<span class="w"> </span>-w<span class="w"> </s
 		<li>
 			<a href="/category/devops/">
 				DevOps
-				<span class="count">13</span>
+				<span class="count">14</span>
 			</a>
 		</li>
 		
@@ -648,6 +744,13 @@ sudo<span class="w"> </span>sysctl<span class="w"> </span>-w<span class="w"> </s
 		</li>
 		
 		<li>
+			<a href="/category/productivity/">
+				Productivity
+				<span class="count">8</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/vim/">
 				VIM
 				<span class="count">8</span>
@@ -658,13 +761,6 @@ sudo<span class="w"> </span>sysctl<span class="w"> </span>-w<span class="w"> </s
 			<a href="/category/unix/">
 				UNIX
 				<span class="count">8</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/productivity/">
-				Productivity
-				<span class="count">7</span>
 			</a>
 		</li>
 		
@@ -826,6 +922,13 @@ sudo<span class="w"> </span>sysctl<span class="w"> </span>-w<span class="w"> </s
 			<a href="/category/wamp/">
 				WAMP
 				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/image-manipulation/">
+				Image Manipulation
+				<span class="count">1</span>
 			</a>
 		</li>
 		
