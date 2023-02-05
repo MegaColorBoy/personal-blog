@@ -78,6 +78,67 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-use-github-personal-access-token-to-authenticate-your-git-commits">How to use GitHub Personal Access Token to authenticate your git commits?</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>On November 2020, GitHub had announced that they would no longer accept basic username/password to authenticate git commits and it would be deprecated by Mid 2021.</p>
+
+<p>Instead, they recommend you to authenticate your git commits using a Personal Access Token from your GitHub account.</p>
+
+<h2>Generate a personal access token</h2>
+
+<ol>
+<li>Unset your credentials from your remote repository: <code>git config --local --unset credential.helper</code></li>
+<li>Login to your GitHub account and go to <em>Settings</em> </li>
+<li>Then navigate to <em>Developer Settings -> Personal Access Tokens</em></li>
+<li>Click on <em>Generate new token</em></li>
+<li>Give a name to your Personal Access Token and the necessary permissions required.</li>
+<li>Once done, hit on <em>Generate token</em></li>
+<li>The token will be shown once, so make sure to copy it and store it somewhere that you can remember.</li>
+</ol>
+
+<h2>Update your remote repository</h2>
+
+<p>Once you've generated a token, you just have to update your remote repository by following the below steps:</p>
+
+<h3>1. Update remote repository URL</h3>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>remote<span class="w"> </span>set-url<span class="w"> </span>origin<span class="w"> </span>https://&lt;your_access_token&gt;@github.com/&lt;your_git_repo_url&gt;
+</code></pre>
+</div>
+
+<h3>2. Just git pull once</h3>
+
+<p>Now, just perform <code>git pull</code> operation once and you should be good:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>pull<span class="w"> </span>https://&lt;your_access_token&gt;@github.com/&lt;your_git_repo_url&gt;
+</code></pre>
+</div>
+
+<p>Hope this helps you out!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>August 13th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/git/">
+					Git
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/how-to-fetch-a-json-object-from-an-array-of-json-objects-by-property-value">How to fetch a JSON object from an array of JSON objects by property value?</a></h1>
 		<p class="description"></p>
 	</div>
@@ -398,82 +459,6 @@ sudo<span class="w"> </span>chmod<span class="w"> </span>a+x<span class="w"> </s
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-setup-rsync-with-passwordless-ssh-on-unixlinux">How to setup rsync with passwordless SSH on UNIX/Linux?</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Tired of ensuring if whether each file in every server is synced? Planning on doing automated backups? If so, then this technique should come in handy for you.</p>
-
-<p>Interested? Then follow the steps below:</p>
-
-<h2>Check if rsync over SSH works</h2>
-
-<p>Before you start, please ensure that you can <code>rsync</code> to your intended server over <code>ssh</code> using a password.
-With the following example, you can just send a simple file over to the intended server and see if it works or not:</p>
-
-<div class="codehilite">
-<pre><span></span><code>rsync<span class="w"> </span>-avz<span class="w"> </span>-e<span class="w"> </span>ssh<span class="w"> </span>test.txt<span class="w"> </span>username@REMOTE_SERVER_IP_OR_DOMAIN:/path/to/folder/
-</code></pre>
-</div>
-
-<p>Once you execute this command on the terminal, it'll prompt you for a password on the remote server, if it does, then it works.</p>
-
-<h2>Generate SSH Keys</h2>
-
-<p>If you want to do a passwordless SSH, you need to generate public and private SSH keys on the local server by typing the following command on the terminal:</p>
-
-<div class="codehilite">
-<pre><span></span><code>ssh-keygen
-Enter<span class="w"> </span>passphrase<span class="w"> </span><span class="o">(</span>empty<span class="w"> </span><span class="k">for</span><span class="w"> </span>no<span class="w"> </span>passphrase<span class="o">)</span>:
-Enter<span class="w"> </span>same<span class="w"> </span>passphrase<span class="w"> </span>again:
-</code></pre>
-</div>
-
-<p>If you're prompted to enter a passphrase, just hit <code>Enter</code> and proceed until the key is generated. Once the keys are generated, they'll be in the <code>~/.ssh</code> directory on your local server.</p>
-
-<h2>Copy public key to remote server</h2>
-
-<p>Using <code>ssh-copy-id</code>, you can copy the public key to the remote server:</p>
-
-<div class="codehilite">
-<pre><span></span><code>ssh-copy-id<span class="w"> </span>-i<span class="w"> </span>~/.ssh/id_rsa.pub<span class="w"> </span>REMOTE_SERVER_IP_OR_DOMAIN
-</code></pre>
-</div>
-
-<p>Once executed, you'll be prompted to enter the password of the account on the remote server and if successful, the public key will be copied to the remote server and will be stored in it's appropriate location.</p>
-
-<h2>Perform Rsync over passwordless SSH</h2>
-
-<p>If you've come this far, then you should be able to SSH to the remote server without entering the password:</p>
-
-<div class="codehilite">
-<pre><span></span><code>ssh<span class="w"> </span>REMOTE_SERVER_IP_OR_DOMAIN
-</code></pre>
-</div>
-
-<p>If it works, then perform the <code>rsync</code> operation again <a href="#rsync-operation">(above)</a> and this time, it shouldn't prompt you to enter any password.</p>
-
-<p>Hope you liked reading this short article!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>July 3rd, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/devops/">
-					DevOps
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -671,6 +656,13 @@ Enter<span class="w"> </span>same<span class="w"> </span>passphrase<span class="
 		</li>
 		
 		<li>
+			<a href="/category/blogmarks/">
+				Blogmarks
+				<span class="count">5</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/apache/">
 				Apache
 				<span class="count">5</span>
@@ -681,13 +673,6 @@ Enter<span class="w"> </span>same<span class="w"> </span>passphrase<span class="
 			<a href="/category/personal-challenge/">
 				Personal Challenge
 				<span class="count">5</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/blogmarks/">
-				Blogmarks
-				<span class="count">4</span>
 			</a>
 		</li>
 		

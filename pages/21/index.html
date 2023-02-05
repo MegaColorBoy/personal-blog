@@ -78,6 +78,209 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/writings/posts/deploy-your-laravel-app-on-heroku">Deploy your Laravel app on Heroku</a></h1>
+		<p class="description">Learn how to deploy your Laravel application along with a database on Heroku.</p>
+	</div>
+	<div class="article-body">
+		<p>In my <a href="/posts/getting-started-with-laravel-homestead">previous article</a>, I talked about how to setup your environment for developing your Laravel applications. Today, I'll be talking about deploying your application along with a database on Heroku.</p>
+
+<p>I wrote a simple CRUD application using Laravel but didn't understand on how to host it. I tried to host it on free shared hosting service but apparently, most of them don't support PHP system calls like <mark>proc_open()</mark>. However, if it was a VPS hosting service, it's supported but ain't nobody got time for shelling out cash for a test drive.</p>
+
+<p>As an alternative, I went on google and discovered that Heroku does support my requirements and it worked flawlessly, which is why I thought of sharing this information to others as well.</p>
+
+<p>If you're a developer who's at the early stages of learning Laravel (like me &#x1f606;), then this article is for you.</p>
+
+<h2>Prerequisites</h2>
+
+<p>You'll be doing some minor configurations, so you should be fine as long as you have a stable internet connection, familiar with using the CLI (Command Line Interface) and have some PHP knowledge.</p>
+
+<p>If you're a Windows user, please <a href="https://gitforwindows.org">Git for Windows</a>. Else, if you're a Linux or macOS user, you should be fine.</p>
+
+<h2>How to deploy?</h2>
+
+<p>You can ignore the first two steps if you already know about Heroku and how to work with it but please follow the rest of the steps:</p>
+
+<ol>
+<li><a href="#step-1">Install Heroku</a></li>
+<li><a href="#step-2">Create a Heroku repository</a></li>
+<li><a href="#step-3">Define Procfile</a></li>
+<li><a href="#step-4">Push Laravel app to repository</a></li>
+<li><a href="#step-5">Add configuration variables</a></li>
+<li><a href="#step-6">Setup your database</a></li>
+</ol>
+
+<h3><a id="step-1"></a> Install Heroku CLI</h3>
+
+<p>You can install this directly from the command line by typing the following:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>snap<span class="w"> </span>install<span class="w"> </span>heroku<span class="w"> </span>--classic
+</code></pre>
+</div>
+
+<h3><a id="step-2"></a> Create a Heroku repository</h3>
+
+<p>If you don't have a Heroku account yet, <a href="https://heroku.com">create an account</a> now and once you're done with that, type the following:</p>
+
+<div class="codehilite">
+<pre><span></span><code>heroku<span class="w"> </span>login
+</code></pre>
+</div>
+
+<p>Follow the login instructions from the command line prompt, fill in your login credentials and you'll be in!</p>
+
+<p>Once, you're done with that, create a repository by doing the following:</p>
+
+<div class="codehilite">
+<pre><span></span><code>heroku<span class="w"> </span>create
+</code></pre>
+</div>
+
+<p>In a few seconds, you'll get a randomly generated domain address, which is the link to your Heroku repository. If you can't remember the link, it's fine, you can make changes to it in your Heroku account.</p>
+
+<h3><a id="step-3"></a> Define Procfile</h3>
+
+<p>In case, you don't know what's a Procfile, it's a file that specifies the commands that needs to be executed by the application on startup. You can declare a variety of process types, <a href="https://devcenter.heroku.com/articles/procfile">click here</a> to learn more.</p>
+
+<p>Since our application is PHP based, we need to add some specific command that selects the server on boot, I chose Apache server for this project:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nb">cd</span><span class="w"> </span>your_laravel_project
+touch<span class="w"> </span>Procfile
+<span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;web: vendor/bin/heroku-php-apache2 web/&quot;</span><span class="w"> </span>&gt;<span class="w"> </span>Procfile
+</code></pre>
+</div>
+
+<h3><a id="step-4"></a> Push Laravel app to repository</h3>
+
+<p>It's similar to pushing your code into your GitHub, except this time, it's your Heroku repository. Type the following in your command line:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>add<span class="w"> </span>.
+git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;pushing application to repo&quot;</span>
+git<span class="w"> </span>push<span class="w"> </span>heroku<span class="w"> </span>master
+</code></pre>
+</div>
+
+<p>To check if your application is launched, type the following:</p>
+
+<div class="codehilite">
+<pre><span></span><code>heroku<span class="w"> </span>open
+</code></pre>
+</div>
+
+<p>At this stage, you might face <mark>Error 500</mark>, that's normal because we'll take care of that in the next step.</p>
+
+<h3><a id="step-5"></a> Configure your Heroku environment</h3>
+
+<p>We need to add some config variables that changes the way your app behaves. So, let's start adding it:</p>
+
+<div class="codehilite">
+<pre><span></span><code>heroku<span class="w"> </span>config:set<span class="w"> </span><span class="nv">APP_DEBUG</span><span class="o">=</span><span class="nb">true</span>
+heroku<span class="w"> </span>config:set<span class="w"> </span><span class="nv">APP_KEY</span><span class="o">=</span>yourlaravelapplicationkey
+heroku<span class="w"> </span>config:set<span class="w"> </span><span class="nv">APP_URL</span><span class="o">=</span>https://yourwebsite.herokuapp.com
+heroku<span class="w"> </span>config:set<span class="w"> </span><span class="nv">REDIRECT_HTTPS</span><span class="o">=</span><span class="nb">true</span>
+</code></pre>
+</div>
+
+<p>In this configuration, you have done the following:
+- Enabled debug mode
+- Set your Laravel application's base64 encrypted key
+- The website's URL
+- Force HTTPS redirect (Useful, when you're calling external assets that uses HTTPS protocol)</p>
+
+<p><strong>Note:</strong> You can find your <mark>APP_KEY</mark> in your <mark>.env</mark> file that's found in your project directory.</p>
+
+<h3><a id="step-6"></a> Setup your database</h3>
+
+<p>Initially, I built the database on MySQL but I later learnt that Heroku gives a free PostgreSQL starter database. I've never tried PostgreSQL before but it's quite similar to MySQL, so you shouldn't worry about your schema as Laravel supports PostgreSQL and MySQL databases by default.</p>
+
+<p>Type the following in the command line:</p>
+
+<div class="codehilite">
+<pre><span></span><code>heroku<span class="w"> </span>addons:create<span class="w"> </span>heroku-postgresql:hobby-dev
+</code></pre>
+</div>
+
+<p>This will create a PostgreSQL database and sets a <mark>DATABASE_URL</mark>, which contains the username and password to the database. To check it, type the following:</p>
+
+<div class="codehilite">
+<pre><span></span><code>heroku<span class="w"> </span>config
+</code></pre>
+</div>
+
+<p>Now, go to your project directory and open the <mark>config/database.php</mark>  file and add the following:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="c1">// Place these variables above</span>
+<span class="nv">$url</span> <span class="o">=</span> <span class="nb">parse_url</span><span class="p">(</span><span class="nb">getenv</span><span class="p">(</span><span class="s2">&quot;DATABASE_URL&quot;</span><span class="p">));</span>
+<span class="nv">$host</span> <span class="o">=</span> <span class="nv">$url</span><span class="p">[</span><span class="s2">&quot;host&quot;</span><span class="p">]</span><span class="o">??</span><span class="k">null</span><span class="p">;</span>
+<span class="nv">$username</span> <span class="o">=</span> <span class="nv">$url</span><span class="p">[</span><span class="s2">&quot;user&quot;</span><span class="p">]</span><span class="o">??</span><span class="k">null</span><span class="p">;</span>
+<span class="nv">$password</span> <span class="o">=</span> <span class="nv">$url</span><span class="p">[</span><span class="s2">&quot;pass&quot;</span><span class="p">]</span><span class="o">??</span><span class="k">null</span><span class="p">;</span>
+<span class="nv">$database</span> <span class="o">=</span> <span class="nb">substr</span><span class="p">(</span><span class="nv">$url</span><span class="p">[</span><span class="s2">&quot;path&quot;</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span><span class="o">??</span><span class="k">null</span><span class="p">;</span>
+
+<span class="c1">// Replace the default connection</span>
+<span class="s1">&#39;default&#39;</span> <span class="o">=&gt;</span> <span class="nx">env</span><span class="p">(</span><span class="s1">&#39;DB_CONNECTION&#39;</span><span class="p">,</span> <span class="s1">&#39;pgsql_prod&#39;</span><span class="p">),</span>
+
+<span class="c1">// Under the connections attribute, create a new connection called &#39;pgsql_prod&#39;</span>
+<span class="s1">&#39;pgsql_production&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span>
+    <span class="s1">&#39;driver&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;pgsql&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;host&#39;</span> <span class="o">=&gt;</span> <span class="nv">$host</span><span class="p">,</span>
+    <span class="s1">&#39;database&#39;</span> <span class="o">=&gt;</span> <span class="nv">$database</span><span class="p">,</span>
+    <span class="s1">&#39;username&#39;</span> <span class="o">=&gt;</span> <span class="nv">$username</span><span class="p">,</span>
+    <span class="s1">&#39;password&#39;</span> <span class="o">=&gt;</span> <span class="nv">$password</span><span class="p">,</span>
+    <span class="s1">&#39;charset&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;utf-8&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;prefix&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;schema&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;public&#39;</span><span class="p">,</span>
+<span class="p">],</span>
+<span class="cp">?&gt;</span>
+</code></pre>
+</div>
+
+<p>Push the new changes to your repository:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>add<span class="w"> </span>.
+git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;configured database&quot;</span>
+git<span class="w"> </span>push<span class="w"> </span>heroku<span class="w"> </span>master
+</code></pre>
+</div>
+
+<p>One last step, we need to create the tables from your schema, so type the following:</p>
+
+<div class="codehilite">
+<pre><span></span><code>heroku<span class="w"> </span>run<span class="w"> </span>php<span class="w"> </span>/app/artisan<span class="w"> </span>migrate<span class="w"> </span>--seed
+</code></pre>
+</div>
+
+<p>Follow the command line prompt and voila, you have successfully deployed your Laravel application with a database on Heroku.</p>
+
+<h2>Conclusion</h2>
+
+<p>Well, I hope you found this article really useful especially if you're a beginner. If you do find this useful, please share it with others too!</p>
+
+<p>Stay tuned for more!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>November 29th, 2019</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/tutorial/">
+					Tutorial
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/writings/posts/getting-started-with-laravel-homestead">Getting started with Laravel Homestead</a></h1>
 		<p class="description">Wanted to install Laravel but scared of configuring files on your host operating system? This article is for you.</p>
 	</div>
@@ -2063,139 +2266,6 @@ pip<span class="w"> </span>install<span class="w"> </span>jinja2
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/keep-a-programming-journal-using-vim-and-bash">Keep a programming journal using VIM and Bash</a></h1>
-		<p class="description">Become a better programmer by writing your own programming journal using VIM and Bash.</p>
-	</div>
-	<div class="article-body">
-		<p>Back in the days of Polymath scientists, physicists and engineers like <a href="https://en.wikipedia.org/wiki/Leonardo_Da_Vinci">Leonardo Da Vinci</a> and <a href="https://en.wikipedia.org/wiki/Albert_Einstein">Albert Einstein</a>, they usually maintained a sort of journal to record their thoughts, ideas and experiments.</p>
-
-<p>It's been 20 days since I have started maintaining journals, one is for personal stuff and the other is for programming, engineering and math related stuff, I mean, we all need to have some new hobbies to keep ourselves productive, right?</p>
-
-<p>Maintaining a journal helped me create a flow to write down my experiences ofthe day. It also helps me clear my mind and be more emotionally stable (I get moody, sometimes) and record my thoughts and ideas too.</p>
-
-<p>There are so many ways to write a journal like you could sign up on some online platform, install Evernote on your desktop or mobile or traditional pen and paper (which is the best way, honestly).</p>
-
-<h2>Requirements</h2>
-
-<p>I thought of keeping it in my laptop and I wanted it to have the following features:</p>
-
-<ol>
-<li>No use of internet required</li>
-<li>Must be super fast, simple and precise to the point</li>
-<li>Privacy (I mean, you can't trust the internet, sometimes!)</li>
-<li>Record thoughts and ideas with a timestamp, similar to a logbook</li>
-<li>Yes, it must look cool and nerdy</li>
-</ol>
-
-<p>I looked on some options like Google Docs, Dropbox Paper and Evernote but I just wanted something that matches my requirements. I went on YouTube and I saw a guy named <a href="https://www.youtube.com/watch?v=M_TQ3tgc4kg">Mike Levin</a>, who made a video named "VIM Journalcasting Experiment" and it inspired me to create something like that too.</p>
-
-<h2>Setup</h2>
-
-<p>First, you need to create a directory to store your journal notes and create a file to create them:</p>
-
-<div class="codehilite">
-<pre><span></span><code>mkdir<span class="w"> </span>journal
-<span class="nb">cd</span><span class="w"> </span>journal
-touch<span class="w"> </span>writer.sh
-chmod<span class="w"> </span>u+rwx<span class="w"> </span>writer.sh
-</code></pre>
-</div>
-
-<p>Next, you need to write a few lines of code in Bash:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="ch">#!/bin/bash</span>
-
-<span class="nv">folder</span><span class="o">=</span><span class="sb">`</span>date<span class="w"> </span>+%Y_%m_%d<span class="sb">`</span>
-mkdir<span class="w"> </span>-p<span class="w"> </span><span class="nv">$folder</span>
-<span class="nb">cd</span><span class="w"> </span><span class="nv">$folder</span>
-
-vi<span class="w"> </span>+star<span class="w"> </span><span class="sb">`</span>date<span class="w"> </span>+%Y%m%d<span class="sb">`</span><span class="s2">&quot;.jrnl&quot;</span>
-</code></pre>
-</div>
-
-<p>One more step, create an alias on your <strong><em>bash_profile</em></strong> in order to access it from anywhere:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="nb">alias</span><span class="w"> </span><span class="nv">jrnl</span><span class="o">=</span><span class="s2">&quot;cd /journal;./writer.sh&quot;</span>
-</code></pre>
-</div>
-
-<p>Alright, that's the basic setup! To test it, just do the following in your Terminal:</p>
-
-<div class="codehilite">
-<pre><span></span><code>journal
-</code></pre>
-</div>
-
-<h2>VIM Customization</h2>
-
-<p>Are you one of those people who gets confused on how to get out of VIM? Don't worry, you'll figure it out <a href="https://google.com/search?q=how-to-get-out-of-vim">over here</a>!</p>
-
-<p>The following setup can be done in your <code>~/.vimrc</code> file to enhance your journaling experience like adding a spellchecker, word counter, highlight colors and so on.</p>
-
-<p>Below are the configurations:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="nb">set</span><span class="w"> </span>spell<span class="w"> </span><span class="nv">spelllang</span><span class="o">=</span>en_gb
-cmap<span class="w"> </span>&lt;F6&gt;<span class="w"> </span>setlocal<span class="w"> </span>spell!
-
-<span class="k">function</span>!<span class="w"> </span>WordCount<span class="o">()</span>
-<span class="w">        </span><span class="nb">let</span><span class="w"> </span>s:old_status<span class="w"> </span><span class="o">=</span><span class="w"> </span>v:statusmsg
-<span class="w">        </span><span class="nb">let</span><span class="w"> </span><span class="nv">position</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>getpos<span class="o">(</span><span class="s2">&quot;.&quot;</span><span class="o">)</span>
-<span class="w">        </span>exe<span class="w"> </span><span class="s2">&quot;:silent normal g\&lt;c-g&gt;&quot;</span>
-<span class="w">        </span><span class="nb">let</span><span class="w"> </span><span class="nv">stat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>v:statusmsg
-<span class="w">        </span><span class="nb">let</span><span class="w"> </span>s:word_count<span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">0</span>
-<span class="w">        </span><span class="k">if</span><span class="w"> </span>stat<span class="w"> </span>!<span class="o">=</span><span class="w"> </span><span class="s1">&#39;--No lines in buffer--&#39;</span>
-<span class="w">                </span><span class="nb">let</span><span class="w"> </span>s:word_count<span class="w"> </span><span class="o">=</span><span class="w"> </span>str2nr<span class="o">(</span>split<span class="o">(</span>v:statusmsg<span class="o">)[</span><span class="m">11</span><span class="o">])</span>
-<span class="w">                </span><span class="nb">let</span><span class="w"> </span>v:statusmsg<span class="w"> </span><span class="o">=</span><span class="w"> </span>s:old_status
-<span class="w">        </span>end
-<span class="w">        </span>call<span class="w"> </span>setpos<span class="o">(</span><span class="s1">&#39;.&#39;</span>,<span class="w"> </span>position<span class="o">)</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span>s:word_count
-endfunction
-
-hi<span class="w"> </span>User1<span class="w"> </span><span class="nv">ctermbg</span><span class="o">=</span>black<span class="w"> </span><span class="nv">ctermfg</span><span class="o">=</span>red<span class="w"> </span><span class="nv">cterm</span><span class="o">=</span>BOLD<span class="w"> </span><span class="nv">guibg</span><span class="o">=</span>black<span class="w"> </span><span class="nv">guifg</span><span class="o">=</span>red<span class="w"> </span><span class="nv">gui</span><span class="o">=</span>BOLD
-
-<span class="nb">set</span><span class="w"> </span><span class="nv">laststatus</span><span class="o">=</span><span class="m">2</span>
-<span class="nb">set</span><span class="w"> </span><span class="nv">statusline</span><span class="o">=</span>
-<span class="nb">set</span><span class="w"> </span><span class="nv">statusline</span><span class="o">+=</span>%1*
-<span class="nb">set</span><span class="w"> </span><span class="nv">statusline</span><span class="o">+=</span>%&lt;<span class="se">\</span>
-</code></pre>
-</div>
-
-<p>Now, you can start writing your own journal whenever and wherever you want using VIM.</p>
-
-<h2>Conclusion</h2>
-
-<p>I'm not saying that you should write your journal on VIM, I thought it would be fun if I could do it on VIM, so that I get a chance to learn it. However, you can do it on Notepad too!</p>
-
-<p>Apart from that, journaling does have a lot of benefits and can help you become more productive!</p>
-
-<p>Get your ideas floating and start building cool stuff!</p>
-
-<p>Hope you liked reading this article!</p>
-
-<p>Until next time, then!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>April 26th, 2019</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/productivity/">
-					Productivity
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -2393,6 +2463,13 @@ hi<span class="w"> </span>User1<span class="w"> </span><span class="nv">ctermbg<
 		</li>
 		
 		<li>
+			<a href="/category/blogmarks/">
+				Blogmarks
+				<span class="count">5</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/apache/">
 				Apache
 				<span class="count">5</span>
@@ -2403,13 +2480,6 @@ hi<span class="w"> </span>User1<span class="w"> </span><span class="nv">ctermbg<
 			<a href="/category/personal-challenge/">
 				Personal Challenge
 				<span class="count">5</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/blogmarks/">
-				Blogmarks
-				<span class="count">4</span>
 			</a>
 		</li>
 		

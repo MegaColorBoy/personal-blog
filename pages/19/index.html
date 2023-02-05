@@ -78,6 +78,60 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/ssh-with-private-key">Using SSH with a private key</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Got a <em>.pem</em> key but don't know how to SSH to your server, just do this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>ssh<span class="w"> </span>-i<span class="w"> </span>name_of_key<span class="w"> </span>user@domain<span class="w"> </span>-p<span class="w"> </span><span class="m">22</span>
+</code></pre>
+</div>
+
+<h2>BONUS: Convert .ppk to .pem key</h2>
+
+<p>Recently, I started working from home and as a programmer, it's pretty common to access the company server for development purposes. </p>
+
+<p>Back in the office, I used to access it using <a href="https://www.putty.org">PuTTY</a> but now that I'm using a linux machine, I thought of accessing it via Terminal but there's a catch, I can't use <em>.ppk</em> key to access it.</p>
+
+<p>So, I did a little research and figured that I can easily convert it using <code>puttygen</code></p>
+
+<p>Open up your terminal and type:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>putty-tools
+</code></pre>
+</div>
+
+<p>Now, convert your private key to PEM format:</p>
+
+<div class="codehilite">
+<pre><span></span><code>puttygen<span class="w"> </span>yourprivate.ppk<span class="w"> </span>-O<span class="w"> </span>private-openssh<span class="w"> </span>-o<span class="w"> </span>your_new_key.pem
+</code></pre>
+</div>
+
+<p>That's it and you're good to go!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>May 25th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/terminal/">
+					Terminal
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/set-up-recaptcha">Set up reCaptcha in Laravel</a></h1>
 		<p class="description"></p>
 	</div>
@@ -363,84 +417,6 @@ NOCAPTCHA_SECRET=yoursecret
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/symlink-shared-hosting">Symbolic storage link in shared hosting</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>If you're hosting a laravel project via cPanel, chances are that it could be a shared hosting server and that means you can't really use <code>php artisan storage:link</code> for this.
-But don't worry, there's another way to this. Just follow the steps below:</p>
-
-<h2>1. Create a symlink</h2>
-
-<p>In your <code>public_html/public</code> directory, remove the <code>storage</code> folder. Next, create a <code>symlink.php</code> file in your <code>public_html</code> directory and add the following code:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="nv">$targetFolder</span> <span class="o">=</span> <span class="nv">$_SERVER</span><span class="p">[</span><span class="s1">&#39;DOCUMENT_ROOT&#39;</span><span class="p">]</span><span class="o">.</span><span class="s1">&#39;/storage/app/public&#39;</span><span class="p">;</span>
-<span class="nv">$linkedFolder</span> <span class="o">=</span> <span class="nv">$_SERVER</span><span class="p">[</span><span class="s1">&#39;DOCUMENT_ROOT&#39;</span><span class="p">]</span><span class="o">.</span><span class="s1">&#39;/public/storage&#39;</span><span class="p">;</span>
-<span class="nb">symlink</span><span class="p">(</span><span class="nv">$targetFolder</span><span class="p">,</span> <span class="nv">$linkedFolder</span><span class="p">);</span>
-<span class="k">echo</span> <span class="s2">&quot;done&quot;</span><span class="p">;</span>
-<span class="cp">?&gt;</span>
-</code></pre>
-</div>
-
-<h2>2. Create a custom route to access storage</h2>
-
-<p>Alright, this is kind of a hack but it works extremely fine. Just add the following route in your <code>routes/web.php</code> file:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="nx">Route</span><span class="o">::</span><span class="na">get</span><span class="p">(</span><span class="s1">&#39;/storage/anyfolder/{filename}&#39;</span><span class="p">,</span> <span class="k">function</span><span class="p">(</span><span class="nv">$filename</span><span class="p">){</span>
-    <span class="c1">// Your folder path</span>
-    <span class="nv">$folder_path</span> <span class="o">=</span> <span class="nx">storage_path</span><span class="p">(</span><span class="s1">&#39;app/public/anyfolder/&#39;</span><span class="o">.</span><span class="nv">$filename</span><span class="p">);</span>
-
-    <span class="c1">// check if the file exists</span>
-    <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">File</span><span class="o">::</span><span class="na">exists</span><span class="p">(</span><span class="nv">$folder_path</span><span class="p">))</span> <span class="p">{</span>
-        <span class="nx">abort</span><span class="p">(</span><span class="mi">404</span><span class="p">);</span>
-    <span class="p">}</span>
-
-    <span class="nv">$file</span> <span class="o">=</span> <span class="nx">File</span><span class="o">::</span><span class="na">get</span><span class="p">(</span><span class="nv">$folder_path</span><span class="p">);</span>
-    <span class="nv">$type</span> <span class="o">=</span> <span class="nx">File</span><span class="o">::</span><span class="na">mimeType</span><span class="p">(</span><span class="nv">$folder_path</span><span class="p">);</span>
-
-    <span class="nv">$response</span> <span class="o">=</span> <span class="nx">Response</span><span class="o">::</span><span class="na">make</span><span class="p">(</span><span class="nv">$file</span><span class="p">,</span> <span class="mi">200</span><span class="p">);</span>
-    <span class="nv">$response</span><span class="o">-&gt;</span><span class="na">header</span><span class="p">(</span><span class="s2">&quot;Content-Type&quot;</span><span class="p">,</span> <span class="nv">$type</span><span class="p">);</span>
-
-    <span class="k">return</span> <span class="nv">$response</span><span class="p">;</span>
-<span class="p">})</span>
-<span class="cp">?&gt;</span>
-</code></pre>
-</div>
-
-<p>Now, you can access your images or any other assets easily using: </p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="nx">asset</span><span class="p">(</span><span class="s1">&#39;storage/anyfolder/&#39;</span><span class="o">.</span><span class="nv">$filename</span><span class="p">)</span>
-<span class="cp">?&gt;</span>
-</code></pre>
-</div>
-
-<p>Hope this helps you out!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>May 25th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/laravel/">
-					Laravel
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -638,6 +614,13 @@ But don't worry, there's another way to this. Just follow the steps below:</p>
 		</li>
 		
 		<li>
+			<a href="/category/blogmarks/">
+				Blogmarks
+				<span class="count">5</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/apache/">
 				Apache
 				<span class="count">5</span>
@@ -648,13 +631,6 @@ But don't worry, there's another way to this. Just follow the steps below:</p>
 			<a href="/category/personal-challenge/">
 				Personal Challenge
 				<span class="count">5</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/blogmarks/">
-				Blogmarks
-				<span class="count">4</span>
 			</a>
 		</li>
 		

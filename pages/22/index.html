@@ -78,6 +78,139 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/writings/posts/keep-a-programming-journal-using-vim-and-bash">Keep a programming journal using VIM and Bash</a></h1>
+		<p class="description">Become a better programmer by writing your own programming journal using VIM and Bash.</p>
+	</div>
+	<div class="article-body">
+		<p>Back in the days of Polymath scientists, physicists and engineers like <a href="https://en.wikipedia.org/wiki/Leonardo_Da_Vinci">Leonardo Da Vinci</a> and <a href="https://en.wikipedia.org/wiki/Albert_Einstein">Albert Einstein</a>, they usually maintained a sort of journal to record their thoughts, ideas and experiments.</p>
+
+<p>It's been 20 days since I have started maintaining journals, one is for personal stuff and the other is for programming, engineering and math related stuff, I mean, we all need to have some new hobbies to keep ourselves productive, right?</p>
+
+<p>Maintaining a journal helped me create a flow to write down my experiences ofthe day. It also helps me clear my mind and be more emotionally stable (I get moody, sometimes) and record my thoughts and ideas too.</p>
+
+<p>There are so many ways to write a journal like you could sign up on some online platform, install Evernote on your desktop or mobile or traditional pen and paper (which is the best way, honestly).</p>
+
+<h2>Requirements</h2>
+
+<p>I thought of keeping it in my laptop and I wanted it to have the following features:</p>
+
+<ol>
+<li>No use of internet required</li>
+<li>Must be super fast, simple and precise to the point</li>
+<li>Privacy (I mean, you can't trust the internet, sometimes!)</li>
+<li>Record thoughts and ideas with a timestamp, similar to a logbook</li>
+<li>Yes, it must look cool and nerdy</li>
+</ol>
+
+<p>I looked on some options like Google Docs, Dropbox Paper and Evernote but I just wanted something that matches my requirements. I went on YouTube and I saw a guy named <a href="https://www.youtube.com/watch?v=M_TQ3tgc4kg">Mike Levin</a>, who made a video named "VIM Journalcasting Experiment" and it inspired me to create something like that too.</p>
+
+<h2>Setup</h2>
+
+<p>First, you need to create a directory to store your journal notes and create a file to create them:</p>
+
+<div class="codehilite">
+<pre><span></span><code>mkdir<span class="w"> </span>journal
+<span class="nb">cd</span><span class="w"> </span>journal
+touch<span class="w"> </span>writer.sh
+chmod<span class="w"> </span>u+rwx<span class="w"> </span>writer.sh
+</code></pre>
+</div>
+
+<p>Next, you need to write a few lines of code in Bash:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="ch">#!/bin/bash</span>
+
+<span class="nv">folder</span><span class="o">=</span><span class="sb">`</span>date<span class="w"> </span>+%Y_%m_%d<span class="sb">`</span>
+mkdir<span class="w"> </span>-p<span class="w"> </span><span class="nv">$folder</span>
+<span class="nb">cd</span><span class="w"> </span><span class="nv">$folder</span>
+
+vi<span class="w"> </span>+star<span class="w"> </span><span class="sb">`</span>date<span class="w"> </span>+%Y%m%d<span class="sb">`</span><span class="s2">&quot;.jrnl&quot;</span>
+</code></pre>
+</div>
+
+<p>One more step, create an alias on your <strong><em>bash_profile</em></strong> in order to access it from anywhere:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nb">alias</span><span class="w"> </span><span class="nv">jrnl</span><span class="o">=</span><span class="s2">&quot;cd /journal;./writer.sh&quot;</span>
+</code></pre>
+</div>
+
+<p>Alright, that's the basic setup! To test it, just do the following in your Terminal:</p>
+
+<div class="codehilite">
+<pre><span></span><code>journal
+</code></pre>
+</div>
+
+<h2>VIM Customization</h2>
+
+<p>Are you one of those people who gets confused on how to get out of VIM? Don't worry, you'll figure it out <a href="https://google.com/search?q=how-to-get-out-of-vim">over here</a>!</p>
+
+<p>The following setup can be done in your <code>~/.vimrc</code> file to enhance your journaling experience like adding a spellchecker, word counter, highlight colors and so on.</p>
+
+<p>Below are the configurations:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nb">set</span><span class="w"> </span>spell<span class="w"> </span><span class="nv">spelllang</span><span class="o">=</span>en_gb
+cmap<span class="w"> </span>&lt;F6&gt;<span class="w"> </span>setlocal<span class="w"> </span>spell!
+
+<span class="k">function</span>!<span class="w"> </span>WordCount<span class="o">()</span>
+<span class="w">        </span><span class="nb">let</span><span class="w"> </span>s:old_status<span class="w"> </span><span class="o">=</span><span class="w"> </span>v:statusmsg
+<span class="w">        </span><span class="nb">let</span><span class="w"> </span><span class="nv">position</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>getpos<span class="o">(</span><span class="s2">&quot;.&quot;</span><span class="o">)</span>
+<span class="w">        </span>exe<span class="w"> </span><span class="s2">&quot;:silent normal g\&lt;c-g&gt;&quot;</span>
+<span class="w">        </span><span class="nb">let</span><span class="w"> </span><span class="nv">stat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>v:statusmsg
+<span class="w">        </span><span class="nb">let</span><span class="w"> </span>s:word_count<span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">0</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span>stat<span class="w"> </span>!<span class="o">=</span><span class="w"> </span><span class="s1">&#39;--No lines in buffer--&#39;</span>
+<span class="w">                </span><span class="nb">let</span><span class="w"> </span>s:word_count<span class="w"> </span><span class="o">=</span><span class="w"> </span>str2nr<span class="o">(</span>split<span class="o">(</span>v:statusmsg<span class="o">)[</span><span class="m">11</span><span class="o">])</span>
+<span class="w">                </span><span class="nb">let</span><span class="w"> </span>v:statusmsg<span class="w"> </span><span class="o">=</span><span class="w"> </span>s:old_status
+<span class="w">        </span>end
+<span class="w">        </span>call<span class="w"> </span>setpos<span class="o">(</span><span class="s1">&#39;.&#39;</span>,<span class="w"> </span>position<span class="o">)</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span>s:word_count
+endfunction
+
+hi<span class="w"> </span>User1<span class="w"> </span><span class="nv">ctermbg</span><span class="o">=</span>black<span class="w"> </span><span class="nv">ctermfg</span><span class="o">=</span>red<span class="w"> </span><span class="nv">cterm</span><span class="o">=</span>BOLD<span class="w"> </span><span class="nv">guibg</span><span class="o">=</span>black<span class="w"> </span><span class="nv">guifg</span><span class="o">=</span>red<span class="w"> </span><span class="nv">gui</span><span class="o">=</span>BOLD
+
+<span class="nb">set</span><span class="w"> </span><span class="nv">laststatus</span><span class="o">=</span><span class="m">2</span>
+<span class="nb">set</span><span class="w"> </span><span class="nv">statusline</span><span class="o">=</span>
+<span class="nb">set</span><span class="w"> </span><span class="nv">statusline</span><span class="o">+=</span>%1*
+<span class="nb">set</span><span class="w"> </span><span class="nv">statusline</span><span class="o">+=</span>%&lt;<span class="se">\</span>
+</code></pre>
+</div>
+
+<p>Now, you can start writing your own journal whenever and wherever you want using VIM.</p>
+
+<h2>Conclusion</h2>
+
+<p>I'm not saying that you should write your journal on VIM, I thought it would be fun if I could do it on VIM, so that I get a chance to learn it. However, you can do it on Notepad too!</p>
+
+<p>Apart from that, journaling does have a lot of benefits and can help you become more productive!</p>
+
+<p>Get your ideas floating and start building cool stuff!</p>
+
+<p>Hope you liked reading this article!</p>
+
+<p>Until next time, then!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>April 26th, 2019</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/productivity/">
+					Productivity
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/writings/posts/stripes-scrolling-bubble-header">Stripe's Scrolling Bubble Header</a></h1>
 		<p class="description">An insight into Stripe's interesting use of animated elements.</p>
 	</div>
@@ -1290,305 +1423,6 @@ Windows again.</p>
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/artificial-intelligence-a-modern-approach--chapter-1">Artificial Intelligence: A Modern Approach - Chapter 1</a></h1>
-		<p class="description">An introduction into the foundations of Artificial Intelligence.</p>
-	</div>
-	<div class="article-body">
-		<p>It's something that I had in my mind for a long time but never got the
-time to execute it but finally, I decided to get out of my comfort zone
-to learn new concepts and techniques that would enable me to solve new
-problems. Hence, I chose to study <strong><em>Artificial Intelligence</em></strong>.</p>
-
-<figure>
-    <img src="http://www-fp.pearsonhighered.com/assets/hip/images/bigcovers/0132071487.jpg"/>
-    <figcaption>
-        Artificial Intelligence, A Modern Approach (3rd Edition)
-    </figcaption>
-</figure>
-
-<p>I did some online research and found out a really good book named
-<a href="https://www.amazon.com/Artificial-Intelligence-Modern-Approach-3rd/dp/0136042597">Artificial Intelligence, A Modern Approach (3rd
-Edition)</a> by
-the <a href="https://en.wikipedia.org/wiki/Stuart_J._Russell">Stuart Russell</a>
-and one of my favorite computer scientists, <a href="https://en.wikipedia.org/wiki/Peter_Norvig">Peter
-Norvig</a> (Director of
-Research at Google) to learn about it's concepts and techniques. The
-book has 1000+ pages and it's a book used for undergraduate and graduate
-level courses in university.</p>
-
-<p>My current knowledge of Artificial Intelligence is pretty basic (e.g:
-write game AI) and I want to learn more about it and be able absorb any
-information related to it and build toy AI projects.</p>
-
-<p>I've completed the first chapter of the book, so let's dive in because
-this going to be a long read.</p>
-
-<h2>What is Artificial Intelligence?</h2>
-
-<p>We read about it in the news, it's being deployed in our mobile
-applications that we use everyday such as Facebook, Instagram, Twitter,
-Reddit and so on to filter out graphic content, fake information and
-insensitive political content. It's also being used in games such as
-chess, scientific research, diagnosis of several diseases and
-self-driving cars.</p>
-
-<p>But do we know what is it? According to Google Search, it means:</p>
-
-<blockquote>
-  <p>The theory and development of computer systems able to perform tasks
-  normally requiring human intelligence such as visual perception,
-  speech recognition, decision-making and translation between
-  languages. </p>
-</blockquote>
-
-<p>It encompasses a huge number of fields and sub-fields and AI is already
-the next big thing that it's shaping our everyday life.</p>
-
-<h2>Approaches towards AI</h2>
-
-<p>The book states that there are four types of approaches when it comes to
-creating an AI:</p>
-
-<figure>
-    <img src="https://cs.shaunlgs.com/wp-content/uploads/2017/02/slide_3.jpg"/>
-    <figcaption>
-        Four approaches towards AI.
-    </figcaption>
-</figure>
-
-<h3>Acting Humanly</h3>
-
-<p>Proposed by British computer scientist <a href="https://en.wikipedia.org/wiki/Alan_Turing">Alan
-Turing</a>, the <a href="https://en.wikipedia.org/wiki/Turing_test">Turing
-Test</a> approach was designed
-to provide a functional definition of Artificial Intelligence. The test
-is proved positive only when a human is unable to tell the difference
-between the results of a computer or a human. In order to think like a
-human, it should possess the following capabilities:</p>
-
-<ul>
-<li><strong><em>Natural Language Processing</em></strong> to enable communication in any
-language with the human</li>
-<li><strong><em>Knowledge Representation</em></strong> to store what it knows or hears</li>
-<li><strong><em>Automated Reasoning</em></strong> to make conclusions based on the repository
-of information to answer questions</li>
-<li><strong><em>Machine Learning</em></strong> to learn and adapt to new patterns and
-extrapolations</li>
-</ul>
-
-<p>It is to be noted that the test deliberately avoided interaction with
-the human because physical interaction with the human wasn't necessary
-for intelligence.</p>
-
-<p>Then came another test called <strong><em>Total Turing Test</em></strong>, this was made to
-test the computer's ability of visual perception. The computer passes
-this test when it's possess the following abilities:</p>
-
-<ul>
-<li><strong><em>Computer Vision</em></strong> to be able to perceive and identify objects</li>
-<li><strong><em>Robotics</em></strong> to be able to manipulate physical objects</li>
-</ul>
-
-<figure>
-    <img src="https://www.sony.net/SonyInfo/CorporateInfo/newbusiness/AI_Robotics/img/image_movie_sp.jpg"/>
-    <figcaption>
-        Sony's AIBO Home Entertainment robot.
-    </figcaption>
-</figure>
-
-<p>The abilities mentioned above, composes most of what modern AI is today
-and Turing deserves a huge credit for designing this test that still
-remains relevant for more than 60+ years.</p>
-
-<h3>Thinking Humanly</h3>
-
-<p>Do we know how humans think? Maybe, but for us to be able to determine
-that, we would need to achieve a deep understanding of the human mind
-works. There are a few ways such as:</p>
-
-<ul>
-<li><strong><em>Introspection</em></strong> by catching our own thoughts as they pass by</li>
-<li><strong><em>Psychological experiments</em></strong> by observing the actions or behavior
-of a human</li>
-<li><strong><em>Brain imaging</em></strong> by observing the brain in action</li>
-</ul>
-
-<figure>
-    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Cognitive_Science_Hexagon.svg/800px-Cognitive_Science_Hexagon.svg.png"/>
-    <figcaption>
-        Fields that contributed to the birth of cognitive science.
-    </figcaption>
-</figure>
-
-<p>Once we have sufficient information, it's possible to theorize that a
-computer program behaves like a human. <a href="https://en.wikipedia.org/wiki/Cognitive_science">Cognitive
-Science</a> enables you to
-combine both computational models of an AI and psychological
-experimentation techniques to provide testable theories as to how the
-human mind works.</p>
-
-<h3>Thinking Rationally</h3>
-
-<p>Greek Philosopher <a href="https://en.wikipedia.org/wiki/Aristotle">Aristotle</a>
-attempted to arrange information based on irrefutable evidence based on
-the process of reasoning. His rules of inference a.k.a <strong><em>syllogisms</em></strong> (a
-form of reasoning in which conclusions are drawn from various
-propositions or a set of premises) provided patterns that yielded
-correct conclusions from correct premises. For example: <em>"Socrates is a
-man; All men are mortal; therefore, Socrates is a mortal being"</em>. These
-laws of thought initiated the study of logic, which gave hope to 19th
-century logicians to help create intelligent systems.</p>
-
-<figure>
-    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/ae/Aristotle_Altemps_Inv8575.jpg/448px-Aristotle_Altemps_Inv8575.jpg"/>
-    <figcaption>
-        Marble bust of Greek Philosopher Aristotle.
-    </figcaption>
-</figure>
-
-<p>However, there are two main obstacles to this logical approach. Firstly,
-it's difficult to convert informal information into formal terms
-required by logical notations especially when the information isn't 100%
-certain. Secondly, being able to solve a problem in theory vs. solving a
-problem in practice are two different things. You can have a computer
-that can solve a problem with a few hundred facts yet use up all of it's
-resources.</p>
-
-<h3>Acting Rationally</h3>
-
-<p>This is focused on creating <strong><em>intelligent agents</em></strong> that can perform
-various tasks like being able to operate autonomously, perceive objects,
-adapt to change, create new goals and pursue them. A <strong><em>rational
-agent</em></strong> is an agent that acts to achieve the best expected outcome.</p>
-
-<p>Making the right conclusions based on evidences i.e. <strong><em>correct
-inferences</em></strong> is part of a rational agent because to act rationally, an
-agent must be able to reason with logic to reach to a conclusion for a
-given action to achieve one's goals.</p>
-
-<p>However, it doesn't necessarily that it's always "correct", sometimes,
-it has there's no such thing as the "right" thing to do but something
-must be done.</p>
-
-<figure>
-    <img src="https://upload.wikimedia.org/wikipedia/commons/3/3f/IntelligentAgent-SimpleReflex.png"/>
-    <figcaption>
-        A simple agent reflex.
-    </figcaption>
-</figure>
-
-<p>The skills needed for a Turing Test allows an agent to act rationally
-especially on making good decisions using <strong><em>Knowledge
-Representation</em></strong> and <strong><em>Automated Reasoning</em></strong>, generating intelligible
-sentences using <strong><em>Natural Language Processing</em></strong> for a complex society,
-adapting to change and generating effective behavior using <strong><em>Machine
-Learning</em></strong>.</p>
-
-<p>But, there are some advantages to this approach. Firstly, it's more
-general in terms of the logical approach (mentioned in <strong><em>Thinking
-Rationally</em></strong>). Secondly, it's more open to scientific development
-compared to human behavior (mentioned in <strong><em>Acting Humanly</em></strong>) and human
-thought (mentioned in <strong><em>Thinking Humanly</em></strong>). The standard rationality of
-an agent is purely mathematically defined and completely general whereas
-human behavior adapts to a specific environment.</p>
-
-<p>Later, the book states that it's focus is going to be based on the
-general principles of rational agents and on components for constructing
-them.</p>
-
-<h2>Is AI a science, or is it engineering?</h2>
-
-<p>As I was reading the book, it was fascinating to see how various
-disciplines have contributed ideas, techniques and viewpoints to the
-field of Artificial Intelligence. The following disciplines are:</p>
-
-<ul>
-<li>Philosophy</li>
-<li>Neuroscience</li>
-<li>Mathematics</li>
-<li>Economics</li>
-<li>Linguistics</li>
-<li>Psychology</li>
-<li>Computer engineering</li>
-<li>Control theory and cybernetics</li>
-</ul>
-
-<p>Each disciplines had thoughtful questions like How does a human brain
-work? How are valid conclusions drawn from formal rules? How can we
-build an efficient computer? How to think and communicate in one's
-language? How does the brain process large amounts of information? How
-do humans and other living things think and act? How does language
-relate to thought?</p>
-
-<p>This part of the book is really long but it was a good way to understand
-about it's early foundations.</p>
-
-<h2>How is it useful today?</h2>
-
-<p>Well, that's not very easy to answer because it's being used in multiple
-fields and sub-fields. There are so many applications such as:</p>
-
-<ul>
-<li>Self Driving Cars</li>
-<li>Speech Recognition</li>
-<li>Facial Recognition</li>
-<li>Fighting Malware and Spam bots</li>
-<li>Filtering graphic content and fake information from social media</li>
-<li>Game playing AIs for different board games like Checkers, Go and Chess</li>
-</ul>
-
-<figure>
-    <img src="https://cdn1.i-scmp.com/sites/default/files/styles/980x551/public/images/methode/2018/04/25/2e2a124c-3b92-11e8-b6d9-57447a4b43e5_image_hires_135128.JPG?itok=uWX9_NQ4"/>
-    <figcaption>
-        Chinese Government surveillance system using Facial Recognition.
-    </figcaption>
-</figure>
-
-<p>All of this used to be science fiction but thanks to the advancements of
-Mathematics, Science and Engineering, it's become a reality in today's
-era.</p>
-
-<h2>Conclusion</h2>
-
-<p>Well, I don't know if this is one of the longest articles I have ever
-written but I really did enjoy writing this because this made me read
-the chapter again and gained a better understanding of the concepts.</p>
-
-<p>I will be writing more articles about it, write algorithms and build
-toy  implementations of Artificial Intelligence applications.</p>
-
-<p>In fact, I wrote this article to answer all, if not, most of the
-questions from the exercises section of this chapter.</p>
-
-<p>Hope you liked reading this article!</p>
-
-<p>Stay tuned for more!</p>
-
-<h2>Extras</h2>
-
-<ul>
-<li><a href="https://www.csee.umbc.edu/courses/471/papers/turing.pdf">Computing Machinery and Intelligence by Alan Turing</a></li>
-</ul>
-
-	</div>
-	<div class="article-footer">
-		<time>September 1st, 2018</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/artificial-intelligence/">
-					Artificial Intelligence
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -1786,6 +1620,13 @@ questions from the exercises section of this chapter.</p>
 		</li>
 		
 		<li>
+			<a href="/category/blogmarks/">
+				Blogmarks
+				<span class="count">5</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/apache/">
 				Apache
 				<span class="count">5</span>
@@ -1796,13 +1637,6 @@ questions from the exercises section of this chapter.</p>
 			<a href="/category/personal-challenge/">
 				Personal Challenge
 				<span class="count">5</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/blogmarks/">
-				Blogmarks
-				<span class="count">4</span>
 			</a>
 		</li>
 		
