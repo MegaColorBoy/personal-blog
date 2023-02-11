@@ -76,6 +76,56 @@
 			<div class="articles">
 				
 					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/list-tables-that-dont-have-primary-keys-in-a-mysql-database">List tables that don't have primary keys in a MySQL database</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Whenever I restore a database dump on a MySQL InnoDB Cluster, most of the time, the error I face is related to missing <code>PRIMARY KEY</code> attribute because as per <a href="https://dev.mysql.com/doc/refman/8.0/en/group-replication-requirements.html">MySQL's official documentation</a>:</p>
+
+<blockquote>
+  <p>Every table that is to be replicated by the group must have a defined primary key, or primary key equivalent where the equivalent is non-null unique key.</p>
+</blockquote>
+
+<p>What I would usually do is, run a simple query to determine the list of the tables that don't the <code>PRIMARY KEY</code> attribute:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">select</span><span class="w"> </span><span class="n">tab</span><span class="p">.</span><span class="n">table_schema</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">database_name</span><span class="p">,</span>
+<span class="w">       </span><span class="n">tab</span><span class="p">.</span><span class="k">table_name</span>
+<span class="k">from</span><span class="w"> </span><span class="n">information_schema</span><span class="p">.</span><span class="k">tables</span><span class="w"> </span><span class="n">tab</span>
+<span class="k">left</span><span class="w"> </span><span class="k">join</span><span class="w"> </span><span class="n">information_schema</span><span class="p">.</span><span class="n">table_constraints</span><span class="w"> </span><span class="n">tco</span>
+<span class="w">          </span><span class="k">on</span><span class="w"> </span><span class="n">tab</span><span class="p">.</span><span class="n">table_schema</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tco</span><span class="p">.</span><span class="n">table_schema</span>
+<span class="w">          </span><span class="k">and</span><span class="w"> </span><span class="n">tab</span><span class="p">.</span><span class="k">table_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tco</span><span class="p">.</span><span class="k">table_name</span>
+<span class="w">          </span><span class="k">and</span><span class="w"> </span><span class="n">tco</span><span class="p">.</span><span class="n">constraint_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;PRIMARY KEY&#39;</span>
+<span class="k">where</span><span class="w"> </span><span class="n">tco</span><span class="p">.</span><span class="n">constraint_type</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="no">null</span>
+<span class="w">      </span><span class="k">and</span><span class="w"> </span><span class="n">tab</span><span class="p">.</span><span class="n">table_schema</span><span class="w"> </span><span class="k">not</span><span class="w"> </span><span class="k">in</span><span class="p">(</span><span class="s1">&#39;mysql&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;information_schema&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;performance_schema&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;sys&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="k">and</span><span class="w"> </span><span class="n">tab</span><span class="p">.</span><span class="n">table_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;BASE TABLE&#39;</span>
+<span class="c1">--      and tab.table_schema = &#39;your_database_name_here&#39;</span>
+<span class="k">order</span><span class="w"> </span><span class="k">by</span><span class="w"> </span><span class="n">tab</span><span class="p">.</span><span class="n">table_schema</span><span class="p">,</span>
+<span class="w">         </span><span class="n">tab</span><span class="p">.</span><span class="k">table_name</span><span class="p">;</span>
+</code></pre>
+</div>
+
+<p>Hope you found this tip useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>February 11th, 2023</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/mysql/">
+					MySQL
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
 <div class="day article">
 	<h2><a href="/blogmarks/posts/5th-february-2023">5th February 2023 &mdash; Blogmarks</a></h2>
 	<ul>
@@ -536,60 +586,6 @@
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/trying-out-the-redragon-k552-kumara-rgb-mechanical-keyboard">Trying out the Redragon K552 Kumara RGB Mechanical Keyboard</a></h1>
-		<p class="description">My experiences using a mechanical keyboard for the first time.</p>
-	</div>
-	<div class="article-body">
-		<figure>
-    <img src="/static/images/redragon-k552-kumara.jpeg" />
-    <figcaption>Redragon K552 Kumara RGB Keyboard</figcaption>
-</figure>
-
-<p>Yes, I finally did it and bought myself a mechanical keyboard after tirelessly scrolling through Amazon and YouTube for a good keyboard that doesn't hurt my pocket in the long run.</p>
-
-<h2>What does it feel like?</h2>
-
-<p>Got it delivered yesterday and as I unboxed it, I noticed that the build quality is strong and it's quite a heavy keyboard that has around 18 RGB modes to spice things up a bit.</p>
-
-<p>I got the one with the Outemu Red Switches (More like a Cherry MX Red clones) and since it's a linear switch, the typing experience is buttery smooth and not at all noisy. This should be good for typing in office environments or gamers who like to be fast while playing their favorite games.</p>
-
-<p>Currently, I have one issue with it i.e. that keyboard is a bit high and it kind of tires my wrists after typing for longer sessions but I guess, it can be fixed with a wrist rest (Maybe, a nice wooden one 👀).</p>
-
-<p>On my first try, the keys seemed a bit fast for me as I'm not really used to typing on linear switches, let alone, on a mechanical keyboard. But as of writing this article, I got my speed back up and I have been able to achieve around 75-80WPM.</p>
-
-<h2>Conclusion</h2>
-
-<p>Apart from that, I'm quite happy about this purchase and would definitely hope that it lasts longer until I get another mechanical keyboard.</p>
-
-<p>If you are looking to buy this keyboard, I'd recommend you to give a shot and see it for yourself because I feel that every programmer deserves to type on a good keyboard.</p>
-
-<p>Stay tuned for more content.</p>
-
-	</div>
-	<div class="article-footer">
-		<time>November 27th, 2022</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/productivity/">
-					Productivity
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/tech/">
-					Tech
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -739,6 +735,13 @@
 		</li>
 		
 		<li>
+			<a href="/category/mysql/">
+				MySQL
+				<span class="count">7</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/tutorial/">
 				Tutorial
 				<span class="count">6</span>
@@ -748,13 +751,6 @@
 		<li>
 			<a href="/category/update/">
 				Update
-				<span class="count">6</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/mysql/">
-				MySQL
 				<span class="count">6</span>
 			</a>
 		</li>

@@ -5,8 +5,15 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta name="author" content="Abdush Shakoor">
 	
+	<meta name="description" content=".">
+	<meta name="og:title" content="List tables that don't have primary keys in a MySQL database | Abdush Shakoor's Weblog" />
+	<meta name="og:type" content="article" />
+	<meta name="og:url" content="til/posts/list-tables-that-dont-have-primary-keys-in-a-mysql-database" />
+	<meta name="og:description" content="" />
+	<meta name="og:site_name" content="Abdush Shakoor's Weblog | Abdush Shakoor's Weblog" />
+	
 	<meta name="robots" content="follow">
-	<title>MySQL | Abdush Shakoor's Weblog </title>
+	<title>List tables that don't have primary keys in a MySQL database | Abdush Shakoor's Weblog </title>
 	<link rel="stylesheet" href="/static/css/main.css" type="text/css">
 	<link rel="stylesheet" href="/static/css/pygments.css" type="text/css">
 
@@ -67,69 +74,63 @@
 		<section id="primary">
 			<div class="articles">
 				
-				<div class="segment">
-					<div class="year"><h2>2023</h2></div>
-					<div class="posts">
-						
-						<div class="post">
-							<a href="/til/posts/list-tables-that-dont-have-primary-keys-in-a-mysql-database">List tables that don't have primary keys in a MySQL database</a>
-							<time>11.02.2023</time>
-						</div>
-								
-					</div>
-				</div>
-				
-				<div class="segment">
-					<div class="year"><h2>2021</h2></div>
-					<div class="posts">
-						
-						<div class="post">
-							<a href="/til/posts/how-to-update-values-of-a-column-from-one-table-to-another">How to update values of a column from one table to another?</a>
-							<time>13.08.2021</time>
-						</div>
-						
-						<div class="post">
-							<a href="/til/posts/convert-string-to-date-using-mysql">Convert string to date using MySQL</a>
-							<time>12.03.2021</time>
-						</div>
-						
-						<div class="post">
-							<a href="/til/posts/use-mysql-80-with-native-password-authentication">Use MySQL 8.0 with Native Password Authentication</a>
-							<time>12.03.2021</time>
-						</div>
-								
-					</div>
-				</div>
-				
-				<div class="segment">
-					<div class="year"><h2>2020</h2></div>
-					<div class="posts">
-						
-						<div class="post">
-							<a href="/til/posts/import-and-export-mysql-database-via-terminal">Import and Export MySQL database via Terminal</a>
-							<time>04.11.2020</time>
-						</div>
-						
-						<div class="post">
-							<a href="/til/posts/concatenate-multiple-rows-into-one-field">Concatenate multiple rows into one field</a>
-							<time>04.11.2020</time>
-						</div>
-						
-						<div class="post">
-							<a href="/til/posts/how-to-duplicate-tables-in-mysql">How to duplicate tables in MySQL?</a>
-							<time>18.07.2020</time>
-						</div>
-								
-					</div>
-				</div>
-				
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/list-tables-that-dont-have-primary-keys-in-a-mysql-database">List tables that don't have primary keys in a MySQL database</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Whenever I restore a database dump on a MySQL InnoDB Cluster, most of the time, the error I face is related to missing <code>PRIMARY KEY</code> attribute because as per <a href="https://dev.mysql.com/doc/refman/8.0/en/group-replication-requirements.html">MySQL's official documentation</a>:</p>
+
+<blockquote>
+  <p>Every table that is to be replicated by the group must have a defined primary key, or primary key equivalent where the equivalent is non-null unique key.</p>
+</blockquote>
+
+<p>What I would usually do is, run a simple query to determine the list of the tables that don't the <code>PRIMARY KEY</code> attribute:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">select</span><span class="w"> </span><span class="n">tab</span><span class="p">.</span><span class="n">table_schema</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">database_name</span><span class="p">,</span>
+<span class="w">       </span><span class="n">tab</span><span class="p">.</span><span class="k">table_name</span>
+<span class="k">from</span><span class="w"> </span><span class="n">information_schema</span><span class="p">.</span><span class="k">tables</span><span class="w"> </span><span class="n">tab</span>
+<span class="k">left</span><span class="w"> </span><span class="k">join</span><span class="w"> </span><span class="n">information_schema</span><span class="p">.</span><span class="n">table_constraints</span><span class="w"> </span><span class="n">tco</span>
+<span class="w">          </span><span class="k">on</span><span class="w"> </span><span class="n">tab</span><span class="p">.</span><span class="n">table_schema</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tco</span><span class="p">.</span><span class="n">table_schema</span>
+<span class="w">          </span><span class="k">and</span><span class="w"> </span><span class="n">tab</span><span class="p">.</span><span class="k">table_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tco</span><span class="p">.</span><span class="k">table_name</span>
+<span class="w">          </span><span class="k">and</span><span class="w"> </span><span class="n">tco</span><span class="p">.</span><span class="n">constraint_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;PRIMARY KEY&#39;</span>
+<span class="k">where</span><span class="w"> </span><span class="n">tco</span><span class="p">.</span><span class="n">constraint_type</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="no">null</span>
+<span class="w">      </span><span class="k">and</span><span class="w"> </span><span class="n">tab</span><span class="p">.</span><span class="n">table_schema</span><span class="w"> </span><span class="k">not</span><span class="w"> </span><span class="k">in</span><span class="p">(</span><span class="s1">&#39;mysql&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;information_schema&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;performance_schema&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;sys&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="k">and</span><span class="w"> </span><span class="n">tab</span><span class="p">.</span><span class="n">table_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;BASE TABLE&#39;</span>
+<span class="c1">--      and tab.table_schema = &#39;your_database_name_here&#39;</span>
+<span class="k">order</span><span class="w"> </span><span class="k">by</span><span class="w"> </span><span class="n">tab</span><span class="p">.</span><span class="n">table_schema</span><span class="p">,</span>
+<span class="w">         </span><span class="n">tab</span><span class="p">.</span><span class="k">table_name</span><span class="p">;</span>
+</code></pre>
+</div>
+
+<p>Hope you found this tip useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>February 11th, 2023</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/mysql/">
+					MySQL
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
 			</div>
 		</section>
 		<section id="secondary">
 			<div class="sidebar">
 				<div class="author-intro">
-	<h3>MySQL</h3>
-	<p>There are <b>7</b> posts linked to this category.</p>
+	<h3>Hello, I'm Abdush Shakoor! &#x1F44B;</h3>
+	<p>I'm a programmer & designer based in Dubai, United Arab Emirates. I love tinkering with code and writing about what I learn.</p>
+	<p>Like this article? Please share it with your friends and colleagues or else, <a href="mailto:megacolorboy@gmail.com">send me</a> a private message about your feedback.</p>
+
 	<ul class="sitemap">
 		<li><a class="back" href="/"><span>👈</span> Check out more articles!</a></li>
 	</ul>

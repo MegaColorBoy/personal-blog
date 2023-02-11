@@ -78,6 +78,47 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/check-ram-disk-space">Check RAM and disk space</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<h2>RAM space</h2>
+
+<p>Type the following command to view available memory in your system:</p>
+
+<div class="codehilite">
+<pre><span></span><code>free<span class="w"> </span>-h
+</code></pre>
+</div>
+
+<h2>Disk space</h2>
+
+<p>Type the following command to view available disk space in your system:</p>
+
+<div class="codehilite">
+<pre><span></span><code>df<span class="w"> </span>-h
+</code></pre>
+</div>
+
+	</div>
+	<div class="article-footer">
+		<time>May 25th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/terminal/">
+					Terminal
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/symlink-shared-hosting">Symbolic storage link in shared hosting</a></h1>
 		<p class="description"></p>
 	</div>
@@ -677,166 +718,6 @@ Senior: Hmm, that&#39;s okay but I&#39;m talking using events in Laravel.
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/the-circle-packing-algorithm">The Circle Packing Algorithm</a></h1>
-		<p class="description">Implemented a mathematically beautiful generative pattern that looks deceivingly complex to the human.</p>
-	</div>
-	<div class="article-body">
-		<iframe width="100%" height="485" src="/static/projects/circle-packing"></iframe>
-
-<p>Beautiful, isn't it? It might look complex but it's mathematically quite impressive. Making this pattern wasn't hard but it definitely took a lot of trial and error to get it right and honestly, I don't really know if it's this is the most efficient way to generate this pattern.</p>
-
-<p>This article isn't a tutorial but rather, I'll be talking about the algorithm itself. However, you can check out the source code in my <a href="https://github.com/megacolorboy/BlogProjects">GitHub repository</a>.</p>
-
-<h2>How it works?</h2>
-
-<p>In order to achieve that "stacked" effect, there are two things to keep in mind:</p>
-
-<ol>
-<li>Generate circles with a random radius</li>
-<li>Look for collisions with other circles</li>
-</ol>
-
-<p>The logic is quite similar to the <a href="https://stackoverflow.com/questions/306316/determine-if-two-rectangles-overlap-each-other">Overlapping Rectangles</a> problem except this is done with circles.</p>
-
-<h2>Generate circles with dynamic radius</h2>
-
-<p>This method will help generate valid circles with a random radius. Circles that don't overlap or collide with other circles are considered to be valid.</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="c1">// Generate a valid circle</span>
-<span class="kd">const</span><span class="w"> </span><span class="nx">generateCircle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nx">newCircle</span><span class="p">;</span>
-<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nx">isValidCircle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">;</span>
-
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kd">let</span><span class="w"> </span><span class="nx">i</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">&lt;</span><span class="nx">attempts</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="nx">newCircle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">width</span><span class="p">),</span>
-<span class="w">            </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">width</span><span class="p">),</span>
-<span class="w">            </span><span class="nx">radius</span><span class="o">:</span><span class="w"> </span><span class="nx">minRadius</span>
-<span class="w">        </span><span class="p">};</span>
-
-<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="nx">checkForCollision</span><span class="p">(</span><span class="nx">newCircle</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="k">continue</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">        </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="nx">isValidCircle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="p">;</span>
-<span class="w">            </span><span class="k">break</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">isValidCircle</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
-
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kd">let</span><span class="w"> </span><span class="nx">i</span><span class="o">=</span><span class="nx">minRadius</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">&lt;=</span><span class="nx">maxRadius</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="nx">newCircle</span><span class="p">.</span><span class="nx">radius</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">i</span><span class="p">;</span>
-<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="nx">checkForCollision</span><span class="p">(</span><span class="nx">newCircle</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="nx">newCircle</span><span class="p">.</span><span class="nx">radius</span><span class="o">--</span><span class="p">;</span>
-<span class="w">            </span><span class="k">break</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="nx">circles</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">newCircle</span><span class="p">);</span>
-<span class="w">    </span><span class="nx">drawCircleOnCanvas</span><span class="p">(</span><span class="nx">context</span><span class="p">,</span><span class="w"> </span><span class="nx">newCircle</span><span class="p">,</span><span class="w"> </span><span class="nx">colors</span><span class="p">[</span><span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">colors</span><span class="p">.</span><span class="nx">length</span><span class="p">)]);</span>
-<span class="p">}</span>
-</code></pre>
-</div>
-
-<h2>Look for collision with other circles</h2>
-
-<p>Thanks to some online research, I was able implement the <a href="https://en.wikipedia.org/wiki/Euclidean_distance">Euclidean Distance</a> equation that helped with calculating the distances between each circle and detect for collisions. Along with that, I also found another article on <a href="http://www.mathsmutt.co.uk/files/tcirc.htm">Touching Circles</a> that was quite useful.</p>
-
-<p>These are the formulas used to detect the collision:</p>
-
-<ol>
-<li><p>Find the distance between two centres
-\[ AB = \sqrt{ (x2 - x1)^2 - (y2 - y1)^2} \]</p></li>
-<li><p>Calculate the radii of both circles.
-\[R = r1 + r2\]</p></li>
-</ol>
-
-<p>If the radii is greater than or equal to the euclidean distance of both circles, then it's a valid circle with no collisions.</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="c1">// Check for collision in a canvas</span>
-<span class="kd">const</span><span class="w"> </span><span class="nx">checkForCollision</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">newCircle</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
-
-<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nx">x2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">newCircle</span><span class="p">.</span><span class="nx">x</span><span class="p">;</span>
-<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nx">y2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">newCircle</span><span class="p">.</span><span class="nx">y</span><span class="p">;</span>
-<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nx">r2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">newCircle</span><span class="p">.</span><span class="nx">radius</span><span class="p">;</span>
-
-
-<span class="w">    </span><span class="c1">// Determine the euclidean distance between two circle</span>
-<span class="w">    </span><span class="c1">// using Pythagorean Theorem.</span>
-
-<span class="w">    </span><span class="c1">// Refer to: </span>
-<span class="w">    </span><span class="c1">// https://en.wikipedia.org/wiki/Euclidean_distance</span>
-
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kd">let</span><span class="w"> </span><span class="nx">i</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">&lt;</span><span class="nx">circles</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-
-<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="nx">otherCircle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">circles</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
-<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="nx">r1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">otherCircle</span><span class="p">.</span><span class="nx">radius</span><span class="p">;</span>
-<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="nx">x1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">otherCircle</span><span class="p">.</span><span class="nx">x</span><span class="p">;</span>
-<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="nx">y1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">otherCircle</span><span class="p">.</span><span class="nx">y</span><span class="p">;</span>
-<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="nx">xx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">((</span><span class="nx">x2</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">x1</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="nx">x2</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">x1</span><span class="p">));</span>
-<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="nx">yy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">((</span><span class="nx">y2</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">y1</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="nx">y2</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">y1</span><span class="p">));</span>
-<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="nx">radii</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">r2</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">r1</span><span class="p">;</span>
-<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="nx">euclidDistance</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">Math</span><span class="p">.</span><span class="nx">sqrt</span><span class="p">(</span><span class="nx">xx</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">yy</span><span class="p">);</span>
-
-<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="nx">radii</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="nx">euclidDistance</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="kc">true</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="c1">// Check collision on top</span>
-<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="nx">x2</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">r2</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="nx">width</span><span class="w"> </span><span class="o">||</span><span class="w"> </span>
-<span class="w">        </span><span class="nx">x2</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">r2</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mf">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="kc">true</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="c1">// Check collision on bottom</span>
-<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="nx">y2</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">r2</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="nx">width</span><span class="w"> </span><span class="o">||</span><span class="w"> </span>
-<span class="w">        </span><span class="nx">y2</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">r2</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mf">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="kc">true</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="c1">//else return false</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="kc">false</span><span class="p">;</span>
-<span class="p">}</span>
-</code></pre>
-</div>
-
-<h2>Conclusion</h2>
-
-<p>I'm thinking of implementing more generative patterns like <a href="https://en.wikipedia.org/wiki/Triangle_mesh">Triangular Mesh</a> and Piet Mondrian's <a href="https://en.wikipedia.org/wiki/Composition_with_Red_Blue_and_Yellow">Red, Blue and Yellow composition</a>.</p>
-
-<p>Hope you liked reading this article.</p>
-
-<p>Stay tuned for more!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>December 8th, 2019</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/algorithms/">
-					Algorithms
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/art/">
-					Art
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -1006,6 +887,13 @@ Senior: Hmm, that&#39;s okay but I&#39;m talking using events in Laravel.
 		</li>
 		
 		<li>
+			<a href="/category/mysql/">
+				MySQL
+				<span class="count">7</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/tutorial/">
 				Tutorial
 				<span class="count">6</span>
@@ -1015,13 +903,6 @@ Senior: Hmm, that&#39;s okay but I&#39;m talking using events in Laravel.
 		<li>
 			<a href="/category/update/">
 				Update
-				<span class="count">6</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/mysql/">
-				MySQL
 				<span class="count">6</span>
 			</a>
 		</li>

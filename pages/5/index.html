@@ -78,6 +78,130 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/install-mariadb-103-on-void-linux">Install MariaDB 10.3 on Void Linux</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>I tried to find a proper guide on how to install MySQL 8.0 on Void Linux but I couldn't really find any. So, I thought of installing MariaDB 10.3 on my laptop instead.</p>
+
+<p>Don't worry about using MariaDB as it meets the same standard enterprised requirements as MySQL. The only difference is that MySQL belongs to Oracle and MariaDB is for people who wanted to get out of Oracle's hands.</p>
+
+<p>Anyway, let's get started.</p>
+
+<h2>Prerequisites</h2>
+
+<ul>
+<li>Need to have root privileges in order to install packages.</li>
+<li>Basic know-how of Void Linux and it's <code>xbps</code> package manager.</li>
+</ul>
+
+<p>Alright, go ahead and follow these steps one-by-one:</p>
+
+<h3>1. Install MariaDB</h3>
+
+<p>Type the following command to install the package:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>xbps-install<span class="w"> </span>-S<span class="w"> </span>mariadb
+</code></pre>
+</div>
+
+<h3>2. Initialize MySQL data directory</h3>
+
+<p>The following command will initialize a MariaDB data directory and create system tables in the MySQL database, if they are not present.</p>
+
+<div class="codehilite">
+<pre><span></span><code>mysql_install_db<span class="w"> </span>--user<span class="o">=</span>mysql<span class="w"> </span>--basedir<span class="o">=</span>/usr<span class="w"> </span>--datadir<span class="o">=</span>/var/lib/mysql
+</code></pre>
+</div>
+
+<p>The options used:</p>
+
+<ul>
+<li><code>--user</code>: The login user name to use for running the <code>mysqld</code> process.</li>
+<li><code>--basedir</code> The path to the MariaDB installation directory.</li>
+<li><code>--datadir</code>: The path to the MariaDB directory.</li>
+</ul>
+
+<p>To know more about it, you can refer to <a href="https://mariadb.com/kb/en/mysql_install_db/">MariaDB's documentation</a>.</p>
+
+<h3>3. Enable MySQL service</h3>
+
+<p>If you are used to Ubuntu or CentOS, enabling services in Void Linux is a bit different but quite simple. Once a process is symlinked, it will start on boot and restarts if it stops unless you stop the service deliberately.</p>
+
+<p>Type the following command to enable the <code>mysqld</code> service:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>ln<span class="w"> </span>-s<span class="w"> </span>/etc/sv/mysqld<span class="w"> </span>/var/service/mysqld
+</code></pre>
+</div>
+
+<h3>4. Start MySQL service</h3>
+
+<p>Type the following command to start the <code>mysqld</code> service:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>sv<span class="w"> </span>start<span class="w"> </span>mysqld
+</code></pre>
+</div>
+
+<p>To confirm, if the service is running, type the following:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>sv<span class="w"> </span>status<span class="w"> </span>mysqld
+</code></pre>
+</div>
+
+<p>And you'll see something like this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>run:<span class="w"> </span>mysqld:<span class="w"> </span><span class="o">(</span>pid<span class="w"> </span><span class="m">15136</span><span class="o">)</span><span class="w"> </span>1116s<span class="p">;</span><span class="w"> </span>run:<span class="w"> </span>log:<span class="w"> </span><span class="o">(</span>pid<span class="w"> </span><span class="m">15025</span><span class="o">)</span><span class="w"> </span>1172s
+</code></pre>
+</div>
+
+<h3><a id="secure-mysql-installation"></a> 5. Secure MySQL installation</h3>
+
+<p>It's recommended to secure your installation, so type the following command:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>mysql_secure_installation
+</code></pre>
+</div>
+
+<p>Once the command is executed, you'll be prompted with a few questions, respond according to your needs and you're done!</p>
+
+<h3>6. Test MariaDB connection</h3>
+
+<p>Now, all you have to do is, try to log in to your database by typing the following:</p>
+
+<div class="codehilite">
+<pre><span></span><code>mysql<span class="w"> </span>-u<span class="w"> </span>root<span class="w"> </span>-p
+</code></pre>
+</div>
+
+<p>Once executed, it would prompt you for your password (which you must have set in the <a href="#secure-mysql-installation">previous step</a> and if you are able to log in, you are good to go!</p>
+
+<p>Hope this guide helps you out!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>January 16th, 2022</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/databases/">
+					Databases
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/writings/posts/is-selinux-complicated">Is SELinux complicated?</a></h1>
 		<p class="description">If you turn off SELinux for a living, try this.</p>
 	</div>
@@ -565,50 +689,6 @@ Stack<span class="w"> </span>trace:
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/view-your-wget-progress-even-after-closing-your-ssh-session">View your wget progress even after closing your SSH session</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Few days back, I ran a <code>wget</code> command to download a file and accidentally closed the SSH client.</p>
-
-<p>I logged in again and checked the list of active processes and thankfully, the <code>wget</code> process was still running except that I wasn't able to know the current progress of it.</p>
-
-<p>So, I did a little research and found a way to view the progress, so I tried the following command:</p>
-
-<div class="codehilite">
-<pre><span></span><code>tail<span class="w"> </span>-f<span class="w"> </span>wget_log
-</code></pre>
-</div>
-
-<p>And, I was able to view it's current download progress again.</p>
-
-<p>Hope this helps you out!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>August 13th, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/devops/">
-					DevOps
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/wget/">
-					wget
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -778,6 +858,13 @@ Stack<span class="w"> </span>trace:
 		</li>
 		
 		<li>
+			<a href="/category/mysql/">
+				MySQL
+				<span class="count">7</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/tutorial/">
 				Tutorial
 				<span class="count">6</span>
@@ -787,13 +874,6 @@ Stack<span class="w"> </span>trace:
 		<li>
 			<a href="/category/update/">
 				Update
-				<span class="count">6</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/mysql/">
-				MySQL
 				<span class="count">6</span>
 			</a>
 		</li>

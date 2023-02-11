@@ -78,6 +78,96 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/troubleshoot-time-related-ssl-errors-on-secure-websites">Troubleshoot time-related SSL errors on secure websites</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>As I was configuring Arch Linux setup on my old HP 8460p laptop, I noticed that I wasn't able to access any site using Chrome or Firefox as I was faced with a weird error:</p>
+
+<p><!--- <img src="../../../static/til_images/ssl-time-error.png" alt="SSL Certificate Error" />-->
+<img src="../../../static/til_images/ssl-time-error.png" style="width: 500px;" /></p>
+
+<p>I was quite confused and thought it might be an issue with my WiFi card or probably some server issue but turns out it was neither of them.</p>
+
+<p>On the side of my screen, I noticed my system time was displaying 4 hours ahead of the current local time, which is wrong. So, I did a little research and turns out my suspicions were correct, it's a time-related issue.</p>
+
+<h2>How is time related to secure websites?</h2>
+
+<p>Well, each website that uses SSL or that begins with <code>https://</code> are only valid for a period of time before getting expired. If the website that you're trying to visit presents a certificate with a time and date that doesn't match with your system's clock, Firefox will prevent you from accessing the page.</p>
+
+<h2>How to fix it?</h2>
+
+<p>Actually, the fix is quite simple. All you have to is just set the correct date and time on your system and you're good to go!</p>
+
+<p>If you're using Linux, just do the following:</p>
+
+<h3>1. Set up your timezone</h3>
+
+<p>You can look up for your timezones by executing the following:</p>
+
+<div class="codehilite">
+<pre><span></span><code>timedatectl<span class="w"> </span>list-timezones<span class="w"> </span><span class="p">|</span><span class="w"> </span>less
+</code></pre>
+</div>
+
+<p>Once, you've found your timezone, execute the following by replacing <code>Continent/Country</code> with your timezone:</p>
+
+<div class="codehilite">
+<pre><span></span><code>timedatectl<span class="w"> </span>set-timezone<span class="w"> </span>Continent/Country
+</code></pre>
+</div>
+
+<h3>2. Manually set your local time</h3>
+
+<p>Execute the following to set up your time, locally on your system:</p>
+
+<div class="codehilite">
+<pre><span></span><code>timedatectl<span class="w"> </span>set-time<span class="w"> </span><span class="s2">&quot;yyyy-MM-dd hh:mm:ss&quot;</span>
+</code></pre>
+</div>
+
+<h3>3. Set the hardware clock from the system clock</h3>
+
+<p>The following command sets the hardware clock from the system clock:</p>
+
+<div class="codehilite">
+<pre><span></span><code>hwclock<span class="w"> </span>--systohc
+</code></pre>
+</div>
+
+<p>Now, that you've executed them, you should be able to view the correct time on your system by executing <code>timedatectl status</code> and you should see something like this:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="w">               </span>Local<span class="w"> </span>time:<span class="w"> </span>Sun<span class="w"> </span><span class="m">2020</span>-06-14<span class="w"> </span><span class="m">21</span>:04:04<span class="w"> </span>+04
+<span class="w">           </span>Universal<span class="w"> </span>time:<span class="w"> </span>Sun<span class="w"> </span><span class="m">2020</span>-06-14<span class="w"> </span><span class="m">17</span>:04:04<span class="w"> </span>UTC
+<span class="w">                 </span>RTC<span class="w"> </span>time:<span class="w"> </span>Sun<span class="w"> </span><span class="m">2020</span>-06-14<span class="w"> </span><span class="m">17</span>:04:05<span class="w">    </span>
+<span class="w">                </span>Time<span class="w"> </span>zone:<span class="w"> </span>Asia/Dubai<span class="w"> </span><span class="o">(</span>+04,<span class="w"> </span>+0400<span class="o">)</span><span class="w">    </span>
+System<span class="w"> </span>clock<span class="w"> </span>synchronized:<span class="w"> </span>no<span class="w">                         </span>
+<span class="w">              </span>NTP<span class="w"> </span>service:<span class="w"> </span>inactive<span class="w"> </span>
+</code></pre>
+</div>
+
+<p>Although, this issue was time-related, you may face the same kind of error for various other reasons. Try reading more on how to <a href="https://support.mozilla.org/en-US/kb/troubleshoot-time-errors-secure-websites">troubleshoot</a> errors like these from Mozilla's official documentation.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>June 14th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/ssl/">
+					SSL
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/transfer-files-remotely-using-scp">Transfer files remotely using SCP</a></h1>
 		<p class="description"></p>
 	</div>
@@ -608,53 +698,6 @@ ping<span class="w"> </span>-c<span class="w"> </span><span class="m">3</span><s
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/allow-inline-elements-in-ckeditor">Allow inline elements in CKEditor</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Using CKEditor is awesome but I hate it when it removes inline elements like <code>&lt;span&gt;</code>, <code>&lt;i&gt;</code> or any DOM elements that contain attributes like classnames or ID, by default.</p>
-
-<p>Well, CKEditor's <a href="https://ckeditor.com/docs/ckeditor4/latest/guide/dev_allowed_content_rules.html">documentation</a> states that you can allow it by adding this line to your configuration:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">editor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">CKEDITOR</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="s1">&#39;textarea_edit&#39;</span><span class="p">,{</span>
-<span class="w">    </span><span class="nx">allowedContent</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
-<span class="p">});</span>
-</code></pre>
-</div>
-
-<p>After adding this line, CKEditor will stop removing those elements from your HTML content but it's also open to all tags. </p>
-
-<p>You can set rules to allow only specific ones like this:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">editor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">CKEDITOR</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="s1">&#39;textarea_edit&#39;</span><span class="p">,{</span>
-<span class="w">    </span><span class="nx">allowedContent</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;span; i; ul; li; a[!href]&#39;</span>
-<span class="p">});</span>
-</code></pre>
-</div>
-
-<p>Hope this helps you out! &#x1F60A;</p>
-
-	</div>
-	<div class="article-footer">
-		<time>June 1st, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/javascript/">
-					JavaScript
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -824,6 +867,13 @@ ping<span class="w"> </span>-c<span class="w"> </span><span class="m">3</span><s
 		</li>
 		
 		<li>
+			<a href="/category/mysql/">
+				MySQL
+				<span class="count">7</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/tutorial/">
 				Tutorial
 				<span class="count">6</span>
@@ -833,13 +883,6 @@ ping<span class="w"> </span>-c<span class="w"> </span><span class="m">3</span><s
 		<li>
 			<a href="/category/update/">
 				Update
-				<span class="count">6</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/mysql/">
-				MySQL
 				<span class="count">6</span>
 			</a>
 		</li>

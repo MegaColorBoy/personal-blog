@@ -77,6 +77,56 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/list-tables-that-dont-have-primary-keys-in-a-mysql-database">List tables that don't have primary keys in a MySQL database</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Whenever I restore a database dump on a MySQL InnoDB Cluster, most of the time, the error I face is related to missing <code>PRIMARY KEY</code> attribute because as per <a href="https://dev.mysql.com/doc/refman/8.0/en/group-replication-requirements.html">MySQL's official documentation</a>:</p>
+
+<blockquote>
+  <p>Every table that is to be replicated by the group must have a defined primary key, or primary key equivalent where the equivalent is non-null unique key.</p>
+</blockquote>
+
+<p>What I would usually do is, run a simple query to determine the list of the tables that don't the <code>PRIMARY KEY</code> attribute:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">select</span><span class="w"> </span><span class="n">tab</span><span class="p">.</span><span class="n">table_schema</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">database_name</span><span class="p">,</span>
+<span class="w">       </span><span class="n">tab</span><span class="p">.</span><span class="k">table_name</span>
+<span class="k">from</span><span class="w"> </span><span class="n">information_schema</span><span class="p">.</span><span class="k">tables</span><span class="w"> </span><span class="n">tab</span>
+<span class="k">left</span><span class="w"> </span><span class="k">join</span><span class="w"> </span><span class="n">information_schema</span><span class="p">.</span><span class="n">table_constraints</span><span class="w"> </span><span class="n">tco</span>
+<span class="w">          </span><span class="k">on</span><span class="w"> </span><span class="n">tab</span><span class="p">.</span><span class="n">table_schema</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tco</span><span class="p">.</span><span class="n">table_schema</span>
+<span class="w">          </span><span class="k">and</span><span class="w"> </span><span class="n">tab</span><span class="p">.</span><span class="k">table_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tco</span><span class="p">.</span><span class="k">table_name</span>
+<span class="w">          </span><span class="k">and</span><span class="w"> </span><span class="n">tco</span><span class="p">.</span><span class="n">constraint_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;PRIMARY KEY&#39;</span>
+<span class="k">where</span><span class="w"> </span><span class="n">tco</span><span class="p">.</span><span class="n">constraint_type</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="no">null</span>
+<span class="w">      </span><span class="k">and</span><span class="w"> </span><span class="n">tab</span><span class="p">.</span><span class="n">table_schema</span><span class="w"> </span><span class="k">not</span><span class="w"> </span><span class="k">in</span><span class="p">(</span><span class="s1">&#39;mysql&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;information_schema&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;performance_schema&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;sys&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="k">and</span><span class="w"> </span><span class="n">tab</span><span class="p">.</span><span class="n">table_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;BASE TABLE&#39;</span>
+<span class="c1">--      and tab.table_schema = &#39;your_database_name_here&#39;</span>
+<span class="k">order</span><span class="w"> </span><span class="k">by</span><span class="w"> </span><span class="n">tab</span><span class="p">.</span><span class="n">table_schema</span><span class="p">,</span>
+<span class="w">         </span><span class="n">tab</span><span class="p">.</span><span class="k">table_name</span><span class="p">;</span>
+</code></pre>
+</div>
+
+<p>Hope you found this tip useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>February 11th, 2023</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/mysql/">
+					MySQL
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/playing-around-with-imagemagick">Playing around with ImageMagick</a></h1>
 		<p class="description"></p>
 	</div>
@@ -607,83 +657,6 @@ sudo<span class="w"> </span>sysctl<span class="w"> </span>-w<span class="w"> </s
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/install-docker-on-fedora-3536">Install Docker on Fedora 35/36</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Recently, I started to play around with Docker and I thought of installing on my personal laptop which runs Fedora 36 workstation.</p>
-
-<p>If you have Fedora and want to know how to install it, here it is:</p>
-
-<h2>Install Docker Engine</h2>
-
-<p>First, add the official Docker repositories to your Fedora OS:</p>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>dnf<span class="w"> </span>install<span class="w"> </span>dnf-plugins-core<span class="w"> </span>-y
-sudo<span class="w"> </span>dnf<span class="w"> </span>config-manager<span class="w"> </span>--add-repo<span class="w"> </span>https://download.docker.com/linux/fedora/docker-ce.repo
-</code></pre>
-</div>
-
-<p>Then, you can run the following command to install Docker and it's dependencies:</p>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>dnf<span class="w"> </span>install<span class="w"> </span>docker-ce<span class="w"> </span>docker-ce-cli<span class="w"> </span>containerd.io
-</code></pre>
-</div>
-
-<p>During installation, you'll be prompted to import the GPG key in order to install Docker on your system. So, press <kbd>Y</kbd> to proceed with the installation.</p>
-
-<p>Next, enable and start the docker service:</p>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>systemctl<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>docker
-sudo<span class="w"> </span>systemctl<span class="w"> </span>start<span class="w"> </span>docker
-</code></pre>
-</div>
-
-<p>That's it you are done. You can try running the following command to see if it's installed properly on your system:</p>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>docker<span class="w"> </span>run<span class="w"> </span>hello-world
-</code></pre>
-</div>
-
-<p>If it works fine, you should be seeing a "Hello from Docker!" message which means that the installation appears to be working fine.</p>
-
-<p>Hope you found this tutorial useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>October 1st, 2022</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/devops/">
-					DevOps
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/linux/">
-					Linux
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/docker/">
-					Docker
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -703,11 +676,11 @@ sudo<span class="w"> </span>systemctl<span class="w"> </span>start<span class="w
 		
 	
 		
-			<a class="" href="/til/pages/13">...</a>
+			<a class="" href="/til/pages/14">...</a>
 		
 	
 		
-			<a class="" href="/til/pages/16">16</a>
+			<a class="" href="/til/pages/17">17</a>
 		
 	
 
@@ -823,6 +796,13 @@ sudo<span class="w"> </span>systemctl<span class="w"> </span>start<span class="w
 		</li>
 		
 		<li>
+			<a href="/category/mysql/">
+				MySQL
+				<span class="count">7</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/tutorial/">
 				Tutorial
 				<span class="count">6</span>
@@ -832,13 +812,6 @@ sudo<span class="w"> </span>systemctl<span class="w"> </span>start<span class="w
 		<li>
 			<a href="/category/update/">
 				Update
-				<span class="count">6</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/mysql/">
-				MySQL
 				<span class="count">6</span>
 			</a>
 		</li>

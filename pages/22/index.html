@@ -78,6 +78,285 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/writings/posts/the-15-puzzle-game">The 15 Puzzle Game</a></h1>
+		<p class="description">A classical numbered puzzle that requires the player to place all the tiles in an ordered sequence.</p>
+	</div>
+	<div class="article-body">
+		<iframe src="/static/projects/15-puzzle" width="500" height="500"></iframe>
+
+<p>Before you read this article, play with the above puzzle. You can move the block around by <strong><em>left-clicking</em></strong> on a numbered tile that's adjacent to the empty tile.</p>
+
+<p>The source code for this puzzle can be found <a href="https://github.com/megacolorboy/BlogProjects/tree/master/15-puzzle">over here</a>.</p>
+
+<h2>Background</h2>
+
+<p>This is a game that has been on my list of projects for a long time and I've finally decided to work on it last night. Although, this post has nothing to do with Artificial Intelligence, I was inspired to write this game when I studied about <a href="https://en.wikipedia.org/wiki/Heuristic_(computer_science)">Heuristics</a> in the book named <a href="/posts/artificial-intelligence-a-modern-approach--chapter-1">Artificial Intelligence: A Modern Approach</a> and on how it was applied to this game.</p>
+
+<h2>What are the game mechanics?</h2>
+
+<p>This game is played on a <strong><em>four-by-four</em></strong> grid with numbered tiles that are shuffled randomly. As you can see, there are <strong><em>15 numbered cells</em></strong> and <strong><em>1 empty cell</em></strong> in the grid, this is to allow movement of the tiles within the grid.</p>
+
+<p>However, the movement is limited to the numbered tiles that are adjacent to the empty tile.</p>
+
+<p>The player wins the game after ordering all the numbered tiles in the grid in an order of ascending sequence.</p>
+
+<h2>Source code</h2>
+
+<p>Here's the source code of the entire game:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">board</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[],</span><span class="w"> </span><span class="nx">rows</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">4</span><span class="p">,</span><span class="w"> </span><span class="nx">cols</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">4</span><span class="p">;</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">possibleMoves</span><span class="p">,</span><span class="w"> </span><span class="nx">zx</span><span class="p">,</span><span class="w"> </span><span class="nx">zy</span><span class="p">,</span><span class="w"> </span><span class="nx">oldzx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">-</span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="nx">oldzy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">-</span><span class="mf">1</span><span class="p">;</span>
+
+<span class="c1">//Generate 2D Board</span>
+<span class="kd">function</span><span class="w"> </span><span class="nx">generateBoard</span><span class="p">()</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kd">var</span><span class="w"> </span><span class="nx">i</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">&lt;</span><span class="nx">rows</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">board</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[];</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kd">var</span><span class="w"> </span><span class="nx">j</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span><span class="w"> </span><span class="nx">j</span><span class="o">&lt;</span><span class="nx">cols</span><span class="p">;</span><span class="w"> </span><span class="nx">j</span><span class="o">++</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kd">var</span><span class="w"> </span><span class="nx">i</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">&lt;</span><span class="nx">rows</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="nx">board</span><span class="p">[</span><span class="nx">j</span><span class="p">][</span><span class="nx">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">j</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">4</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">1</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1">//position of the empty cell in the grid i.e. 3,3</span>
+<span class="w">    </span><span class="nx">zx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">zy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">3</span><span class="p">;</span>
+<span class="w">    </span><span class="nx">board</span><span class="p">[</span><span class="nx">zx</span><span class="p">][</span><span class="nx">zy</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">16</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="c1">//Generate the cells</span>
+<span class="kd">function</span><span class="w"> </span><span class="nx">generateCells</span><span class="p">()</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">grid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">document</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s2">&quot;div&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="nx">grid</span><span class="p">.</span><span class="nx">className</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="s2">&quot;board&quot;</span><span class="p">;</span>
+
+<span class="w">    </span><span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">appendChild</span><span class="p">(</span><span class="nx">grid</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kd">var</span><span class="w"> </span><span class="nx">j</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span><span class="w"> </span><span class="nx">j</span><span class="o">&lt;</span><span class="mf">4</span><span class="p">;</span><span class="w"> </span><span class="nx">j</span><span class="o">++</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kd">var</span><span class="w"> </span><span class="nx">i</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">&lt;</span><span class="mf">4</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="kd">var</span><span class="w"> </span><span class="nx">cell</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">document</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s2">&quot;div&quot;</span><span class="p">);</span>
+<span class="w">            </span><span class="nx">cell</span><span class="p">.</span><span class="nx">className</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="s2">&quot;cell&quot;</span><span class="p">;</span>
+<span class="w">            </span><span class="nx">cell</span><span class="p">.</span><span class="nx">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;cell_&quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="p">(</span><span class="nx">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">j</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">4</span><span class="p">);</span>
+<span class="w">            </span><span class="nx">cell</span><span class="p">.</span><span class="nx">row</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">i</span><span class="p">;</span>
+<span class="w">            </span><span class="nx">cell</span><span class="p">.</span><span class="nx">col</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">j</span><span class="p">;</span>
+<span class="w">            </span><span class="nx">cell</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&quot;click&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">cellEventHandle</span><span class="p">,</span><span class="w"> </span><span class="kc">false</span><span class="p">);</span>
+<span class="w">            </span><span class="nx">cell</span><span class="p">.</span><span class="nx">appendChild</span><span class="p">(</span><span class="nb">document</span><span class="p">.</span><span class="nx">createTextNode</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">));</span>
+<span class="w">            </span><span class="nx">grid</span><span class="p">.</span><span class="nx">appendChild</span><span class="p">(</span><span class="nx">cell</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="cm">/*</span>
+<span class="cm">    Determine the possible number of moves</span>
+<span class="cm">    based on the empty cell&#39;s coordinates.</span>
+<span class="cm">*/</span>
+<span class="kd">function</span><span class="w"> </span><span class="nx">genPossibleMoves</span><span class="p">()</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="nx">possibleMoves</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[];</span>
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">ii</span><span class="p">,</span><span class="w"> </span><span class="nx">jj</span><span class="p">;</span>
+
+<span class="w">    </span><span class="cm">/*</span>
+<span class="cm">        Just for reference:</span>
+<span class="cm">        The empty cell can be moved in the following x,y coords:</span>
+<span class="cm">        -1,0, 0,-1, 1,0, 0,1</span>
+<span class="cm">    */</span>
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">xCoords</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="o">-</span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="mf">0</span><span class="p">];</span>
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">yCoords</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="mf">1</span><span class="p">];</span>
+
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kd">var</span><span class="w"> </span><span class="nx">i</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">&lt;</span><span class="mf">4</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">ii</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">zx</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">xCoords</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
+<span class="w">        </span><span class="nx">jj</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">zy</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">yCoords</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
+
+<span class="w">        </span><span class="c1">//If it&#39;s out of bounds, skip it</span>
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="nx">ii</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mf">0</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nx">jj</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mf">0</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nx">ii</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">3</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nx">jj</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">3</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">continue</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="nx">possibleMoves</span><span class="p">.</span><span class="nx">push</span><span class="p">({</span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="nx">ii</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="nx">jj</span><span class="p">});</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kd">function</span><span class="w"> </span><span class="nx">updateCells</span><span class="p">()</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kd">var</span><span class="w"> </span><span class="nx">j</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span><span class="w"> </span><span class="nx">j</span><span class="o">&lt;</span><span class="nx">cols</span><span class="p">;</span><span class="w"> </span><span class="nx">j</span><span class="o">++</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kd">var</span><span class="w"> </span><span class="nx">i</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">&lt;</span><span class="nx">rows</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="kd">var</span><span class="w"> </span><span class="nx">cell_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;cell_&quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="p">(</span><span class="nx">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">j</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">4</span><span class="p">);</span>
+<span class="w">            </span><span class="kd">var</span><span class="w"> </span><span class="nx">cell</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="nx">cell_id</span><span class="p">);</span>
+<span class="w">            </span><span class="kd">var</span><span class="w"> </span><span class="nx">val</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">board</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="nx">j</span><span class="p">];</span>
+
+<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="nx">val</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mf">16</span><span class="p">)</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">                </span><span class="nx">cell</span><span class="p">.</span><span class="nx">innerHTML</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">val</span><span class="p">);</span>
+<span class="w">                </span><span class="k">if</span><span class="p">(</span><span class="nx">val</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mf">2</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mf">0</span><span class="p">)</span>
+<span class="w">                </span><span class="p">{</span>
+<span class="w">                    </span><span class="nx">cell</span><span class="p">.</span><span class="nx">className</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;cell dark&quot;</span><span class="p">;</span><span class="w">               </span>
+<span class="w">                </span><span class="p">}</span>
+<span class="w">                </span><span class="k">else</span>
+<span class="w">                </span><span class="p">{</span>
+<span class="w">                    </span><span class="nx">cell</span><span class="p">.</span><span class="nx">className</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;cell light&quot;</span><span class="p">;</span>
+<span class="w">                </span><span class="p">}</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">            </span><span class="k">else</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">                </span><span class="nx">cell</span><span class="p">.</span><span class="nx">innerHTML</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="p">;</span>
+<span class="w">                </span><span class="nx">cell</span><span class="p">.</span><span class="nx">className</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;empty&quot;</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1">//Event handler for each cell</span>
+<span class="kd">function</span><span class="w"> </span><span class="nx">cellEventHandle</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="nx">genPossibleMoves</span><span class="p">();</span>
+
+<span class="w">    </span><span class="c1">//Current coords of the cell</span>
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">r</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">e</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">row</span><span class="p">;</span>
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">e</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">col</span><span class="p">;</span>
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">pos</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">-</span><span class="mf">1</span><span class="p">;</span>
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">isPossible</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">;</span>
+<span class="w">    </span><span class="c1">// console.log(r + &quot;,&quot; + c);</span>
+
+<span class="w">    </span><span class="cm">/*</span>
+<span class="cm">        Check if the current cell is </span>
+<span class="cm">        one of the possible moves</span>
+<span class="cm">    */</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kd">var</span><span class="w"> </span><span class="nx">i</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">&lt;</span><span class="nx">possibleMoves</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="nx">possibleMoves</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">x</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nx">r</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">possibleMoves</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">y</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nx">c</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="nx">isPossible</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="p">;</span>
+<span class="w">            </span><span class="nx">pos</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">i</span><span class="p">;</span>
+<span class="w">            </span><span class="k">break</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="nx">isPossible</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="kd">var</span><span class="w"> </span><span class="nx">temp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">possibleMoves</span><span class="p">[</span><span class="nx">pos</span><span class="p">];</span>
+
+<span class="w">        </span><span class="c1">//Swap position of the empty cell</span>
+<span class="w">        </span><span class="nx">board</span><span class="p">[</span><span class="nx">zx</span><span class="p">][</span><span class="nx">zy</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">board</span><span class="p">[</span><span class="nx">temp</span><span class="p">.</span><span class="nx">x</span><span class="p">][</span><span class="nx">temp</span><span class="p">.</span><span class="nx">y</span><span class="p">];</span>
+<span class="w">        </span><span class="c1">//Update the coordinates of the empty cell</span>
+<span class="w">        </span><span class="nx">zx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">temp</span><span class="p">.</span><span class="nx">x</span><span class="p">;</span>
+<span class="w">        </span><span class="nx">zy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">temp</span><span class="p">.</span><span class="nx">y</span><span class="p">;</span>
+<span class="w">        </span><span class="nx">board</span><span class="p">[</span><span class="nx">zx</span><span class="p">][</span><span class="nx">zy</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">16</span><span class="p">;</span>
+<span class="w">        </span><span class="nx">updateCells</span><span class="p">();</span>
+
+<span class="w">        </span><span class="c1">//Check if the game is over</span>
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="nx">is_game_over</span><span class="p">())</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="nx">setTimeout</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
+<span class="w">                </span><span class="nx">alert</span><span class="p">(</span><span class="s2">&quot;Congrats!&quot;</span><span class="p">);</span>
+<span class="w">            </span><span class="p">},</span><span class="w"> </span><span class="mf">2</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="p">}</span>
+
+<span class="c1">//Check if the game is over</span>
+<span class="kd">function</span><span class="w"> </span><span class="nx">is_game_over</span><span class="p">()</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">currentVal</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0</span><span class="p">;</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kd">var</span><span class="w"> </span><span class="nx">j</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span><span class="w"> </span><span class="nx">j</span><span class="o">&lt;</span><span class="nx">cols</span><span class="p">;</span><span class="w"> </span><span class="nx">j</span><span class="o">++</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kd">var</span><span class="w"> </span><span class="nx">i</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">&lt;</span><span class="nx">rows</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="nx">board</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="nx">j</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="nx">currentVal</span><span class="p">)</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="kc">false</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span>
+
+<span class="w">            </span><span class="nx">currentVal</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">board</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="nx">j</span><span class="p">];</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="kc">true</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="c1">//Shuffle the board</span>
+<span class="kd">function</span><span class="w"> </span><span class="nx">shuffleBoard</span><span class="p">()</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">shuffleLimit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0</span><span class="p">;</span>
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">temp</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">do</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">genPossibleMoves</span><span class="p">();</span>
+
+<span class="w">        </span><span class="k">while</span><span class="p">(</span><span class="kc">true</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="c1">// Pick a random cell of possible moves</span>
+<span class="w">            </span><span class="nx">temp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">possibleMoves</span><span class="p">[</span><span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">possibleMoves</span><span class="p">.</span><span class="nx">length</span><span class="p">)];</span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">temp</span><span class="p">.</span><span class="nx">x</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="nx">oldzx</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nx">temp</span><span class="p">.</span><span class="nx">y</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="nx">oldzy</span><span class="p">)</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">                </span><span class="k">break</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="nx">oldzx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">zx</span><span class="p">;</span>
+<span class="w">        </span><span class="nx">oldzy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">zy</span><span class="p">;</span>
+
+<span class="w">        </span><span class="nx">board</span><span class="p">[</span><span class="nx">zx</span><span class="p">][</span><span class="nx">zy</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">board</span><span class="p">[</span><span class="nx">temp</span><span class="p">.</span><span class="nx">x</span><span class="p">][</span><span class="nx">temp</span><span class="p">.</span><span class="nx">y</span><span class="p">];</span>
+<span class="w">        </span><span class="nx">zx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">temp</span><span class="p">.</span><span class="nx">x</span><span class="p">;</span>
+<span class="w">        </span><span class="nx">zy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">temp</span><span class="p">.</span><span class="nx">y</span><span class="p">;</span>
+<span class="w">        </span><span class="nx">board</span><span class="p">[</span><span class="nx">zx</span><span class="p">][</span><span class="nx">zy</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">16</span><span class="p">;</span>
+
+<span class="w">    </span><span class="p">}</span><span class="k">while</span><span class="p">(</span><span class="o">++</span><span class="nx">shuffleLimit</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mf">200</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="c1">//REstart the game</span>
+<span class="kd">function</span><span class="w"> </span><span class="nx">restart</span><span class="p">()</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="nx">shuffleBoard</span><span class="p">();</span>
+<span class="w">    </span><span class="nx">updateCells</span><span class="p">();</span>
+<span class="p">}</span>
+
+<span class="c1">//Start the game</span>
+<span class="kd">function</span><span class="w"> </span><span class="nx">start</span><span class="p">()</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="nx">generateBoard</span><span class="p">();</span>
+<span class="w">    </span><span class="nx">generateCells</span><span class="p">();</span>
+<span class="w">    </span><span class="nx">restart</span><span class="p">();</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<p>As I had mentioned above, today's article has nothing to do with Artificial Intelligence but in the future, I plan to write a solver for this game that makes use of Heuristics.</p>
+
+<p>Hope you liked reading this article and have fun playing the game!</p>
+
+<p>Stay tuned for more!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>June 22nd, 2019</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/personal-challenge/">
+					Personal Challenge
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/writings/posts/keep-a-programming-journal-using-vim-and-bash">Keep a programming journal using VIM and Bash</a></h1>
 		<p class="description">Become a better programmer by writing your own programming journal using VIM and Bash.</p>
 	</div>
@@ -1313,116 +1592,6 @@ justo. Donec porta id mi non porttitor. Fusce id est sit amet leo consectetur co
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/goodbye-windows-10">Goodbye, Windows 10!</a></h1>
-		<p class="description">An essay on why I switched from Windows 10 to Ubuntu 18.04 LTS.</p>
-	</div>
-	<div class="article-body">
-		<p>Ah, it's been a long time since I had posted anything on my blog. In
-today's article, I will be talking about my switch from Windows 10 to
-Ubuntu 18.04 LTS.</p>
-
-<h2>Why did I make the switch?</h2>
-
-<p>I grew up using different versions of Windows OS and my favorite one is
-Windows 7. I use Windows 8.1 at work and macOS High Sierra on my
-mid-2010 MacBook Pro at home.</p>
-
-<p>Recently, I bought myself a Dell XPS 9360 for serious development. Below
-are the specs:</p>
-
-<ul>
-<li>Intel Core i7 @ 2.4Ghz 7th Generation</li>
-<li>256GB SSD</li>
-<li>8GB RAM</li>
-<li>13.3" Inch Full-HD Display</li>
-</ul>
-
-<p>However, I did have an issue with it, it came pre-installed with a bloated Windows 10.</p>
-
-<p>I tried giving Windows 10 a shot even after reading several blog posts
-on how Microsoft collects data, forces updates that users can't opt out
-of and so on.</p>
-
-<p>Then one fine day, I left my laptop to download some files and then
-Windows decides to update without asking for my permission. My download
-got disrupted and I finally decided to make the switch.</p>
-
-<p>Besides that, I wanted to have a good environment that's secure,
-programmer friendly and wanted to use the Terminal, which is a
-programmer's sweet spot for automation, executing scripts and accessing
-remote machines and so on.</p>
-
-<h2>Choosing a Linux distribution</h2>
-
-<p>At first, I wanted to try out Arch Linux for it's strong community and
-amazing configurations but I thought of taking a safe side by trying out
-Ubuntu.</p>
-
-<p>I downloaded the latest distribution from the official website and
-created a bootable USB drive. Later, I changed my laptop's BIOS
-configuration to Legacy mode from it's UEFI Secure Boot mode, which was
-a bit annoying.</p>
-
-<p>After everything was done, I plugged in the bootable USB drive and
-voila, Ubuntu's loaded on my screen.</p>
-
-<h2>Check for Hardware Compatibility</h2>
-
-<p>If you've read some articles, you might find some people writing out
-comments that when you install Linux on your computer, you might face
-some hardware compatibility issues. You can be detect it beforehand by
-trying it out on a bootable USB drive.</p>
-
-<p>Luckily, thanks to Dell's hardware support for Linux, it detected all of
-my laptop's hardware without any issues.</p>
-
-<p>I decided to go with a minimal installation as I don't want to have any
-bloatware on my computer.</p>
-
-<h2>Hello Ubuntu!</h2>
-
-<p>Ubuntu's new user interface looks really clean and minimal and it looked
-really vibrant in my laptop's Full HD Display.</p>
-
-<p>The boot time was fast and it took a mere few seconds to display the
-login screen. As soon as I logged in, I installed the necessary
-development tools such as gcc, python, perl, git, node.js, npm package
-manager, Emacs text editor and more.</p>
-
-<h2>Conclusion</h2>
-
-<p>Well, every operating system has it's own pros and cons, likewise, Linux
-has a few cons such as that I won't be able to use Adobe applications
-like Photoshop and Illustrator but that's not a big deal for me as my
-focus is purely on development.</p>
-
-<p>If you're a programmer and serious about development, I would strongly
-recommend you to try it out and you'll never want to return back to
-Windows again.</p>
-
-<p>Hope you liked reading this article!</p>
-
-<p>Adios Amigo!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>November 2nd, 2018</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/essay/">
-					Essay
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -1592,6 +1761,13 @@ Windows again.</p>
 		</li>
 		
 		<li>
+			<a href="/category/mysql/">
+				MySQL
+				<span class="count">7</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/tutorial/">
 				Tutorial
 				<span class="count">6</span>
@@ -1601,13 +1777,6 @@ Windows again.</p>
 		<li>
 			<a href="/category/update/">
 				Update
-				<span class="count">6</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/mysql/">
-				MySQL
 				<span class="count">6</span>
 			</a>
 		</li>
