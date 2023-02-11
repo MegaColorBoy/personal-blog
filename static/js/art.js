@@ -367,7 +367,54 @@ let generativeArt = (() => {
 	};
 	// TODO: Lines
 	_self.lines = () => {
-		console.log("coming soon.");
+		injectStyle = () => {
+			style = `<style>
+				.lines-art {
+					background-color: #111111;
+					width: 100%;
+					height: 100%;
+					border-radius: 4px;
+					margin: 5px 0px 0px;
+					overflow: hidden;
+				}
+			</style>`;
+			document.head.insertAdjacentHTML("beforeend", style);
+		},
+		draw = (ctx, x, y, width, height) => {
+			let leftToRight = Math.random() >= 0.5;
+			if(leftToRight) {
+				ctx.moveTo(x, y);
+				ctx.lineTo(x + width, y + height);    
+			} else {
+				ctx.moveTo(x + width, y);
+				ctx.lineTo(x, y + height);
+			}
+			ctx.strokeStyle = "#555555";
+			ctx.stroke();
+		},
+		generateCanvasPattern = () => {
+			let step = 20;
+			let linesArtCanvases = document.querySelectorAll(".lines-art");
+			linesArtCanvases.forEach((el, idx) => {
+				ctx = el.getContext('2d');
+				ctx.canvas.width = 500;
+				ctx.canvas.height = 200;
+				ctx.lineCap = 'round';
+				ctx.lineWidth = 2;
+
+				for(let x = 0; x < ctx.canvas.width; x += step) {
+					for(let y = 0; y < ctx.canvas.height; y+= step) {
+						draw(ctx, x, y, step, step);    
+					}
+				}
+			})
+		},
+		init = () => {
+			injectStyle();
+			_self.utils.injectArtPlaceholderIntoArticles('lines-art', 'canvas');
+			generateCanvasPattern();
+		};
+		init();
 	};
 	// TODO: Joy Division
 	_self.joyDivision = () => {
@@ -376,7 +423,7 @@ let generativeArt = (() => {
 	// Main function
 	_self.init = () => {
 		// let methods = ['truchetTriangles', 'truchetQuarterCircles', 'bauhaus', 'pixels'];
-		let methods = ['truchetTriangles', 'truchetQuarterCircles', 'bauhaus'];
+		let methods = ['truchetTriangles', 'truchetQuarterCircles', 'bauhaus', 'lines'];
 		_self[methods[_self.utils.generateRandomNumber(0,methods.length-1)]]();
 	};
 	return _self;
