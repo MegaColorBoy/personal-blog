@@ -78,6 +78,124 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/install-pfx-certificate-on-a-linux-server">Install PFX certificate on a Linux server</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>I would consider this as an extended post to my <a href="https://www.megacolorboy.com/til/posts/extract-private-key-and-certificate-from-pfx-file/">previous post</a> that I had written six months ago.</p>
+
+<p>A PFX Certificate usually contains the following in PKCS#12 format:</p>
+
+<ul>
+<li>The actual certificate.</li>
+<li>The private key to the certificate.</li>
+<li>The Intermediate authority certificate that ensures the trustworthiness of the certificate.</li>
+</ul>
+
+<p>To extract all those files, here are the steps that I have documented:</p>
+
+<div class="post-notification warning">
+    <h3><i class="ph-warning-light"></i> Note</h3>
+    <p>If the .PFX file prompts you for a passphrase, please check with your project manager or client regarding this information.</p>
+</div>
+
+<h2>Extract the Encrypted Private Key</h2>
+
+<div class="codehilite">
+<pre><span></span><code>openssl<span class="w"> </span>pkcs12<span class="w"> </span>-in<span class="w"> </span>&lt;filename.pfx&gt;<span class="w"> </span>-nocerts<span class="w"> </span>-out<span class="w"> </span>encrypted.key
+</code></pre>
+</div>
+
+<h2>Extract RSA Private Key</h2>
+
+<div class="codehilite">
+<pre><span></span><code>openssl<span class="w"> </span>rsa<span class="w"> </span>-in<span class="w"> </span>encrypted.key<span class="w"> </span>-out<span class="w"> </span>private.key
+</code></pre>
+</div>
+
+<h2>Extract Certificate</h2>
+
+<div class="codehilite">
+<pre><span></span><code>openssl<span class="w"> </span>pkcs12<span class="w"> </span>-in<span class="w"> </span>&lt;filename.pfx&gt;<span class="w"> </span>-clcerts<span class="w"> </span>-nokeys<span class="w"> </span>-out<span class="w"> </span>certificate.crt
+</code></pre>
+</div>
+
+<h2>Extract Combined Chain Certificate (Optional)</h2>
+
+<div class="codehilite">
+<pre><span></span><code>openssl<span class="w"> </span>pkcs12<span class="w"> </span>-in<span class="w"> </span>&lt;filename.pfx&gt;<span class="w"> </span>-cacerts<span class="w"> </span>-nokeys<span class="w"> </span>-chain<span class="w"> </span><span class="p">|</span><span class="w"> </span>sed<span class="w"> </span>-ne<span class="w"> </span><span class="s1">&#39;/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p&#39;</span><span class="w"> </span>&gt;<span class="w"> </span>combined_chain_certificate.crt
+</code></pre>
+</div>
+
+<p>Once you are done extracting all the required files, you can add the certificates like this:</p>
+
+<h3>Apache configuration:</h3>
+
+<div class="codehilite">
+<pre><span></span><code>SSLCertificateFile<span class="w"> </span>/path/to/certificate.crt
+SSLCertificateKeyFile<span class="w"> </span>/path/to/private.key
+
+<span class="c1"># Optional, if you have it, else skip.</span>
+SSLCertificateChainFile<span class="w"> </span>/path/to/combined_chain_certificate.crt
+</code></pre>
+</div>
+
+<p>Test if it works:</p>
+
+<div class="codehilite">
+<pre><span></span><code>apachectl<span class="w"> </span>configtest
+systemctl<span class="w"> </span>restart<span class="w"> </span>httpd
+</code></pre>
+</div>
+
+<h3>Nginx configuration:</h3>
+
+<div class="codehilite">
+<pre><span></span><code><span class="c1"># If you don&#39;t have a combined chain certificate:</span>
+ssl_certificate<span class="w"> </span>/path/to/certificate.crt<span class="p">;</span>
+ssl_certificate_key<span class="w"> </span>/path/to/private.key<span class="p">;</span>
+
+<span class="c1"># If you have a combined chain certificate:</span>
+ssl_certificate<span class="w"> </span>/path/to/combined_chain_certificate.crt
+ssl_certificate_key<span class="w"> </span>/path/to/private.key<span class="p">;</span>
+</code></pre>
+</div>
+
+<p>Test if it works:</p>
+
+<div class="codehilite">
+<pre><span></span><code>nginx<span class="w"> </span>-t
+systemctl<span class="w"> </span>restart<span class="w"> </span>nginx
+</code></pre>
+</div>
+
+<p>Hope you found this tip useful.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>September 24th, 2022</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/install-microsoft-sql-server-driver-for-php-on-amazon-linux-2">Install Microsoft SQL Server Driver for PHP on Amazon Linux 2</a></h1>
 		<p class="description"></p>
 	</div>
@@ -421,65 +539,6 @@ sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class=
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/built-a-new-generative-art-pattern-generator">Built a new generative art pattern generator</a></h1>
-		<p class="description">Thought of giving a colorful touch to the site.</p>
-	</div>
-	<div class="article-body">
-		<p>Ten days ago, I launched a new makeover for the blog and I felt that it needed a little bit of a colorful yet unique touch.</p>
-
-<p>Recently, I started playing around with the concept of Generative Art and have been studying a lot of about various patterns like:</p>
-
-<ul>
-<li>Bauhaus</li>
-<li>Truchet Tiles</li>
-<li>Piet Mondrian</li>
-</ul>
-
-<p>So, I thought of writing a new pattern generator using CSS and JavaScript that would assign each article a unique, colorful pattern. Though, it's not yet quite complete, I would consider it to be an experimental feature to see if it goes well with the site.</p>
-
-<p>What do you think about it? Does it look good? What kind of patterns should I add to my generator?</p>
-
-<p>Interested on how it's implemented? Have a look at the <a href="/static/js/art.js">source code</a>.</p>
-
-<p>Hope you found this article to be inspiring!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>July 24th, 2022</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/update/">
-					Update
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/generative-art/">
-					Generative Art
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/css/">
-					CSS
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/javascript/">
-					JavaScript
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -613,16 +672,16 @@ sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class=
 		</li>
 		
 		<li>
-			<a href="/category/programming/">
-				Programming
+			<a href="/category/productivity/">
+				Productivity
 				<span class="count">9</span>
 			</a>
 		</li>
 		
 		<li>
-			<a href="/category/productivity/">
-				Productivity
-				<span class="count">8</span>
+			<a href="/category/programming/">
+				Programming
+				<span class="count">9</span>
 			</a>
 		</li>
 		
@@ -739,6 +798,13 @@ sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class=
 		</li>
 		
 		<li>
+			<a href="/category/artificial-intelligence/">
+				Artificial Intelligence
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/docker/">
 				Docker
 				<span class="count">2</span>
@@ -798,6 +864,13 @@ sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class=
 			<a href="/category/wamp/">
 				WAMP
 				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/software-development/">
+				Software Development
+				<span class="count">1</span>
 			</a>
 		</li>
 		
@@ -958,13 +1031,6 @@ sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class=
 		<li>
 			<a href="/category/review/">
 				Review
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/artificial-intelligence/">
-				Artificial Intelligence
 				<span class="count">1</span>
 			</a>
 		</li>

@@ -78,6 +78,82 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/configuring-audio-drivers-in-arch-Linux">Configuring audio drivers in Arch Linux</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Yesterday, I thought of testing my Arch Linux system's audio and turns out, I didn't even install it yet! &#x1F612;</p>
+
+<p>Well, thanks to <a href="https://wiki.archlinux.org">ArchWiki</a>, it was simple enough to install to make the audio work on my old laptop. Just install the following packages:</p>
+
+<div class="codehilite">
+<pre><span></span><code>pacman<span class="w"> </span>-S<span class="w"> </span>alsa-firmware<span class="w"> </span>alsa-lib<span class="w"> </span>alsa-utils
+</code></pre>
+</div>
+
+<p>Reboot the system once you're done installing the packages. Depending on your window manager, you should be able to see your sound icon being active.</p>
+
+<h2>Bonus: Bash script to control your volume from the terminal</h2>
+
+<p>In my current laptop, I still haven't mapped out the keys to control the audio volume, so I thought of writing a small method in my <code>.bashrc</code> file, so that I can control it from my terminal.</p>
+
+<p>Open your favorite text editor and Add this method in your <code>.bashrc</code> file:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="c1"># simple volume control</span>
+volume<span class="o">(){</span>
+<span class="w">    </span><span class="nv">x</span><span class="o">=</span><span class="m">5</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="nv">$1</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s1">&#39;up&#39;</span><span class="w"> </span><span class="o">]</span>
+<span class="w">    </span><span class="k">then</span>
+<span class="w">        </span>amixer<span class="w"> </span><span class="nb">set</span><span class="w"> </span>Master<span class="w"> </span><span class="nv">$x</span>%+<span class="w"> </span><span class="p">&amp;</span>&gt;<span class="w"> </span>/dev/null
+<span class="w">    </span><span class="k">elif</span><span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="nv">$1</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s1">&#39;down&#39;</span><span class="w"> </span><span class="o">]</span>
+<span class="w">    </span><span class="k">then</span>
+<span class="w">        </span>amixer<span class="w"> </span><span class="nb">set</span><span class="w"> </span>Master<span class="w"> </span><span class="nv">$x</span>%-<span class="w"> </span><span class="p">&amp;</span>&gt;<span class="w"> </span>/dev/null
+<span class="w">    </span><span class="k">elif</span><span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="nv">$1</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s1">&#39;toggle&#39;</span><span class="w"> </span><span class="o">]</span>
+<span class="w">    </span><span class="k">then</span>
+<span class="w">        </span>amixer<span class="w"> </span><span class="nb">set</span><span class="w"> </span>Master<span class="w"> </span>toggle<span class="w"> </span><span class="p">&amp;</span>&gt;<span class="w"> </span>/dev/null
+<span class="w">    </span><span class="k">fi</span>
+<span class="o">}</span>
+</code></pre>
+</div>
+
+<p>Save the file, close your edit and refresh your file by typing:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nb">source</span><span class="w"> </span>.bashrc
+</code></pre>
+</div>
+
+<p>Now, it should work when you type any of these commands:</p>
+
+<div class="codehilite">
+<pre><span></span><code>volume<span class="w"> </span>up
+volume<span class="w"> </span>down
+volume<span class="w"> </span>toggle
+</code></pre>
+</div>
+
+<p>Hope this tiny script helps you out! </p>
+
+	</div>
+	<div class="article-footer">
+		<time>June 20th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/troubleshoot-time-related-ssl-errors-on-secure-websites">Troubleshoot time-related SSL errors on secure websites</a></h1>
 		<p class="description"></p>
 	</div>
@@ -649,55 +725,6 @@ ping<span class="w"> </span>-c<span class="w"> </span><span class="m">3</span><s
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-identify-the-current-target-of-an-event">How to identify the current target of an event?</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Using the <code>event.currentTarget</code> property which belongs to the <code>Event</code> interface can help you in many ways to identify target of the current event especially if you want to fetch attributes or modify the classname of an element that belongs to a group of elements sharing the same classname.</p>
-
-<p>There are many examples but I chose to write a small snippet of highlighting a tab:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="kd">function</span><span class="w"> </span><span class="nx">highlightTab</span><span class="p">(</span><span class="nx">e</span><span class="p">){</span>
-<span class="w">    </span><span class="c1">// Find elements that has the classname &#39;active&#39; </span>
-<span class="w">    </span><span class="c1">// and remove them</span>
-<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="nb">document</span><span class="p">.</span><span class="nx">querySelector</span><span class="p">(</span><span class="s1">&#39;div.tab_item.active&#39;</span><span class="p">)</span><span class="w"> </span><span class="o">!==</span><span class="w"> </span><span class="kc">null</span><span class="p">){</span>
-<span class="w">        </span><span class="nb">document</span><span class="p">.</span><span class="nx">querySelector</span><span class="p">(</span><span class="s1">&#39;div.tab_item.active&#39;</span><span class="p">).</span><span class="nx">classList</span><span class="p">.</span><span class="nx">remove</span><span class="p">(</span><span class="s1">&#39;active&#39;</span><span class="p">);</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="c1">// Add active class to target node</span>
-<span class="w">    </span><span class="nx">e</span><span class="p">.</span><span class="nx">currentTarget</span><span class="p">.</span><span class="nx">className</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="s2">&quot; active&quot;</span><span class="p">;</span>
-
-<span class="w">    </span><span class="c1">// Add active class to target&#39;s child node</span>
-<span class="w">    </span><span class="c1">// e.currentTarget.querySelector(&#39;a.child_anchor_link&#39;).className += &quot; active&quot;;</span>
-
-<span class="w">    </span><span class="c1">// Add active class to target&#39;s parent node</span>
-<span class="w">    </span><span class="c1">// e.currentTarget.parentNode.className += &quot; active&quot;;</span>
-<span class="p">}</span>
-</code></pre>
-</div>
-
-<p>Read <a href="https://developer.mozilla.org/en-US/docs/Web/API/Event/currentTarget">Mozilla's official documentation</a> to know more about getting the current target of an event and it's compatibility with different web browsers.</p>
-
-	</div>
-	<div class="article-footer">
-		<time>June 1st, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/javascript/">
-					JavaScript
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -839,16 +866,16 @@ ping<span class="w"> </span>-c<span class="w"> </span><span class="m">3</span><s
 		</li>
 		
 		<li>
-			<a href="/category/programming/">
-				Programming
+			<a href="/category/productivity/">
+				Productivity
 				<span class="count">9</span>
 			</a>
 		</li>
 		
 		<li>
-			<a href="/category/productivity/">
-				Productivity
-				<span class="count">8</span>
+			<a href="/category/programming/">
+				Programming
+				<span class="count">9</span>
 			</a>
 		</li>
 		
@@ -965,6 +992,13 @@ ping<span class="w"> </span>-c<span class="w"> </span><span class="m">3</span><s
 		</li>
 		
 		<li>
+			<a href="/category/artificial-intelligence/">
+				Artificial Intelligence
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/docker/">
 				Docker
 				<span class="count">2</span>
@@ -1024,6 +1058,13 @@ ping<span class="w"> </span>-c<span class="w"> </span><span class="m">3</span><s
 			<a href="/category/wamp/">
 				WAMP
 				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/software-development/">
+				Software Development
+				<span class="count">1</span>
 			</a>
 		</li>
 		
@@ -1184,13 +1225,6 @@ ping<span class="w"> </span>-c<span class="w"> </span><span class="m">3</span><s
 		<li>
 			<a href="/category/review/">
 				Review
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/artificial-intelligence/">
-				Artificial Intelligence
 				<span class="count">1</span>
 			</a>
 		</li>
