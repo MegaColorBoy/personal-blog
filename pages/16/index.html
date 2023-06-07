@@ -78,6 +78,88 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/enable-copy-paste-clipboard-in-urxvt-terminal-emulator">Enable copy-paste clipboard in URxvt Terminal Emulator</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>In my current Arch Linux installation, I decided to use a window manager called i3. It's really awesome and it comes with a really lightweight terminal emulator called <strong>urxvt</strong>. It's very minimal and I lked it but when I tried to copy-paste text from one terminal to another, I wasn't able to.</p>
+
+<p>However, thanks to the internet, I did some research and figured a way out.</p>
+
+<h2>1. Install xClip</h2>
+
+<p>First, you need to ensure that you have installed the <code>xclip</code> package, which will be used to copy-paste text in the emulator.</p>
+
+<p>Type the following command to install the package:</p>
+
+<div class="codehilite">
+<pre><span></span><code>pacman<span class="w"> </span>-S<span class="w"> </span>xclip
+</code></pre>
+</div>
+
+<h2>2. Activate Clipboard using Perl</h2>
+
+<p>Now, you have to paste these custom commands into your <code>clipboard</code> file, which is found in <code>/usr/lib/urxvt/perl</code> directory:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="c1"># paste selection from clipboard</span>
+<span class="k">sub</span><span class="w"> </span><span class="nf">paste</span><span class="w"> </span><span class="p">{</span>
+<span class="w">     </span><span class="k">my</span><span class="w"> </span><span class="p">(</span><span class="nv">$self</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">@_</span><span class="p">;</span>
+<span class="w">     </span><span class="k">my</span><span class="w"> </span><span class="nv">$content</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`/usr/bin/xclip -loop 1 -out -selection clipboard`</span><span class="w"> </span><span class="p">;</span>
+<span class="w">     </span><span class="nv">$self</span><span class="o">-&gt;</span><span class="n">tt_write</span><span class="w"> </span><span class="p">(</span><span class="nv">$content</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="c1"># copy text to clipbard on selection</span>
+<span class="k">sub</span><span class="w"> </span><span class="nf">on_sel_grab</span><span class="w"> </span><span class="p">{</span>
+<span class="w">     </span><span class="k">my</span><span class="w"> </span><span class="nv">$query</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">$_</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">selection</span><span class="p">;</span>
+<span class="w">     </span><span class="nb">open</span><span class="w"> </span><span class="p">(</span><span class="k">my</span><span class="w"> </span><span class="nv">$pipe</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;| /usr/bin/xclip -in -selection clipboard&#39;</span><span class="p">)</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="nb">die</span><span class="p">;</span>
+<span class="w">     </span><span class="k">print</span><span class="w"> </span><span class="nv">$pipe</span><span class="w"> </span><span class="nv">$query</span><span class="p">;</span>
+<span class="w">     </span><span class="nb">close</span><span class="w"> </span><span class="nv">$pipe</span><span class="p">;</span>
+<span class="w"> </span><span class="p">}</span>
+</code></pre>
+</div>
+
+<h2>3. Modify your .Xresources</h2>
+
+<p>Add these keybindings to your <code>.Xresources</code> file:</p>
+
+<div class="codehilite">
+<pre><span></span><code>URxvt.keysym.Shift-Control-V:<span class="w"> </span>perl:clipboard:paste
+URxvt.iso14755:<span class="w"> </span>False
+URxvt.perl-ext-common:<span class="w"> </span>default,clipboard
+</code></pre>
+</div>
+
+<p>After adding it, refresh your <code>.Xresources</code> settings:</p>
+
+<div class="codehilite">
+<pre><span></span><code>xrdb<span class="w"> </span>-merge<span class="w"> </span>.Xresources
+</code></pre>
+</div>
+
+<p>Reboot your terminal and try selecting some text from your terminal using your mouse and paste it using <code>Ctrl</code>+<code>Shift</code>+<code>V</code> and it should work! </p>
+
+<p>That's it! Enjoy &#x1F603;</p>
+
+	</div>
+	<div class="article-footer">
+		<time>June 20th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/configuring-audio-drivers-in-arch-Linux">Configuring audio drivers in Arch Linux</a></h1>
 		<p class="description"></p>
 	</div>
@@ -669,62 +751,6 @@ ping<span class="w"> </span>-c<span class="w"> </span><span class="m">3</span><s
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/using-default-function-parameters-in-internet-explorer">Using default function parameters in Internet Explorer</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Today, I wrote a simple method that fetches images from the database via AJAX and also, I defined an empty object as a default parameter:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="kd">function</span><span class="w"> </span><span class="nx">fetchImages</span><span class="p">(</span><span class="nx">obj</span><span class="o">=</span><span class="p">{}){</span>
-<span class="w">    </span><span class="c1">// some code here...</span>
-<span class="p">}</span>
-
-<span class="nx">fetchImages</span><span class="p">();</span>
-</code></pre>
-</div>
-
-<p>The default <code>obj</code> parameter would contain extra parameters like <code>id</code>, <code>slug</code> and <code>page</code>, which would be then used to fetch a particular group of images, else, it'll fetch a random set of images.</p>
-
-<p>This method worked fine in Google Chrome and Mozilla Firefox but not in Internet Explorer. I thought of inspecting the code and I was facing weird errors like <code>undefined</code> or <code>Expected: ')'</code> on the IE console.</p>
-
-<p>Luckily, I had compared it to the other methods that didn't have any default parameters, so I did a little research and turns out that according to <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/default_parameters">Mozilla's documentation</a>, default function parameters are proposed by the ES6 syntax and at this point, I realized that Internet Explorer <strong>doesn't support ES6 syntax</strong>. What a bummer! &#x1F612;</p>
-
-<p>However, there's a way to prevent this from happening by rewriting the method like this:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="kd">function</span><span class="w"> </span><span class="nx">fetchImages</span><span class="p">(</span><span class="nx">obj</span><span class="p">){</span>
-<span class="w">    </span><span class="c1">// Check if obj is defined, else make it assign it as an empty object.</span>
-<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">obj</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="p">{};</span>
-
-<span class="w">    </span><span class="c1">// some code here...</span>
-<span class="p">}</span>
-</code></pre>
-</div>
-
-<p>And BAM! The method worked flawlessly just as it's intended to do so. &#x1F60E;</p>
-
-<p>Addtionally, you may refer to the <a href="http://kangax.github.io/compat-table/es6/">ECMAScript 6 Compatibility table</a> that you might find it quite helpful to check browser compatiblity for Internet Explorer versions 11 and under.</p>
-
-	</div>
-	<div class="article-footer">
-		<time>June 3rd, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/javascript/">
-					JavaScript
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -812,7 +838,7 @@ ping<span class="w"> </span>-c<span class="w"> </span><span class="m">3</span><s
 		<li>
 			<a href="/category/laravel/">
 				Laravel
-				<span class="count">17</span>
+				<span class="count">18</span>
 			</a>
 		</li>
 		
@@ -826,7 +852,7 @@ ping<span class="w"> </span>-c<span class="w"> </span><span class="m">3</span><s
 		<li>
 			<a href="/category/php/">
 				PHP
-				<span class="count">11</span>
+				<span class="count">12</span>
 			</a>
 		</li>
 		
@@ -1058,6 +1084,13 @@ ping<span class="w"> </span>-c<span class="w"> </span><span class="m">3</span><s
 			<a href="/category/wamp/">
 				WAMP
 				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/clean-code/">
+				Clean Code
+				<span class="count">1</span>
 			</a>
 		</li>
 		
