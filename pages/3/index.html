@@ -78,6 +78,463 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/view-list-of-services-in-linux">View list of services in Linux</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>If you wanted to see a list of services available on your Linux server/desktop, try the following command:</p>
+
+<div class="codehilite">
+<pre><span></span><code>systemctl<span class="w"> </span>list-unit-files<span class="w"> </span>--type<span class="o">=</span>service
+</code></pre>
+</div>
+
+<p>Upon executing this command, you'll be able to see a list of services along with their statuses i.e whether the service is enabled or disabled.</p>
+
+<p>This can come in handy if you want to know the status of a specific service like <code>nginx</code>:</p>
+
+<div class="codehilite">
+<pre><span></span><code>systemctl<span class="w"> </span>list-unit-files<span class="w"> </span>--type<span class="o">=</span>service<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s2">&quot;nginx&quot;</span>
+</code></pre>
+</div>
+
+<p>Hope you found this tip useful.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>November 27th, 2022</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/writings/posts/containerize-your-laravel-application-for-development">Containerize your Laravel application for Development</a></h1>
+		<p class="description">A short tutorial on how to containerize your Laravel application and use it for testing and development purposes.</p>
+	</div>
+	<div class="article-body">
+		<p>Since I started exploring Docker containers during my spare time, I learnt how to containerize a Laravel application using Docker Compose.</p>
+
+<p>In this guide, I'll show you how to containerize your application and by the end of this tutorial, you'll have your application running on four separate service containers:</p>
+
+<ul>
+<li>App service running <code>php7.4-fpm</code>.</li>
+<li>A database service running <code>mysql-80</code>.</li>
+<li>An NGINX service.</li>
+<li>A phpMyAdmin service for you to view and manage your database.</li>
+</ul>
+
+<h2>Prerequisites</h2>
+
+<ul>
+<li>You need to have Docker and Docker Compose installed on your system</li>
+<li>A non-root user with sudo privileges (If you are using any UNIX-based environment).</li>
+<li>An existing working Laravel project.</li>
+</ul>
+
+<p>I tried this on my personal laptop that runs on Fedora Workstation 36 and hopefully, it should work on Windows and macOS as well. If you are a Windows user, I would recommend you to try WSL2 with Ubuntu installed in it.</p>
+
+<h2>Configure your app service</h2>
+
+<p>First, you need to create a Dockerfile for your app service in your project's root directory:</p>
+
+<div class="codehilite">
+<pre><span></span><code>touch<span class="w"> </span>Dockerfile
+vim<span class="w"> </span>Dockerfile
+</code></pre>
+</div>
+
+<p>In this tutorial, I'll be using PHP7.4 but you can use any version that you need. Here you go:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">FROM</span><span class="w"> </span><span class="s">php:7.4-fpm</span>
+
+<span class="c"># Arguments defined in docker-compose.yml</span>
+<span class="k">ARG</span><span class="w"> </span><span class="k">user</span>
+<span class="s">ARG uid </span>
+
+<span class="c"># Install system dependencies</span>
+<span class="k">RUN</span><span class="w"> </span>apt-get<span class="w"> </span>update<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>git<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>curl<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>libpng-dev<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>libonig-dev<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>libxml2-dev<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>zip<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>unzip
+
+<span class="c"># Clear cache</span>
+<span class="k">RUN</span><span class="w"> </span>apt-get<span class="w"> </span>clean<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>rm<span class="w"> </span>-rf<span class="w"> </span>/var/lib/apt/lists/*
+
+<span class="c"># Install PHP extensions</span>
+<span class="k">RUN</span><span class="w"> </span>docker-php-ext-install<span class="w"> </span>pdo_mysql<span class="w"> </span>mbstring<span class="w"> </span>exif<span class="w"> </span>pcntl<span class="w"> </span>bcmath<span class="w"> </span>gd
+
+<span class="c"># Get latest Composer</span>
+<span class="k">COPY</span><span class="w"> </span>--from<span class="o">=</span>composer:latest<span class="w"> </span>/usr/bin/composer<span class="w"> </span>/usr/bin/composer
+
+<span class="c"># Create system user to run Composer and Artisan Commands</span>
+<span class="k">RUN</span><span class="w"> </span>useradd<span class="w"> </span>-G<span class="w"> </span>www-data,root<span class="w"> </span>-u<span class="w"> </span><span class="nv">$uid</span><span class="w"> </span>-d<span class="w"> </span>/home/<span class="nv">$user</span><span class="w"> </span><span class="nv">$user</span>
+<span class="k">RUN</span><span class="w"> </span>mkdir<span class="w"> </span>-p<span class="w"> </span>/home/<span class="nv">$user</span>/.composer<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>chown<span class="w"> </span>-R<span class="w"> </span><span class="nv">$user</span>:<span class="nv">$user</span><span class="w"> </span>/home/<span class="nv">$user</span>
+
+<span class="c"># Set working directory</span>
+<span class="k">WORKDIR</span><span class="w"> </span><span class="s">/var/www</span>
+
+<span class="k">USER</span><span class="w"> </span><span class="s">$user</span>
+</code></pre>
+</div>
+
+<p>So, what's happening in the configuration above is that, it pulls a PHP7.4-FPM image from Docker Hub. Next, it'll define the user of the service and install all the necessary dependencies that are given above and set the working directory to <code>/var/www/</code>. The last step will change to the newly created user, which would make sure that you are using the service as a normal user.</p>
+
+<p>Again, if you are a bit playful, try configuring it to however you want it and see if it works.</p>
+
+<h2>Set up NGINX and MySQL</h2>
+
+<p>I have been following some tutorials and I liked the idea of creating dedicated directories to organize your files related to configuring each service container.</p>
+
+<p>Create a directory named <code>.docker</code> in your project's root directory:</p>
+
+<div class="codehilite">
+<pre><span></span><code>mkdir<span class="w"> </span>-p<span class="w"> </span>.docker
+</code></pre>
+</div>
+
+<h3>NGINX</h3>
+
+<p>Go to <code>.docker</code> directory and create <code>nginx</code> directory:</p>
+
+<div class="codehilite">
+<pre><span></span><code>mkdir<span class="w"> </span>-p<span class="w"> </span>nginx
+</code></pre>
+</div>
+
+<p>Now let's set up the NGINX service by creating a <code>.conf</code> file:</p>
+
+<div class="codehilite">
+<pre><span></span><code>touch<span class="w"> </span>myservice.conf
+</code></pre>
+</div>
+
+<p>Now, copy the following configuration to your <code>.conf</code> file:</p>
+
+<div class="codehilite">
+<pre><span></span><code>server<span class="w"> </span><span class="o">{</span>
+<span class="w">    </span>listen<span class="w"> </span><span class="m">80</span><span class="p">;</span>
+<span class="w">    </span>index<span class="w"> </span>index.php<span class="w"> </span>index.html<span class="p">;</span>
+<span class="w">    </span>error_log<span class="w">  </span>/var/log/nginx/error.log<span class="p">;</span>
+<span class="w">    </span>access_log<span class="w"> </span>/var/log/nginx/access.log<span class="p">;</span>
+<span class="w">    </span>root<span class="w"> </span>/var/www/public<span class="p">;</span>
+<span class="w">    </span>location<span class="w"> </span>~<span class="w"> </span><span class="se">\.</span>php$<span class="w"> </span><span class="o">{</span>
+<span class="w">        </span>try_files<span class="w"> </span><span class="nv">$uri</span><span class="w"> </span><span class="o">=</span><span class="m">404</span><span class="p">;</span>
+<span class="w">        </span>fastcgi_split_path_info<span class="w"> </span>^<span class="o">(</span>.+<span class="se">\.</span>php<span class="o">)(</span>/.+<span class="o">)</span>$<span class="p">;</span>
+<span class="w">        </span>fastcgi_pass<span class="w"> </span>app:9000<span class="p">;</span>
+<span class="w">        </span>fastcgi_index<span class="w"> </span>index.php<span class="p">;</span>
+<span class="w">        </span>include<span class="w"> </span>fastcgi_params<span class="p">;</span>
+<span class="w">        </span>fastcgi_param<span class="w"> </span>SCRIPT_FILENAME<span class="w"> </span><span class="nv">$document_root$fastcgi_script_name</span><span class="p">;</span>
+<span class="w">        </span>fastcgi_param<span class="w"> </span>PATH_INFO<span class="w"> </span><span class="nv">$fastcgi_path_info</span><span class="p">;</span>
+<span class="w">    </span><span class="o">}</span>
+<span class="w">    </span>location<span class="w"> </span>/<span class="w"> </span><span class="o">{</span>
+<span class="w">        </span>try_files<span class="w"> </span><span class="nv">$uri</span><span class="w"> </span><span class="nv">$uri</span>/<span class="w"> </span>/index.php?<span class="nv">$query_string</span><span class="p">;</span>
+<span class="w">        </span>gzip_static<span class="w"> </span>on<span class="p">;</span>
+<span class="w">    </span><span class="o">}</span>
+<span class="o">}</span>
+</code></pre>
+</div>
+
+<h3>MySQL</h3>
+
+<p>Since this is a Laravel application, you can skip this step by running migrations and seeding your database or you can try creating a directory inside the <code>.docker</code> folder to store your MySQL related configuration:</p>
+
+<div class="codehilite">
+<pre><span></span><code>mkdir<span class="w"> </span>-p<span class="w"> </span>mysql
+</code></pre>
+</div>
+
+<p>Once created, create a file named <code>init_db.sql</code> that would contain your entire database dump to be seeded once you run your docker service.</p>
+
+<h2>Set up multiple containers using Docker Compose</h2>
+
+<p>This the configuration I have used to create four separate services, please take a look and feel free to modify it based on your requirements.</p>
+
+<p>In this configuration, all services will share a bridge network named <code>yourapp</code> which is defined at the bottom of this configuration.</p>
+
+<p>Here is the configuration:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;3.8&#39;</span>
+<span class="nt">services</span><span class="p">:</span>
+<span class="w">  </span><span class="c1"># PHP Service</span>
+<span class="w">  </span><span class="nt">app</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">build</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">args</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">user</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">username</span>
+<span class="w">        </span><span class="nt">uid</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1000</span>
+<span class="w">      </span><span class="nt">context</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./</span>
+<span class="w">      </span><span class="nt">dockerfile</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Dockerfile</span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yourapp</span><span class="w"> </span>
+<span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yourapp-app</span>
+<span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">unless-stopped</span>
+<span class="w">    </span><span class="nt">working_dir</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/var/www/</span>
+<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./:/var/www</span>
+<span class="w">    </span><span class="nt">networks</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yourapp</span>
+
+<span class="w">  </span><span class="c1"># MySQL Service</span>
+<span class="w">  </span><span class="nt">db</span><span class="p">:</span><span class="w"> </span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mysql:8.0</span>
+<span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yourapp-db</span>
+<span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">unless-stopped</span>
+<span class="w">    </span><span class="nt">environment</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">MYSQL_DATABASE</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${DB_DATABASE}</span>
+<span class="w">      </span><span class="nt">MYSQL_ROOT_PASSWORD</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${DB_PASSWORD}</span>
+<span class="w">      </span><span class="nt">MYSQL_PASSWORD</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${DB_PASSWORD}</span>
+<span class="w">      </span><span class="nt">MYSQL_USER</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${DB_USERNAME}</span>
+<span class="w">      </span><span class="nt">SERVICE_TAGS</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dev</span><span class="w"> </span>
+<span class="w">      </span><span class="nt">SERVICE_NAME</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mysql</span>
+<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./.docker/mysql:/docker-entrypoint-initdb.d</span>
+<span class="w">    </span><span class="nt">healthcheck</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">test</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mysqladmin ping -h 127.0.0.1 -u ${DB_USERNAME} --password=${DB_PASSWORD}</span>
+<span class="w">      </span><span class="nt">interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5s</span>
+<span class="w">      </span><span class="nt">retries</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span>
+<span class="w">    </span><span class="nt">networks</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yourapp</span>
+
+<span class="w">  </span><span class="c1"># NGINX Service</span>
+<span class="w">  </span><span class="nt">nginx</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nginx:alpine</span>
+<span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yourapp-nginx</span>
+<span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">unless-stopped</span>
+<span class="w">    </span><span class="nt">ports</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8000:80</span>
+<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./:/var/www</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./.docker/nginx:/etc/nginx/conf.d/</span>
+<span class="w">    </span><span class="nt">networks</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yourapp</span>
+
+<span class="w">  </span><span class="c1"># phpMyAdmin service</span>
+<span class="w">  </span><span class="nt">phpmyadmin</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">phpmyadmin/phpmyadmin:5</span>
+<span class="w">    </span><span class="nt">ports</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8080:80</span>
+<span class="w">    </span><span class="nt">environment</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">PMA_HOST</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">db</span>
+<span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">db</span><span class="p">:</span><span class="w"> </span>
+<span class="w">        </span><span class="nt">condition</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">service_healthy</span>
+<span class="w">    </span><span class="nt">networks</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yourapp</span>
+
+<span class="nt">networks</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">yourapp</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">driver</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">bridge</span>
+</code></pre>
+</div>
+
+<h2>Configure your application</h2>
+
+<p>Open your current <code>.env</code> file of your laravel project and just add the necessary database configuration:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="l l-Scalar l-Scalar-Plain">DB_HOST=yourapp-db</span>
+<span class="l l-Scalar l-Scalar-Plain">DB_PORT=3306</span>
+<span class="l l-Scalar l-Scalar-Plain">DB_DATABASE=your_database_name</span>
+<span class="l l-Scalar l-Scalar-Plain">DB_USERNAME=your_database_user_name</span>
+<span class="l l-Scalar l-Scalar-Plain">DB_PASSWORD=your_database_password</span>
+</code></pre>
+</div>
+
+<h2>Build the application image</h2>
+
+<p>After you are done with configuring, run the following command to build your application image:</p>
+
+<div class="codehilite">
+<pre><span></span><code>docker-compose<span class="w"> </span>build<span class="w"> </span>yourapp
+</code></pre>
+</div>
+
+<p>Depending on your network speed, it might take a few minutes to build your image.</p>
+
+<h2>Run the application</h2>
+
+<p>Once the build is complete, execute the following command:</p>
+
+<div class="codehilite">
+<pre><span></span><code>docker-compose<span class="w"> </span>up<span class="w"> </span>-d
+</code></pre>
+</div>
+
+<p>The following command will run your containers in the background. To display your information about the state of your docker services:</p>
+
+<div class="codehilite">
+<pre><span></span><code>docker-compose<span class="w"> </span>ps
+</code></pre>
+</div>
+
+<p>Install your application's dependencies:</p>
+
+<div class="codehilite">
+<pre><span></span><code>docker-compose<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>yourapp<span class="w"> </span>rm<span class="w"> </span>-rf<span class="w"> </span>vendor<span class="w"> </span>composer.lock
+docker-compose<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>yourapp<span class="w"> </span>composer<span class="w"> </span>install
+</code></pre>
+</div>
+
+<p>And then run the following commands to run your Laravel application:</p>
+
+<div class="codehilite">
+<pre><span></span><code>docker-compose<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>yourapp<span class="w"> </span>php<span class="w"> </span>artisan<span class="w"> </span>key:generate
+docker-compose<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>yourapp<span class="w"> </span>php<span class="w"> </span>artisan<span class="w"> </span>config:clear
+docker-compose<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>yourapp<span class="w"> </span>php<span class="w"> </span>artisan<span class="w"> </span>cache:clear
+docker-compose<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>yourapp<span class="w"> </span>php<span class="w"> </span>artisan<span class="w"> </span>view:clear
+docker-compose<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>yourapp<span class="w"> </span>php<span class="w"> </span>artisan<span class="w"> </span>route:clear
+docker-compose<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>yourapp<span class="w"> </span>php<span class="w"> </span>artisan<span class="w"> </span>storage:link<span class="w"> </span>
+</code></pre>
+</div>
+
+<p>Now, you can go to your browser, type your <code>http://localhost:8000</code> to access your application.</p>
+
+<h2>Conclusion</h2>
+
+<p>If you've come to this part, give yourself a pat in the back!</p>
+
+<p>From now onwards, you don't really need to install and set up a local web server and database to run and test your application.</p>
+
+<p>Furthermore, you'll be having a disposable environment in your hand, which means you can easily replicate and distribute it to other developers in your team, so that no one says "It works on my machine and not on yours!"</p>
+
+<p>Hope you liked this tutorial!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>October 23rd, 2022</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/tutorial/">
+					Tutorial
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/docker/">
+					Docker
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/laravel/">
+					Laravel
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/install-docker-on-fedora-3536">Install Docker on Fedora 35/36</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Recently, I started to play around with Docker and I thought of installing on my personal laptop which runs Fedora 36 workstation.</p>
+
+<p>If you have Fedora and want to know how to install it, here it is:</p>
+
+<h2>Install Docker Engine</h2>
+
+<p>First, add the official Docker repositories to your Fedora OS:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>dnf<span class="w"> </span>install<span class="w"> </span>dnf-plugins-core<span class="w"> </span>-y
+sudo<span class="w"> </span>dnf<span class="w"> </span>config-manager<span class="w"> </span>--add-repo<span class="w"> </span>https://download.docker.com/linux/fedora/docker-ce.repo
+</code></pre>
+</div>
+
+<p>Then, you can run the following command to install Docker and it's dependencies:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>dnf<span class="w"> </span>install<span class="w"> </span>docker-ce<span class="w"> </span>docker-ce-cli<span class="w"> </span>containerd.io
+</code></pre>
+</div>
+
+<p>During installation, you'll be prompted to import the GPG key in order to install Docker on your system. So, press <kbd>Y</kbd> to proceed with the installation.</p>
+
+<p>Next, enable and start the docker service:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>systemctl<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>docker
+sudo<span class="w"> </span>systemctl<span class="w"> </span>start<span class="w"> </span>docker
+</code></pre>
+</div>
+
+<p>That's it you are done. You can try running the following command to see if it's installed properly on your system:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>docker<span class="w"> </span>run<span class="w"> </span>hello-world
+</code></pre>
+</div>
+
+<p>If it works fine, you should be seeing a "Hello from Docker!" message which means that the installation appears to be working fine.</p>
+
+<p>Hope you found this tutorial useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>October 1st, 2022</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/docker/">
+					Docker
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/resolve-permission-error-while-sshing-to-aws-ec2-instance-from-a-linux-machine">Resolve permission error while SSH-ing to AWS EC2 instance from a Linux machine</a></h1>
 		<p class="description"></p>
 	</div>
@@ -505,96 +962,6 @@ sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class=
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/using-iife-in-javascript">Using IIFE in JavaScript</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>IIFE a.k.a Immediately-Invoked Function Expression &mdash; is a way to execute functions as soon as the function is created.</p>
-
-<p>Using IIFE, you can easily isolate declared variables away from the global scope.</p>
-
-<p>This is how the syntax would look like:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="c1">// ES5 Standard</span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">foo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
-<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nx">message</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Hello world&quot;</span>
-<span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">message</span><span class="p">);</span>
-<span class="p">})();</span>
-</code></pre>
-</div>
-
-<p>They can be defined with arrow functions as well:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="c1">// ES6 Standard</span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">foo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nx">message</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Hello world&quot;</span>
-<span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">message</span><span class="p">);</span>
-<span class="p">})();</span>
-</code></pre>
-</div>
-
-<p>According to <strong>MDN Docs</strong>, it's a design pattern a.k.a Self-Executing Anonymous Function. There are two parts to this:</p>
-
-<ol>
-<li><p>The function that's enclosed within the Grouping Operator <code>()</code>, which would prevent it from polluting the global space and access to the variables within it's scope.</p></li>
-<li><p>The <code>();</code> will create the Immediately Invoked Function Expression on-the-fly.</p></li>
-</ol>
-
-<h2>When to use it?</h2>
-
-<p>There are many interesting cases such as if you are following the <a href="https://www.patterns.dev/posts/classic-design-patterns/">Module Pattern</a> especially if you want to avoid polluting the global namespace or just that you don't want your code to interfere with other code thus ensures code safety.</p>
-
-<h2>Readings</h2>
-
-<ul>
-<li><a href="https://developer.mozilla.org/en-US/docs/Glossary/IIFE">IIFE - MDN Web Docs Glossary</a></li>
-</ul>
-
-	</div>
-	<div class="article-footer">
-		<time>August 10th, 2022</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/javascript/">
-					JavaScript
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="day article">
-	<h2><a href="/blogmarks/posts/9th-august-2022">9th August 2022 &mdash; Blogmarks</a></h2>
-	<ul>
-<li><a href="https://charlieharrington.com/library/">Charlie Harlington's Library</a> &mdash; The library makes use of a Read-Only API for static datasets that doesn't require you to code. To know how it works, <a href="https://charlieharrington.com/sql-powered-reading-list/">click here</a> for a quick read.</li>
-<li><blockquote>Companies amass coordination power by having good ideas, executing them using more good ideas, and capturing a big part of the resulting value created (that is, when they’re not extracting value out of monopoly controls over markets). &mdash; <cite><a href="https://thesephist.com/posts/legacy/">Build Unix, Not Uber by The Sephist</a></cite></blockquote></li>
-<li><a href="https://quentin.delcourt.be/blog/software-engineering-books-to-read-and-reread/index.html">Software engineering books to read and unread</a> &mdash; Useful book recommendations by <a href="https://quentin.delcourt.be">Quentin Delcourt</a> that are timeless.</li>
-</ul>
-
-</div>
-
-				
-					
-<div class="day article">
-	<h2><a href="/blogmarks/posts/7th-august-2022">7th August 2022 &mdash; Blogmarks</a></h2>
-	<ul>
-<li><a href="https://github.com/WerWolv/ImHex">ImHex</a> &mdash; A Hex Editor for Reverse Engineers, Programmers and people who value their retinas when working at 3 AM.</li>
-<li><a href="https://www.youtube.com/c/Bisqwit/videos">Bisqwit</a> &mdash; Found this cool programmer on YouTube who writes game emulators and 3D renderers from scratch. Inspiring guy!</li>
-<li><a href="https://browser.engineering">Web Browser Engineering</a> &mdash; I came across this site recently and it was quite intriguing. I really wanted to get my hands-on this tutorial and learn more about Web Browsers. Thank you <a href="https://pavpanchekha.com">Pavel Panchekha</a> for this!</li>
-</ul>
-
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -626,11 +993,11 @@ sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class=
 		
 	
 		
-			<a class="" href="/pages/21">...</a>
+			<a class="" href="/pages/22">...</a>
 		
 	
 		
-			<a class="" href="/pages/26">26</a>
+			<a class="" href="/pages/27">27</a>
 		
 	
 
@@ -681,14 +1048,14 @@ sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class=
 		<li>
 			<a href="/category/devops/">
 				DevOps
-				<span class="count">14</span>
+				<span class="count">15</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/php/">
 				PHP
-				<span class="count">12</span>
+				<span class="count">13</span>
 			</a>
 		</li>
 		
@@ -812,6 +1179,13 @@ sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class=
 		</li>
 		
 		<li>
+			<a href="/category/vscode/">
+				VSCode
+				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/python/">
 				Python
 				<span class="count">3</span>
@@ -850,6 +1224,20 @@ sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class=
 			<a href="/category/general/">
 				General
 				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/selfreflection/">
+				Self-reflection
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/ssl/">
+				SSL
+				<span class="count">2</span>
 			</a>
 		</li>
 		
@@ -896,13 +1284,6 @@ sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class=
 		</li>
 		
 		<li>
-			<a href="/category/vscode/">
-				VSCode
-				<span class="count">2</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/email/">
 				Email
 				<span class="count">2</span>
@@ -920,6 +1301,34 @@ sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class=
 			<a href="/category/wamp/">
 				WAMP
 				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/xdebug/">
+				XDebug
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/development/">
+				Development
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/openssl/">
+				OpenSSL
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/csr/">
+				CSR
+				<span class="count">1</span>
 			</a>
 		</li>
 		
@@ -1001,13 +1410,6 @@ sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class=
 		</li>
 		
 		<li>
-			<a href="/category/selfreflection/">
-				Self-reflection
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/security/">
 				Security
 				<span class="count">1</span>
@@ -1059,13 +1461,6 @@ sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class=
 		<li>
 			<a href="/category/go/">
 				Go
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/ssl/">
-				SSL
 				<span class="count">1</span>
 			</a>
 		</li>

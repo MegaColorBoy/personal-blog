@@ -77,6 +77,158 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/writings/posts/convert-svg-from-image-to-code-using-javascript">Convert SVG from Image to Code using Javascript</a></h1>
+		<p class="description">Two weeks ago, I wrote a small script to convert SVG from Image to Code using Javascript that allowed me to play around with it's attributes and properties.</p>
+	</div>
+	<div class="article-body">
+		<p>Have you ever downloaded minimal and beautiful looking SVG icons and
+added them into your HTML code as an <strong><em>&lt;img&gt;</em></strong> instead of
+<strong><em>&lt;svg&gt;</em></strong> tag? The answer is: <strong><em>"yes, you're right!"</em></strong>.</p>
+
+<p>Okay, how about another question?</p>
+
+<p>What would you do if you want to change all of those SVG icons to black,
+red or blue? Your answer would be: <strong><em>"Well, I would edit the colors of
+all the vector images in Adobe Illustrator and then refresh my page to
+see the changes."</em></strong>, if that's your answer, then what would you do if
+you have to do it for multiple icons in multiple pages in a short amount
+of time?</p>
+
+<p>Two weeks ago, I faced this same scenario and I found a quick solution
+to it and I will be sharing it in this article on how to convert SVG
+from image to code using Javascript and how it allowed me to play around
+with attributes and properties.</p>
+
+<h2>Why convert from Image to Code?</h2>
+
+<p>Well, as a developer, it allows me to interact with every part of the
+SVG such as changing the colors, adjusting the height and width, animate
+it and so on. In this article, I will show you an example on how I could
+do a simple color change on an SVG image that I had downloaded from
+<a href="https://www.flaticon.com">flaticon</a>.</p>
+
+<figure>
+    <img src="/static/images/space.svg"/>
+    <figcaption>
+        Figure 1. Original SVG Space Icon
+    </figcaption>
+</figure>
+
+<h2>How to convert from Image to Code?</h2>
+
+<p>Simple, just convert the SVG image into an XML format using
+<strong><em>XMLSerializer()</em></strong> then give it a class name like <strong><em>"custom-svg-icon"</em></strong>
+and execute the code! Below, I have provided a code snippet, I hope the
+comments will help you out!</p>
+
+<p><strong>Code snippet:</strong></p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="w">    </span><span class="nx">$</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
+<span class="w">     </span><span class="c1">//Change the class name, if it has to be applied for more SVG elements</span>
+<span class="w">     </span><span class="nx">jQuery</span><span class="p">(</span><span class="s1">&#39;img.custom-svg-icon&#39;</span><span class="p">).</span><span class="nx">each</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
+<span class="w">     </span><span class="kd">var</span><span class="w"> </span><span class="nx">$img</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">jQuery</span><span class="p">(</span><span class="k">this</span><span class="p">);</span><span class="w"> </span><span class="c1">// The image</span>
+<span class="w">     </span><span class="kd">var</span><span class="w"> </span><span class="nx">imgID</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">$img</span><span class="p">.</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">);</span><span class="w"> </span><span class="c1">// ID attribute</span>
+<span class="w">     </span><span class="kd">var</span><span class="w"> </span><span class="nx">imgClass</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">$img</span><span class="p">.</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;class&#39;</span><span class="p">);</span><span class="w"> </span><span class="c1">// Class Name</span>
+<span class="w">     </span><span class="kd">var</span><span class="w"> </span><span class="nx">imgURL</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">$img</span><span class="p">.</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;src&#39;</span><span class="p">);</span><span class="w"> </span><span class="c1">// URL of the SVG image</span>
+
+<span class="w">     </span><span class="nx">jQuery</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="nx">imgURL</span><span class="p">,</span><span class="w"> </span><span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">     </span><span class="c1">//The data param contains the XML data of the SVG image</span>
+<span class="w">     </span><span class="c1">//alert(new XMLSerializer().serializeToString(data));</span>
+
+<span class="w">     </span><span class="c1">// Get the SVG tag, ignore the rest</span>
+<span class="w">     </span><span class="kd">var</span><span class="w"> </span><span class="nx">$svg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">jQuery</span><span class="p">(</span><span class="nx">data</span><span class="p">).</span><span class="nx">find</span><span class="p">(</span><span class="s1">&#39;svg&#39;</span><span class="p">);</span>
+
+<span class="w">     </span><span class="c1">// Give the image&#39;s ID to the SVG</span>
+<span class="w">     </span><span class="k">if</span><span class="p">(</span><span class="ow">typeof</span><span class="w"> </span><span class="nx">imgID</span><span class="w"> </span><span class="o">!==</span><span class="w"> </span><span class="s1">&#39;undefined&#39;</span><span class="p">)</span><span class="w"> </span>
+<span class="w">     </span><span class="p">{</span>
+<span class="w">     </span><span class="nx">$svg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">$svg</span><span class="p">.</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">imgID</span><span class="p">);</span>
+<span class="w">     </span><span class="p">}</span>
+
+<span class="w">     </span><span class="c1">// Give the image&#39;s class to the SVG</span>
+<span class="w">     </span><span class="k">if</span><span class="p">(</span><span class="ow">typeof</span><span class="w"> </span><span class="nx">imgClass</span><span class="w"> </span><span class="o">!==</span><span class="w"> </span><span class="s1">&#39;undefined&#39;</span><span class="p">)</span><span class="w"> </span>
+<span class="w">     </span><span class="p">{</span>
+<span class="w">     </span><span class="nx">$svg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">$svg</span><span class="p">.</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;class&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">imgClass</span><span class="o">+</span><span class="s1">&#39; replaced-svg&#39;</span><span class="p">);</span>
+<span class="w">     </span><span class="p">}</span>
+
+<span class="w">     </span><span class="c1">// Remove any invalid XML tags as per http://validator.w3.org</span>
+<span class="w">     </span><span class="nx">$svg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">$svg</span><span class="p">.</span><span class="nx">removeAttr</span><span class="p">(</span><span class="s1">&#39;xmlns:a&#39;</span><span class="p">);</span>
+
+<span class="w">     </span><span class="c1">// Check if the viewport is set, else we gonna set it if we can.</span>
+<span class="w">     </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">$svg</span><span class="p">.</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;viewBox&#39;</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">$svg</span><span class="p">.</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;height&#39;</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">$svg</span><span class="p">.</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;width&#39;</span><span class="p">))</span><span class="w"> </span>
+<span class="w">     </span><span class="p">{</span>
+<span class="w">     </span><span class="nx">$svg</span><span class="p">.</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;viewBox&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;0 0 &#39;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">$svg</span><span class="p">.</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;height&#39;</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s1">&#39; &#39;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">$svg</span><span class="p">.</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;width&#39;</span><span class="p">))</span>
+<span class="w">     </span><span class="p">}</span>
+
+<span class="w">     </span><span class="c1">// Replace image with new SVG</span>
+<span class="w">     </span><span class="nx">$img</span><span class="p">.</span><span class="nx">replaceWith</span><span class="p">(</span><span class="nx">$svg</span><span class="p">);</span>
+
+<span class="w">     </span><span class="p">},</span><span class="w"> </span><span class="s1">&#39;xml&#39;</span><span class="p">);</span><span class="w"> </span><span class="c1">//Returns as XML</span>
+<span class="w">     </span><span class="p">});</span>
+<span class="w">    </span><span class="p">});</span>
+</code></pre>
+</div>
+
+<p>Give it some custom CSS to change the color and width of the SVG image:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="w">    </span><span class="nt">svg</span><span class="w"> </span><span class="nt">path</span><span class="o">,</span><span class="w"> </span><span class="nt">svg</span><span class="w"> </span><span class="nt">rect</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">fill</span><span class="p">:</span><span class="w"> </span><span class="mh">#ff5a5f</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="p">.</span><span class="nc">custom-svg-icon</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">width</span><span class="p">:</span><span class="w"> </span><span class="mi">170</span><span class="kt">px</span><span class="p">;</span>
+<span class="w">        </span><span class="k">height</span><span class="p">:</span><span class="w"> </span><span class="mi">170</span><span class="kt">px</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+</code></pre>
+</div>
+
+<p>Right-click on the image, hit <strong><em>"Inspect Element"</em></strong> and view the
+converted image below but this time, you'll see it as an SVG element:</p>
+
+<script defer src="/static/projects/svg-img-to-code/script.js"></script>
+
+<figure>
+    <img class="custom-svg-icon" src="/static/images/space.svg"/>
+    <figcaption>
+        Figure 2. Converted SVG Space Icon
+    </figcaption>
+</figure>
+
+<p>However, there are a few downsides to this as SVG code is hard to
+maintain, pretty messy and sometimes quite complex especially if it
+contains a lot of paths, circles and rectangles but in a scenario that
+is similar to what I have faced, I think it's pretty useful, otherwise,
+just stick to adding your SVG images using the <strong><em>&lt;img&gt;</em></strong> tag.</p>
+
+<p>Hope you have found this article useful!</p>
+
+<h2>Credit</h2>
+
+<p>Icons made by <a href="https://www.flaticon.com/authors/eucalyp">Eucalyp</a> from <a href="https://www.flaticon.com/">www.flaticon.com</a> is licensed by <a href="http://creativecommons.org/licenses/by/3.0/">CC 3.0
+BY</a></p>
+
+	</div>
+	<div class="article-footer">
+		<time>February 24th, 2018</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/programming/">
+					Programming
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/writings/posts/i-decided-to-learn-python">I decided to learn Python</a></h1>
 		<p class="description">I decided to get back on solving algorithmic and programming puzzles by adding a new programming language to my tech arsenal, Python.</p>
 	</div>
@@ -132,7 +284,7 @@ numbers on the row below, the maximum total from top to bottom is 23.</p>
 2 <span style="color:#ff0000;"><b>4</b></span> 6<br>
 8 5 <span style="color:#ff0000;"><b>9</b></span> 3</p>
 
-That is, 3 + 7 + 4 + 9 = 23. Now, find the maximum total from top to bottom of the Binary Tree below:
+<p>That is, 3 + 7 + 4 + 9 = 23. Now, find the maximum total from top to bottom of the Binary Tree below:</p>
 
 <p style="text-align:center;font-family:'FiraMono';">
 75<br>
@@ -1154,200 +1306,6 @@ Message: Cooking MC&#39;s like a pound of bacon
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/the-cryptopals-crypto-challenges-set-1--detect-singlecharacter-xor">The Cryptopals Crypto Challenges: Set 1 - Detect Single-Character XOR</a></h1>
-		<p class="description">Write a method that derives which string that has a length of 60 characters has been encrypted using Single-Byte XOR cipher.</p>
-	</div>
-	<div class="article-body">
-		<p>This is the <a href="http://cryptopals.com/sets/1/challenges/4">fourth challenge</a> of Set 1 in The Cryptopals Crypto Challenges website. Previously, I spoke about these challenges and provided walkthroughs for the previous challenges, if you haven't read them, here are the links:</p>
-
-<ul>
-<li><a href="/posts/the-cryptopals-crypto-challenges">The Cryptopals Crypto Challenges</a></li>
-<li><a href="/posts/the-cryptopals-crypto-challenges-set-1--convert-hex-to-base64">The Cryptopals Crypto Challenges: Set 1 - Convert Hex to Base64</a></li>
-<li><a href="/posts/base64-encoding-decoding-using-bitwise-manipulation-in-c">Base64 Encoding / Decoding using Bitwise Manipulation in C++</a></li>
-<li><a href="/posts/the-cryptopals-crypto-challenges-set-1--fixed-xor">The Cryptopals Crypto Challenges: Set 1 - Fixed XOR Cipher</a></li>
-<li><a href="/posts/the-cryptopals-crypto-challenges-set-1--singlebyte-xor-cipher">The Cryptopals Crypto Challenges: Set 1 - Single-Byte XOR Cipher</a></li>
-</ul>
-
-<p>For this challenge, given a <a href="http://cryptopals.com/static/challenge-data/4.txt">list</a> of encrypted strings, you must derive which string (that has a length of 60 characters) is encrypted using <strong><em>Single-Byte XOR Cipher</em></strong>.</p>
-
-<p>Similar to the <a href="/posts/the-cryptopals-crypto-challenges-set-1--singlebyte-xor-cipher">previous post</a>, this is more about breaking the <strong><em>Single-Byte XOR Cipher</em></strong> technique. Remember, you can solve this challenge only if you were able to solve the previous challenge because you'll have to tweak some of the previous code in this challenge.</p>
-
-<h2>How to detect Single-Byte XOR?</h2>
-
-<p>In the previous challenge, we're able to determine the key as we had one string but how do we do that with 300+ strings in a file except now that we also have to determine if the string is encrypted using <strong><em>Single-Byte XOR Cipher</em></strong> or not?</p>
-
-<p>Here's comes the interesting part:</p>
-
-<ol>
-<li>Select the string that has the most english letters from the file</li>
-<li>Perform a Brute-force XOR on the string with the most english letters in which each character is XOR'd against every character from the ASCII table (256 characters)</li>
-<li>Pick the most english string after brute-forcing with each character</li>
-<li>Display the final result</li>
-</ol>
-
-<p>Let's have a look at the code:</p>
-
-<p><strong>Implementation of the method(s):</strong></p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="c1">//Return Character frequency of a string</span>
-<span class="n">map</span><span class="o">&lt;</span><span class="kt">char</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">CryptoLib</span><span class="o">::</span><span class="n">frequency_table</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="n">str</span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="n">map</span><span class="o">&lt;</span><span class="kt">char</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span>
-<span class="w">    </span><span class="n">map</span><span class="o">&lt;</span><span class="kt">char</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;::</span><span class="n">iterator</span><span class="w"> </span><span class="n">it</span><span class="p">;</span>
-
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">str</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="kt">char</span><span class="w"> </span><span class="n">ch</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">str</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
-<span class="w">        </span><span class="n">it</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">m</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="n">ch</span><span class="p">);</span>
-
-<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">it</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">m</span><span class="p">.</span><span class="n">end</span><span class="p">())</span>
-<span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="n">m</span><span class="p">.</span><span class="n">insert</span><span class="p">(</span><span class="n">make_pair</span><span class="p">(</span><span class="n">ch</span><span class="p">,</span><span class="mi">1</span><span class="p">));</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">        </span><span class="k">else</span>
-<span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="n">it</span><span class="o">-&gt;</span><span class="n">second</span><span class="o">++</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">m</span><span class="p">;</span>
-<span class="p">}</span>
-
-<span class="c1">//Return integer with the highest frequency of alphabets</span>
-<span class="kt">int</span><span class="w"> </span><span class="n">CryptoLib</span><span class="o">::</span><span class="n">high_frequency_count</span><span class="p">(</span><span class="n">map</span><span class="o">&lt;</span><span class="kt">char</span><span class="p">,</span><span class="kt">int</span><span class="o">&gt;</span><span class="n">m</span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="k">auto</span><span class="w"> </span><span class="n">p</span><span class="o">:</span><span class="w"> </span><span class="n">m</span><span class="p">)</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">isalpha</span><span class="p">(</span><span class="n">p</span><span class="p">.</span><span class="n">first</span><span class="p">))</span>
-<span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="c1">// cout &lt;&lt; p.first &lt;&lt; &quot;:&quot; &lt;&lt; p.second &lt;&lt; &quot; &quot;;</span>
-<span class="w">            </span><span class="n">count</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">second</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">count</span><span class="p">;</span>
-<span class="p">}</span>
-
-<span class="c1">//Detect string with Single Byte XOR</span>
-<span class="n">string</span><span class="w"> </span><span class="n">CryptoLib</span><span class="o">::</span><span class="n">detectSingleByteXOR</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">maxV</span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="k">final</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">;</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">maxCount</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-
-<span class="w">    </span><span class="cm">/*</span>
-<span class="cm">        2. Perform a Brute-force XOR on the string that has</span>
-<span class="cm">        the most english letters in which each character is XOR&#39;d against</span>
-<span class="cm">        every character from the ASCII table (256 characters)</span>
-<span class="cm">    */</span>
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="mi">256</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="n">string</span><span class="w"> </span><span class="n">temp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">;</span>
-<span class="w">        </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i</span><span class="p">;</span>
-<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="n">maxV</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">)</span>
-<span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">maxV</span><span class="p">[</span><span class="n">j</span><span class="p">];</span>
-<span class="w">            </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">^</span><span class="w"> </span><span class="n">a</span><span class="p">;</span>
-<span class="w">            </span><span class="n">temp</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">tolower</span><span class="p">(</span><span class="n">c</span><span class="p">);</span>
-<span class="w">        </span><span class="p">}</span>
-
-<span class="w">        </span><span class="c1">//3. Select the string that has the most english letters. again.</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">high_frequency_count</span><span class="p">(</span><span class="n">frequency_table</span><span class="p">(</span><span class="n">temp</span><span class="p">));</span>
-<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">count</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">maxCount</span><span class="p">)</span>
-<span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="n">maxCount</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">count</span><span class="p">;</span>
-<span class="w">            </span><span class="k">final</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">temp</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="c1">//4. Display the most &quot;english&quot; text as the final result</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="k">final</span><span class="p">;</span>
-<span class="p">}</span>
-</code></pre>
-</div>
-
-<p><strong>Final code:</strong></p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="c1">//Cryptopals Set 1 Challenge 4</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;crypto.h&quot;</span>
-
-<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="n">CryptoLib</span><span class="w"> </span><span class="n">crypt</span><span class="p">;</span>
-
-<span class="w">    </span><span class="n">ifstream</span><span class="w"> </span><span class="n">infile</span><span class="p">;</span>
-<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">str</span><span class="p">;</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">maxCount</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">maxString</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">;</span>
-<span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">maxV</span><span class="p">;</span>
-
-<span class="w">    </span><span class="n">infile</span><span class="p">.</span><span class="n">open</span><span class="p">(</span><span class="s">&quot;enctext.txt&quot;</span><span class="p">);</span>
-
-<span class="w">    </span><span class="c1">//if the file is not there</span>
-<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">infile</span><span class="p">)</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Unable to open the file&quot;</span><span class="p">;</span>
-<span class="w">        </span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">infile</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">str</span><span class="p">)</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="c1">//Only look for strings with 60 char length</span>
-<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">str</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">60</span><span class="p">)</span>
-<span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="n">str</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">crypt</span><span class="p">.</span><span class="n">add_spaces</span><span class="p">(</span><span class="n">crypt</span><span class="p">.</span><span class="n">con_hex_2_bin</span><span class="p">(</span><span class="n">str</span><span class="p">),</span><span class="w"> </span><span class="mi">8</span><span class="p">);</span>
-<span class="w">            </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">v1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">crypt</span><span class="p">.</span><span class="n">con_bin_2_dec</span><span class="p">(</span><span class="n">str</span><span class="p">,</span><span class="w"> </span><span class="mf">7.0</span><span class="p">);</span>
-<span class="w">            </span><span class="n">string</span><span class="w"> </span><span class="n">newStr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">crypt</span><span class="p">.</span><span class="n">con_dec_2_ascii</span><span class="p">(</span><span class="n">v1</span><span class="p">);</span>
-
-<span class="w">            </span><span class="c1">//1. Select the string that has the most english letters</span>
-<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">crypt</span><span class="p">.</span><span class="n">high_frequency_count</span><span class="p">(</span><span class="n">crypt</span><span class="p">.</span><span class="n">frequency_table</span><span class="p">(</span><span class="n">newStr</span><span class="p">));</span>
-<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">count</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">maxCount</span><span class="p">)</span>
-<span class="w">            </span><span class="p">{</span>
-<span class="w">                </span><span class="n">maxCount</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">count</span><span class="p">;</span>
-<span class="w">                </span><span class="n">maxString</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newStr</span><span class="p">;</span>
-<span class="w">                </span><span class="n">maxV</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v1</span><span class="p">;</span>
-<span class="w">            </span><span class="p">}</span><span class="w"> </span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="c1">//2. Pass the list of decimals to the function (for now)</span>
-<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">crypt</span><span class="p">.</span><span class="n">detectSingleByteXOR</span><span class="p">(</span><span class="n">maxV</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="p">}</span>
-</code></pre>
-</div>
-
-<p><strong>Decrypted message:</strong></p>
-
-<div class="codehilite">
-<pre><span></span><code>Message: Now that the party is jumping.
-</code></pre>
-</div>
-
-<p><strong><em>Note: This solution and the library named <code>crypto.h</code> was built using the C++ programming language. The source code for this solution can be found on Github.</em></strong></p>
-
-<p>Stay tuned for the next challenge!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>December 13th, 2017</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/cryptography/">
-					Cryptography
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -1424,14 +1382,14 @@ Message: Cooking MC&#39;s like a pound of bacon
 		<li>
 			<a href="/category/devops/">
 				DevOps
-				<span class="count">14</span>
+				<span class="count">15</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/php/">
 				PHP
-				<span class="count">12</span>
+				<span class="count">13</span>
 			</a>
 		</li>
 		
@@ -1555,6 +1513,13 @@ Message: Cooking MC&#39;s like a pound of bacon
 		</li>
 		
 		<li>
+			<a href="/category/vscode/">
+				VSCode
+				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/python/">
 				Python
 				<span class="count">3</span>
@@ -1593,6 +1558,20 @@ Message: Cooking MC&#39;s like a pound of bacon
 			<a href="/category/general/">
 				General
 				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/selfreflection/">
+				Self-reflection
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/ssl/">
+				SSL
+				<span class="count">2</span>
 			</a>
 		</li>
 		
@@ -1639,13 +1618,6 @@ Message: Cooking MC&#39;s like a pound of bacon
 		</li>
 		
 		<li>
-			<a href="/category/vscode/">
-				VSCode
-				<span class="count">2</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/email/">
 				Email
 				<span class="count">2</span>
@@ -1663,6 +1635,34 @@ Message: Cooking MC&#39;s like a pound of bacon
 			<a href="/category/wamp/">
 				WAMP
 				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/xdebug/">
+				XDebug
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/development/">
+				Development
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/openssl/">
+				OpenSSL
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/csr/">
+				CSR
+				<span class="count">1</span>
 			</a>
 		</li>
 		
@@ -1744,13 +1744,6 @@ Message: Cooking MC&#39;s like a pound of bacon
 		</li>
 		
 		<li>
-			<a href="/category/selfreflection/">
-				Self-reflection
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/security/">
 				Security
 				<span class="count">1</span>
@@ -1802,13 +1795,6 @@ Message: Cooking MC&#39;s like a pound of bacon
 		<li>
 			<a href="/category/go/">
 				Go
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/ssl/">
-				SSL
 				<span class="count">1</span>
 			</a>
 		</li>

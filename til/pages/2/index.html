@@ -77,6 +77,114 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/temporarily-disable-ipv6-protocol-on-ubuntu">Temporarily disable IPV6 protocol on Ubuntu</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Few days ago, I resolved an issue that I faced on an Ubuntu server that was related to SMTP not working, as a result, the server was always throwing a <code>504 Gateway Timeout</code> error.</p>
+
+<p>During troubleshooting, I found out that <code>telnet smtp.office365.com 587</code> was not giving any response and thought that the port was blocked on the client's network but no, it wasn't.</p>
+
+<p>I did a little digging and learnt that it could be due to the fact that SMTP traffic over IPV6 might be blocked on the client's network.</p>
+
+<p>So, I tried executing the following commands to disable IPV6 temporarily:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>sysctl<span class="w"> </span>-w<span class="w"> </span>net.ipv6.conf.all.disable_ipv6<span class="o">=</span><span class="m">1</span>
+sudo<span class="w"> </span>sysctl<span class="w"> </span>-w<span class="w"> </span>net.ipv6.conf.default.disable_ipv6<span class="o">=</span><span class="m">1</span>
+</code></pre>
+</div>
+
+<p>And voila, the mails were going and SMTP traffic was working over IPV4.</p>
+
+<p>If you want to enable it again, try the following:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>sysctl<span class="w"> </span>-w<span class="w"> </span>net.ipv6.conf.all.disable_ipv6<span class="o">=</span><span class="m">0</span>
+sudo<span class="w"> </span>sysctl<span class="w"> </span>-w<span class="w"> </span>net.ipv6.conf.default.disable_ipv6<span class="o">=</span><span class="m">0</span>
+</code></pre>
+</div>
+
+<p>Hope you found this tip useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>November 27th, 2022</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/ubuntu/">
+					Ubuntu
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/view-list-of-services-in-linux">View list of services in Linux</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>If you wanted to see a list of services available on your Linux server/desktop, try the following command:</p>
+
+<div class="codehilite">
+<pre><span></span><code>systemctl<span class="w"> </span>list-unit-files<span class="w"> </span>--type<span class="o">=</span>service
+</code></pre>
+</div>
+
+<p>Upon executing this command, you'll be able to see a list of services along with their statuses i.e whether the service is enabled or disabled.</p>
+
+<p>This can come in handy if you want to know the status of a specific service like <code>nginx</code>:</p>
+
+<div class="codehilite">
+<pre><span></span><code>systemctl<span class="w"> </span>list-unit-files<span class="w"> </span>--type<span class="o">=</span>service<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s2">&quot;nginx&quot;</span>
+</code></pre>
+</div>
+
+<p>Hope you found this tip useful.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>November 27th, 2022</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/install-docker-on-fedora-3536">Install Docker on Fedora 35/36</a></h1>
 		<p class="description"></p>
 	</div>
@@ -563,94 +671,6 @@ sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class=
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/download-a-webpage-along-with-its-assets-using-wget">Download a webpage along with it's assets using wget</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>I wanted to download a webpage along with it's assets and scripts, I tried using Chrome's <strong>Save as...</strong> option but it wasn't working as expected.</p>
-
-<p>I did a little googling and thought of using <code>wget</code> to do the job and it worked. Here's the command I used:</p>
-
-<div class="codehilite">
-<pre><span></span><code>wget<span class="w"> </span>-p<span class="w"> </span>-k<span class="w"> </span>-H<span class="w"> </span>--nd<span class="w"> </span>https://www.example.com
-</code></pre>
-</div>
-
-<p>Let's see what do those flags mean:</p>
-
-<ul>
-<li><code>-p</code>: Downloads all the necessary files to properly display the downloaded HTML page.</li>
-<li><code>-k</code>: After the download is complete, it converts the links in the document to make them suitable for local viewing.</li>
-<li><code>-H</code>: This would download files that spans different hosts.</li>
-<li><code>--nd</code>: While retrieving files recursively, it will not create a hierarchy of directories and downloads the files into a single directory instead.</li>
-</ul>
-
-<p>If you open <code>index.html</code> directly on the browser, the assets might be broken as the <code>-k</code> flag doesn't seem to make the assets relative to the root directory. In order to view it, you can view it on a localhost server like WAMP, XAMPP or if you are using Python, you can type <code>python -m http.server</code> and view your downloaded file.</p>
-
-<p>Might be a bit messy but gets the job done.</p>
-
-	</div>
-	<div class="article-footer">
-		<time>July 17th, 2022</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/wget/">
-					wget
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/linux/">
-					Linux
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/extract-private-key-and-certificate-from-pfx-file">Extract private key and certificate from .pfx file</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Ever wondered what's a <code>.pfx</code> file? It's just a combination of both private key and the certificate and this file is usually used in Microsoft IIS Servers.</p>
-
-<p>However, you can't use this file in Linux servers as both private key and the certificate are supposed to be individual files.</p>
-
-<p>Here's how you can extract both private key and certificate files:</p>
-
-<div class="codehilite">
-<pre><span></span><code>openssl<span class="w"> </span>pkcs12<span class="w"> </span>-in<span class="w"> </span>file.pfx<span class="w"> </span>-nocerts<span class="w"> </span>-out<span class="w"> </span>privatekey.pem<span class="w"> </span>-nodes
-openssl<span class="w"> </span>pkcs12<span class="w"> </span>-in<span class="w"> </span>file.pfx<span class="w"> </span>-nokeys<span class="w"> </span>-out<span class="w"> </span>certificate.crt
-</code></pre>
-</div>
-
-<p>Hope this tip helps you out!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>March 12th, 2022</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/devops/">
-					DevOps
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -723,14 +743,14 @@ openssl<span class="w"> </span>pkcs12<span class="w"> </span>-in<span class="w">
 		<li>
 			<a href="/category/devops/">
 				DevOps
-				<span class="count">14</span>
+				<span class="count">15</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/php/">
 				PHP
-				<span class="count">12</span>
+				<span class="count">13</span>
 			</a>
 		</li>
 		
@@ -854,6 +874,13 @@ openssl<span class="w"> </span>pkcs12<span class="w"> </span>-in<span class="w">
 		</li>
 		
 		<li>
+			<a href="/category/vscode/">
+				VSCode
+				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/python/">
 				Python
 				<span class="count">3</span>
@@ -892,6 +919,20 @@ openssl<span class="w"> </span>pkcs12<span class="w"> </span>-in<span class="w">
 			<a href="/category/general/">
 				General
 				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/selfreflection/">
+				Self-reflection
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/ssl/">
+				SSL
+				<span class="count">2</span>
 			</a>
 		</li>
 		
@@ -938,13 +979,6 @@ openssl<span class="w"> </span>pkcs12<span class="w"> </span>-in<span class="w">
 		</li>
 		
 		<li>
-			<a href="/category/vscode/">
-				VSCode
-				<span class="count">2</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/email/">
 				Email
 				<span class="count">2</span>
@@ -962,6 +996,34 @@ openssl<span class="w"> </span>pkcs12<span class="w"> </span>-in<span class="w">
 			<a href="/category/wamp/">
 				WAMP
 				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/xdebug/">
+				XDebug
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/development/">
+				Development
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/openssl/">
+				OpenSSL
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/csr/">
+				CSR
+				<span class="count">1</span>
 			</a>
 		</li>
 		
@@ -1043,13 +1105,6 @@ openssl<span class="w"> </span>pkcs12<span class="w"> </span>-in<span class="w">
 		</li>
 		
 		<li>
-			<a href="/category/selfreflection/">
-				Self-reflection
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/security/">
 				Security
 				<span class="count">1</span>
@@ -1101,13 +1156,6 @@ openssl<span class="w"> </span>pkcs12<span class="w"> </span>-in<span class="w">
 		<li>
 			<a href="/category/go/">
 				Go
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/ssl/">
-				SSL
 				<span class="count">1</span>
 			</a>
 		</li>
