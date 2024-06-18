@@ -77,91 +77,247 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/configure-xdebug-in-visual-studio-code">Configure XDebug in Visual Studio Code</a></h1>
+		<h1 class="heading"><a href="/til/posts/using-records-for-dtos">Using records for DTOs</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>For the past 6 months, I've been writing code in C# 11 and .NET 7 Core and of course, using the amazing Visual Studio 2022 IDE was quite an amazing experience especially when it comes to debugging your code.</p>
+		<p>If you're building an application or API using .NET Core in where you might have to integrate with any external services or third-party APIs, this is for you.</p>
 
-<p>Recently, I had to switch back to classic ol' PHP and now, I wanted a similar debugging experience in Visual Studio Code.</p>
+<h2>What are records?</h2>
 
-<p>Using XDebug and if configured correctly, it'll be quite useful in your debugging journey instead of using <code>var_dump()</code> or <code>dd()</code> your variables everytime.</p>
+<p>It's a feature introduced since <strong>C# 9.0</strong> that allows you to create simple and immutable data types. When representing DTOs (Data Transfer Objects), it comes in handy because the syntax in concise and it's primarily used to transfer data between layers of an application such as the Core and Presentation Layer. </p>
 
-<h2>Prerequisites</h2>
-
-<p>The only thing you need here is Visual Studio Code and ensure that it's the latest version. I'm writing this from a Windows Machine using the latest version of WAMP Server.</p>
-
-<h2>1. Download PHP Debug</h2>
-
-<p>The official XDebug team has released an extension that could be installed in your editor. So, here you go, first <a href="https://xdebug.org/download">download it</a>.</p>
-
-<h2>2. Install XDebug</h2>
-
-<p>In the previous step, we just installed the extension for the editor but that's just an adapter used between the editor and XDebug.
-Whereas, XDebug is a PHP extension that needs to be installed on your local system.</p>
-
-<p>I'm not going to show you the installation process as this <a href="https://xdebug.org/docs/install">documentation</a> explains that well enough and you can follow it based on your operating system of choice.</p>
-
-<h2>3. PHP Configuration</h2>
-
-<p>After you're done with installing the extension, open your <code>php.ini</code> file and add the following line in this file:</p>
+<p>Here's an example of a car using a regular <code>class</code> type:</p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="na">zend_extension</span><span class="o">=</span><span class="s">path/to/xdebug</span>
+<pre><span></span><code><span class="k">public</span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">Car</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">public</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="n">Manufacturer</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">get</span><span class="p">;</span><span class="w"> </span><span class="n">init</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+<span class="w">    </span><span class="k">public</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">Price</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">get</span><span class="p">;</span><span class="w"> </span><span class="n">init</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+<span class="w">    </span><span class="k">public</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="n">Color</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">get</span><span class="p">;</span><span class="w"> </span><span class="n">init</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+<span class="p">}</span>
 </code></pre>
 </div>
 
-<p>Now, it's time to enable remote debugging. Depending on your XDebug version:</p>
-
-<p>For XDebug <code>v3.x.x</code>:</p>
+<p>And here's a simplified version of that using <code>record</code> type:</p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="na">xdebug.mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">debug</span>
-<span class="na">xdebug.start_with_request</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">yes</span>
+<pre><span></span><code><span class="k">public</span><span class="w"> </span><span class="n">record</span><span class="w"> </span><span class="nf">Car</span><span class="p">(</span>
+<span class="w">    </span><span class="kt">string</span><span class="w"> </span><span class="n">Manufacturer</span><span class="p">,</span>
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">Price</span><span class="p">,</span>
+<span class="w">    </span><span class="kt">string</span><span class="w"> </span><span class="n">Color</span>
+<span class="p">);</span>
 </code></pre>
 </div>
 
-<p>For XDebug <code>v2.x.x</code>:</p>
+<p>Making use of the <code>record</code> type to manage Data Transfer Objects makes use of clean coding practicies by writing concise yet maintainable code.</p>
 
-<div class="codehilite">
-<pre><span></span><code><span class="na">xdebug.remote_enable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">1</span>
-<span class="na">xdebug.remote_autostart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">1</span>
-<span class="na">xdebug.remote_port</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">9000</span>
-</code></pre>
-</div>
+<h2>So, no need of using classes?</h2>
 
-<p>If you are looking for more specific options, please see read the <a href="https://xdebug.org/docs/remote#starting">documentation on remote debugging</a>. Please note that the default port in XDebug <code>v3.x.x</code> has been changed from <code>9000</code> to <code>9003</code>.</p>
-
-<p>Once done, restart your PHP service and check if the configuration has taken effect. You can do this by creating a simple <code>test.php</code> with a <code>phpinfo();</code> statement in there and look for your XDebug extension under the <strong>Loaded Configuration File</strong> section.</p>
-
-<h2>4. Visual Studio Code Configuration</h2>
-
-<p>In your editor, hold <kbd>CTRL</kbd> + <kbd>SHIFT</kbd> + <kbd>P</kbd> and type "Debug: Add Configuration" and it'll prompt you to select your language of preference and this case, of course, you should "PHP".</p>
-
-<p>Upon selecting, it'll automatically generate a <code>launch.json</code> file in your <code>.vscode</code> folder in your project folder.</p>
-
-<p>There'll be three different configurations in your file:</p>
-
-<ul>
-<li>Listen for XDebug: This setting will simply start listening on the specified port (by default <code>9003</code>) for XDebug.</li>
-<li>Launch currently open script: It will launch the currently opened script as a CLI, show all stdout/stderr output in the debug console and end the debug session once the script exits.</li>
-<li>Launch Built-in web server: This configuration starts the PHP built-in web server on a random port and opens the browser with the <code>serverReadyAction</code> directive.</li>
-</ul>
-
-<p>Now, to test if it works, hit <kbd>F5</kbd> and add a breakpoint in your PHP code and if it lands on your breakpoint, that means it works fine.</p>
+<p>Well, it depends because records aren't meant to replace classes for all scenarios. It's still recommended to use regular classes for complex types with complex behavior and whereas, records can be used for simple data structures.</p>
 
 <p>Hope you found this article useful!</p>
 
-<h2>References</h2>
+	</div>
+	<div class="article-footer">
+		<time>June 18th, 2024</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/net-core/">
+					.NET Core
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/c/">
+					C#
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/oop/">
+					OOP
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
 
-<ul>
-<li><a href="https://marketplace.visualstudio.com/items?itemName=xdebug.php-debug">PHP Debug for VS Code</a></li>
-<li><a href="https://xdebug.org/docs/install">XDebug Installation Manual</a></li>
-</ul>
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/using-property-pattern-matching-in-c">Using Property Pattern Matching in C#</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Alright, we've all been there especially when it comes to writing IF conditions with multiple checks in a single line like the example below:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">if</span><span class="p">(</span><span class="n">employee</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="k">null</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">employee</span><span class="p">.</span><span class="n">Age</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="m">20</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">employee</span><span class="p">.</span><span class="n">Address</span><span class="p">.</span><span class="n">City</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s">&quot;Dubai&quot;</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="c1">// Do something here...</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<p>As you can see, this condition is straight-forward but can sometimes hinder readability and doesn't really ensure type safety.</p>
+
+<p>Here's where you can make use <strong>Property Pattern Matching</strong>.</p>
+
+<h2>What's Property Pattern Matching?</h2>
+
+<p>This type of pattern matching is used to match the defined expression if the conditions/nested conditions successfully matches the corresponding property or the field of the result and output of the result is not null. Here's an example of how it might be like:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">if</span><span class="p">(</span><span class="n">employee</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">Age</span><span class="p">:</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="m">20</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">Address</span><span class="p">.</span><span class="n">City</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s">&quot;Dubai&quot;</span><span class="w"> </span><span class="p">})</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="c1">// Do something here...</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<p>This pattern elevates your code's readability, ensures type safety and enable flexibility in terms of data manipulation.</p>
+
+<p>Hope you found this tip useful!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>December 31st, 2023</time>
+		<time>June 17th, 2024</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/c/">
+					C#
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/programming/">
+					Programming
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/remove-control-flags">Remove Control Flags</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>There are times when we write flags to control the flow of the program. I mean, it's good to use control flags (sometimes) but it's not necessary to be used in most cases. Like the one shown below:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">public</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="nf">HandlePaymentRecords</span><span class="p">(</span><span class="n">List</span><span class="o">&lt;</span><span class="n">PaymentRecord</span><span class="o">&gt;</span><span class="w"> </span><span class="n">paymentRecords</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">isSuccessful</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">true</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">foreach</span><span class="p">(</span><span class="kt">var</span><span class="w"> </span><span class="n">paymentRecord</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="n">paymentRecords</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">ProcessPaymentRecord</span><span class="p">(</span><span class="n">paymentRecord</span><span class="p">))</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">isSuccessful</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">false</span><span class="p">;</span>
+<span class="w">            </span><span class="k">break</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">isSuccessful</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<p>The name of method states it's purpose but it seems a tad bit complicated and might confuse some developers who get on-board with it. </p>
+
+<p>Instead, you can make of use of a refactoring technique called <strong>Remove Control Flags</strong> and modify the method to look like this:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">public</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="nf">HandlePaymentProcess</span><span class="p">(</span><span class="n">List</span><span class="o">&lt;</span><span class="n">PaymentRecord</span><span class="o">&gt;</span><span class="w"> </span><span class="n">paymentRecords</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">foreach</span><span class="p">(</span><span class="kt">var</span><span class="w"> </span><span class="n">paymentRecord</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="n">paymentRecords</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">ProcessPaymentRecord</span><span class="p">(</span><span class="n">paymentRecord</span><span class="p">))</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="k">false</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="k">true</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<p>The logic is the same but now the code is now simplified, less complex to read and much more maintainable.</p>
+
+<p>Less code is good code.</p>
+
+<p>Hope this helps you out!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>June 16th, 2024</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/c/">
+					C#
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/clean-code/">
+					Clean Code
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/refactoring/">
+					Refactoring
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/error-loading-v8-startup-snapshot-file-in-visual-studio-code">Error loading V8 startup snapshot file in Visual Studio Code</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Unusually, one fine afternoon, I was facing issues with opening my VSCode editor and I faced the followinge error when I tried <code>code .</code> on my project directory:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="o">[</span><span class="m">0830</span>/101630.031:FATAL:v8_initializer.cc<span class="o">(</span><span class="m">527</span><span class="o">)]</span><span class="w"> </span>Error<span class="w"> </span>loading<span class="w"> </span>V8<span class="w"> </span>startup<span class="w"> </span>snapshot<span class="w"> </span>file
+</code></pre>
+</div>
+
+<p>I didn't really understand what might have caused it but after reading this <a href="https://github.com/microsoft/vscode/issues/183314">issue raised on GitHub</a>, I realized that occurred due to a corrupted update while I was shutting down my PC (Good job, Windows! :facepalm:)</p>
+
+<p>If you're are lucky enough, here's how you can get it back to work:</p>
+
+<ol>
+<li>Go <code>C:\Users\XXX\AppData\Local\Programs\Microsoft VS Code</code> directory</li>
+<li>If you spot a folder titled <code>_</code>, copy the contents and paste it in the VS Code directly</li>
+<li>Try starting your editor again</li>
+</ol>
+
+<p>The following steps worked out for me and if it worked out for you, that's great! Else, you'll have to re-install your editor all over again, which means you might have to re-install your extensions and re-configure it again (if you haven't taken a backup of it).</p>
+
+<p>Hope this helps you out!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>May 29th, 2024</time>
 		<ul class="tags">
 			
 			<li>
@@ -171,20 +327,8 @@ Whereas, XDebug is a PHP extension that needs to be installed on your local syst
 			</li>
 			
 			<li>
-				<a href="/category/php/">
-					PHP
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/xdebug/">
-					XDebug
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/development/">
-					Development
+				<a href="/category/troubleshooting/">
+					Troubleshooting
 				</a>
 			</li>
 			
@@ -196,328 +340,90 @@ Whereas, XDebug is a PHP extension that needs to be installed on your local syst
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/generate-csr-with-multiple-subdomains-using-openssl">Generate CSR with multiple subdomains using OpenSSL</a></h1>
+		<h1 class="heading"><a href="/til/posts/generating-custom-snippets-using-visual-studio-code">Generating custom snippets using Visual Studio Code</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>I have done this many times but I never got to write about it and I felt that I should write about it after I helped a friend of mine with this.</p>
+		<p>I've always wanted to write about this feature and I believe this is one of the most productivity hacks you can do to speed your work and worry-less about writing boilerplate code.</p>
 
-<h2>Prerequisites</h2>
+<p>For example, if I wanted to write a piece of code that fetches a list of books asynchronously using JavaScript, I would have to type it or maybe copy-paste that stub from another file or project and edit it accordingly.
+That's fine but when working on a large project or tight deadlines, it can be quite time-consuming if all you want is just a boilerplate code that's ready to begin with.</p>
 
-<p>It doesn't matter which operating system you're going to do this on as long as you have <code>openssl</code> installed in your system, you should be fine.</p>
+<p>Here's how you can create your own snippet:</p>
 
-<p>All you have to do is just create a simple configuration file and give it a name like <code>multiple-domains.cnf</code>:</p>
+<ol>
+<li>Press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd></li>
+<li>Type <strong>Configure User Snippets</strong> and hit <kbd>Enter</kbd></li>
+<li>Select the language for which it should appear and hit <kbd>Enter</kbd></li>
+</ol>
+
+<p>Once done, a new tab will open up with simple instructions for you to get started with. The instructions are quite straight-forward and you can write something like this right below the note:</p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="k">[req]</span>
-<span class="na">default_bits</span><span class="w">       </span><span class="o">=</span><span class="w"> </span><span class="s">2048</span>
-<span class="na">distinguished_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">req_distinguished_name</span>
-<span class="na">req_extensions</span><span class="w">     </span><span class="o">=</span><span class="w"> </span><span class="s">req_ext</span>
-
-<span class="k">[req_distinguished_name]</span>
-<span class="na">countryName</span><span class="w">         </span><span class="o">=</span><span class="w"> </span><span class="s">[COUNTRYCODE]</span>
-<span class="na">stateOrProvinceName</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">[STATE]</span>
-<span class="na">localityName</span><span class="w">        </span><span class="o">=</span><span class="w"> </span><span class="s">[LOCALITY]</span>
-<span class="na">organizationName</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="s">[ORGANIZATION]</span>
-<span class="na">commonName</span><span class="w">          </span><span class="o">=</span><span class="w"> </span><span class="s">website.com</span>
-
-<span class="k">[req_ext]</span>
-<span class="na">subjectAltName</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">@alt_names</span>
-
-<span class="k">[alt_names]</span>
-<span class="na">DNS.1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">website.org</span>
-<span class="na">DNS.2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">wesbite.ae</span>
-<span class="na">DNS.3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">wesbite.co.uk</span>
+<pre><span></span><code><span class="p">{</span>
+<span class="w">    </span><span class="c1">// Place your snippets for javascript here. Each snippet is defined under a snippet name and has a prefix, body and </span>
+<span class="w">    </span><span class="c1">// description. The prefix is what is used to trigger the snippet and the body will be expanded and inserted. Possible variables are:</span>
+<span class="w">    </span><span class="c1">// $1, $2 for tab stops, $0 for the final cursor position, and ${1:label}, ${2:another} for placeholders. Placeholders with the </span>
+<span class="w">    </span><span class="c1">// same ids are connected.</span>
+<span class="w">    </span><span class="c1">// Example:</span>
+<span class="w">    </span><span class="c1">// &quot;Print to console&quot;: {</span>
+<span class="w">    </span><span class="c1">//  &quot;prefix&quot;: &quot;log&quot;,</span>
+<span class="w">    </span><span class="c1">//  &quot;body&quot;: [</span>
+<span class="w">    </span><span class="c1">//      &quot;console.log(&#39;$1&#39;);&quot;,</span>
+<span class="w">    </span><span class="c1">//      &quot;$2&quot;</span>
+<span class="w">    </span><span class="c1">//  ],</span>
+<span class="w">    </span><span class="c1">//  &quot;description&quot;: &quot;Log output to console&quot;</span>
+<span class="w">    </span><span class="c1">// }</span>
+<span class="w">    </span><span class="nt">&quot;AJAX Get Method&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;prefix&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ajax-get&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;body&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">            </span><span class="s2">&quot;$.ajax({&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="s2">&quot;\turl: &#39;/&#39;,&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="s2">&quot;\tmethod: &#39;GET&#39;,&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="s2">&quot;\tdatatype: &#39;json&#39;,&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="s2">&quot;\tsuccess: (data) =&gt; {&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="s2">&quot;\t\tconsole.log(data);&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="s2">&quot;\t},&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="s2">&quot;\terror: (err) =&gt; {&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="s2">&quot;\t\tconsole.error(err);&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="s2">&quot;\t}&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="s2">&quot;});&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="p">],</span>
+<span class="w">        </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;A simple AJAX GET Method&quot;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
 </code></pre>
 </div>
 
-<p>Save the file and copy-paste this into your command prompt or terminal:</p>
+<p>Save the file and test if the snippet works fine by opening any file, in this case, open an empty <code>.js</code> file and type <code>ajax-get</code> and hit <kbd>Tab</kbd> at the end of the prefix. The generated snippet would look like this:</p>
 
 <div class="codehilite">
-<pre><span></span><code>openssl<span class="w"> </span>req<span class="w"> </span>-out<span class="w"> </span>&lt;your-csr-name&gt;.csr<span class="w"> </span>-newkey<span class="w"> </span>rsa:2048<span class="w"> </span>-nodes<span class="w"> </span>-keyout<span class="w"> </span>&lt;your-private-key-name&gt;.key<span class="w"> </span>-config<span class="w"> </span>multiple-domains.cnf
+<pre><span></span><code><span class="nx">$</span><span class="p">.</span><span class="nx">ajax</span><span class="p">({</span>
+<span class="w">    </span><span class="nx">url</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;/&#39;</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">method</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;GET&#39;</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">datatype</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;json&#39;</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">success</span><span class="o">:</span><span class="w"> </span><span class="p">(</span><span class="nx">data</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="nx">error</span><span class="o">:</span><span class="w"> </span><span class="p">(</span><span class="nx">err</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">});</span>
 </code></pre>
 </div>
 
-<p>Once executed, it should be generated for you and if not, verify your configuration file for any typos.</p>
+<p>Learn more about generating snippets by reading the <a href="https://code.visualstudio.com/docs/editor/userdefinedsnippets">documentation</a> about it.</p>
 
-<p>Hope this helps you out!</p>
+<p>Hope this tip helps you out!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>December 31st, 2023</time>
+		<time>May 26th, 2024</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/openssl/">
-					OpenSSL
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/ssl/">
-					SSL
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/csr/">
-					CSR
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/devops/">
-					DevOps
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/list-tables-that-dont-have-primary-keys-in-a-mysql-database">List tables that don't have primary keys in a MySQL database</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Whenever I restore a database dump on a MySQL InnoDB Cluster, most of the time, the error I face is related to missing <code>PRIMARY KEY</code> attribute because as per <a href="https://dev.mysql.com/doc/refman/8.0/en/group-replication-requirements.html">MySQL's official documentation</a>:</p>
-
-<blockquote>
-  <p>Every table that is to be replicated by the group must have a defined primary key, or primary key equivalent where the equivalent is non-null unique key.</p>
-</blockquote>
-
-<p>What I would usually do is, run a simple query to determine the list of the tables that don't the <code>PRIMARY KEY</code> attribute:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">select</span><span class="w"> </span><span class="n">tab</span><span class="p">.</span><span class="n">table_schema</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">database_name</span><span class="p">,</span>
-<span class="w">       </span><span class="n">tab</span><span class="p">.</span><span class="k">table_name</span>
-<span class="k">from</span><span class="w"> </span><span class="n">information_schema</span><span class="p">.</span><span class="k">tables</span><span class="w"> </span><span class="n">tab</span>
-<span class="k">left</span><span class="w"> </span><span class="k">join</span><span class="w"> </span><span class="n">information_schema</span><span class="p">.</span><span class="n">table_constraints</span><span class="w"> </span><span class="n">tco</span>
-<span class="w">          </span><span class="k">on</span><span class="w"> </span><span class="n">tab</span><span class="p">.</span><span class="n">table_schema</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tco</span><span class="p">.</span><span class="n">table_schema</span>
-<span class="w">          </span><span class="k">and</span><span class="w"> </span><span class="n">tab</span><span class="p">.</span><span class="k">table_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tco</span><span class="p">.</span><span class="k">table_name</span>
-<span class="w">          </span><span class="k">and</span><span class="w"> </span><span class="n">tco</span><span class="p">.</span><span class="n">constraint_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;PRIMARY KEY&#39;</span>
-<span class="k">where</span><span class="w"> </span><span class="n">tco</span><span class="p">.</span><span class="n">constraint_type</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="no">null</span>
-<span class="w">      </span><span class="k">and</span><span class="w"> </span><span class="n">tab</span><span class="p">.</span><span class="n">table_schema</span><span class="w"> </span><span class="k">not</span><span class="w"> </span><span class="k">in</span><span class="p">(</span><span class="s1">&#39;mysql&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;information_schema&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;performance_schema&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;sys&#39;</span><span class="p">)</span>
-<span class="w">      </span><span class="k">and</span><span class="w"> </span><span class="n">tab</span><span class="p">.</span><span class="n">table_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;BASE TABLE&#39;</span>
-<span class="w">      </span><span class="k">and</span><span class="w"> </span><span class="n">tab</span><span class="p">.</span><span class="n">table_schema</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;your_database_name_here&#39;</span>
-<span class="k">order</span><span class="w"> </span><span class="k">by</span><span class="w"> </span><span class="n">tab</span><span class="p">.</span><span class="n">table_schema</span><span class="p">,</span>
-<span class="w">         </span><span class="n">tab</span><span class="p">.</span><span class="k">table_name</span><span class="p">;</span>
-</code></pre>
-</div>
-
-<p>Hope you found this tip useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>February 11th, 2023</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/mysql/">
-					MySQL
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/playing-around-with-imagemagick">Playing around with ImageMagick</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>ImageMagick is not a new tool for me but I haven't really talked about how it comes in handy whenever I wanted to resize and/or compress images efficiently using the terminal instead of using some image conversion service found for free online.</p>
-
-<p>To get started, make sure you install ImageMagick on your machine. This is the command I use for Fedora Linux:</p>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>dnf<span class="w"> </span>install<span class="w"> </span>ImageMagick
-</code></pre>
-</div>
-
-<p>For example, if you wanted to compress an image's quality to 80%, here's you can do it:</p>
-
-<div class="codehilite">
-<pre><span></span><code>convert<span class="w"> </span>-quality<span class="w"> </span><span class="m">80</span>%<span class="w"> </span>src.png<span class="w"> </span>dest.png
-</code></pre>
-</div>
-
-<p>Great! What if you want to do it for hundreds of images in a directory, then you can easily do something like this:</p>
-
-<div class="codehilite">
-<pre><span></span><code>find<span class="w"> </span>.<span class="w"> </span>-type<span class="w"> </span>f<span class="w"> </span>-name<span class="w"> </span><span class="s1">&#39;*.png&#39;</span><span class="w"> </span>-exec<span class="w"> </span>bash<span class="w"> </span>-c<span class="w"> </span><span class="s1">&#39;convert -quality 80% &quot;$1&quot; &quot;${1%}_compressed.png&quot; &#39;</span><span class="w"> </span>bash<span class="w">  </span><span class="o">{}</span><span class="w"> </span><span class="se">\;</span>
-</code></pre>
-</div>
-
-<p>You can do the same to resize the images while keeping original aspect ratio intact:</p>
-
-<div class="codehilite">
-<pre><span></span><code>convert<span class="w"> </span>-resize<span class="w"> </span>450x450<span class="w"> </span>src.png<span class="w"> </span>dest.png
-</code></pre>
-</div>
-
-<p>And similar to the one above, you can do the same for multiple images like so:</p>
-
-<div class="codehilite">
-<pre><span></span><code>find<span class="w"> </span>.<span class="w"> </span>-type<span class="w"> </span>f<span class="w"> </span>-name<span class="w"> </span><span class="s1">&#39;*.png&#39;</span><span class="w"> </span>-exec<span class="w"> </span>bash<span class="w"> </span>-c<span class="w"> </span><span class="s1">&#39;convert -resize 450x450 &quot;$1&quot; &quot;${1%}_resized.png&quot; &#39;</span><span class="w"> </span>bash<span class="w">  </span><span class="o">{}</span><span class="w"> </span><span class="se">\;</span>
-</code></pre>
-</div>
-
-<p>I have just scraped the surface of this image manipulation tool and if you are interested to know more, read the official <a href="https://linux.die.net/man/1/imagemagick">manpage</a> on how to use it.</p>
-
-<p>Hope you found this tip useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>January 15th, 2023</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/image-manipulation/">
-					Image Manipulation
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/install-cisco-anyconnect-client-on-fedora-linux">Install Cisco Anyconnect Client on Fedora Linux</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Cisco Anyconnect Client is a SSL VPN Client with VPN functionalites that enables an organization to secure its endpoints. Although, I use it a lot at office, I have only used it on Windows 10 so far.</p>
-
-<p>One day, when I was on my vacation, I had to connect to a server remotely but this time, I tried doing it via Linux and it worked well!</p>
-
-<h2>Download Cisco AnyConnect Client for Linux</h2>
-
-<p>Fortunately, the client is available for Windows, macOS and Linux.  You can go to the <a href="https://software.cisco.com/download/home/286281283/type/282364313/release/4.10.06079">Downloads</a> page and download the tarball archive for Linux.</p>
-
-<p>After downloading, you can extract the tarball file:</p>
-
-<div class="codehilite">
-<pre><span></span><code>tar<span class="w"> </span>-xvf<span class="w"> </span>anyconnect-linux64-4.10.00093-predeploy-k9.tar.gz
-</code></pre>
-</div>
-
-<h2>Install Cisco AnyConnect Client for Linux</h2>
-
-<p>Now that the file has been extracted, you can navigate to the <code>vpn</code> directory in <code>anyconnect-linux64-*</code> directory:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="nb">cd</span><span class="w"> </span>anyconnect-linux64-*/vpn/
-</code></pre>
-</div>
-
-<p>Execute the <code>vpn_install.sh</code> script:</p>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>./vpn_install.sh
-</code></pre>
-</div>
-
-<p>Follow the instruction steps and you're ready to use it.</p>
-
-<h2>Connect to VPN via Terminal</h2>
-
-<p>The GUI version was crashing on both KDE and GNOME desktop environments. Whereas, it was a smooth experience when connecting via the Terminal.</p>
-
-<p>For easy access, you can create an alias in your <code>.bashrc</code> file:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="nb">alias</span><span class="w"> </span><span class="nv">anyconnectvpn</span><span class="o">=</span><span class="s2">&quot;/opt/cisco/anyconnect/bin/vpn&quot;</span>
-</code></pre>
-</div>
-
-<p>Save and restart your terminal for the changes to take effect.</p>
-
-<p>After that, you can connect to VPN like this:</p>
-
-<div class="codehilite">
-<pre><span></span><code>anyconnectvpn<span class="w"> </span>-s<span class="w"> </span>connect<span class="w"> </span>&lt;IP_ADDRESS&gt;
-</code></pre>
-</div>
-
-<p>Once executed, you'll be prompted to enter your credentials and if all goes fine, you should be connected.</p>
-
-<h2>Disconnect VPN via the Terminal</h2>
-
-<p>You can execute the following command to disconnect:</p>
-
-<div class="codehilite">
-<pre><span></span><code>anyconnectvpn<span class="w"> </span>-s<span class="w"> </span>disconnect<span class="w"> </span>&lt;IP_ADDRESS&gt;
-</code></pre>
-</div>
-
-<h2>Configuring your VPN connection</h2>
-
-<p>Sometimes, it can be tedious to write these commands all the time especially when you're in a rush, this can really get in your way.</p>
-
-<p>To solve that, you can easily store your credentials in a file like <code>.my_vpn_creds</code> in your home directory:</p>
-
-<div class="codehilite">
-<pre><span></span><code>y
-&lt;username&gt;
-&lt;password&gt;
-</code></pre>
-</div>
-
-<p>Save the file and create another file named <code>my_vpn_connect.sh</code>:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="ch">#!/bin/bash</span>
-
-<span class="nv">VPN_SERVER</span><span class="o">=</span><span class="s2">&quot;&lt;IP_ADDRESS&gt;&quot;</span>
-
-<span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Connecting to VPN..&quot;</span>
-/opt/cisco/anyconnect/bin/vpn<span class="w"> </span>-s<span class="w">  </span>&lt;<span class="w"> </span>~/.my_vpn_creds<span class="w"> </span>connect<span class="w"> </span><span class="si">${</span><span class="nv">VPN_SERVER</span><span class="si">}</span>
-</code></pre>
-</div>
-
-<p>Save the file and make the file executable:</p>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>chmod<span class="w"> </span>+x<span class="w"> </span>my_vpn_connect.sh
-</code></pre>
-</div>
-
-<p>Now, you'll be connected to the VPN automatically by just executing this script:</p>
-
-<div class="codehilite">
-<pre><span></span><code>./my_vpn_connect.sh
-</code></pre>
-</div>
-
-<p>This saved me a lot of time and I hope it does the same for you as well! 🤗</p>
-
-<p>Hope you found this article useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>January 15th, 2023</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/linux/">
-					Linux
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/devops/">
-					DevOps
+				<a href="/category/vscode/">
+					VSCode
 				</a>
 			</li>
 			
@@ -535,214 +441,165 @@ Whereas, XDebug is a PHP extension that needs to be installed on your local syst
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/setup-a-virtual-environment-for-python-development">Setup a virtual environment for Python development</a></h1>
+		<h1 class="heading"><a href="/til/posts/using-the-nullcoaleascing-operator-in-c">Using the null-coaleascing operator in C#</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p><code>virtualenv</code> is a tool used that allows you to install and isolate Python packages that are specific to your project rather than installing them globally on your system, which might, at some point, break other tools or services in your system.</p>
+		<p>Null checks are the most underrated thing and despite years of experience, we still forget to write a null check in our code.</p>
 
-<p>In this simple guide, I'll show you how to install and create your own Python virtual environment for development.</p>
-
-<p>Before you begin, please make sure that you have installed Python 3 or greater on your system.</p>
-
-<h2>Install virtualenv</h2>
-
-<p>Using the <code>pip</code> tool, you can execute the following command:</p>
+<p>When it comes to writing null checks, this is what one would most write:</p>
 
 <div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>virtualenvwrapper
+<pre><span></span><code><span class="kt">string</span><span class="w"> </span><span class="n">foo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">null</span><span class="p">;</span>
+<span class="kt">string</span><span class="w"> </span><span class="n">bar</span><span class="p">;</span>
+<span class="k">if</span><span class="p">(</span><span class="n">foo</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="k">null</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">bar</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">foo</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="k">else</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">bar</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;Hello, friend!&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="n">bar</span><span class="p">)</span><span class="w"> </span><span class="c1">// Output: Hello, friend!</span>
 </code></pre>
 </div>
 
-<p>Then you need to add the following lines to your <code>.bashrc</code> startup file (found in the home directory).</p>
-
-<p>These lines determine where your virtual environments should live, the location of the script installed and the location of the development project directories:</p>
+<p>Yes, it does the job but it's a bit lengthy and not so readable. Let's see how the <code>??</code> operator i.e. the null-coalescing operator can help simplify your logic:</p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">WORKON_HOME</span><span class="o">=</span><span class="nv">$HOME</span>/.virtualenvs
-<span class="nb">export</span><span class="w"> </span><span class="nv">VIRTUALENVWRAPPER_PYTHON</span><span class="o">=</span>/usr/bin/python3
-<span class="nb">export</span><span class="w"> </span><span class="nv">VIRTUALENVWRAPPER_VIRTUALENV_ARGS</span><span class="o">=</span><span class="s1">&#39; -p /usr/bin/python3 &#39;</span>
-<span class="nb">export</span><span class="w"> </span><span class="nv">PROJECT_HOME</span><span class="o">=</span><span class="nv">$HOME</span>/Devel
-<span class="nb">source</span><span class="w"> </span>/usr/local/bin/virtualenvwrapper.sh
+<pre><span></span><code><span class="kt">string</span><span class="w"> </span><span class="n">foo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">null</span><span class="p">;</span>
+<span class="kt">string</span><span class="w"> </span><span class="n">bar</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">foo</span><span class="w"> </span><span class="o">??</span><span class="w"> </span><span class="s">&quot;Hello, friend!&quot;</span><span class="p">;</span>
+<span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="n">bar</span><span class="p">)</span><span class="w"> </span><span class="c1">// Output: Hello, friend!</span>
 </code></pre>
 </div>
 
-<p>Next, restart the startup file:</p>
+<p>Now, you can bid goodbyes to writing verbose null checks and make your code more cleaner and readable.</p>
+
+<p>Hope this tip helps you out!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>May 25th, 2024</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/c/">
+					C#
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/programming/">
+					Programming
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/check-if-a-string-is-a-uniqueidentifier-in-sql-server">Check if a string is a UNIQUEIDENTIFIER in SQL Server</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Recently, when I was performing a data migration that contained previous payment history, I came across a table that had a column named <code>PaymentId</code> which is supposed to have a UUID styled format but funnily enough, it was kind of confusing because some of them had numbers in it.</p>
+
+<p>Luckily, the ones that weren't in UUID format are not supposed to be migrated, so I decided to write a <code>SELECT</code> query and filter the records using the <code>TRY_CONVERT</code> function:</p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="nb">source</span><span class="w"> </span>.bashrc
+<pre><span></span><code><span class="k">SELECT</span><span class="w"> </span>
+<span class="w">    </span><span class="o">*</span><span class="w"> </span>
+<span class="k">FROM</span><span class="w"> </span>
+<span class="w">    </span><span class="n">dbo</span><span class="p">.</span><span class="n">YourTable</span><span class="w"> </span>
+<span class="k">WHERE</span><span class="w"> </span>
+<span class="w">    </span><span class="n">TRY_CONVERT</span><span class="p">(</span><span class="n">UNIQUEIDENTIFIER</span><span class="p">,</span><span class="w"> </span><span class="n">YourColumn</span><span class="p">)</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">;</span>
 </code></pre>
 </div>
 
-<p>Once done, it'l execute a bunch of scripts for a few minutes and once the installation is successful, you can start using the <code>mkvirtualenv</code> command to create your virtual environment.</p>
+<p>Yes, it's that simple. You don't need to write any complex regular expressions for such operations.</p>
 
-<h2>Creating a virtual environment</h2>
+<p>Hope you found this tip useful!</p>
 
-<p>Really, it's quite trivial to create a virtual environment like this:</p>
+	</div>
+	<div class="article-footer">
+		<time>February 18th, 2024</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/sql-server/">
+					SQL Server
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/filtering-results-by-weekdays-in-sql-server">Filtering results by weekdays in SQL Server</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Ever wanted to know how many people are actively posting something on a Monday? Or maybe during the weekends?</p>
+
+<p>You can do that by using the <code>DATEPART</code> and <code>DATENAME</code> functions. Let me show you how they work.</p>
+
+<h2>Using DATEPART</h2>
+
+<p>The <code>DATEPART</code> function represents weekdays as integers from 1 (Sunday) to 7 (Saturday).</p>
+
+<p>Let's say that you wanted to filter between Monday and Friday, you can achieve something like this:</p>
 
 <div class="codehilite">
-<pre><span></span><code>mkvirtualenv<span class="w"> </span>my_virtual_environment
+<pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">dbo</span><span class="p">.</span><span class="n">YourTable</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">DATEPART</span><span class="p">(</span><span class="n">WEEKDAY</span><span class="p">,</span><span class="w"> </span><span class="n">YourDateColumn</span><span class="p">)</span><span class="w"> </span><span class="k">BETWEEN</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="mi">6</span><span class="p">;</span>
 </code></pre>
 </div>
 
-<p>Once done, you'll notice that your terminal looks something like this:</p>
+<p>One thing to note, in SQL Server, Sunday is the first day of the week. So, if you wanted to set the first day of the week, you can write the following statement before executing your query:</p>
 
 <div class="codehilite">
-<pre><span></span><code>(my_virtual_environment) user@desktop:~$
+<pre><span></span><code><span class="k">SET</span><span class="w"> </span><span class="n">DATEFIRST</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w">  </span><span class="c1">-- Set Monday as the first day of the week</span>
+<span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">dbo</span><span class="p">.</span><span class="n">YourTable</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">DATEPART</span><span class="p">(</span><span class="n">WEEKDAY</span><span class="p">,</span><span class="w"> </span><span class="n">YourDateColumn</span><span class="p">)</span><span class="w"> </span><span class="k">BETWEEN</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="mi">5</span><span class="p">;</span>
 </code></pre>
 </div>
 
-<p>This indicates that you are inside the virtual environment and can begin installing your Python packages and begin developing your application.</p>
+<p>In the example above, you'll achieve the same results as the previous one.</p>
 
-<h2>Using the virtual environment</h2>
+<h2>Using DATENAME</h2>
 
-<p>There are a few commands that I'd like to share (and you should also know) while working with a virtual environment:</p>
+<p>The <code>DATENAME</code> function represents weekdays as a string from Monday to Sunday.</p>
+
+<p>Let's replicate the previous example using this function:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">dbo</span><span class="p">.</span><span class="n">YourTable</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">DATENAME</span><span class="p">(</span><span class="n">WEEKDAY</span><span class="p">,</span><span class="w"> </span><span class="n">YourDateColumn</span><span class="p">)</span><span class="w"> </span><span class="k">IN</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;Monday&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Tuesday&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Wednesday&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Thursday&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Friday&#39;</span><span class="p">);</span>
+</code></pre>
+</div>
+
+<p>If you want to know more about filtering your records effectively using these methods, you can the read the documentation:</p>
 
 <ul>
-<li><code>deactivate</code> &mdash; get out of the current virtual environment</li>
-<li><code>workon</code> &mdash; list available virtual environments on the system</li>
-<li><code>workon name_of_environment</code> &mdash; activate the specified virtual environment</li>
-<li><code>rmvirtualenv name_of_environment</code> &mdash; remove the specified virtual environment</li>
+<li>(DATENAME (Transact-SQL))[https://learn.microsoft.com/en-us/sql/t-sql/functions/datename-transact-sql?view=sql-server-ver16]</li>
+<li>(DATEPART (Transact-SQL))[https://learn.microsoft.com/en-us/sql/t-sql/functions/datepart-transact-sql?view=sql-server-ver16]</li>
 </ul>
-
-<h2>Conclusion</h2>
-
-<p>If you are a Python developer or write code in Python, then virtual environments are super handy and disposable especially while testing and working on different projects.</p>
-
-<p>Unless, your project is package-dependant, you don't really need to isolate your development environment.</p>
-
-<p>Hope you found this article useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>January 3rd, 2023</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/python/">
-					Python
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/install-teamviewer-on-fedora-linux-3637">Install TeamViewer on Fedora Linux 36/37</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>If you are using Fedora Linux or any other Linux distribution and want a short guide on how to install TeamViewer on your workstation, then this article is for you.</p>
-
-<p>Usually, I use it access remote servers or my computer at work but I myself never did it on a Linux workstation. It worked out for me, so it should work for you too!</p>
-
-<h2>1. Download TeamViewer RPM Package</h2>
-
-<p>You can find the <a href="https://www.teamviewer.com/en/download/linux/">latest release</a> on TeamViewer's official site.</p>
-
-<p>Make sure that you have install <code>wget</code> on your system to easily download it via the Terminal:</p>
-
-<div class="codehilite">
-<pre><span></span><code>wget<span class="w"> </span>https://download.teamviewer.com/download/linux/teamviewer.x86_64.rpm
-</code></pre>
-</div>
-
-<h2>2. Download minizip module</h2>
-
-<p>During installation, it failed for me as I was missing a certain <code>libminizip.so</code> module. So, I looked up online and found the module and downloaded it on my workstation:</p>
-
-<div class="codehilite">
-<pre><span></span><code>wget<span class="w"> </span>https://rpmfind.net/linux/fedora/linux/updates/36/Everything/x86_64/Packages/m/minizip-compat-1.2.11-33.fc36.x86_64.rpm
-</code></pre>
-</div>
-
-<p>Once the download is complete, you can install it:</p>
-
-<div class="codehilite">
-<pre><span></span><code>rpm<span class="w"> </span>-i<span class="w"> </span>minizip-compat-1.2.11-33.fc36.x86_64.rpm
-</code></pre>
-</div>
-
-<h2>3. Install TeamViewer</h2>
-
-<p>Now, the final step is to install the RPM package for TeamViewer:</p>
-
-<div class="codehilite">
-<pre><span></span><code>rpm<span class="w"> </span>-i<span class="w"> </span>teamviewer_15.37.3.x86_64.rpm
-</code></pre>
-</div>
-
-<p>Hope you found this short guide useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>January 1st, 2023</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/linux/">
-					Linux
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/productivity/">
-					Productivity
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/connect-to-a-remote-windows-machine-from-a-linux-machine">Connect to a Remote Windows machine from a Linux machine</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Last week, my Windows machine was down and I was struggling to connect to a remote server as I'm using Fedora Linux at home.</p>
-
-<p>I tried installing and using GNOME Connections but it crashed and didn't work well for me. I found another tool named <code>rdesktop</code> which was stable and worked well for my case.</p>
-
-<p>Installing it is as easy as typing the following command using the <code>dnf</code> package manager:</p>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>dnf<span class="w"> </span>install<span class="w"> </span>rdesktop
-</code></pre>
-</div>
-
-<p>Now, you can connect to your remote desktop machine using the following command:</p>
-
-<div class="codehilite">
-<pre><span></span><code>rdesktop<span class="w"> </span>-d<span class="w"> </span>&lt;domain&gt;<span class="w"> </span>-u<span class="w"> </span>&lt;username&gt;<span class="w"> </span>-p<span class="w"> </span>-<span class="w"> </span>&lt;ipaddress&gt;
-</code></pre>
-</div>
-
-<p>Upon execution of this command, you'll be prompted to enter the password and after that, you're all good to go!</p>
 
 <p>Hope you found this tip useful!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>January 1st, 2023</time>
+		<time>February 18th, 2024</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/linux/">
-					Linux
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/productivity/">
-					Productivity
+				<a href="/category/sql-server/">
+					SQL Server
 				</a>
 			</li>
 			
@@ -770,11 +627,11 @@ Whereas, XDebug is a PHP extension that needs to be installed on your local syst
 		
 	
 		
-			<a class="" href="/til/pages/14">...</a>
+			<a class="" href="/til/pages/15">...</a>
 		
 	
 		
-			<a class="" href="/til/pages/17">17</a>
+			<a class="" href="/til/pages/18">18</a>
 		
 	
 
@@ -827,6 +684,20 @@ Whereas, XDebug is a PHP extension that needs to be installed on your local syst
 		</li>
 		
 		<li>
+			<a href="/category/cryptography/">
+				Cryptography
+				<span class="count">12</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/programming/">
+				Programming
+				<span class="count">11</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/javascript/">
 				JavaScript
 				<span class="count">11</span>
@@ -848,9 +719,9 @@ Whereas, XDebug is a PHP extension that needs to be installed on your local syst
 		</li>
 		
 		<li>
-			<a href="/category/cryptography/">
-				Cryptography
-				<span class="count">11</span>
+			<a href="/category/productivity/">
+				Productivity
+				<span class="count">10</span>
 			</a>
 		</li>
 		
@@ -858,20 +729,6 @@ Whereas, XDebug is a PHP extension that needs to be installed on your local syst
 			<a href="/category/git/">
 				Git
 				<span class="count">10</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/productivity/">
-				Productivity
-				<span class="count">9</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/programming/">
-				Programming
-				<span class="count">9</span>
 			</a>
 		</li>
 		
@@ -918,6 +775,13 @@ Whereas, XDebug is a PHP extension that needs to be installed on your local syst
 		</li>
 		
 		<li>
+			<a href="/category/vscode/">
+				VSCode
+				<span class="count">5</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/blogmarks/">
 				Blogmarks
 				<span class="count">5</span>
@@ -939,16 +803,16 @@ Whereas, XDebug is a PHP extension that needs to be installed on your local syst
 		</li>
 		
 		<li>
-			<a href="/category/arcade-challenge/">
-				Arcade Challenge
+			<a href="/category/c/">
+				C#
 				<span class="count">4</span>
 			</a>
 		</li>
 		
 		<li>
-			<a href="/category/vscode/">
-				VSCode
-				<span class="count">3</span>
+			<a href="/category/arcade-challenge/">
+				Arcade Challenge
+				<span class="count">4</span>
 			</a>
 		</li>
 		
@@ -991,6 +855,34 @@ Whereas, XDebug is a PHP extension that needs to be installed on your local syst
 			<a href="/category/general/">
 				General
 				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/clean-code/">
+				Clean Code
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/refactoring/">
+				Refactoring
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/security/">
+				Security
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/sql-server/">
+				SQL Server
+				<span class="count">2</span>
 			</a>
 		</li>
 		
@@ -1072,6 +964,34 @@ Whereas, XDebug is a PHP extension that needs to be installed on your local syst
 		</li>
 		
 		<li>
+			<a href="/category/net-core/">
+				.NET Core
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/oop/">
+				OOP
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/troubleshooting/">
+				Troubleshooting
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/documentary/">
+				Documentary
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/xdebug/">
 				XDebug
 				<span class="count">1</span>
@@ -1095,13 +1015,6 @@ Whereas, XDebug is a PHP extension that needs to be installed on your local syst
 		<li>
 			<a href="/category/csr/">
 				CSR
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/clean-code/">
-				Clean Code
 				<span class="count">1</span>
 			</a>
 		</li>
@@ -1177,13 +1090,6 @@ Whereas, XDebug is a PHP extension that needs to be installed on your local syst
 		</li>
 		
 		<li>
-			<a href="/category/security/">
-				Security
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/cpanel/">
 				cPanel
 				<span class="count">1</span>
@@ -1193,13 +1099,6 @@ Whereas, XDebug is a PHP extension that needs to be installed on your local syst
 		<li>
 			<a href="/category/introduction/">
 				Introduction
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/refactoring/">
-				Refactoring
 				<span class="count">1</span>
 			</a>
 		</li>

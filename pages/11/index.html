@@ -78,31 +78,20 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/convert-string-to-date-using-mysql">Convert string to date using MySQL</a></h1>
+		<h1 class="heading"><a href="/til/posts/convert-string-from-snake-case-to-camel-case">Convert string from snake case to camel case</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>Today, I was debugging a piece of code that is supposed to return a list of data based on the year, the funny thing is that the data was being returned on the development server but not on the production one.</p>
+		<p>Thought of sharing a simple regular expression that I use on VIM to convert <strong>snake_case</strong> letters to <strong>camelCase</strong> letters (see what I did there) &#x1F61C;</p>
 
-<p>Weird, so I opened up <strong>MySQL Workbench</strong> and wrote a simple query to see if the dates were being returned because who knows maybe they weren't stored at all.</p>
+<p>Here's the pattern for you to use:</p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="kt">YEAR</span><span class="p">(</span><span class="n">date_posted</span><span class="p">)</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">posts</span><span class="p">;</span>
+<pre><span></span><code><span class="p">:</span>s<span class="sr">/ \([a-zA-Z]\)/</span>\<span class="k">u</span>\<span class="m">1</span>/<span class="k">g</span>
 </code></pre>
 </div>
 
-<p>The values returned were <code>null</code>. Now, that's strange because the dates were present in the column. So, I took a deep look and figured out that the dates were stored in <code>VARCHAR</code> instead of <code>DATETIME</code> data type! &#x1F614;</p>
-
-<p>Luckily, I figured that there's a way to resolve this by <code>STR_TO_DATE()</code> function:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="kt">YEAR</span><span class="p">(</span><span class="nf">STR_TO_DATE</span><span class="p">(</span><span class="n">date_posted</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;%Y-%m-%d&#39;</span><span class="p">))</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">posts</span><span class="p">;</span>
-</code></pre>
-</div>
-
-<p>Bam! The results were coming now! &#x1F60C;</p>
-
-<p>Hope this helps you out!</p>
+<p>Hope you found this tip useful!</p>
 
 	</div>
 	<div class="article-footer">
@@ -110,8 +99,8 @@
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/mysql/">
-					MySQL
+				<a href="/category/vim/">
+					VIM
 				</a>
 			</li>
 			
@@ -123,49 +112,20 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/use-mysql-80-with-native-password-authentication">Use MySQL 8.0 with Native Password Authentication</a></h1>
+		<h1 class="heading"><a href="/til/posts/check-if-trait-is-being-used-in-your-class">Check if trait is being used in your class</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>Last month, I was configuring an Ubuntu Server to deploy a client's project that uses MySQL 8.0 and PHP 7.2.
-So, I installed the necessary dependencies and finally installed MySQL 8.0, created a new schema and imported the database tables required for the project.</p>
-
-<p>Next, I typed the project URL and ran into this error:</p>
+		<p>Want to know if a trait is being used in your current class? Try this:</p>
 
 <div class="codehilite">
-<pre><span></span><code>Unable to load plugin &#39;caching_sha2_password&#39;
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="nb">in_array</span><span class="p">(</span><span class="nx">Foo</span><span class="o">::</span><span class="na">class</span><span class="p">,</span> <span class="nb">class_uses</span><span class="p">(</span><span class="nv">$this</span><span class="p">))</span>
+<span class="cp">?&gt;</span>
 </code></pre>
 </div>
 
-<p>If you're running PHP 7.2 and facing this error, you should know that PHP 7.2 doesn't support native password authentication by default. But it's a simple fix, all you have to do is either one of the following:</p>
-
-<ol>
-<li><a href="#opt1">Alter the current user's authentication to native password</a></li>
-<li><a href="#opt2">Create a new user with native password authentication</a></li>
-</ol>
-
-<h2><a id="opt1"></a> Alter the current user's authentication to native password</h2>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">ALTER</span><span class="w"> </span><span class="k">USER</span><span class="w"> </span><span class="s1">&#39;your_user&#39;</span><span class="nv">@&#39;your_server_host&#39;</span><span class="w"> </span><span class="k">IDENTIFIED</span><span class="w"> </span><span class="k">WITH</span><span class="w"> </span><span class="n">mysql_native_password</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="s1">&#39;your_password&#39;</span><span class="p">;</span>
-</code></pre>
-</div>
-
-<h2><a id="opt2"></a> Create a new user with native password authentication</h2>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">USER</span><span class="w"> </span><span class="s1">&#39;your_user&#39;</span><span class="nv">@&#39;your_server_host &#39;</span><span class="w"> </span><span class="k">IDENTIFIED</span><span class="w"> </span><span class="k">WITH</span><span class="w"> </span><span class="n">mysql_native_password</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="s1">&#39;your_password&#39;</span>
-</code></pre>
-</div>
-
-<p>For the changes to take effect, you need to reload the privileges by typing the following:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">FLUSH</span><span class="w"> </span><span class="k">PRIVILEGES</span><span class="p">;</span>
-</code></pre>
-</div>
-
-<p>Hope this helps you out!</p>
+<p>By any chance, if the current class is inherited, please note that the <code>class_uses()</code> method will only return the list of traits used by the current class and won't include any traits of it's parent class.</p>
 
 	</div>
 	<div class="article-footer">
@@ -173,8 +133,8 @@ So, I installed the necessary dependencies and finally installed MySQL 8.0, crea
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/mysql/">
-					MySQL
+				<a href="/category/php/">
+					PHP
 				</a>
 			</li>
 			
@@ -186,60 +146,172 @@ So, I installed the necessary dependencies and finally installed MySQL 8.0, crea
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/create-migrations-and-seeds-from-an-existing-database">Create migrations and seeds from an existing database</a></h1>
+		<h1 class="heading"><a href="/til/posts/how-to-resolve-the-issue-of-not-receiving-emails-on-the-same-domain">How to resolve the issue of not receiving emails on the same domain?</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>Up until now, I've written migrations and generated seeders for some Laravel projects that I have worked on but recently, I thought of seeing if there's a way to generate migrations and seeds from an existing database especially if it's a project that never had any migrations or seeds created before.</p>
+		<p>Recently, we hosted our company's redesigned website on GoDaddy, which offers cPanel to manage your website. I was dealing with an annoying email bug in which I was able to send/receive emails to any account except the ones that share the company domain.</p>
 
-<p>Luckily, I found these two packages, which turned out to be quite productive:</p>
+<p>The company's current email setup makes use of Google Workspace and since we're using a Shared Hosting account, GoDaddy allows you to use their SMTP relay and prohibits the use of third-party SMTP services such as Google Workspace, Outlook, etc.</p>
+
+<p>After configuring it with Google's MX records in the DNS settings, I wasn't receiving any email on my own company email yet I was able to receive on other email accounts that didn't share the company's domain.</p>
+
+<p>I did a little R&amp;D and ran into this documentation about <a href="https://docs.cpanel.net/cpanel/email/email-routing/">email routing</a> and figured out that there could be an issue with it's configuration.</p>
+
+<p>Here's what I did:</p>
 
 <ol>
-<li><a href="https://github.com/kitloong/laravel-migrations-generator">kitloong/laravel-migrations-generator</a></li>
-<li><a href="https://github.com/orangehill/iseed">orangehill/iseed</a></li>
+<li>Open cPanel </li>
+<li>Search or look for <strong>Email Routing</strong></li>
+<li>Click on <strong>Email Routing</strong></li>
+<li>If your MX records are not pointing to the IP address of the hosting server, then select <strong>Remote Mail Exchanger</strong></li>
+<li>Save changes</li>
 </ol>
 
-<p>Execute the following commands to install the packages mentioned above:</p>
+<p>After following these steps, I was able to receive mails on the same domain!</p>
+
+<h2>So what really caused the issue?</h2>
+
+<p>Since, we didn't have a default email address set up in cPanel, the current mode to send all unrouted emails was set to <code>:blackhole:</code>, by default. I guess, it's set up that way to prevent the server from sending/receiving spam mails from the domain.</p>
+
+<p>This makes sense because:</p>
+
+<ol>
+<li>The MX records are not pointing to the current server</li>
+<li>There are no email accounts created for the domain on cPanel</li>
+<li>By setting the mode to <code>:blackhole</code>, all emails with the same domain are being discarded or rejected</li>
+</ol>
+
+<p>Not really sure if this is what caused the issue but judging from the facts, I was able to reach to this conclusion.</p>
+
+<p>Hope you found this tip useful.</p>
+
+<h2>Reference</h2>
+
+<ul>
+<li><a href="https://stackoverflow.com/questions/1107730/cant-send-email-to-addresses-at-my-own-domain">Can't send email to addresses at my own domain</a></li>
+</ul>
+
+	</div>
+	<div class="article-footer">
+		<time>March 12th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/cpanel/">
+					cPanel
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/email/">
+					Email
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/convert-string-to-variable-in-php">Convert string to variable in PHP</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>I read about <a href="https://www.php.net/language.variables.variable">variable variables</a> in PHP's official documentation.</p>
+
+<p>Here's a sample:</p>
 
 <div class="codehilite">
-<pre><span></span><code>composer<span class="w"> </span>require<span class="w"> </span>--dev<span class="w"> </span><span class="s2">&quot;kitloong/laravel-migrations-generator&quot;</span>
-composer<span class="w"> </span>require<span class="w"> </span>orangehill/iseed
+<pre><span></span><code><span class="cp">&lt;?php</span>
+    <span class="nv">$a</span> <span class="o">=</span> <span class="s2">&quot;hello&quot;</span><span class="p">;</span>
+    <span class="c1">// Remove special characters and tags to prevent it from crashing.</span>
+    <span class="nv">$foo</span> <span class="o">=</span> <span class="nb">preg_replace</span><span class="p">(</span><span class="s1">&#39;/[^a-zA-Z0-9\s]/&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="nv">$$a</span><span class="p">);</span>
+    <span class="k">echo</span> <span class="nv">$foo</span><span class="p">;</span>
+<span class="cp">?&gt;</span>
 </code></pre>
 </div>
 
-<h2>Generate migrations using existing database</h2>
+<p>Not sure if this is a good practice but it sure gets the job done!</p>
 
-<p>You can generate your migrations for all tables like this:</p>
+	</div>
+	<div class="article-footer">
+		<time>March 12th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/php/">
+					PHP
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-resolve-the-filegetcontents-ssl-operation-failed-error">How to resolve the "file_get_contents(): SSL operation failed" error</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>If you're facing this error while trying to download a file from your server, it's most probably the SSL certificate that has been hosted on your server isn't correctly verified or maybe, you're using OpenSSL on a server running PHP 5.6.</p>
+
+<p>As per the <a href="http://php.net/manual/en/migration56.openssl.php">documentation</a>, there are some changes that can be made to resolve it, like the following method:</p>
 
 <div class="codehilite">
-<pre><span></span><code>php<span class="w"> </span>artisan<span class="w"> </span>migrate:generate
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="k">public</span> <span class="k">function</span> <span class="nf">foo</span><span class="p">(</span><span class="nx">Request</span> <span class="nv">$request</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nv">$arrContextOptions</span> <span class="o">=</span> <span class="k">array</span><span class="p">(</span>
+        <span class="s2">&quot;ssl&quot;</span> <span class="o">=&gt;</span> <span class="k">array</span><span class="p">(</span>
+            <span class="s2">&quot;verify_peer&quot;</span> <span class="o">=&gt;</span> <span class="k">false</span><span class="p">,</span>
+            <span class="s2">&quot;verify_peer_name&quot;</span> <span class="o">=&gt;</span> <span class="k">false</span><span class="p">,</span>
+        <span class="p">),</span>
+    <span class="p">);</span>
+    <span class="k">return</span> <span class="nx">Response</span><span class="o">::</span><span class="na">make</span><span class="p">(</span><span class="nb">file_get_contents</span><span class="p">(</span><span class="nx">asset</span><span class="p">(</span><span class="s1">&#39;pdf/file.pdf&#39;</span><span class="p">),</span> <span class="k">false</span><span class="p">,</span> <span class="nb">stream_context_create</span><span class="p">(</span><span class="nv">$arrContextOptions</span><span class="p">)),</span> <span class="mi">200</span><span class="p">,</span> <span class="p">[</span>
+        <span class="s1">&#39;Content-Type&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;application/pdf&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;Content-Disposition&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;inline; filename=&quot;file.pdf&quot;&#39;</span><span class="p">,</span>
+    <span class="p">]);</span>
+<span class="p">}</span>
+<span class="cp">?&gt;</span>
 </code></pre>
 </div>
 
-<p>Or, you can specify the tables you wish to generate:</p>
+<p>Although, I won't recommend this unless you are testing it on a <code>localhost</code> environment as it's not secure and could have significant security implications because disabling verification can permit a <a href="https://en.wikipedia.org/wiki/Man-in-the-middle_attack">Man in the Middle attack</a> to take place.</p>
 
-<div class="codehilite">
-<pre><span></span><code>php<span class="w"> </span>artisan<span class="w"> </span>migrate:generate<span class="w"> </span>table1,table2,table3
-</code></pre>
+<p>Use it at your own risk!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>March 12th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/php/">
+					PHP
+				</a>
+			</li>
+			
+		</ul>
+	</div>
 </div>
 
-<h2>Generate new seeds using existing database</h2>
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-resolve-the-failed-to-clear-cache-make-sure-you-have-the-appropriate-permissions-error">How to resolve the "Failed to clear cache. Make sure you have the appropriate permissions." error</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>This error is annoying and mostly happens if the <code>data</code> directory is missing under the <code>storage/framework/cache/data</code> directory. For some reason, this folder doesn't exist by default.</p>
 
-<p>You can generate seeds for a single table like this:</p>
-
-<div class="codehilite">
-<pre><span></span><code>php<span class="w"> </span>artisan<span class="w"> </span>iseed<span class="w"> </span>table_name
-</code></pre>
-</div>
-
-<p>And for multiple tables, you can do this:</p>
-
-<div class="codehilite">
-<pre><span></span><code>php<span class="w"> </span>artisan<span class="w"> </span>iseed<span class="w"> </span>table1,table2,table3
-</code></pre>
-</div>
-
-<p>Hope you find this tip useful!.</p>
+<p>To resolve it, just manually create the <code>data</code> directory under the <code>storage/framework/cache/data</code> directory and it should fix the issue.</p>
 
 	</div>
 	<div class="article-footer">
@@ -260,54 +332,20 @@ composer<span class="w"> </span>require<span class="w"> </span>orangehill/iseed
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/show-git-branch-in-your-bash-prompt-with-colors">Show Git branch in your Bash prompt (with colors)</a></h1>
+		<h1 class="heading"><a href="/til/posts/how-to-exclude-certain-slugs-in-laravel">How to exclude certain slugs in Laravel</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>Do you work on a project with multiple Git branches but don't know which one you're in? Open your <code>.bashrc</code> file and add this:</p>
+		<p>Using plain Regular Expressions, you can exclude certain slug from your routes, try adding the following to your <code>routes/web.php</code> file:</p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="nv">force_color_prompt</span><span class="o">=</span>yes
-<span class="nv">color_prompt</span><span class="o">=</span>yes
-
-parse_git_branch<span class="o">()</span><span class="w"> </span><span class="o">{</span>
-<span class="w"> </span>git<span class="w"> </span>branch<span class="w"> </span><span class="m">2</span>&gt;<span class="w"> </span>/dev/null<span class="w"> </span><span class="p">|</span><span class="w"> </span>sed<span class="w"> </span>-e<span class="w"> </span><span class="s1">&#39;/^[^*]/d&#39;</span><span class="w"> </span>-e<span class="w"> </span><span class="s1">&#39;s/* \(.*\)/(\1)/&#39;</span>
-<span class="o">}</span>
-
-<span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$color_prompt</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>yes<span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
-<span class="w"> </span><span class="nv">PS1</span><span class="o">=</span><span class="s1">&#39;${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[01;31m\]$(parse_git_branch)\[\033[00m\]\$ &#39;</span>
-<span class="k">else</span>
-<span class="w"> </span><span class="nv">PS1</span><span class="o">=</span><span class="s1">&#39;${debian_chroot:+($debian_chroot)}\u@\h:\w$(parse_git_branch)\$ &#39;</span>
-<span class="k">fi</span>
-
-<span class="nb">unset</span><span class="w"> </span>color_prompt<span class="w"> </span>force_color_prompt
+<pre><span></span><code><span class="cp">&lt;?php</span>
+    <span class="nx">Route</span><span class="o">::</span><span class="na">match</span><span class="p">(</span><span class="k">array</span><span class="p">(</span><span class="s1">&#39;GET&#39;</span><span class="p">,</span> <span class="s1">&#39;POST&#39;</span><span class="p">),</span> <span class="s1">&#39;/{slug}&#39;</span><span class="p">,</span> <span class="s1">&#39;YourController@index&#39;</span><span class="p">)</span><span class="o">-&gt;</span><span class="na">name</span><span class="p">(</span><span class="s1">&#39;page&#39;</span><span class="p">)</span><span class="o">-&gt;</span><span class="na">where</span><span class="p">(</span><span class="s1">&#39;slug&#39;</span><span class="p">,</span> <span class="s1">&#39;^(?!pattern).*$&#39;</span><span class="p">);</span>
+<span class="cp">?&gt;</span>
 </code></pre>
 </div>
 
-<div class="post-notification info">
-    <h3>Updated: November 26th, 2022</h3>
-    The above script works fine for Ubuntu but doesn't work fine on other distros. Here's an alternative one that works on all distros:
-<div class="codehilite">
-<pre><span></span><code>parse_git_branch<span class="o">()</span><span class="w"> </span><span class="o">{</span>
-<span class="w">    </span>git<span class="w"> </span>branch<span class="w"> </span><span class="m">2</span>&gt;<span class="w"> </span>/dev/null<span class="w"> </span><span class="p">|</span><span class="w"> </span>sed<span class="w"> </span>-e<span class="w"> </span><span class="s1">&#39;/^[^*]/d&#39;</span><span class="w"> </span>-e<span class="w"> </span><span class="s1">&#39;s/* \(.*\)/(\1)/&#39;</span>
-<span class="o">}</span>
-
-<span class="nb">export</span><span class="w"> </span><span class="nv">PS1</span><span class="o">=</span><span class="s2">&quot;\u@\h \[\e[32m\]\w \[\e[91m\]\$(parse_git_branch)\[\e[00m\]</span>$<span class="s2"> &quot;</span>
-</code></pre>
-</div>
-
-</div>
-
-<p>Save the file and execute this command for your changes to take effect:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="nb">source</span><span class="w"> </span>~/.bashrc
-</code></pre>
-</div>
-
-<p>Now, you should see your colors in your Bash prompt along with the Git branch that you're working on (<strong>Note: this will be shown if you're in a project that uses a Git repository</strong>).</p>
-
-<p>Hope this helps you out!</p>
+<p>Hope you found this useful!</p>
 
 	</div>
 	<div class="article-footer">
@@ -315,8 +353,8 @@ parse_git_branch<span class="o">()</span><span class="w"> </span><span class="o"
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/bash/">
-					Bash
+				<a href="/category/laravel/">
+					Laravel
 				</a>
 			</li>
 			
@@ -328,348 +366,33 @@ parse_git_branch<span class="o">()</span><span class="w"> </span><span class="o"
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/make-your-own-generative-pixel-art-in-less-than-100-lines-of-code">Make your own generative pixel art in less than 100 lines of code</a></h1>
-		<p class="description">By modifying my old random pixel generator, I was able to generate a Space Invaders-esque pixel art.</p>
-	</div>
-	<div class="article-body">
-		<p><canvas id="myCanvas" width="500" height="302" style="border:0px solid #40514e;background-color: #e4f9f5;"></canvas></p>
-
-<script defer type="text/javascript" src="/static/projects/invaders-sprites/script.js"></script>
-
-<div class="post-notification success">
-    <h3>Try it out!</h3>
-    <p>Refresh the page to generate unique Space Invader-esque patterns as the results are unpredictable!</p>
-</div>
-
-<p>Generative art is a topic that still fascinates me because of the fact that you can produce something unique by just writing few (sometimes, more) lines of code. Especially, if it's self-generating art that makes use of fixed rules and a slight dash of randomness to produce unique results.</p>
-
-<p>When it comes to writing code, it's quite straightforward. You come up with the rules and constraints and voila, you have something that works. Having said that, setting up rules for generative art can get quite tricky.</p>
-
-<p>You might have read about my previous post about <a href="/writings/posts/the-game-of-life/">The Game of Life</a>, it contains only four rules and each of them took a part in evolving the system through each generation. With generative systems like that, you can never predict the results as complex patterns will emerge due to it's randomness.</p>
-
-<p>In my view, a combination of predictability and randomness is needed in order to create a good looking generative art.</p>
-
-<h2>Why you should explore it?</h2>
-
-<p>There could be many reasons, maybe you're bored, curious or passionate to learn something new. Who knows? Open up your editor and try it for yourself.</p>
-
-<p>Exploring the craft of making generative art has allowed me to:</p>
-
-<ul>
-<li>Gain different experiences &mdash; It allows you to sharpen your algorithms &amp; data structures and maybe even, learn a new technique.</li>
-<li>Create something visually appealing &mdash; A picture is equal to a thousand words.</li>
-<li>Instant results that makes you feel good &mdash; I mean, it's hard to explain but y'know what I mean, right?</li>
-</ul>
-
-<h2>Where to start?</h2>
-
-<p>Just like any other project, you just need:</p>
-
-<ul>
-<li>An inspiration or an idea that you can work on.</li>
-<li>The right kind of technology to use.</li>
-</ul>
-
-<p>With today's article, I'll be showing you how I built a Space Invader-esque pixel art generator in JavaScript that makes use of the Canvas API.</p>
-
-<h2>Building a generator</h2>
-
-<p>I'd like to give a shout out to the <a href="https://www.erdavids.com/">person</a> who built a twitterbot that generates random sprites using Python's Pillow image library.</p>
-
-<p>I was inspired and I thought of writing it in JavaScript and as you can see above, it did turn out pretty well.</p>
-
-<p>Here's the code for your reference and please read the comments to know how it functions:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="c1">// To store any used colors</span>
-<span class="kd">var</span><span class="w"> </span><span class="nx">colorStack</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[];</span>
-
-<span class="c1">// Selected color palette</span>
-<span class="kd">var</span><span class="w"> </span><span class="nx">colors</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span>
-<span class="w">    </span><span class="s1">&#39;#30e3ca&#39;</span><span class="p">,</span>
-<span class="w">    </span><span class="s1">&#39;#ff5a5f&#39;</span><span class="p">,</span>
-<span class="w">    </span><span class="s1">&#39;#40514e&#39;</span><span class="p">,</span>
-<span class="w">    </span><span class="s1">&#39;#e4f9f5&#39;</span><span class="p">,</span>
-<span class="w">    </span><span class="s1">&#39;#40514e&#39;</span><span class="p">,</span>
-<span class="w">    </span><span class="s1">&#39;#e4f9f5&#39;</span><span class="p">,</span>
-<span class="w">    </span><span class="s1">&#39;#e4f9f5&#39;</span><span class="p">,</span>
-<span class="p">];</span>
-
-<span class="kd">var</span><span class="w"> </span><span class="nx">canvas</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s2">&quot;myCanvas&quot;</span><span class="p">);</span>
-<span class="kd">var</span><span class="w"> </span><span class="nx">ctx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">canvas</span><span class="p">.</span><span class="nx">getContext</span><span class="p">(</span><span class="s1">&#39;2d&#39;</span><span class="p">);</span>
-
-<span class="kd">var</span><span class="w"> </span><span class="nx">width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">canvas</span><span class="p">.</span><span class="nx">width</span><span class="p">;</span>
-<span class="kd">var</span><span class="w"> </span><span class="nx">height</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">canvas</span><span class="p">.</span><span class="nx">height</span><span class="p">;</span>
-
-<span class="kd">function</span><span class="w"> </span><span class="nx">createSquare</span><span class="p">(</span><span class="nx">squareDimensions</span><span class="p">,</span><span class="w"> </span><span class="nx">color</span><span class="p">,</span><span class="w"> </span><span class="nx">element</span><span class="p">,</span><span class="w"> </span><span class="nx">spriteDim</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="p">{</span><span class="nx">squareX</span><span class="p">,</span><span class="w"> </span><span class="nx">squareY</span><span class="p">,</span><span class="w"> </span><span class="nx">squareWidth</span><span class="p">,</span><span class="w"> </span><span class="nx">squareHeight</span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">squareDimensions</span><span class="p">;</span>
-
-<span class="w">    </span><span class="c1">// If it&#39;s a middle element, apply a color</span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">element</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">spriteDim</span><span class="o">/</span><span class="mf">2</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="nx">ctx</span><span class="p">.</span><span class="nx">fillStyle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">color</span><span class="p">;</span>
-<span class="w">        </span><span class="nx">ctx</span><span class="p">.</span><span class="nx">fillRect</span><span class="p">(</span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">squareX</span><span class="p">),</span><span class="w"> </span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">squareY</span><span class="p">),</span><span class="w"> </span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">squareWidth</span><span class="o">/</span><span class="nx">squareX</span><span class="p">)</span><span class="o">+</span><span class="mf">3</span><span class="p">,</span><span class="w"> </span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">squareHeight</span><span class="o">/</span><span class="nx">squareY</span><span class="p">)</span><span class="o">+</span><span class="mf">3</span><span class="p">);</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="c1">// If it&#39;s the last element, then use the color that you saved previously</span>
-<span class="w">    </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">colorStack</span><span class="p">.</span><span class="nx">length</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nx">element</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">1</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="nx">ctx</span><span class="p">.</span><span class="nx">fillStyle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">colorStack</span><span class="p">.</span><span class="nx">pop</span><span class="p">();</span>
-<span class="w">        </span><span class="nx">ctx</span><span class="p">.</span><span class="nx">fillRect</span><span class="p">(</span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">squareX</span><span class="p">),</span><span class="w"> </span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">squareY</span><span class="p">),</span><span class="w"> </span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">squareWidth</span><span class="o">/</span><span class="nx">squareX</span><span class="p">)</span><span class="o">+</span><span class="mf">3</span><span class="p">,</span><span class="w"> </span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">squareHeight</span><span class="o">/</span><span class="nx">squareY</span><span class="p">)</span><span class="o">+</span><span class="mf">3</span><span class="p">);</span><span class="w">  </span>
-<span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="c1">// Else, apply a color and save this for the last element.</span>
-<span class="w">    </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="nx">colorStack</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">color</span><span class="p">);</span>
-<span class="w">        </span><span class="nx">ctx</span><span class="p">.</span><span class="nx">fillStyle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">color</span><span class="p">;</span>
-<span class="w">        </span><span class="nx">ctx</span><span class="p">.</span><span class="nx">fillRect</span><span class="p">(</span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">squareX</span><span class="p">),</span><span class="w"> </span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">squareY</span><span class="p">),</span><span class="w"> </span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">squareWidth</span><span class="o">/</span><span class="nx">squareX</span><span class="p">)</span><span class="o">+</span><span class="mf">3</span><span class="p">,</span><span class="w"> </span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">squareHeight</span><span class="o">/</span><span class="nx">squareY</span><span class="p">)</span><span class="o">+</span><span class="mf">3</span><span class="p">);</span><span class="w">      </span>
-<span class="w">    </span><span class="p">}</span>
-<span class="p">}</span>
-
-<span class="kd">function</span><span class="w"> </span><span class="nx">createInvader</span><span class="p">(</span><span class="nx">invaderDimensions</span><span class="p">,</span><span class="w"> </span><span class="nx">spriteDim</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span>
-
-<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="p">{</span><span class="nx">posX</span><span class="p">,</span><span class="w"> </span><span class="nx">posY</span><span class="p">,</span><span class="w"> </span><span class="nx">invaderWidth</span><span class="p">,</span><span class="w"> </span><span class="nx">invaderHeight</span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">invaderDimensions</span><span class="p">;</span>
-<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">squareSize</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">invaderWidth</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">posX</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nx">spriteDim</span><span class="p">;</span>
-
-<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">cellPosition</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1</span><span class="p">;</span>
-<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">element</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0</span><span class="p">;</span>
-
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kd">var</span><span class="w"> </span><span class="nx">y</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span><span class="w"> </span><span class="nx">y</span><span class="o">&lt;</span><span class="nx">spriteDim</span><span class="p">;</span><span class="w"> </span><span class="nx">y</span><span class="o">++</span><span class="p">){</span>
-<span class="w">        </span><span class="c1">// Starts from the left side of the grid.</span>
-<span class="w">        </span><span class="c1">// Think of it as something like this:</span>
-<span class="w">        </span><span class="c1">// [-3,-2,-1,0,1,2,3]</span>
-<span class="w">        </span><span class="nx">cellPosition</span><span class="w"> </span><span class="o">*=</span><span class="w"> </span><span class="o">-</span><span class="mf">1</span><span class="p">;</span>
-
-<span class="w">        </span><span class="c1">// First element</span>
-<span class="w">        </span><span class="nx">element</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0</span><span class="p">;</span>
-
-<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kd">var</span><span class="w"> </span><span class="nx">x</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span><span class="w"> </span><span class="nx">x</span><span class="o">&lt;</span><span class="nx">spriteDim</span><span class="p">;</span><span class="w"> </span><span class="nx">x</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="nx">squareX</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">x</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">squareSize</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">posX</span><span class="p">;</span>
-<span class="w">            </span><span class="nx">squareY</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">y</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">squareSize</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">posY</span><span class="p">;</span>
-<span class="w">            </span><span class="nx">squareWidth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">squareX</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">squareSize</span><span class="p">;</span>
-<span class="w">            </span><span class="nx">squareHeight</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">squareY</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">squareSize</span><span class="p">;</span>
-
-<span class="w">            </span><span class="c1">// Pick a random color from the color palette</span>
-<span class="w">            </span><span class="kd">var</span><span class="w"> </span><span class="nx">color</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">colors</span><span class="p">[</span><span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">colors</span><span class="p">.</span><span class="nx">length</span><span class="p">)];</span>
-
-<span class="w">            </span><span class="kd">var</span><span class="w"> </span><span class="nx">squareDimensions</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
-<span class="w">                </span><span class="s1">&#39;squareX&#39;</span><span class="o">:</span><span class="w"> </span><span class="nx">squareX</span><span class="o">+</span><span class="mf">2</span><span class="p">,</span>
-<span class="w">                </span><span class="s1">&#39;squareY&#39;</span><span class="o">:</span><span class="nx">squareY</span><span class="o">+</span><span class="mf">2</span><span class="p">,</span>
-<span class="w">                </span><span class="s1">&#39;squareWidth&#39;</span><span class="o">:</span><span class="nx">squareWidth</span><span class="p">,</span>
-<span class="w">                </span><span class="s1">&#39;squareHeight&#39;</span><span class="o">:</span><span class="nx">squareHeight</span><span class="p">,</span>
-<span class="w">            </span><span class="p">};</span>
-
-<span class="w">            </span><span class="c1">// Create a square with a color and desired dimensions.</span>
-<span class="w">            </span><span class="nx">createSquare</span><span class="p">(</span><span class="nx">squareDimensions</span><span class="p">,</span><span class="w"> </span><span class="nx">color</span><span class="p">,</span><span class="w"> </span><span class="nx">element</span><span class="p">,</span><span class="w"> </span><span class="nx">spriteDim</span><span class="p">);</span>
-
-<span class="w">             </span><span class="c1">// If it&#39;s the middle element or the starting element, </span>
-<span class="w">             </span><span class="c1">// then shift it&#39;s position to the leftmost.</span>
-<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="nx">element</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">spriteDim</span><span class="o">/</span><span class="mf">2</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nx">element</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mf">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">                </span><span class="nx">cellPosition</span><span class="w"> </span><span class="o">*=</span><span class="w"> </span><span class="o">-</span><span class="mf">1</span><span class="p">;</span>
-<span class="w">            </span><span class="p">}</span>
-
-<span class="w">            </span><span class="nx">element</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="nx">cellPosition</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="p">}</span>
-
-<span class="kd">function</span><span class="w"> </span><span class="nx">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">spriteDim</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">7</span><span class="p">;</span>
-<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">numberOfInvaders</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">15</span><span class="p">;</span>
-<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">invadersSize</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">width</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nx">numberOfInvaders</span><span class="p">);</span>
-<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">padding</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">invadersSize</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nx">spriteDim</span><span class="p">);</span>
-
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kd">var</span><span class="w"> </span><span class="nx">x</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span><span class="w"> </span><span class="nx">x</span><span class="o">&lt;</span><span class="nx">numberOfInvaders</span><span class="p">;</span><span class="w"> </span><span class="nx">x</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kd">var</span><span class="w"> </span><span class="nx">y</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span><span class="w"> </span><span class="nx">y</span><span class="o">&lt;</span><span class="nx">numberOfInvaders</span><span class="p">;</span><span class="w"> </span><span class="nx">y</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="kd">var</span><span class="w"> </span><span class="nx">posX</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">x</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">invadersSize</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">padding</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">2</span><span class="p">;</span>
-<span class="w">            </span><span class="kd">var</span><span class="w"> </span><span class="nx">posY</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">y</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">invadersSize</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">padding</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">2</span><span class="p">;</span>
-<span class="w">            </span><span class="kd">var</span><span class="w"> </span><span class="nx">invaderWidth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">posX</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">invadersSize</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="p">(</span><span class="nx">padding</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">3</span><span class="p">);</span>
-<span class="w">            </span><span class="kd">var</span><span class="w"> </span><span class="nx">invaderHeight</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">posY</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">invadersSize</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="p">(</span><span class="nx">padding</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">3</span><span class="p">);</span>
-
-<span class="w">            </span><span class="kd">var</span><span class="w"> </span><span class="nx">invaderDimensions</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
-<span class="w">                </span><span class="s1">&#39;posX&#39;</span><span class="o">:</span><span class="w"> </span><span class="nx">posX</span><span class="p">,</span>
-<span class="w">                </span><span class="s1">&#39;posY&#39;</span><span class="o">:</span><span class="w"> </span><span class="nx">posY</span><span class="p">,</span>
-<span class="w">                </span><span class="s1">&#39;invaderWidth&#39;</span><span class="o">:</span><span class="w"> </span><span class="nx">invaderWidth</span><span class="p">,</span>
-<span class="w">                </span><span class="s1">&#39;invaderHeight&#39;</span><span class="o">:</span><span class="w"> </span><span class="nx">invaderHeight</span>
-<span class="w">            </span><span class="p">};</span>
-
-<span class="w">            </span><span class="nx">createInvader</span><span class="p">(</span><span class="nx">invaderDimensions</span><span class="p">,</span><span class="w"> </span><span class="nx">spriteDim</span><span class="p">);</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">}</span><span class="w">   </span>
-<span class="p">}</span>
-
-<span class="nx">main</span><span class="p">();</span>
-</code></pre>
-</div>
-
-<p>Well, I won't say that is a perfect solution but hey, it works and yes, it doesn't take a lot of code to achieve something like this.</p>
-
-<h2>Explanation</h2>
-
-<p>I'll try my best to explain how this whole thing works.</p>
-
-<p>First, you need to initialize a <code>&lt;canvas&gt;</code> DOM element of the desired width and height. Then in the <code>main()</code> function, you determine the size of each invader by specifying the number of invaders and dividing it with the width of the canvas. These values will then be used to determine the coordinates for each invader.</p>
-
-<p>Second, the function <code>createInvader()</code> follows nearly the same process as the <code>main</code> function except that the coordinates for each pixel is determined by calculating the width of the invader and subtracting it's <code>x</code> position divided by the dimensions of each invader.</p>
-
-<p>Third, as you can see in the function <code>createSquare()</code>, it contains 3 simple rules in which all of them draws a square with a color but with an emphasis that each invader has a symmetrical pattern.</p>
-
-<p>The code looks deceptively simple but achieving this complexity did take a lot of trial and error and a little bit of simple calculus &#x1F602;.</p>
-
-<h2>Conclusion</h2>
-
-<p>Generative art might be something that you may not need to explore but it's quite fun and you may never know what you might be able to produce by combining both code and visuals.</p>
-
-<p>Hope you liked reading this article.</p>
-
-<p>Stay tuned for more! &#x1F918;</p>
-
-	</div>
-	<div class="article-footer">
-		<time>March 5th, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/generative-art/">
-					Generative Art
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/javascript/">
-					JavaScript
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/built-a-new-static-site-generator-using-python-37">Built a new static site generator using Python 3.7</a></h1>
-		<p class="description">Thought of giving it some new upgrades and finally decided to open-source it.</p>
-	</div>
-	<div class="article-body">
-		<p>Since <a href="/writings/posts/build-your-own-static-site-generator-using-python/">2019</a>, I always used a custom static site generator for the website. The previous one was written in Python 2.7 but ever since Python decided to <a href="https://www.python.org/doc/sunset-python-2/">sunset</a> it, I decided to rewrite it using Python 3.7.</p>
-
-<p>Unlike the previous one, it's quite flexible and I thought of giving it some new features that would help me maintain it with ease.</p>
-
-<p>The new features I have added are:</p>
-
-<ul>
-<li>A neat CLI to build the entire site or certain parts of the website</li>
-<li>Able to switch between different templates </li>
-<li>Archive mode</li>
-<li>Pagination</li>
-<li>Generates RSS Feeds and JSON files</li>
-</ul>
-
-<h2>Why rewrite it again?</h2>
-
-<p>Over the past few months, I didn't really maintain my blog and when I visited the old codebase, I realized it wasn't flexible and it didn't have many features and it was slow, too.</p>
-
-<p>Recently, I got new ideas of building different sections for the website and thus, is why I had the motivation to rewrite everything and make it modular and flexible enough to build a powerful yet simple custom static site generator.</p>
-
-<h2>Have a look</h2>
-
-<p>I have decided to open-source my static site generator on my <a href="https://www.github.com/megacolorboy/megacolorboy-ssg">GitHub repository</a> and I'm having plans of writing a new documentation for it, so that if people are interested, they could contribute or use it for their own personal uses.</p>
-
-<h2>Conclusion</h2>
-
-<p>If you've been following my blog posts, you may know that I have a knack of displaying JavaScript widgets on some of my previous blog posts. Well, I've decided to rewrite all of those widgets, one-by-one, using ReactJS and hopefully, write more tutorials for each of them.</p>
-
-<p>Hope you liked reading this article.</p>
-
-	</div>
-	<div class="article-footer">
-		<time>February 19th, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/refactoring/">
-					Refactoring
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/resolve-the-general-error-1835-malformed-communication-packet-error">Resolve the "General error: 1835 Malformed communication packet" error</a></h1>
+		<h1 class="heading"><a href="/til/posts/convert-to-date-from-timestamp-using-carbon">Convert to date from timestamp using Carbon</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>This happened like two days ago, when one of the client sites went down. Upon inspecting the error logs, I found this:</p>
+		<p>Using Carbon's <code>createFromFormat()</code> method is basically a wrapper for <code>DateTime::createFromFormat()</code>, the main difference between the two methods is that you can add a timezone to Carbon's method.</p>
+
+<p>Here's a sample on how you can convert to date using timestamp using Carbon:</p>
 
 <div class="codehilite">
-<pre><span></span><code>SQLSTATE[HY000]: General error: 1835 Malformed communication packet
+<pre><span></span><code><span class="cp">&lt;?php</span>
+    <span class="k">function</span> <span class="nf">formatDate</span><span class="p">(</span><span class="nx">Request</span> <span class="nv">$request</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">\Carbon\Carbon</span><span class="o">::</span><span class="na">createFromFormat</span><span class="p">(</span><span class="s1">&#39;Y-m-d H:i:s&#39;</span><span class="p">,</span> <span class="nv">$request</span><span class="o">-&gt;</span><span class="na">date</span><span class="p">)</span><span class="o">-&gt;</span><span class="na">format</span><span class="p">(</span><span class="s1">&#39;Y-m-d&#39;</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="cp">?&gt;</span>
 </code></pre>
 </div>
 
-<p>If you got the same error as the one above, don't worry, it's not your fault. According to this <a href="https://jira.mariadb.org/browse/MDEV-24121">forum</a>, <strong>a recent MariaDB update introduced a new bug for PHP versions &lt; 7.3</strong> that uses PDO and MySQL connectors. You can easily resolve this by simply upgrading it to PHP 7.3.</p>
-
-<p>Hope this tip helps you out!</p>
+<p>Hope you found this useful!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>November 7th, 2020</time>
+		<time>March 12th, 2021</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/php/">
-					PHP
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/find-and-remove-duplicate-lines-using-regular-expressions">Find and remove duplicate lines using Regular Expressions</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Open up your text editor and use the following RegEx pattern to find and remove the duplicate lines:</p>
-
-<div class="codehilite">
-<pre><span></span><code>^(.*)(\r?\n\1)+$
-</code></pre>
-</div>
-
-<p>I found this technique on <a href="http://www.regular-expressions.info/duplicatelines.html">Regular-Expressions.info</a> and I'm going to quote their explanation over here:</p>
-
-<div class="codehilite">
-<pre><span></span><code>The caret will match only at the start of a line. So the regex engine will only attempt to match the remainder of the regex there. The dot and star combination simply matches an entire line, whatever its contents, if any. The parentheses store the matched line into the first backreference.
-
-Next we will match the line separator. I put the question mark into `\r?\n` to make this regex work with both Windows `(\r\n)` and UNIX `(\n)` text files. So up to this point we matched a line and the following line break.
-
-Now we need to check if this combination is followed by a duplicate of that same line. We do this simply with `\1`. This is the first backreference which holds the line we matched. The backreference will match that very same text.
-
-If the backreference fails to match, the regex match and the backreference are discarded, and the regex engine tries again at the start of the next line. If the backreference succeeds, the plus symbol in the regular expression will try to match additional copies of the line. Finally, the dollar symbol forces the regex engine to check if the text matched by the backreference is a complete line. We already know the text matched by the backreference is preceded by a line break (matched by `\r?\n`).
-
-Therefore, we now check if it is also followed by a line break or if it is at the end of the file using the dollar sign.
-
-The entire match becomes `line\nline` (or `line\nline\nline` etc.). Because we are doing a search and replace, the line, its duplicates, and the line breaks in between them, are all deleted from the file. Since we want to keep the original line, but not the duplicates, we use `\1` as the replacement text to put the original line back in.
-</code></pre>
-</div>
-
-<p>Hope you found this tip useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>November 7th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/regular-expressions/">
-					Regular Expressions
+				<a href="/category/laravel/">
+					Laravel
 				</a>
 			</li>
 			
@@ -717,11 +440,11 @@ The entire match becomes `line\nline` (or `line\nline\nline` etc.). Because we a
 		
 	
 		
-			<a class="" href="/pages/14">...</a>
+			<a class="" href="/pages/15">...</a>
 		
 	
 		
-			<a class="" href="/pages/27">27</a>
+			<a class="" href="/pages/28">28</a>
 		
 	
 
@@ -784,6 +507,20 @@ The entire match becomes `line\nline` (or `line\nline\nline` etc.). Because we a
 		</li>
 		
 		<li>
+			<a href="/category/cryptography/">
+				Cryptography
+				<span class="count">12</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/programming/">
+				Programming
+				<span class="count">11</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/javascript/">
 				JavaScript
 				<span class="count">11</span>
@@ -805,9 +542,9 @@ The entire match becomes `line\nline` (or `line\nline\nline` etc.). Because we a
 		</li>
 		
 		<li>
-			<a href="/category/cryptography/">
-				Cryptography
-				<span class="count">11</span>
+			<a href="/category/productivity/">
+				Productivity
+				<span class="count">10</span>
 			</a>
 		</li>
 		
@@ -815,20 +552,6 @@ The entire match becomes `line\nline` (or `line\nline\nline` etc.). Because we a
 			<a href="/category/git/">
 				Git
 				<span class="count">10</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/productivity/">
-				Productivity
-				<span class="count">9</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/programming/">
-				Programming
-				<span class="count">9</span>
 			</a>
 		</li>
 		
@@ -875,6 +598,13 @@ The entire match becomes `line\nline` (or `line\nline\nline` etc.). Because we a
 		</li>
 		
 		<li>
+			<a href="/category/vscode/">
+				VSCode
+				<span class="count">5</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/blogmarks/">
 				Blogmarks
 				<span class="count">5</span>
@@ -896,16 +626,16 @@ The entire match becomes `line\nline` (or `line\nline\nline` etc.). Because we a
 		</li>
 		
 		<li>
-			<a href="/category/arcade-challenge/">
-				Arcade Challenge
+			<a href="/category/c/">
+				C#
 				<span class="count">4</span>
 			</a>
 		</li>
 		
 		<li>
-			<a href="/category/vscode/">
-				VSCode
-				<span class="count">3</span>
+			<a href="/category/arcade-challenge/">
+				Arcade Challenge
+				<span class="count">4</span>
 			</a>
 		</li>
 		
@@ -948,6 +678,34 @@ The entire match becomes `line\nline` (or `line\nline\nline` etc.). Because we a
 			<a href="/category/general/">
 				General
 				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/clean-code/">
+				Clean Code
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/refactoring/">
+				Refactoring
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/security/">
+				Security
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/sql-server/">
+				SQL Server
+				<span class="count">2</span>
 			</a>
 		</li>
 		
@@ -1029,6 +787,34 @@ The entire match becomes `line\nline` (or `line\nline\nline` etc.). Because we a
 		</li>
 		
 		<li>
+			<a href="/category/net-core/">
+				.NET Core
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/oop/">
+				OOP
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/troubleshooting/">
+				Troubleshooting
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/documentary/">
+				Documentary
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/xdebug/">
 				XDebug
 				<span class="count">1</span>
@@ -1052,13 +838,6 @@ The entire match becomes `line\nline` (or `line\nline\nline` etc.). Because we a
 		<li>
 			<a href="/category/csr/">
 				CSR
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/clean-code/">
-				Clean Code
 				<span class="count">1</span>
 			</a>
 		</li>
@@ -1134,13 +913,6 @@ The entire match becomes `line\nline` (or `line\nline\nline` etc.). Because we a
 		</li>
 		
 		<li>
-			<a href="/category/security/">
-				Security
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/cpanel/">
 				cPanel
 				<span class="count">1</span>
@@ -1150,13 +922,6 @@ The entire match becomes `line\nline` (or `line\nline\nline` etc.). Because we a
 		<li>
 			<a href="/category/introduction/">
 				Introduction
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/refactoring/">
-				Refactoring
 				<span class="count">1</span>
 			</a>
 		</li>

@@ -77,429 +77,28 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/prevent-loading-webpage-from-backforward-cache">Prevent loading a webpage from Back-Forward cache</a></h1>
+		<h1 class="heading"><a href="/til/posts/clear-a-file-directory-using-filesystem-in-laravel">Clear a file directory using Filesystem in Laravel</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>I'm working on an eCommerce project and I encountered a really weird problem, whenever I saved items into my cart and proceed to the checkout page and then go back to previous page, my cart isn't updated until I refresh the page.</p>
+		<p>I was working on a project that dealt with generating large .zip exports and as a result, the <code>storage/exports</code> directory, which was used to store all the .zip exports, ended up going all the way up to a whopping size of 10 gigabytes! &#x1F62E;</p>
 
-<p>Honestly, I thought this was a bug until I came around to learn about <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Firefox/Releases/1.5/Using_Firefox_1.5_caching">Back-Forward Caching</a> a.k.a <strong>bfcache</strong>, which allows the user to navigate between pages faster. That's a good thing, though!</p>
-
-<p>But that didn't help resolve my issue, so I thought of going around with a tiny hack:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="nb">window</span><span class="p">.</span><span class="nx">onpageshow</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">event</span><span class="p">.</span><span class="nx">persisted</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="p">.</span><span class="nx">reload</span><span class="p">()</span><span class="w"> </span>
-<span class="w">    </span><span class="p">}</span>
-<span class="p">};</span>
-</code></pre>
-</div>
-
-<p>The code above will look any persistence of the <code>onpageshow</code> event. Initially, it's set to <code>false</code> and if the page is loaded from <strong>bfcache</strong>, it'll set to <code>true</code>.</p>
-
-<p>I wouldn't really consider this as a solution as it only worked on Safari instead of Chrome or Firefox.</p>
-
-<p>But hey, it gets the job done! &#x1F602;</p>
-
-	</div>
-	<div class="article-footer">
-		<time>August 30th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/javascript/">
-					JavaScript
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/refresh-browser-window-without-query-parameters">Refresh browser window without query parameters</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>If you want to reload the current page in your browser without any query string or parameters, here's how you can do it:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="p">.</span><span class="nx">pathname</span><span class="p">;</span>
-</code></pre>
-</div>
-
-<p>By doing so, it'll preserve the HTTP/HTTPS protocols of the URL and also remove the fragments that start with a <code>#</code>.</p>
-
-<p>If you want to preserve the fragments, you can try this:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">reloadURL</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="p">.</span><span class="nx">pathname</span><span class="p">;</span>
-<span class="kd">var</span><span class="w"> </span><span class="nx">fragments</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="p">.</span><span class="nx">part</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="kc">undefined</span><span class="p">)</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;#&quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="p">.</span><span class="nx">part</span><span class="p">;</span>
-<span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">reloadURL</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">fragments</span><span class="p">;</span>
-</code></pre>
-</div>
-
-<p>Hope you found this useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>August 29th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/javascript/">
-					JavaScript
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/input-sanitization-with-php">Input sanitization with PHP</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>This can come in handy when you're dealing with user inputs during a form submission and in most cases, your web application will be using a database query to store the data. </p>
-
-<h2>Using filter_var()</h2>
-
-<p>This method uses a number of flags to validate and sanitize a string. Here are some examples I have tried:</p>
-
-<h3>Removing special characters</h3>
-
-<p>Want to strip out all tags and certain characters? Try this:</p>
+<p>I resolved it by calling the <code>Filesystem</code> package in my controller:</p>
 
 <div class="codehilite">
 <pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="nv">$str</span> <span class="o">=</span> <span class="s2">&quot;&lt;h1&gt;Hello World&lt;/h1&gt;&quot;</span><span class="p">;</span>
-<span class="nv">$filtered</span> <span class="o">=</span> <span class="nb">filter_var</span><span class="p">(</span><span class="nv">$str</span><span class="p">,</span> <span class="nx">FILTER_SANITIZE_STRING</span><span class="p">);</span>
-<span class="k">echo</span> <span class="nv">$filtered</span><span class="p">;</span>
+<span class="k">use</span> <span class="nx">Illuminate\Filesystem\Filesystem</span><span class="p">;</span>
 <span class="cp">?&gt;</span>
 </code></pre>
 </div>
 
-<h3>Integer validation</h3>
-
-<p>You can check if the input is an integer and if it's a value between 1 and 20:</p>
+<p>Then simply, create a new instance and define the directory you wanted to clear:</p>
 
 <div class="codehilite">
 <pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="nv">$x</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
-<span class="nv">$min</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-<span class="nv">$max</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>
-<span class="nv">$options</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="s2">&quot;min_range&quot;</span> <span class="o">=&gt;</span> <span class="nv">$min</span><span class="p">,</span>
-    <span class="s2">&quot;max_range&quot;</span> <span class="o">=&gt;</span> <span class="nv">$max</span>
-<span class="p">];</span>
-
-<span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nb">filter_var</span><span class="p">(</span><span class="nv">$x</span><span class="p">,</span> <span class="nx">FILTER_VALIDATE_INT</span><span class="p">,</span> <span class="nv">$options</span><span class="p">)){</span>
-    <span class="k">echo</span> <span class="s2">&quot;This input is invalid.&quot;</span><span class="p">;</span>
-<span class="p">}</span>
-<span class="k">else</span> <span class="p">{</span>
-    <span class="k">echo</span> <span class="s2">&quot;This input is valid.&quot;</span><span class="p">;</span>
-<span class="p">}</span>
+<span class="nv">$folder</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Filesystem</span><span class="p">;</span>
+<span class="nv">$folder</span><span class="o">-&gt;</span><span class="na">cleanDirectory</span><span class="p">(</span><span class="s1">&#39;storage/exports&#39;</span><span class="p">);</span>
 <span class="cp">?&gt;</span>
-</code></pre>
-</div>
-
-<h3>URL validation</h3>
-
-<p>Want to check if the input is a valid URL? Try this out:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="c1">// Make sure the URL is sanitized</span>
-<span class="nv">$url</span> <span class="o">=</span> <span class="nb">filter_var</span><span class="p">(</span><span class="s2">&quot;https://www.google.com&quot;</span><span class="p">,</span> <span class="nx">FILTER_SANITIZE_URL</span><span class="p">);</span>
-<span class="k">if</span><span class="p">(</span><span class="nb">filter_var</span><span class="p">(</span><span class="nv">$url</span><span class="p">,</span> <span class="nx">FILTER_VALIDATE_URL</span><span class="p">)){</span>
-    <span class="k">echo</span> <span class="s2">&quot;This URL is valid.&quot;</span><span class="p">;</span>
-<span class="p">}</span>
-<span class="k">else</span> <span class="p">{</span>
-    <span class="k">echo</span> <span class="s2">&quot;This URL is invalid.&quot;</span><span class="p">;</span>
-<span class="p">}</span>
-<span class="cp">?&gt;</span>
-</code></pre>
-</div>
-
-<p>Using these in-built features makes it easier for PHP developers to process data from external sources in a safer manner and also adds an extra layer of protection to your web application.</p>
-
-<p>Read more about this method in <a href="https://www.php.net/manual/en/function.filter-var.php">PHP's official documentation</a>.</p>
-
-	</div>
-	<div class="article-footer">
-		<time>August 23rd, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/php/">
-					PHP
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/extract-unique-characters-from-a-string">Extract unique characters from a string</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>I thought of getting back into competitive programming again and 
-started practicing my python coding-chops on <a href="https://www.codewars.com">Codewars</a>.</p>
-
-<p>Here's a neat trick on how to extract unique characters from a string:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
-
-<span class="n">word</span> <span class="o">=</span> <span class="s2">&quot;HelloWorld&quot;</span>
-<span class="n">uniq</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">OrderedDict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">word</span><span class="p">)</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="n">uniq</span><span class="p">)</span> <span class="c1"># prints HeloWrd</span>
-</code></pre>
-</div>
-
-<p>Using <code>OrderedDict</code> allows you to preserve the order in which the keys are inserted as a normal <code>dict</code> doesn't track the order.</p>
-
-<p>Hope you found this useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>August 23rd, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/python/">
-					Python
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/increase-execution-time-in-php">Increase execution time in PHP</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Ever process a file that's larger than 2GB and got an error that said something like this:</p>
-
-<div class="codehilite">
-<pre><span></span><code>Maximum execution time of 30 seconds exceeded
-</code></pre>
-</div>
-
-<p>Though, PHP doesn't have an efficient way of processing files of large sizes, you can prevent your web application from timing out by adding this to your code:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="c1">// 300 seconds == 5 minutes</span>
-<span class="nb">ini_set</span><span class="p">(</span><span class="s1">&#39;max_execution_time&#39;</span><span class="p">,</span> <span class="mi">300</span><span class="p">);</span>
-<span class="cp">?&gt;</span>
-</code></pre>
-</div>
-
-<p>Hopefully, some day, this might come in handy for you! &#128540;</p>
-
-	</div>
-	<div class="article-footer">
-		<time>August 23rd, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/php/">
-					PHP
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/increase-memory-limit-in-php">Increase memory limit in PHP</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Last month, I was building a web application that collected a lot of data via form submissions. I wrote a method to export attachments and form data by zipping them all together. </p>
-
-<p>It worked for a smaller archives but as the records grew larger, I got a fatal error which said that I've exhausted the PHP's memory limit.</p>
-
-<p>So, I found an easy way to increase the memory limit to 1024MB (1GB) like this:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="nb">ini_set</span><span class="p">(</span><span class="s1">&#39;memory_limit&#39;</span><span class="p">,</span> <span class="s1">&#39;1024M&#39;</span><span class="p">);</span>
-<span class="cp">?&gt;</span>
-</code></pre>
-</div>
-
-<p>Before you write this stub in your script, make sure you have enough resources in your system or else, it'll go splat!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>August 23rd, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/php/">
-					PHP
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/hello-go">Hello, Go!</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>After reading a lot of articles about using Go as a programming language to write high-performing concurrent web applications and services yet maintain a clean codebase, I thought of starting to learn it to see what's it about and so far, it's been great!</p>
-
-<p>This mini-tutorial will show you how to install Go on your system and write a simple "Hello, World" program.</p>
-
-<p><strong>Note: This tutorial will go through installing Go on Linux.</strong></p>
-
-<h2>Install Go</h2>
-
-<p>Make sure you have the latest updates and upgrades on your Linux system before installing Go.</p>
-
-<p>You need to download the binary file from their <a href="https://golang.org/dl/">official package</a>. Find the version that suits your OS and architecture.</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="nb">cd</span><span class="w"> </span>/tmp
-wget<span class="w"> </span>https://golang.org/dl/go1.14.6.linux-amd64.tar.gz
-</code></pre>
-</div>
-
-<p>Extract the downloaded archive and install it in the <code>/usr/local</code> directory (as per the standards):</p>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>tar<span class="w"> </span>-xvf<span class="w"> </span>go1.14.6.linux-amd64.tar.gz
-sudo<span class="w"> </span>mv<span class="w"> </span>go<span class="w"> </span>/usr/local
-</code></pre>
-</div>
-
-<h2>Set up environment</h2>
-
-<p>Now, we need to set up three variables:</p>
-
-<ul>
-<li><code>GOROOT</code>: Location of where your Go package is installed.</li>
-<li><code>GOPATH</code>: Location of your work directory.'</li>
-<li><code>PATH</code>: Tells bash on where to look for programs that are being executed.</li>
-</ul>
-
-<p>Open up your <code>.bashrc</code> file and add these lines at the end of the file:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">GOROOT</span><span class="o">=</span>/usr/local/go
-<span class="nb">export</span><span class="w"> </span><span class="nv">GOPATH</span><span class="o">=</span><span class="nv">$HOME</span>/go
-<span class="nb">export</span><span class="w"> </span><span class="nv">PATH</span><span class="o">=</span><span class="nv">$GOPATH</span>/bin:<span class="nv">$GOROOT</span>/bin:<span class="nv">$PATH</span>
-</code></pre>
-</div>
-
-<p>Save your <code>.bashrc</code> file and update the current shell session:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="nb">source</span><span class="w"> </span>~/.bashrc
-</code></pre>
-</div>
-
-<h2>Verify your installation</h2>
-
-<p>Type the following command to ensure that your Go installation is successful:</p>
-
-<div class="codehilite">
-<pre><span></span><code>go<span class="w"> </span>version<span class="w"> </span>go1.14.6<span class="w"> </span>linux/amd64
-</code></pre>
-</div>
-
-<h2>Hello, world!</h2>
-
-<p>As per traditions, whenever you learn a programming language, you start off with a "Hello, world!" program, so here it is:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="kn">package</span><span class="w"> </span><span class="nx">main</span>
-
-<span class="kn">import</span><span class="w"> </span><span class="s">&quot;fmt&quot;</span>
-
-<span class="kd">func</span><span class="w"> </span><span class="nx">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;Hello, world!\n&quot;</span><span class="p">)</span>
-<span class="p">}</span><span class="w"> </span>
-</code></pre>
-</div>
-
-<h2>Conclusion</h2>
-
-<p>I just started learning it today and at first, you might have the tendency to write code in Go the same way you write in any other language but beware, it doesn't work that way. It forces you to write good code including the way it formats the code using the <code>gofmt</code> tool.</p>
-
-<p>Lots of cool things are coming!</p>
-
-<p>Stay tuned for more.</p>
-
-	</div>
-	<div class="article-footer">
-		<time>August 1st, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/go/">
-					Go
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-delete-files-inside-a-zip-file">How to delete files inside a zip file?</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Ever compressed your project directory but forgot to delete that useless file or folder and turns out the compresed file is larger than it's supposed to be? </p>
-
-<p>Here's a quick solution you can try:</p>
-
-<p>If you want to delete a file inside a <code>.zip</code> file, try this:</p>
-
-<div class="codehilite">
-<pre><span></span><code>zip<span class="w"> </span>--delete<span class="w"> </span>file.zip<span class="w"> </span><span class="s2">&quot;file.ext&quot;</span>
-</code></pre>
-</div>
-
-<p>And if you want to delete a folder, try this:</p>
-
-<div class="codehilite">
-<pre><span></span><code>zip<span class="w"> </span>--delete<span class="w"> </span>file.zip<span class="w"> </span><span class="s2">&quot;folder/*&quot;</span>
 </code></pre>
 </div>
 
@@ -507,12 +106,392 @@ sudo<span class="w"> </span>mv<span class="w"> </span>go<span class="w"> </span>
 
 	</div>
 	<div class="article-footer">
-		<time>July 21st, 2020</time>
+		<time>September 28th, 2020</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/terminal/">
-					Terminal
+				<a href="/category/laravel/">
+					Laravel
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-move-a-running-process-to-the-background">How to move a running process to the background?</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Pause the current process using <code>Ctrl + Z</code>, which will send it to the background and then type <code>bg</code> to allow the process to run in the background.</p>
+
+<p>Alternatively, you can add a <code>&amp;</code> after the desired process you wanted to execute and it'll automatically execute it as a background process.</p>
+
+<p>Hope this helps you out!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>September 28th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/unix/">
+					UNIX
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/get-pagination-data-by-page-number">Get pagination data by page number</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>By default, Laravel's paginator checks the value of the page based on the query string and uses that to display the results and also, it generates links to previous and next pages as well.</p>
+
+<p>The <code>paginate()</code> method takes the following parameters by default:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="k">public</span> <span class="k">function</span> <span class="nf">paginate</span><span class="p">(</span><span class="nv">$perPage</span> <span class="o">=</span> <span class="k">null</span><span class="p">,</span> <span class="nv">$columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;*&#39;</span><span class="p">],</span> <span class="nv">$pageName</span> <span class="o">=</span> <span class="s1">&#39;page&#39;</span><span class="p">,</span> <span class="nv">$page</span> <span class="o">=</span> <span class="k">null</span><span class="p">);</span>
+<span class="cp">?&gt;</span>
+</code></pre>
+</div>
+
+<p>So, if you want to fetch the pagination data of a specific page, then just write this:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="nv">$pageNumber</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span>
+<span class="nv">$data</span> <span class="o">=</span> <span class="nx">ExampleModel</span><span class="o">::</span><span class="na">paginate</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;*&#39;</span><span class="p">],</span> <span class="s1">&#39;page&#39;</span><span class="p">,</span> <span class="nv">$pageNumber</span><span class="p">);</span>
+<span class="cp">?&gt;</span>
+</code></pre>
+</div>
+
+<p>Hope you found this article useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>September 28th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/laravel/">
+					Laravel
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/resolve-curl-error-60-ssl-certificate-problem-on-localhost">Resolve cURL error 60: SSL certificate problem on localhost</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>You'll get this error when you're hosting a Laravel project with using HTTPS/SSL protocol on <code>localhost</code> or <code>127.0.0.1</code>:</p>
+
+<div class="codehilite">
+<pre><span></span><code>cURL error 60: SSL certificate problem: unable to get local issuer certificate (see https://curl.haxx.se/libcurl/c/libcurl-errors.html)
+</code></pre>
+</div>
+
+<p>I read some article on trying to install <code>cacert.pem</code> authorization certificate on your WAMP/XAMPP setup but it didn't really work out for me as I was running out of time.</p>
+
+<p>So, I did a little digging and learnt that I can just modify the <code>verify</code> flag to <code>false</code> in the <code>vendor/guzzlehttp/guzzle/src/Client.php</code> file:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="nv">$defaults</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s1">&#39;allow_redirects&#39;</span> <span class="o">=&gt;</span> <span class="nx">RedirectMiddleware</span><span class="o">::</span><span class="nv">$defaultSettings</span><span class="p">,</span>
+    <span class="s1">&#39;http_errors&#39;</span>     <span class="o">=&gt;</span> <span class="k">true</span><span class="p">,</span>
+    <span class="s1">&#39;decode_content&#39;</span>  <span class="o">=&gt;</span> <span class="k">true</span><span class="p">,</span>
+    <span class="s1">&#39;verify&#39;</span>          <span class="o">=&gt;</span> <span class="k">false</span><span class="p">,</span> <span class="c1">// changed it to false</span>
+    <span class="s1">&#39;cookies&#39;</span>         <span class="o">=&gt;</span> <span class="k">false</span>
+<span class="p">];</span>
+<span class="cp">?&gt;</span>
+</code></pre>
+</div>
+
+<p>By changing to it <code>false</code>, you'll not face that error again but please keep in mind, you should do this only if you're developing on localhost.</p>
+
+<p>Happy coding!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>September 28th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/laravel/">
+					Laravel
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-resolve-the-no-application-encryption-key-has-been-specified-error">How to resolve the "No application encryption key has been specified" error</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Are you facing the same error as this article's title? Then this article might help you out.</p>
+
+<p>If you're developing applications using HTTP/SSL Protocols (regardless, you should!) on Laravel, by default, you'll be using Laravel's encrypter but in it's <a href="https://laravel.com/docs/7.x/encryption#configuration">official documentation</a>, it says:</p>
+
+<blockquote>
+  <p>Before using Laravel's encrypter, you must set a <code>key</code> option in your <code>config/app.php</code> configuration file. You should use the <code>php artisan key:generate</code> command to generate this key since this Artisan command will use PHP's secure random bytes generator to build your key. If this value is not properly set, all values encrypted by Laravel will be insecure.</p>
+</blockquote>
+
+<p>Just execute the following command in your root directory:</p>
+
+<div class="codehilite">
+<pre><span></span><code>php<span class="w"> </span>artisan<span class="w"> </span>key:generate
+</code></pre>
+</div>
+
+<p>If the error still persists, try clearing the cache by doing the following:</p>
+
+<div class="codehilite">
+<pre><span></span><code>php<span class="w"> </span>artisan<span class="w"> </span>config:cache
+php<span class="w"> </span>artisan<span class="w"> </span>cache:clear
+php<span class="w"> </span>artisan<span class="w"> </span>config:clear
+</code></pre>
+</div>
+
+<p>Hope you found this article useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>September 19th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/laravel/">
+					Laravel
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-filter-requests-with-errors-on-chromes-devtools">How to filter requests with errors on Chrome's DevTools</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Tired of trying to look for errors in DevTools by scrolling a long list of HTTP responses?</p>
+
+<p>Open up your <strong>Chrome DevTools</strong> and hit the <strong>Network</strong> tab and then try filtering the responses by typing the <code>status-code</code> property in the filter box.</p>
+
+<p>It comes in handy when you want to narrow down to a specific list of HTTP responses. For instance, if you're looking for responses with error 404, you can filter it by typing like this: <code>status-code:404</code>.</p>
+
+<p>Another trick is, you can filter out the responses that you don't want to see by just adding a hyphen like this: <code>-status-code:200</code>.</p>
+
+<p>Hope this tip helps you out!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>September 19th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/chrome-devtools/">
+					Chrome DevTools
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/enable-httpsssl-on-wamp-server">Enable HTTPS/SSL on WAMP Server</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Building a website with HTTPS/SSL in mind can help resolve a lot of problems when you're going to deploy it on production server.</p>
+
+<p>So, here's a small tutorial on how to enable HTTPS mode and install SSL certificate on your local WAMP Server.</p>
+
+<p><strong>Note: This tutorial assumes that you have a Windows PC and have installed WAMP Server 3.2.0 in your local system, if not, <a href="https://www.wampserver.com/en/">download it from here</a>.</strong></p>
+
+<h2>Download OpenSSL</h2>
+
+<p>Based on your system's architecture, you can download either a 32 or 64-bit installer. You can find the latest version of OpenSSL from here. While installing, please make sure all the options selected are default.</p>
+
+<h2>Generate SSL Key and Certificate</h2>
+
+<p>Open your terminal or command-line prompt and navigate to the following folder:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nb">cd</span><span class="w"> </span><span class="s2">&quot;C:\Program Files\OpenSSL-Win64\bin&quot;</span>
+</code></pre>
+</div>
+
+<p>Next, you need to create a private key. While generating a private key, you'll have to enter a passphrase, it can be anything but make sure that you can remember it for the next step &#x1F602;.</p>
+
+<p>Execute the following command:</p>
+
+<div class="codehilite">
+<pre><span></span><code>openssl<span class="w"> </span>genrsa<span class="w"> </span>-aes256<span class="w"> </span>-out<span class="w"> </span>private.key<span class="w"> </span><span class="m">2048</span>
+</code></pre>
+</div>
+
+<p>Good, now let's generate our certificate and in this step, you'll be prompted with several questions. You can fill as per your wish or just hit "Enter" to leave it as default. The only thing that matters is <strong>Common Name</strong> and this should named as <code>localhost</code></p>
+
+<p>Execute the following command:</p>
+
+<div class="codehilite">
+<pre><span></span><code>openssl<span class="w"> </span>req<span class="w"> </span>-new<span class="w"> </span>-x509<span class="w"> </span>-nodes<span class="w"> </span>-sha1<span class="w"> </span>-key<span class="w"> </span>private.key<span class="w"> </span>-out<span class="w"> </span>certificate.crt<span class="w"> </span>-days<span class="w"> </span><span class="m">36500</span>
+</code></pre>
+</div>
+
+<h2>Move the certificate and key to Apache's directory</h2>
+
+<p>Create a folder named <code>keys</code> and move both <code>private.key</code> and <code>certificate.crt</code> to this directory: <code>C:\wamp64\bin\apache\apache2.4.41\conf</code>.</p>
+
+<h2>Modify your httpd.conf file</h2>
+
+<p>You have to uncomment 3 lines from <code>C:/wamp64/bin/apache/apache2.4.41/conf/httpd.conf</code>:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nb">LoadModule</span><span class="w"> </span>ssl_module<span class="w"> </span>modules/mod_ssl.so
+<span class="nb">Include</span><span class="w"> </span>conf/extra/httpd-ssl.conf
+<span class="nb">LoadModule</span><span class="w"> </span>socache_shmcb_module<span class="w"> </span>modules/mod_socache_shmcb.so
+</code></pre>
+</div>
+
+<h2>Modify your httpd-ssl.conf file</h2>
+
+<p>Go to <code>C:/wamp64/bin/apache/apache2.4.41/conf/extra/httpd-ssl.conf</code> and modify the following parameters:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nb">DocumentRoot</span><span class="w"> </span><span class="s2">&quot;c:/wamp64/www&quot;</span>
+<span class="nb">ServerName</span><span class="w"> </span>localhost:443
+<span class="nb">ServerAdmin</span><span class="w"> </span>admin@youremail.com
+<span class="nb">ErrorLog</span><span class="w"> </span><span class="s2">&quot;${SRVROOT}/logs/error.log&quot;</span>
+<span class="nb">TransferLog</span><span class="w"> </span><span class="s2">&quot;${SRVROOT}/logs/access.log&quot;</span>
+<span class="nb">SSLSessionCache</span><span class="w"> </span><span class="s2">&quot;shmcb:${SRVROOT}/logs/ssl_scache(512000)&quot;</span>
+<span class="nb">SSLCertificateFile</span><span class="w"> </span><span class="s2">&quot;${SRVROOT}/conf/keys/certificate.crt&quot;</span>
+<span class="nb">SSLCertificateKeyFile</span><span class="w"> </span><span class="s2">&quot;${SRVROOT}/conf/keys/private.key&quot;</span>
+<span class="nb">CustomLog</span><span class="w"> </span><span class="s2">&quot;${SRVROOT}/logs/ssl_request.log&quot;</span>
+</code></pre>
+</div>
+
+<p><code>DocumentRoot</code> is the location of where your website files are located. <code>ServerName</code> can be anything but preferable to use <code>localhost</code>.</p>
+
+<h2>Restart your WAMP Server</h2>
+
+<p>Just restart your WAMP Server for the changes to take effect. If the WAMP icon turns green, you're good else, an typo or syntax error must have occurred.</p>
+
+<p>Hope you found this tutorial useful! &#x1F600;</p>
+
+	</div>
+	<div class="article-footer">
+		<time>September 13th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/apache/">
+					Apache
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/wamp/">
+					WAMP
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/accessing-wamp-server-from-other-computers-on-lan">Accessing WAMP Server from other computers on LAN</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Whenever you develop a website using the <strong>LAMP</strong> or <strong>WAMP</strong> stack, you'll want to access the website, locally, via different systems and devices solely for testing purposes.</p>
+
+<h2>Modify your VirtualHosts configuration</h2>
+
+<p>Setting up your WAMP Server for LAN access only requires you to tweak your <strong>VirtualHosts</strong> configuration file found in <code>C:\wamp64\bin\apache\apache2.4.41\conf\extra\httpd-vhost.conf</code></p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nt">&lt;VirtualHost</span><span class="w"> </span><span class="s">*:80</span><span class="nt">&gt;</span>
+<span class="w">  </span><span class="nb">ServerName</span><span class="w"> </span>example.test
+<span class="w">  </span><span class="nb">ServerAlias</span><span class="w"> </span>example.test
+<span class="w">  </span><span class="nb">DocumentRoot</span><span class="w"> </span><span class="s2">&quot;c:/wamp64/www/yourprojectname&quot;</span>
+<span class="w">  </span><span class="nt">&lt;Directory</span><span class="w"> </span><span class="s">&quot;c:/wamp64/www/yourprojectname/&quot;</span><span class="nt">&gt;</span>
+<span class="w">    </span><span class="nb">Options</span><span class="w"> </span>+Indexes<span class="w"> </span>+Includes<span class="w"> </span>+FollowSymLinks<span class="w"> </span>+MultiViews
+<span class="w">    </span><span class="nb">AllowOverride</span><span class="w"> </span><span class="k">All</span>
+<span class="w">    </span><span class="nb">Require</span><span class="w"> </span><span class="k">all</span><span class="w"> </span>granted
+<span class="w">  </span><span class="nt">&lt;/Directory&gt;</span>
+<span class="nt">&lt;/VirtualHost&gt;</span>
+</code></pre>
+</div>
+
+<p>Oh, if you're using Linux, you'll find the file <code>000-default.conf</code> in <code>/etc/apache2/sites-available</code> directory.</p>
+
+<h2>Update your hosts file</h2>
+
+<p>If you type the URL of the website that you want to visit, the computer will first refer to the <code>hosts</code> file and then it'll go out to fetch DNS information. So, if you want <code>http:\\example.test</code> url to point to your local system, you just have add it in your <code>hosts</code> file:</p>
+
+<p>Open the hosts file(<code>C:\Windows\System32\drivers\etc\hosts</code>) using a text editor and add this line to your <code>hosts</code> file:</p>
+
+<div class="codehilite">
+<pre><span></span><code>127.0.0.1   example.test
+</code></pre>
+</div>
+
+<p>Once done, save the file and restart your WAMP Server and you're all set to go!</p>
+
+<p>Hope you found this tip useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>September 13th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/apache/">
+					Apache
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/wamp/">
+					WAMP
 				</a>
 			</li>
 			
@@ -560,11 +539,11 @@ sudo<span class="w"> </span>mv<span class="w"> </span>go<span class="w"> </span>
 		
 	
 		
-			<a class="" href="/til/pages/4">...</a>
+			<a class="" href="/til/pages/5">...</a>
 		
 	
 		
-			<a class="" href="/til/pages/17">17</a>
+			<a class="" href="/til/pages/18">18</a>
 		
 	
 
@@ -617,6 +596,20 @@ sudo<span class="w"> </span>mv<span class="w"> </span>go<span class="w"> </span>
 		</li>
 		
 		<li>
+			<a href="/category/cryptography/">
+				Cryptography
+				<span class="count">12</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/programming/">
+				Programming
+				<span class="count">11</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/javascript/">
 				JavaScript
 				<span class="count">11</span>
@@ -638,9 +631,9 @@ sudo<span class="w"> </span>mv<span class="w"> </span>go<span class="w"> </span>
 		</li>
 		
 		<li>
-			<a href="/category/cryptography/">
-				Cryptography
-				<span class="count">11</span>
+			<a href="/category/productivity/">
+				Productivity
+				<span class="count">10</span>
 			</a>
 		</li>
 		
@@ -648,20 +641,6 @@ sudo<span class="w"> </span>mv<span class="w"> </span>go<span class="w"> </span>
 			<a href="/category/git/">
 				Git
 				<span class="count">10</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/productivity/">
-				Productivity
-				<span class="count">9</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/programming/">
-				Programming
-				<span class="count">9</span>
 			</a>
 		</li>
 		
@@ -708,6 +687,13 @@ sudo<span class="w"> </span>mv<span class="w"> </span>go<span class="w"> </span>
 		</li>
 		
 		<li>
+			<a href="/category/vscode/">
+				VSCode
+				<span class="count">5</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/blogmarks/">
 				Blogmarks
 				<span class="count">5</span>
@@ -729,16 +715,16 @@ sudo<span class="w"> </span>mv<span class="w"> </span>go<span class="w"> </span>
 		</li>
 		
 		<li>
-			<a href="/category/arcade-challenge/">
-				Arcade Challenge
+			<a href="/category/c/">
+				C#
 				<span class="count">4</span>
 			</a>
 		</li>
 		
 		<li>
-			<a href="/category/vscode/">
-				VSCode
-				<span class="count">3</span>
+			<a href="/category/arcade-challenge/">
+				Arcade Challenge
+				<span class="count">4</span>
 			</a>
 		</li>
 		
@@ -781,6 +767,34 @@ sudo<span class="w"> </span>mv<span class="w"> </span>go<span class="w"> </span>
 			<a href="/category/general/">
 				General
 				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/clean-code/">
+				Clean Code
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/refactoring/">
+				Refactoring
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/security/">
+				Security
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/sql-server/">
+				SQL Server
+				<span class="count">2</span>
 			</a>
 		</li>
 		
@@ -862,6 +876,34 @@ sudo<span class="w"> </span>mv<span class="w"> </span>go<span class="w"> </span>
 		</li>
 		
 		<li>
+			<a href="/category/net-core/">
+				.NET Core
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/oop/">
+				OOP
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/troubleshooting/">
+				Troubleshooting
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/documentary/">
+				Documentary
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/xdebug/">
 				XDebug
 				<span class="count">1</span>
@@ -885,13 +927,6 @@ sudo<span class="w"> </span>mv<span class="w"> </span>go<span class="w"> </span>
 		<li>
 			<a href="/category/csr/">
 				CSR
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/clean-code/">
-				Clean Code
 				<span class="count">1</span>
 			</a>
 		</li>
@@ -967,13 +1002,6 @@ sudo<span class="w"> </span>mv<span class="w"> </span>go<span class="w"> </span>
 		</li>
 		
 		<li>
-			<a href="/category/security/">
-				Security
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/cpanel/">
 				cPanel
 				<span class="count">1</span>
@@ -983,13 +1011,6 @@ sudo<span class="w"> </span>mv<span class="w"> </span>go<span class="w"> </span>
 		<li>
 			<a href="/category/introduction/">
 				Introduction
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/refactoring/">
-				Refactoring
 				<span class="count">1</span>
 			</a>
 		</li>

@@ -78,14 +78,68 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/view-battery-status">View battery status</a></h1>
+		<h1 class="heading"><a href="/til/posts/set-up-recaptcha">Set up reCaptcha in Laravel</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>This comes in handy if you're using the terminal in full screen but still want to know your battery life. Just type the following:</p>
+		<p>I mean, come on, you need to have a reCaptcha in your forms, no matter what.</p>
+
+<p>Here are the steps:</p>
+
+<h2>1. Install using Composer</h2>
 
 <div class="codehilite">
-<pre><span></span><code>upower<span class="w"> </span>-i<span class="w"> </span>/org/freedesktop/UPower/devices/battery_BAT0
+<pre><span></span><code>composer<span class="w"> </span>require<span class="w"> </span>anhskohbo/no-captcha
+</code></pre>
+</div>
+
+<h2>2. Add provider and alias to configuration</h2>
+
+<p>Open your <code>config/app.php</code> file and add this to your providers array:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="nx">Anhskohbo\NoCaptcha\NoCaptchaServiceProvider</span><span class="o">::</span><span class="na">class</span><span class="p">,</span>
+<span class="cp">?&gt;</span>
+</code></pre>
+</div>
+
+<p>And this to your aliases array:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="s1">&#39;NoCaptcha&#39;</span> <span class="o">=&gt;</span> <span class="nx">Anhskohbo\NoCaptcha\Facades\NoCaptcha</span><span class="o">::</span><span class="na">class</span><span class="p">,</span>
+<span class="cp">?&gt;</span>
+</code></pre>
+</div>
+
+<h2>3. Publish configuration</h2>
+
+<div class="codehilite">
+<pre><span></span><code>php<span class="w"> </span>artisan<span class="w"> </span>vendor:publish<span class="w"> </span>--provider<span class="o">=</span><span class="s2">&quot;Anhskohbo\NoCaptcha\NoCaptchaServiceProvider&quot;</span>
+</code></pre>
+</div>
+
+<h2>4. Add sitekey and secret key to .env file</h2>
+
+<p>Open your <code>.env</code> file and add this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>NOCAPTCHA_SITEKEY=yoursitekey
+NOCAPTCHA_SECRET=yoursecret
+</code></pre>
+</div>
+
+<h2>How to use it?</h2>
+
+<p>Now, you can use it in your validator using like this:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="nv">$validate</span> <span class="o">=</span> <span class="nx">Validator</span><span class="o">::</span><span class="na">make</span><span class="p">(</span><span class="nx">Input</span><span class="o">::</span><span class="na">all</span><span class="p">(),[</span>
+    <span class="s1">&#39;g-recaptcha-response&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;required|captcha&#39;</span>
+<span class="p">]);</span>
+<span class="cp">?&gt;</span>
 </code></pre>
 </div>
 
@@ -95,8 +149,8 @@
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/linux/">
-					Linux
+				<a href="/category/laravel/">
+					Laravel
 				</a>
 			</li>
 			
@@ -108,75 +162,15 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/set-up-repo">Set up a new repository</a></h1>
+		<h1 class="heading"><a href="/til/posts/clear-all-lines">Clear all lines</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>Are you new to using Git? Then this is for you.</p>
-
-<h2>1. Set up a Git account</h2>
-
-<p>Go to <a href="https://www.github.com">GitHub</a> and create your account with your email address.</p>
-
-<h2>2. Create a repository</h2>
-
-<p>Just create a new project with whatever you wanted. For this, you can just create <code>git-starter-repo</code> or something like that.</p>
-
-<h2>3. Initialize git in your project directory</h2>
-
-<p>Now, go to your project directory and initialize git by doing the following:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>init
-</code></pre>
-</div>
-
-<h2>4. Add your files</h2>
-
-<p>Add your files to the repository by doing the following:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>add<span class="w"> </span>.
-</code></pre>
-</div>
-
-<p>Or if you want add selected files:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>add<span class="w"> </span>file_1<span class="w"> </span>file_2
-</code></pre>
-</div>
-
-<h2>5. Commit your changes</h2>
-
-<p>Before you push your changes, you need to write a message about what changes are done:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;this is my first commit&quot;</span>
-</code></pre>
-</div>
-
-<h2>6. Link your project to the repo</h2>
-
-<p>Do the following to link your project to the repo that you've created in step 1:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>remote<span class="w"> </span>add<span class="w"> </span>origin<span class="w"> </span>https://github.com/youraccount/repositoryname.git
-</code></pre>
-</div>
-
-<h2>7. Push changes</h2>
-
-<p>You can decide which branch you wanted to push but initially, you'll have one branch, which is called <code>master</code>:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>push<span class="w"> </span>-u<span class="w"> </span>origin<span class="w"> </span>master
-</code></pre>
-</div>
-
-<p>Or if you have an existing branch, just replace <code>master</code> with <code>yourbranchname</code>.</p>
-
-<p>Hope that helps you out!</p>
+		<ol>
+<li>Switch to normal mode by pressing <code>ESC</code> key</li>
+<li>Press <code>gg</code> and it will take you to first line of the file.</li>
+<li>Then type <code>dG</code> and it will clear all the lines from start to the end of the file.</li>
+</ol>
 
 	</div>
 	<div class="article-footer">
@@ -184,8 +178,8 @@
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/git/">
-					Git
+				<a href="/category/vim/">
+					VIM
 				</a>
 			</li>
 			
@@ -197,326 +191,35 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/checkout-branch">Checkout branch</a></h1>
+		<h1 class="heading"><a href="/til/posts/find-files-specific-text">Find files containing specific text</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>Want to create a new branch in your project? Simple, just do this:</p>
+		<p>This helped me a lot whenever I'm in a remote server trying to find a keyword or specific text amongst a bunch of files.</p>
+
+<p>This command will save you a lot of time:</p>
 
 <div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>checkout<span class="w"> </span>-b<span class="w"> </span>new_branch
+<pre><span></span><code>grep<span class="w"> </span>-rwn<span class="w"> </span><span class="o">[</span>path<span class="o">]</span><span class="w"> </span>-e<span class="w"> </span><span class="s1">&#39;pattern&#39;</span>
 </code></pre>
 </div>
-
-<p>By doing this, you'll automatically be shifted to a new branch of your project. To check which branch you're working on, type this:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>branch
-</code></pre>
-</div>
-
-<p>And you should be able to see your current branch marked with a <code>*</code>:</p>
-
-<div class="codehilite">
-<pre><span></span><code>master
-*<span class="w"> </span>new_branch
-</code></pre>
-</div>
-
-	</div>
-	<div class="article-footer">
-		<time>May 25th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/git/">
-					Git
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/writing-a-book-on-how-to-build-reactjs-applications">Writing a book on how to build ReactJS applications</a></h1>
-		<p class="description">I'm challenging myself to write a book on how to build simple applications using ReactJS</p>
-	</div>
-	<div class="article-body">
-		<p>Over the past few months, I've been spending some of my free time to learn ReactJS and I've got to say, I really like it and got a hang of it after lots of trials and errors.</p>
-
-<p>Just to make it clear, I didn't become a ReactJS expert or something but I figured that writing a book on something that you've learnt would help you understand the material much more deeper.</p>
-
-<p>And since I do believe in it, I decided to challenge myself to write a book on it.</p>
-
-<h2>What's the aim of the book?</h2>
-
-<p>I aim to cover the fundamentals and concepts of ReactJS using a progressive and an example-driven approach. You know like on how to write reusable UI components, handle user events and interactions and managing state and props of a component.</p>
-
-<p>By the end of this book, the reader will have solid understanding of React's concepts and be able to build cool applications using it.</p>
-
-<h2>When's it going to be released?</h2>
-
-<p>Honestly, I didn't plan on the size of the book yet but the practical content for it i.e. the actual code and applications are ready. I aim to release it somewhere around <strong>late April 2020</strong>.</p>
-
-<h2>Are you planning to monetize it?</h2>
-
-<p>Umm, nope! I believe that knowledge should be accessible for everyone and I plan on making the book open source, so that it can get updated as per the latest changes.</p>
-
-<h2>Conclusion</h2>
-
-<p>I know it's a short article but I feel like I wanted to challenge myself with a small goal for this year.</p>
-
-<p>Let's see how it goes!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>March 13th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/personal-challenge/">
-					Personal Challenge
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/using-laravel-events-and-listeners-in-your-application">Using Laravel events and listeners in your application</a></h1>
-		<p class="description">Sharing my experiences of using events and listeners in my Laravel application.</p>
-	</div>
-	<div class="article-body">
-		<p>Recently, I have started learning Laravel and now, I'm building an application for my new company using this amazing framework.</p>
-
-<p>My senior developer was curious and thought of having a conversation with me that went like this:</p>
-
-<div class="codehilite">
-<pre><span></span><code>Senior dev: Hmm, can I have a look at your code?
-
-Me: Oh sure, here take a look.
-
-Senior: (Goes through project file structure)
-
-Senior: So, have you ever thought of using events in your application?
-
-Me: Yeah, I wrote a custom JavaScript file to handle and fire events on the client-side like validating the forms and passing async requests to the server.
-
-Senior: Hmm, that&#39;s okay but I&#39;m talking using events in Laravel.
-</code></pre>
-</div>
-
-<p>At this point, I was pretty clueless and I didn't know what the heck was going on. Events in PHP? I mean, I know about it in JavaScript because of it's event-driven architecture that we are all familiar with. But in PHP? I didn't know that.</p>
-
-<p>Still confused, he proceeds to explain about it's concepts in an abstract manner and thanks to him, it induced my curiosity by asking myself: <strong><em>What's the deal in between using events over function calls using a route on a standard controller?</em></strong></p>
-
-<p>In today's article, I'll be talking about why and when to use events over function calls using Laravel in your application.</p>
-
-<h2>What's an event?</h2>
-
-<p>An event is a piece of reusable logic stored somewhere in your application that has a set of listeners waiting to be executed, if triggered.</p>
-
-<p>Let's say, you have a simple CRUD application that involves user registration. Whenever a user registers, you may want to perform certain actions, such as:</p>
 
 <ul>
-<li>Adding them into your mailing list</li>
-<li>Confirmation of account</li>
+<li><code>r</code> stands for recursion</li>
+<li><code>n</code> displays the line number</li>
+<li><code>w</code> matches the whole word</li>
 </ul>
 
-<p>You can add more but this is just to give you an idea. Let's see take a look at two different approaches:</p>
-
-<ol>
-<li><a href="#approach-1">Functional</a></li>
-<li><a href="#approach-2">Events and Listeners</a></li>
-</ol>
-
-<h3><a id="approach-1"></a> Functional</h3>
-
-<p>If you're using an MVC framework (Laravel, in our case), you'd do this in a controller with a bunch of methods like so:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="k">namespace</span> <span class="nx">App\Http\Controllers</span><span class="p">;</span>
-
-<span class="k">use</span> <span class="nx">App\Http\Controllers\Controller</span><span class="p">;</span>
-<span class="k">use</span> <span class="nx">App\User</span><span class="p">;</span>
-
-<span class="k">class</span> <span class="nc">UserController</span> <span class="k">extends</span> <span class="nx">Controller</span> <span class="p">{</span>
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">index</span><span class="p">()</span> <span class="p">{</span>
-        <span class="c1">// insert code to view users page</span>
-    <span class="p">}</span>
-
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">create</span><span class="p">(</span><span class="nx">Request</span> <span class="nv">$request</span><span class="p">)</span> <span class="p">{</span>
-        <span class="nv">$arr</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="s1">&#39;username&#39;</span> <span class="o">=&gt;</span> <span class="nv">$request</span><span class="o">-&gt;</span><span class="na">username</span><span class="p">,</span>
-            <span class="s1">&#39;email&#39;</span> <span class="o">=&gt;</span> <span class="nv">$request</span><span class="o">-&gt;</span><span class="na">email</span><span class="p">,</span>
-            <span class="s1">&#39;password&#39;</span> <span class="o">=&gt;</span> <span class="nx">bcrypt</span><span class="p">(</span><span class="s1">&#39;something&#39;</span><span class="p">)</span>
-        <span class="p">];</span>
-
-        <span class="nv">$user</span> <span class="o">=</span> <span class="nx">User</span><span class="o">::</span><span class="na">create</span><span class="p">(</span><span class="nv">$arr</span><span class="p">);</span>
-
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">sendConfirmationEmail</span><span class="p">(</span><span class="nv">$user</span><span class="p">);</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">subscribeToMailingList</span><span class="p">(</span><span class="nv">$user</span><span class="p">);</span>
-    <span class="p">}</span>
-
-    <span class="c1">// Send confirmation email to user</span>
-    <span class="k">private</span> <span class="k">function</span> <span class="nf">sendConfirmationEmail</span><span class="p">(</span><span class="nv">$user</span><span class="p">)</span> <span class="p">{</span>
-        <span class="c1">// insert code</span>
-    <span class="p">}</span>
-
-    <span class="c1">// Subscribe user to mailing list</span>
-    <span class="k">private</span> <span class="k">function</span> <span class="nf">subscribeToMailingList</span><span class="p">(</span><span class="nv">$user</span><span class="p">)</span> <span class="p">{</span>
-        <span class="c1">// insert code</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-<span class="cp">?&gt;</span>
-</code></pre>
-</div>
-
-<p>This is approach is self-contained and simple to follow but you're also adding in a lot of responsibility to your controller.</p>
-
-<p>Not only that, what if the user wants to register from another place in your application, in that case, you'll have to duplicate your logic in multiple places.</p>
-
-<h3><a id="approach-2"></a> Events and Listeners</h3>
-
-<p>Using this approach, you can split this into <mark>Event</mark> and <mark>Listener</mark> files in your application.</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="k">namespace</span> <span class="nx">App\Http\Controllers</span><span class="p">;</span>
-
-<span class="k">use</span> <span class="nx">App\Http\Controllers\Controller</span><span class="p">;</span>
-<span class="k">use</span> <span class="nx">App\User</span><span class="p">;</span>
-
-<span class="k">class</span> <span class="nc">UserController</span> <span class="k">extends</span> <span class="nx">Controller</span> <span class="p">{</span>
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">index</span><span class="p">()</span> <span class="p">{</span>
-        <span class="c1">// insert code to view users page</span>
-    <span class="p">}</span>
-
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">create</span><span class="p">(</span><span class="nx">Request</span> <span class="nv">$request</span><span class="p">)</span> <span class="p">{</span>
-        <span class="nv">$arr</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="s1">&#39;username&#39;</span> <span class="o">=&gt;</span> <span class="nv">$request</span><span class="o">-&gt;</span><span class="na">username</span><span class="p">,</span>
-            <span class="s1">&#39;email&#39;</span> <span class="o">=&gt;</span> <span class="nv">$request</span><span class="o">-&gt;</span><span class="na">email</span><span class="p">,</span>
-            <span class="s1">&#39;password&#39;</span> <span class="o">=&gt;</span> <span class="nx">bcrypt</span><span class="p">(</span><span class="s1">&#39;something&#39;</span><span class="p">)</span>
-        <span class="p">];</span>
-
-        <span class="nv">$user</span> <span class="o">=</span> <span class="nx">User</span><span class="o">::</span><span class="na">create</span><span class="p">(</span><span class="nv">$arr</span><span class="p">);</span>
-
-        <span class="c1">// Emit event</span>
-        <span class="nx">event</span><span class="p">(</span><span class="k">new</span> <span class="nx">UserRegistered</span><span class="p">(</span><span class="nv">$user</span><span class="p">));</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-<span class="cp">?&gt;</span>
-</code></pre>
-</div>
-
-<p>This is how your <mark>UserRegistered</mark> event would look like:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="k">namespace</span> <span class="nx">App\Events</span><span class="p">;</span>
-
-<span class="k">use</span> <span class="nx">Illuminate\Queue\SerializeModels</span><span class="p">;</span>
-<span class="k">use</span> <span class="nx">App\User</span><span class="p">;</span>
-
-<span class="k">class</span> <span class="nc">UserRegistered</span> <span class="p">{</span>
-    <span class="k">use</span> <span class="nx">SerializesModels</span><span class="p">;</span>
-
-    <span class="k">public</span> <span class="nv">$user</span><span class="p">;</span>
-
-    <span class="k">public</span> <span class="k">function</span> <span class="fm">__construct</span><span class="p">(</span><span class="nx">User</span> <span class="nv">$user</span><span class="p">)</span> <span class="p">{</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">user</span> <span class="o">=</span> <span class="nv">$user</span><span class="p">;</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-<span class="cp">?&gt;</span>
-</code></pre>
-</div>
-
-<p>And this is how your <mark>SendConfirmationEmail</mark> listener would look like:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="k">namespace</span> <span class="nx">App\Listeners</span><span class="p">;</span>
-
-<span class="k">use</span> <span class="nx">App\Events\UserRegistered</span><span class="p">;</span>
-
-<span class="k">class</span> <span class="nc">SendConfirmationEmail</span> <span class="p">{</span>
-
-    <span class="k">public</span> <span class="k">function</span> <span class="fm">__construct</span><span class="p">(</span><span class="nx">User</span> <span class="nv">$user</span><span class="p">)</span> <span class="p">{</span>
-        <span class="c1">// insert code</span>
-    <span class="p">}</span>
-
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">handle</span><span class="p">(</span><span class="nx">UserRegister</span> <span class="nv">$event</span><span class="p">)</span> <span class="p">{</span>
-        <span class="c1">// insert code</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-<span class="cp">?&gt;</span>
-</code></pre>
-</div>
-
-<p>Using this approach, you can use the <mark>UserRegistered</mark> event anywhere you wanted in your application. No matter what happens, it will trigger the same actions as it was intended to do so. If you want to add a new functionality, create a new listener and register it with the event in your <mark>EventServiceProvider</mark> file like this:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="k">protected</span> <span class="nv">$listen</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="s1">&#39;App\Events\UserRegistered&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span>
-    <span class="s1">&#39;App\Listeners\SendConfirmationEmail&#39;</span><span class="p">,</span>
-    <span class="p">],</span>
-<span class="p">];</span>
-<span class="cp">?&gt;</span>
-</code></pre>
-</div>
-
-<p>If you follow this approach, your logic complexity is toned down and the controller will have less responsibility.</p>
-
-<h2>Why use events and listeners over function calls?</h2>
-
-<p>Just like this answer that I found on <a href="https://stackoverflow.com/questions/4503723/why-use-event-listeners-over-function-calls">StackOverflow</a> question regarding events and listeners over calling functions:</p>
-
-<blockquote>
-  <p>You might not be in control of the code that's doing the calling. Or even if you are, you don't want to introduce dependencies into that code.</p>
-</blockquote>
-
-<p>Think about it, what if you built an API or library that you want people to use but don't want them to modify the source code. Instead, you could provide a documentation that states specific events are raised under specific circumstances, in turn, they can write code that responds to such events.</p>
-
-<p>I'm sure that there are more examples as to where this methodology might be applied.</p>
-
-<h2>When to use it?</h2>
-
-<p>Truth be told, it depends. If you have a simple application, then a functional approach is all you need but it's a larger and more complicated application, using Events and Listeners can be a better option.</p>
-
-<h2>Conclusion</h2>
-
-<p>Please note, I'm not an expert at this topic as I'm still learning and I thought of sharing what I had learnt. If you have any suggestions or thoughts, please share it with me on <a href="https://twitter.com/megacolorboy">Twitter</a> or <a href="mailto:megacolorboy@gmail.com">send me</a> a message to my inbox.</p>
-
-<p>Hope you liked reading this article.</p>
-
-<p>Stay tuned for more.</p>
-
-<h2>Extras</h2>
-
-<ul>
-<li><a href="https://stackoverflow.com/questions/4503723/why-use-event-listeners-over-function-calls">Why use event listeners over function calls</a></li>
-<li><a href="https://stackoverflow.com/questions/17377442/meaning-of-event-in-php">The meaning of events in PHP</a></li>
-<li><a href="https://laravel.com/docs/6.x/events">Laravel Events</a></li>
-</ul>
+<p>Refer to <code>man find</code> pages for more info.</p>
 
 	</div>
 	<div class="article-footer">
-		<time>February 7th, 2020</time>
+		<time>May 25th, 2020</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/programming/">
-					Programming
+				<a href="/category/terminal/">
+					Terminal
 				</a>
 			</li>
 			
@@ -528,155 +231,25 @@ Senior: Hmm, that&#39;s okay but I&#39;m talking using events in Laravel.
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/the-circle-packing-algorithm">The Circle Packing Algorithm</a></h1>
-		<p class="description">Implemented a mathematically beautiful generative pattern that looks deceivingly complex to the human.</p>
+		<h1 class="heading"><a href="/til/posts/check-file-size">View the filesize in human-readable format</a></h1>
+		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<iframe width="100%" height="485" src="/static/projects/circle-packing"></iframe>
-
-<p>Beautiful, isn't it? It might look complex but it's mathematically quite impressive. Making this pattern wasn't hard but it definitely took a lot of trial and error to get it right and honestly, I don't really know if it's this is the most efficient way to generate this pattern.</p>
-
-<p>This article isn't a tutorial but rather, I'll be talking about the algorithm itself. However, you can check out the source code in my <a href="https://github.com/megacolorboy/BlogProjects">GitHub repository</a>.</p>
-
-<h2>How it works?</h2>
-
-<p>In order to achieve that "stacked" effect, there are two things to keep in mind:</p>
-
-<ol>
-<li>Generate circles with a random radius</li>
-<li>Look for collisions with other circles</li>
-</ol>
-
-<p>The logic is quite similar to the <a href="https://stackoverflow.com/questions/306316/determine-if-two-rectangles-overlap-each-other">Overlapping Rectangles</a> problem except this is done with circles.</p>
-
-<h2>Generate circles with dynamic radius</h2>
-
-<p>This method will help generate valid circles with a random radius. Circles that don't overlap or collide with other circles are considered to be valid.</p>
+		<p>Wanted to view the size of a file in terminal but don't understand the number of bytes displayed? No worries, just type this command and it'll display the size of the in human-readable format:</p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="c1">// Generate a valid circle</span>
-<span class="kd">const</span><span class="w"> </span><span class="nx">generateCircle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nx">newCircle</span><span class="p">;</span>
-<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nx">isValidCircle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">;</span>
-
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kd">let</span><span class="w"> </span><span class="nx">i</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">&lt;</span><span class="nx">attempts</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="nx">newCircle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">width</span><span class="p">),</span>
-<span class="w">            </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">width</span><span class="p">),</span>
-<span class="w">            </span><span class="nx">radius</span><span class="o">:</span><span class="w"> </span><span class="nx">minRadius</span>
-<span class="w">        </span><span class="p">};</span>
-
-<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="nx">checkForCollision</span><span class="p">(</span><span class="nx">newCircle</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="k">continue</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">        </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="nx">isValidCircle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="p">;</span>
-<span class="w">            </span><span class="k">break</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">isValidCircle</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
-
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kd">let</span><span class="w"> </span><span class="nx">i</span><span class="o">=</span><span class="nx">minRadius</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">&lt;=</span><span class="nx">maxRadius</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="nx">newCircle</span><span class="p">.</span><span class="nx">radius</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">i</span><span class="p">;</span>
-<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="nx">checkForCollision</span><span class="p">(</span><span class="nx">newCircle</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="nx">newCircle</span><span class="p">.</span><span class="nx">radius</span><span class="o">--</span><span class="p">;</span>
-<span class="w">            </span><span class="k">break</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="nx">circles</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">newCircle</span><span class="p">);</span>
-<span class="w">    </span><span class="nx">drawCircleOnCanvas</span><span class="p">(</span><span class="nx">context</span><span class="p">,</span><span class="w"> </span><span class="nx">newCircle</span><span class="p">,</span><span class="w"> </span><span class="nx">colors</span><span class="p">[</span><span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">colors</span><span class="p">.</span><span class="nx">length</span><span class="p">)]);</span>
-<span class="p">}</span>
+<pre><span></span><code>du<span class="w"> </span>-sh<span class="w"> </span>filename.ext
 </code></pre>
 </div>
-
-<h2>Look for collision with other circles</h2>
-
-<p>Thanks to some online research, I was able implement the <a href="https://en.wikipedia.org/wiki/Euclidean_distance">Euclidean Distance</a> equation that helped with calculating the distances between each circle and detect for collisions. Along with that, I also found another article on <a href="http://www.mathsmutt.co.uk/files/tcirc.htm">Touching Circles</a> that was quite useful.</p>
-
-<p>These are the formulas used to detect the collision:</p>
-
-<ol>
-<li><p>Find the distance between two centres
-\[ AB = \sqrt{ (x2 - x1)^2 - (y2 - y1)^2} \]</p></li>
-<li><p>Calculate the radii of both circles.
-\[R = r1 + r2\]</p></li>
-</ol>
-
-<p>If the radii is greater than or equal to the euclidean distance of both circles, then it's a valid circle with no collisions.</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="c1">// Check for collision in a canvas</span>
-<span class="kd">const</span><span class="w"> </span><span class="nx">checkForCollision</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">newCircle</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
-
-<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nx">x2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">newCircle</span><span class="p">.</span><span class="nx">x</span><span class="p">;</span>
-<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nx">y2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">newCircle</span><span class="p">.</span><span class="nx">y</span><span class="p">;</span>
-<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nx">r2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">newCircle</span><span class="p">.</span><span class="nx">radius</span><span class="p">;</span>
-
-
-<span class="w">    </span><span class="c1">// Determine the euclidean distance between two circle</span>
-<span class="w">    </span><span class="c1">// using Pythagorean Theorem.</span>
-
-<span class="w">    </span><span class="c1">// Refer to: </span>
-<span class="w">    </span><span class="c1">// https://en.wikipedia.org/wiki/Euclidean_distance</span>
-
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kd">let</span><span class="w"> </span><span class="nx">i</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">&lt;</span><span class="nx">circles</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-
-<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="nx">otherCircle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">circles</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
-<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="nx">r1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">otherCircle</span><span class="p">.</span><span class="nx">radius</span><span class="p">;</span>
-<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="nx">x1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">otherCircle</span><span class="p">.</span><span class="nx">x</span><span class="p">;</span>
-<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="nx">y1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">otherCircle</span><span class="p">.</span><span class="nx">y</span><span class="p">;</span>
-<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="nx">xx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">((</span><span class="nx">x2</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">x1</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="nx">x2</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">x1</span><span class="p">));</span>
-<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="nx">yy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">((</span><span class="nx">y2</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">y1</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="nx">y2</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">y1</span><span class="p">));</span>
-<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="nx">radii</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">r2</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">r1</span><span class="p">;</span>
-<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="nx">euclidDistance</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">Math</span><span class="p">.</span><span class="nx">sqrt</span><span class="p">(</span><span class="nx">xx</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">yy</span><span class="p">);</span>
-
-<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="nx">radii</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="nx">euclidDistance</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="kc">true</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="c1">// Check collision on top</span>
-<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="nx">x2</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">r2</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="nx">width</span><span class="w"> </span><span class="o">||</span><span class="w"> </span>
-<span class="w">        </span><span class="nx">x2</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">r2</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mf">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="kc">true</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="c1">// Check collision on bottom</span>
-<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="nx">y2</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">r2</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="nx">width</span><span class="w"> </span><span class="o">||</span><span class="w"> </span>
-<span class="w">        </span><span class="nx">y2</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">r2</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mf">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="kc">true</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="c1">//else return false</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="kc">false</span><span class="p">;</span>
-<span class="p">}</span>
-</code></pre>
-</div>
-
-<h2>Conclusion</h2>
-
-<p>I'm thinking of implementing more generative patterns like <a href="https://en.wikipedia.org/wiki/Triangle_mesh">Triangular Mesh</a> and Piet Mondrian's <a href="https://en.wikipedia.org/wiki/Composition_with_Red_Blue_and_Yellow">Red, Blue and Yellow composition</a>.</p>
-
-<p>Hope you liked reading this article.</p>
-
-<p>Stay tuned for more!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>December 8th, 2019</time>
+		<time>May 25th, 2020</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/algorithms/">
-					Algorithms
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/art/">
-					Art
+				<a href="/category/terminal/">
+					Terminal
 				</a>
 			</li>
 			
@@ -688,384 +261,178 @@ Senior: Hmm, that&#39;s okay but I&#39;m talking using events in Laravel.
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/deploy-your-laravel-app-on-heroku">Deploy your Laravel app on Heroku</a></h1>
-		<p class="description">Learn how to deploy your Laravel application along with a database on Heroku.</p>
+		<h1 class="heading"><a href="/til/posts/zip-a-file">Zip a file</a></h1>
+		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>In my <a href="/posts/getting-started-with-laravel-homestead">previous article</a>, I talked about how to setup your environment for developing your Laravel applications. Today, I'll be talking about deploying your application along with a database on Heroku.</p>
-
-<p>I wrote a simple CRUD application using Laravel but didn't understand on how to host it. I tried to host it on free shared hosting service but apparently, most of them don't support PHP system calls like <mark>proc_open()</mark>. However, if it was a VPS hosting service, it's supported but ain't nobody got time for shelling out cash for a test drive.</p>
-
-<p>As an alternative, I went on google and discovered that Heroku does support my requirements and it worked flawlessly, which is why I thought of sharing this information to others as well.</p>
-
-<p>If you're a developer who's at the early stages of learning Laravel (like me &#x1f606;), then this article is for you.</p>
-
-<h2>Prerequisites</h2>
-
-<p>You'll be doing some minor configurations, so you should be fine as long as you have a stable internet connection, familiar with using the CLI (Command Line Interface) and have some PHP knowledge.</p>
-
-<p>If you're a Windows user, please <a href="https://gitforwindows.org">Git for Windows</a>. Else, if you're a Linux or macOS user, you should be fine.</p>
-
-<h2>How to deploy?</h2>
-
-<p>You can ignore the first two steps if you already know about Heroku and how to work with it but please follow the rest of the steps:</p>
-
-<ol>
-<li><a href="#step-1">Install Heroku</a></li>
-<li><a href="#step-2">Create a Heroku repository</a></li>
-<li><a href="#step-3">Define Procfile</a></li>
-<li><a href="#step-4">Push Laravel app to repository</a></li>
-<li><a href="#step-5">Add configuration variables</a></li>
-<li><a href="#step-6">Setup your database</a></li>
-</ol>
-
-<h3><a id="step-1"></a> Install Heroku CLI</h3>
-
-<p>You can install this directly from the command line by typing the following:</p>
+		<p>This comes in handy especially whenever you want to download multiples files from a server or take backups.</p>
 
 <div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>snap<span class="w"> </span>install<span class="w"> </span>heroku<span class="w"> </span>--classic
+<pre><span></span><code>zip<span class="w"> </span><span class="o">[</span>option<span class="o">]</span><span class="w"> </span>output_file<span class="w"> </span>input1<span class="w"> </span>input2
 </code></pre>
 </div>
 
-<h3><a id="step-2"></a> Create a Heroku repository</h3>
-
-<p>If you don't have a Heroku account yet, <a href="https://heroku.com">create an account</a> now and once you're done with that, type the following:</p>
+<p>For example: if you want to zip an entire directory with it's file contents, just do this:</p>
 
 <div class="codehilite">
-<pre><span></span><code>heroku<span class="w"> </span>login
+<pre><span></span><code>zip<span class="w"> </span>-r<span class="w"> </span>myfiles.zip<span class="w"> </span>folder/
 </code></pre>
 </div>
 
-<p>Follow the login instructions from the command line prompt, fill in your login credentials and you'll be in!</p>
+	</div>
+	<div class="article-footer">
+		<time>May 25th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/terminal/">
+					Terminal
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
 
-<p>Once, you're done with that, create a repository by doing the following:</p>
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/insert-mode">Insert mode</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>I get it, a lot of people are confused on how to start typing on VIM. All you have to do is press the <code>A</code> key, the editor will be switched to <strong>insert mode</strong>.</p>
+
+<p>Press <code>ESC</code> key to switch back to <strong>normal mode</strong>. </p>
+
+	</div>
+	<div class="article-footer">
+		<time>May 25th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/vim/">
+					VIM
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/check-ram-disk-space">Check RAM and disk space</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<h2>RAM space</h2>
+
+<p>Type the following command to view available memory in your system:</p>
 
 <div class="codehilite">
-<pre><span></span><code>heroku<span class="w"> </span>create
+<pre><span></span><code>free<span class="w"> </span>-h
 </code></pre>
 </div>
 
-<p>In a few seconds, you'll get a randomly generated domain address, which is the link to your Heroku repository. If you can't remember the link, it's fine, you can make changes to it in your Heroku account.</p>
+<h2>Disk space</h2>
 
-<h3><a id="step-3"></a> Define Procfile</h3>
-
-<p>In case, you don't know what's a Procfile, it's a file that specifies the commands that needs to be executed by the application on startup. You can declare a variety of process types, <a href="https://devcenter.heroku.com/articles/procfile">click here</a> to learn more.</p>
-
-<p>Since our application is PHP based, we need to add some specific command that selects the server on boot, I chose Apache server for this project:</p>
+<p>Type the following command to view available disk space in your system:</p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="nb">cd</span><span class="w"> </span>your_laravel_project
-touch<span class="w"> </span>Procfile
-<span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;web: vendor/bin/heroku-php-apache2 web/&quot;</span><span class="w"> </span>&gt;<span class="w"> </span>Procfile
+<pre><span></span><code>df<span class="w"> </span>-h
 </code></pre>
 </div>
 
-<h3><a id="step-4"></a> Push Laravel app to repository</h3>
-
-<p>It's similar to pushing your code into your GitHub, except this time, it's your Heroku repository. Type the following in your command line:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>add<span class="w"> </span>.
-git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;pushing application to repo&quot;</span>
-git<span class="w"> </span>push<span class="w"> </span>heroku<span class="w"> </span>master
-</code></pre>
+	</div>
+	<div class="article-footer">
+		<time>May 25th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/terminal/">
+					Terminal
+				</a>
+			</li>
+			
+		</ul>
+	</div>
 </div>
 
-<p>To check if your application is launched, type the following:</p>
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/symlink-shared-hosting">Symbolic storage link in shared hosting</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>If you're hosting a laravel project via cPanel, chances are that it could be a shared hosting server and that means you can't really use <code>php artisan storage:link</code> for this.
+But don't worry, there's another way to this. Just follow the steps below:</p>
 
-<div class="codehilite">
-<pre><span></span><code>heroku<span class="w"> </span>open
-</code></pre>
-</div>
+<h2>1. Create a symlink</h2>
 
-<p>At this stage, you might face <mark>Error 500</mark>, that's normal because we'll take care of that in the next step.</p>
-
-<h3><a id="step-5"></a> Configure your Heroku environment</h3>
-
-<p>We need to add some config variables that changes the way your app behaves. So, let's start adding it:</p>
-
-<div class="codehilite">
-<pre><span></span><code>heroku<span class="w"> </span>config:set<span class="w"> </span><span class="nv">APP_DEBUG</span><span class="o">=</span><span class="nb">true</span>
-heroku<span class="w"> </span>config:set<span class="w"> </span><span class="nv">APP_KEY</span><span class="o">=</span>yourlaravelapplicationkey
-heroku<span class="w"> </span>config:set<span class="w"> </span><span class="nv">APP_URL</span><span class="o">=</span>https://yourwebsite.herokuapp.com
-heroku<span class="w"> </span>config:set<span class="w"> </span><span class="nv">REDIRECT_HTTPS</span><span class="o">=</span><span class="nb">true</span>
-</code></pre>
-</div>
-
-<p>In this configuration, you have done the following:
-- Enabled debug mode
-- Set your Laravel application's base64 encrypted key
-- The website's URL
-- Force HTTPS redirect (Useful, when you're calling external assets that uses HTTPS protocol)</p>
-
-<p><strong>Note:</strong> You can find your <mark>APP_KEY</mark> in your <mark>.env</mark> file that's found in your project directory.</p>
-
-<h3><a id="step-6"></a> Setup your database</h3>
-
-<p>Initially, I built the database on MySQL but I later learnt that Heroku gives a free PostgreSQL starter database. I've never tried PostgreSQL before but it's quite similar to MySQL, so you shouldn't worry about your schema as Laravel supports PostgreSQL and MySQL databases by default.</p>
-
-<p>Type the following in the command line:</p>
-
-<div class="codehilite">
-<pre><span></span><code>heroku<span class="w"> </span>addons:create<span class="w"> </span>heroku-postgresql:hobby-dev
-</code></pre>
-</div>
-
-<p>This will create a PostgreSQL database and sets a <mark>DATABASE_URL</mark>, which contains the username and password to the database. To check it, type the following:</p>
-
-<div class="codehilite">
-<pre><span></span><code>heroku<span class="w"> </span>config
-</code></pre>
-</div>
-
-<p>Now, go to your project directory and open the <mark>config/database.php</mark>  file and add the following:</p>
+<p>In your <code>public_html/public</code> directory, remove the <code>storage</code> folder. Next, create a <code>symlink.php</code> file in your <code>public_html</code> directory and add the following code:</p>
 
 <div class="codehilite">
 <pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="c1">// Place these variables above</span>
-<span class="nv">$url</span> <span class="o">=</span> <span class="nb">parse_url</span><span class="p">(</span><span class="nb">getenv</span><span class="p">(</span><span class="s2">&quot;DATABASE_URL&quot;</span><span class="p">));</span>
-<span class="nv">$host</span> <span class="o">=</span> <span class="nv">$url</span><span class="p">[</span><span class="s2">&quot;host&quot;</span><span class="p">]</span><span class="o">??</span><span class="k">null</span><span class="p">;</span>
-<span class="nv">$username</span> <span class="o">=</span> <span class="nv">$url</span><span class="p">[</span><span class="s2">&quot;user&quot;</span><span class="p">]</span><span class="o">??</span><span class="k">null</span><span class="p">;</span>
-<span class="nv">$password</span> <span class="o">=</span> <span class="nv">$url</span><span class="p">[</span><span class="s2">&quot;pass&quot;</span><span class="p">]</span><span class="o">??</span><span class="k">null</span><span class="p">;</span>
-<span class="nv">$database</span> <span class="o">=</span> <span class="nb">substr</span><span class="p">(</span><span class="nv">$url</span><span class="p">[</span><span class="s2">&quot;path&quot;</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span><span class="o">??</span><span class="k">null</span><span class="p">;</span>
-
-<span class="c1">// Replace the default connection</span>
-<span class="s1">&#39;default&#39;</span> <span class="o">=&gt;</span> <span class="nx">env</span><span class="p">(</span><span class="s1">&#39;DB_CONNECTION&#39;</span><span class="p">,</span> <span class="s1">&#39;pgsql_prod&#39;</span><span class="p">),</span>
-
-<span class="c1">// Under the connections attribute, create a new connection called &#39;pgsql_prod&#39;</span>
-<span class="s1">&#39;pgsql_production&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span>
-    <span class="s1">&#39;driver&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;pgsql&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;host&#39;</span> <span class="o">=&gt;</span> <span class="nv">$host</span><span class="p">,</span>
-    <span class="s1">&#39;database&#39;</span> <span class="o">=&gt;</span> <span class="nv">$database</span><span class="p">,</span>
-    <span class="s1">&#39;username&#39;</span> <span class="o">=&gt;</span> <span class="nv">$username</span><span class="p">,</span>
-    <span class="s1">&#39;password&#39;</span> <span class="o">=&gt;</span> <span class="nv">$password</span><span class="p">,</span>
-    <span class="s1">&#39;charset&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;utf-8&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;prefix&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;schema&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;public&#39;</span><span class="p">,</span>
-<span class="p">],</span>
+<span class="nv">$targetFolder</span> <span class="o">=</span> <span class="nv">$_SERVER</span><span class="p">[</span><span class="s1">&#39;DOCUMENT_ROOT&#39;</span><span class="p">]</span><span class="o">.</span><span class="s1">&#39;/storage/app/public&#39;</span><span class="p">;</span>
+<span class="nv">$linkedFolder</span> <span class="o">=</span> <span class="nv">$_SERVER</span><span class="p">[</span><span class="s1">&#39;DOCUMENT_ROOT&#39;</span><span class="p">]</span><span class="o">.</span><span class="s1">&#39;/public/storage&#39;</span><span class="p">;</span>
+<span class="nb">symlink</span><span class="p">(</span><span class="nv">$targetFolder</span><span class="p">,</span> <span class="nv">$linkedFolder</span><span class="p">);</span>
+<span class="k">echo</span> <span class="s2">&quot;done&quot;</span><span class="p">;</span>
 <span class="cp">?&gt;</span>
 </code></pre>
 </div>
 
-<p>Push the new changes to your repository:</p>
+<h2>2. Create a custom route to access storage</h2>
+
+<p>Alright, this is kind of a hack but it works extremely fine. Just add the following route in your <code>routes/web.php</code> file:</p>
 
 <div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>add<span class="w"> </span>.
-git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;configured database&quot;</span>
-git<span class="w"> </span>push<span class="w"> </span>heroku<span class="w"> </span>master
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="nx">Route</span><span class="o">::</span><span class="na">get</span><span class="p">(</span><span class="s1">&#39;/storage/anyfolder/{filename}&#39;</span><span class="p">,</span> <span class="k">function</span><span class="p">(</span><span class="nv">$filename</span><span class="p">){</span>
+    <span class="c1">// Your folder path</span>
+    <span class="nv">$folder_path</span> <span class="o">=</span> <span class="nx">storage_path</span><span class="p">(</span><span class="s1">&#39;app/public/anyfolder/&#39;</span><span class="o">.</span><span class="nv">$filename</span><span class="p">);</span>
+
+    <span class="c1">// check if the file exists</span>
+    <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">File</span><span class="o">::</span><span class="na">exists</span><span class="p">(</span><span class="nv">$folder_path</span><span class="p">))</span> <span class="p">{</span>
+        <span class="nx">abort</span><span class="p">(</span><span class="mi">404</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="nv">$file</span> <span class="o">=</span> <span class="nx">File</span><span class="o">::</span><span class="na">get</span><span class="p">(</span><span class="nv">$folder_path</span><span class="p">);</span>
+    <span class="nv">$type</span> <span class="o">=</span> <span class="nx">File</span><span class="o">::</span><span class="na">mimeType</span><span class="p">(</span><span class="nv">$folder_path</span><span class="p">);</span>
+
+    <span class="nv">$response</span> <span class="o">=</span> <span class="nx">Response</span><span class="o">::</span><span class="na">make</span><span class="p">(</span><span class="nv">$file</span><span class="p">,</span> <span class="mi">200</span><span class="p">);</span>
+    <span class="nv">$response</span><span class="o">-&gt;</span><span class="na">header</span><span class="p">(</span><span class="s2">&quot;Content-Type&quot;</span><span class="p">,</span> <span class="nv">$type</span><span class="p">);</span>
+
+    <span class="k">return</span> <span class="nv">$response</span><span class="p">;</span>
+<span class="p">})</span>
+<span class="cp">?&gt;</span>
 </code></pre>
 </div>
 
-<p>One last step, we need to create the tables from your schema, so type the following:</p>
+<p>Now, you can access your images or any other assets easily using: </p>
 
 <div class="codehilite">
-<pre><span></span><code>heroku<span class="w"> </span>run<span class="w"> </span>php<span class="w"> </span>/app/artisan<span class="w"> </span>migrate<span class="w"> </span>--seed
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="nx">asset</span><span class="p">(</span><span class="s1">&#39;storage/anyfolder/&#39;</span><span class="o">.</span><span class="nv">$filename</span><span class="p">)</span>
+<span class="cp">?&gt;</span>
 </code></pre>
 </div>
 
-<p>Follow the command line prompt and voila, you have successfully deployed your Laravel application with a database on Heroku.</p>
-
-<h2>Conclusion</h2>
-
-<p>Well, I hope you found this article really useful especially if you're a beginner. If you do find this useful, please share it with others too!</p>
-
-<p>Stay tuned for more!</p>
+<p>Hope this helps you out!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>November 29th, 2019</time>
+		<time>May 25th, 2020</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/tutorial/">
-					Tutorial
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/getting-started-with-laravel-homestead">Getting started with Laravel Homestead</a></h1>
-		<p class="description">Wanted to install Laravel but scared of configuring files on your host operating system? This article is for you.</p>
-	</div>
-	<div class="article-body">
-		<p>I started learning Laravel and I thought of writing a small tutorial on how to setup your own local development environment for Laravel projects with Laravel Homestead and Vagrant.</p>
-
-<h2>What is Laravel Homestead?</h2>
-
-<p>It's an official package from Laravel that provides a neat development environment that comes along with a Vagrant box that has pre-installed software. Read their <a href="https://laravel.com/docs/6.x/homestead">documentation</a> to know more about it.</p>
-
-<p><strong>Note:</strong> The examples of this tutorial are applicable to any developer that uses any UNIX-based operating systems such as macOS or any Linux distributions like Ubuntu. If you're using Windows, I recommend that you install <a href="https://gitforwindows.org">Git for Windows</a> on your local machine.</p>
-
-<h2>Prerequisites</h2>
-
-<p>The only requirement for this tutorial is that you should be familiar with using the command-line interface.</p>
-
-<h2>Install VirtualBox and Vagrant</h2>
-
-<p><a href="https://virtualbox.org">VirtualBox</a> is the software used to run a virtual machine with a sandbox operating system within your own computer.</p>
-
-<p><a href="https://vagrantup.com">Vagrant</a> is a software that's used to manage a development environment. Through the command-line, you can perform any operation such as installing an OS, configuration, deployment and so on.</p>
-
-<p>You can install VirtualBox and Vagrant via the command-line:</p>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>virtualbox<span class="w"> </span>vagrant
-</code></pre>
-</div>
-
-<p>Once you're done installing them, you should add the <mark>laravel/homestead</mark> box to your Vagrant installation using the following command:</p>
-
-<div class="codehilite">
-<pre><span></span><code>vagrant<span class="w"> </span>box<span class="w"> </span>add<span class="w"> </span>laravel/homestead
-</code></pre>
-</div>
-
-<p>To check if it has been installed, use the following command:</p>
-
-<div class="codehilite">
-<pre><span></span><code>vagrant<span class="w"> </span>box<span class="w"> </span>list<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s2">&quot;homestead&quot;</span>
-</code></pre>
-</div>
-
-<p>Using VirtualBox and Vagrant allows you to simulate your Laravel development environment without messing up any configurations on your hosting system. Even if you did, no worries, Vagrant boxes are disposable, so you can destroy and create a new box again in minutes.</p>
-
-<h2>Download Laravel Homestead</h2>
-
-<p>You can install Homestead by cloning it's repository onto your local machine by typing the following command:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/laravel/homestead.git<span class="w"> </span>~/projects/Homestead
-</code></pre>
-</div>
-
-<h3>Generate configuration file</h3>
-
-<p>Once you're done cloning the repository, go inside the <mark>projects/Homestead</mark> directory and run the <mark>init.sh</mark> or <mark>init.bat</mark> (for Windows) to create the <mark>Homestead.yaml</mark> configuration file:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="nb">cd</span><span class="w"> </span>projects/Homestead
-bash<span class="w"> </span>init.sh
-</code></pre>
-</div>
-
-<p>Open the default <mark>Homestead.yaml</mark> file and make the following changes:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="nn">---</span>
-<span class="nt">ip</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;192.168.10.10&quot;</span>
-<span class="nt">memory</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2048</span>
-<span class="nt">cpus</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
-<span class="nt">provider</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">virtualbox</span>
-
-<span class="nt">authorize</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">~/.ssh/id_rsa.pub</span>
-
-<span class="nt">keys</span><span class="p">:</span>
-<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">~/.ssh/id_rsa</span>
-
-<span class="nt">folders</span><span class="p">:</span>
-<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">map</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">~/projects/code</span>
-<span class="w">      </span><span class="nt">to</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/home/vagrant/projects/code</span>
-
-<span class="nt">sites</span><span class="p">:</span>
-<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">map</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">homestead.test</span>
-<span class="w">      </span><span class="nt">to</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/home/vagrant/projects/code/public</span>
-
-<span class="nt">databases</span><span class="p">:</span>
-<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">homestead</span>
-</code></pre>
-</div>
-
-<h3>Generate SSH key</h3>
-
-<p>The documentation for Laravel Homestead doesn't really talk about generating SSH keys used to access the Vagrant box. Use the following command to generate it using <mark>ssh-keygen</mark> on the command-line:</p>
-
-<div class="codehilite">
-<pre><span></span><code>ssh-keygen<span class="w"> </span>-t<span class="w"> </span>rsa<span class="w"> </span>-C<span class="w"> </span><span class="s2">&quot;root@homestead&quot;</span>
-</code></pre>
-</div>
-
-<h3>Map the project's shared folder</h3>
-
-<p>Make sure that you have created a folder named <mark>code</mark> in your <mark>projects</mark> directory. This folder will keep all of your Laravel project files in sync between your local machine and Homestead environment.</p>
-
-<h2>Installing Laravel</h2>
-
-<p>Time to install Laravel into your virtual machine. So, get switch on your virtual machine by doing the following in the command-line:</p>
-
-<div class="codehilite">
-<pre><span></span><code>vagrant<span class="w"> </span>up
-</code></pre>
-</div>
-
-<p>As you're switching it on for the first time, depending on your internet connection, it might take somewhere around 10-20 minutes to getting it running but it'll be fine afterwards.</p>
-
-<p>Alright, login to your Vagrant machine by doing the following the command-line:</p>
-
-<div class="codehilite">
-<pre><span></span><code>vagrant<span class="w"> </span>ssh
-</code></pre>
-</div>
-
-<p>Once you're in, go to your <mark>code</mark> directory and type the following in the command-line:</p>
-
-<div class="codehilite">
-<pre><span></span><code>composer<span class="w"> </span>global<span class="w"> </span>require<span class="w"> </span>laravel/installer
-</code></pre>
-</div>
-
-<h2>Create a new project</h2>
-
-<p>Now, it's time to create a new Laravel project by simply typing the following command:</p>
-
-<div class="codehilite">
-<pre><span></span><code>laravel<span class="w"> </span>new<span class="w"> </span>projectname
-</code></pre>
-</div>
-
-<p>It'll take some time to generate the necessary files and boilerplate code and after that, you're good to go!</p>
-
-<p>Oh, you should be able to see the Laravel project files in your local machine as it's synced with the virtual machine and local machine. That means, any changes made on either machines will be synced and reflected on both ends.</p>
-
-<h2>Map your hosts file</h2>
-
-<p>One last step, make sure you map your project's test domain onto your local machine's <mark>hosts</mark> file.</p>
-
-<p>Open a text-editor of your choice and do the following in the <mark>etc/hosts</mark> file:</p>
-
-<div class="codehilite">
-<pre><span></span><code>127.0.0.1   localhost
-::1         localhost
-
-# Add this line (Note: It can be any URL)
-127.0.0.1   homestead.test
-</code></pre>
-</div>
-
-<p>Now, go to your browser and type <mark>homestead.test</mark> and you should be able to see your Laravel project's sample layout.</p>
-
-<h2>Conclusion</h2>
-
-<p>As mentioned, in the beginning of this article, I have started to learn Laravel and I'll be building some projects and writing out my experiences about it soon.</p>
-
-<p>I hope you liked reading this article and please share it with others if you do find this tutorial useful.</p>
-
-<p>Stay tuned for more!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>November 16th, 2019</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/tutorial/">
-					Tutorial
+				<a href="/category/laravel/">
+					Laravel
 				</a>
 			</li>
 			
@@ -1113,11 +480,11 @@ bash<span class="w"> </span>init.sh
 		
 	
 		
-			<a class="" href="/pages/4">...</a>
+			<a class="" href="/pages/5">...</a>
 		
 	
 		
-			<a class="" href="/pages/27">27</a>
+			<a class="" href="/pages/28">28</a>
 		
 	
 
@@ -1180,6 +547,20 @@ bash<span class="w"> </span>init.sh
 		</li>
 		
 		<li>
+			<a href="/category/cryptography/">
+				Cryptography
+				<span class="count">12</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/programming/">
+				Programming
+				<span class="count">11</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/javascript/">
 				JavaScript
 				<span class="count">11</span>
@@ -1201,9 +582,9 @@ bash<span class="w"> </span>init.sh
 		</li>
 		
 		<li>
-			<a href="/category/cryptography/">
-				Cryptography
-				<span class="count">11</span>
+			<a href="/category/productivity/">
+				Productivity
+				<span class="count">10</span>
 			</a>
 		</li>
 		
@@ -1211,20 +592,6 @@ bash<span class="w"> </span>init.sh
 			<a href="/category/git/">
 				Git
 				<span class="count">10</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/productivity/">
-				Productivity
-				<span class="count">9</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/programming/">
-				Programming
-				<span class="count">9</span>
 			</a>
 		</li>
 		
@@ -1271,6 +638,13 @@ bash<span class="w"> </span>init.sh
 		</li>
 		
 		<li>
+			<a href="/category/vscode/">
+				VSCode
+				<span class="count">5</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/blogmarks/">
 				Blogmarks
 				<span class="count">5</span>
@@ -1292,16 +666,16 @@ bash<span class="w"> </span>init.sh
 		</li>
 		
 		<li>
-			<a href="/category/arcade-challenge/">
-				Arcade Challenge
+			<a href="/category/c/">
+				C#
 				<span class="count">4</span>
 			</a>
 		</li>
 		
 		<li>
-			<a href="/category/vscode/">
-				VSCode
-				<span class="count">3</span>
+			<a href="/category/arcade-challenge/">
+				Arcade Challenge
+				<span class="count">4</span>
 			</a>
 		</li>
 		
@@ -1344,6 +718,34 @@ bash<span class="w"> </span>init.sh
 			<a href="/category/general/">
 				General
 				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/clean-code/">
+				Clean Code
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/refactoring/">
+				Refactoring
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/security/">
+				Security
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/sql-server/">
+				SQL Server
+				<span class="count">2</span>
 			</a>
 		</li>
 		
@@ -1425,6 +827,34 @@ bash<span class="w"> </span>init.sh
 		</li>
 		
 		<li>
+			<a href="/category/net-core/">
+				.NET Core
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/oop/">
+				OOP
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/troubleshooting/">
+				Troubleshooting
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/documentary/">
+				Documentary
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/xdebug/">
 				XDebug
 				<span class="count">1</span>
@@ -1448,13 +878,6 @@ bash<span class="w"> </span>init.sh
 		<li>
 			<a href="/category/csr/">
 				CSR
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/clean-code/">
-				Clean Code
 				<span class="count">1</span>
 			</a>
 		</li>
@@ -1530,13 +953,6 @@ bash<span class="w"> </span>init.sh
 		</li>
 		
 		<li>
-			<a href="/category/security/">
-				Security
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/cpanel/">
 				cPanel
 				<span class="count">1</span>
@@ -1546,13 +962,6 @@ bash<span class="w"> </span>init.sh
 		<li>
 			<a href="/category/introduction/">
 				Introduction
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/refactoring/">
-				Refactoring
 				<span class="count">1</span>
 			</a>
 		</li>

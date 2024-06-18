@@ -78,340 +78,56 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/one-year-of-writing-til-articles">One year of writing TIL articles</a></h1>
-		<p class="description">A little self-reflection on how writing TIL articles has improved my productivity and learning.</p>
-	</div>
-	<div class="article-body">
-		<p>Last year, around this time, I was working from home due to the COVID-19 restrictions placed by the UAE Government.</p>
-
-<p>During this time, I noticed that I ran out of ideas for my blog and didn't even get time to maintain it for a long time.</p>
-
-<p>Then, I came across <a href="https://github.com/jbranchaud/til">Josh Branchaud's TIL collection</a>, which inspired me to start my own TIL section in my blog. At first, I had the idea of merging it with my main blog but then, I thought of keeping it separate and well, fast-forward to a year now, it's been one of the most productive platforms for writing short articles based on whatever I have learnt or solved.</p>
-
-<p>As for those of you who might not know, TIL a.k.a stands for <strong>Today I Learned</strong> and what I really liked about it is that there isn't any barrier that stops you from writing a short article and that was the one thing that motivated me to write something on my blog.</p>
-
-<h2>Has it helped it you?</h2>
-
-<p>Yes, it did help me in two ways.</p>
-
-<p>Professionally, it has motivated me to learn more about my field and share my knowledge about whatever I learned while solving a particular problem or a tip that I found useful. The idea was likened to a personal StackOverflow repository that I would often revisit to refresh my memory.</p>
-
-<p>Personally, it helped me reflect my values as a programmer and made me realize that there's a lot of things to learn out there and it's pretty much endless as there's always something to learn every single day. And yes, it helped me improve my writing abilities too.</p>
-
-<p>Although, this article resides in a what I would call it as a "Technical blog", I guess, this applies to everyone who wants to refresh their writing productivity and help them get started back on the tracks again.</p>
-
-<p>Hope you liked reading this article.</p>
-
-<p>Stay tuned for more!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>June 4th, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/selfreflection/">
-					Self-reflection
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/understanding-spf-dkim-and-dmarc-protocols">Understanding SPF, DKIM and DMARC protocols</a></h1>
-		<p class="description">An insight into the three main email security protocols that protects your email from malicious attackers.</p>
-	</div>
-	<div class="article-body">
-		<p>Today, email spam is one of the most common cyberattacks conducted by people with malicious intent intending to steal your passwords and personal credentials, leading users to phishing sites to steal bank account details, identity theft and so on.</p>
-
-<p>Because of this, ISPs and email providers such as Gmail and Office 365 are taking anti-spam measures by enforcing stricter protocols in the type of emails that they receive, so it's good to implement those protocols and ensure that your email gets delivered and not delayed or worse, rejected by the mail servers.</p>
-
-<h2>So, what are those protocols?</h2>
-
-<p><a href="#spf-record">SPF</a>, <a href="#dkim-record">DKIM</a> and <a href="#dmarc-record">DMARC</a> are the three main secure protocols used to authenticate your mail server and this will prove the ISPs and other mail service providers that the mail being sent is legitimate and authorized.</p>
-
-<h2><a id="spf-record"></a> What is SPF?</h2>
-
-<p>It's an acronym for <strong>Sender Policy Framework</strong>. SPF is nothing but a DNS TXT record that specifies the server(s) and IP addresses that are allowed to send email from a specific domain.</p>
-
-<p>Assuming you are the sender, just think of sending a postcard to your friend in which you add your address as well, so that your friend knows who the recipient is and he/she would most likely open it because they trust it.</p>
-
-<p>But in technical terms, the actual recipient is not the user but rather the mail server that receives the mail.</p>
-
-<h3>Create an SPF record</h3>
-
-<p>An SPF record is a very simple string and it can be easily created. However, there are a few parts to it:</p>
-
-<ol>
-<li>Version of SPF used.</li>
-<li>IP addresses that are authorized to send emails.</li>
-<li>Third party domain(s) that are authorized to send emails.</li>
-<li>An ending tag named "all" which tells the receiving server on what policy to apply if the sending server is not a part of the SPF record.</li>
-</ol>
-
-<p>So, let's what does it look like and what each part of it does:</p>
-
-<div class="codehilite">
-<pre><span></span><code>v=spf1 ip4:111.111.111.111 include:example-domain.com -all
-</code></pre>
-</div>
-
-<p><code>v=spf1</code> states the SPF version being implemented. Currently, there's no any other version at this point. So, it should always stay as this version until another version is released.</p>
-
-<p><code>ip4:111.111.111.111</code> is the IP address of the mail server/domain that's authorized to send emails for that domain. You can use multiple IP addresses and can be listed individually like this <code>ip4:111.111.111.111 ip4:222.222.222.222</code> or through a <a href="https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing">CIDR</a> like <code>ip4:111.111.111.0/20</code>. If both IPv4 and IPv6 addresses are being used by mail server, make sure that both of those addresses are being listed.</p>
-
-<p><code>include:example-domain.com</code> is a secondary domain that's authorized to send emails on behalf of the primary mail domain(s) listed. Just like the previous rule above, you can add multiple secondary domains but bear in mind that only a maximum of 10 domains are allowed for any sending domain.</p>
-
-<p><code>-all</code> is a tag that instructs the receiving server on how to handle messages from a domain that isn't a part of the SPF record. There are some options and they are all dictated by a single character that precedes the <code>all</code> keyword. The options are:</p>
-
-<ul>
-<li><code>-all</code> means hard fail. The receiving server should reject the email if the sender domain is not authorized.</li>
-<li><code>~all</code> means soft fail. The receiving server can flag it as a possible spam if the sender domain is not authorized. </li>
-<li><code>+all</code> means authorized. The receiving server allows the email even if the sender domain is not authorized. Now, this is not recommended and please do not use this option.</li>
-</ul>
-
-<h2><a id="dkim-record"></a> What is DKIM?</h2>
-
-<p>It's an acronym for <strong>DomainKeys Identified Mail</strong> a.k.a Email signing. Just like <a href="#spf-record">SPF</a>, DKIM is also a simple DNS TXT record that tells the receiving server that the mail is certified which allows to build a trust between both the sending and receiving servers.</p>
-
-<p>To handle this trust, DKIM makes uses of an RSA cryptographic algorithm to create a pair of <strong>public</strong> and <strong>private</strong> encryption keys. The private key will remain on the server (i.e. the mail server) whereas the public key is placed in your DNS records.</p>
-
-<h2>How to create a DKIM record?</h2>
-
-<p>Depending on your mail provider, it can be easily generated by tools provided by them and once generated, it can be copy-pasted to the DNS records.</p>
-
-<p>This is how a typical DKIM record would look like:</p>
-
-<div class="codehilite">
-<pre><span></span><code>v=DKIM1; k=rsa;
-p=iHeFQ+7rCiSQs3DPjR2eUSZSv4i/Kp+sipRfVH7BGf+SxcwOkX7X8R1RVObMQsFcbIxnrq7Ba2QCf0YZlL9iqJf32V+baDI8IykuDztuoNUF2Kk0pawZkbSPNHYRtLxV2CTOtc+x4eIeSeYptaiu7g7GupekLZ2DE1ODHhuP4I=
-</code></pre>
-</div>
-
-<p>Regardless of how it's being generated, this is what each part of the header means:</p>
-
-<p><code>v=DKIM1</code> is the DKIM protocol version used.</p>
-
-<p><code>p=</code> is the Base64 encoded public key generated.</p>
-
-<p><code>k=</code> is the mechanism used to decode the DKIM signature. The encryption key is usually based on <code>rsa-sha1</code> or <code>rsa-sha256</code> signing algorithm.</p>
-
-<p>You can use DMARC analyzer's <a href="https://dmarcanalyzer.com/dkim/dkim-checker">DKIM checker</a> to check if your DKIM record is valid.</p>
-
-<h2><a id="dmarc-record"></a> What is DMARC?</h2>
-
-<p>It's an acronym for <strong>Domain-based Message Authentication, Reporting and Conformance</strong>. This protocol is built around SPF and DKIM and it ensures the following:</p>
-
-<ol>
-<li>Verifies that the sender's email is protected by SPF and DKIM protocols.</li>
-<li>Instructs the receiving mail server on what to do if the authentication fails.</li>
-<li>Provides a way for the receiving server to send a report to the sender about the DMARC evaluation i.e. whether it passed or failed.</li>
-</ol>
-
-<p>If you have come this far in the article, you might have understood why both <a href="#spf-record">SPF</a> and <a href="#dkim-record">DKIM</a> were explained and why they are quite necessary.</p>
-
-<h2>How to create a DMARC record?</h2>
-
-<p>Once you have both SPF and DKIM records in place, then it's easy to create your DMARC record. There are many sites and I would recommend you to try MXToolbox's <a href="https://mxtoolbox.com/DMARCRecordGenerator.aspx">DMARC Record Generator</a>.</p>
-
-<p>This is how a DMARC record would look like:</p>
-
-<div class="codehilite">
-<pre><span></span><code>v=DMARC1; p=none; fo=1; rua=mailto:address@example.com;
-</code></pre>
-</div>
-
-<p>And here's what each part of the header translates to:</p>
-
-<p><code>v</code> is the version tag, similar to the SPF record. It should always be <code>DMARC1</code> in the record.</p>
-
-<p><code>p</code> is the policy tag. <code>none</code> means to not do anything to the email, <code>quarantine</code> means to flag it as spam and <code>reject</code> means to reject the email.</p>
-
-<p><code>fo</code> is the tag that lets the receiving servers know that failed messages must be returned to the sender or not. There are four values for this tag:</p>
-
-<ul>
-<li><code>0</code>: Generate a report if both DKIM and SPF produce a "Pass" result.</li>
-<li><code>1</code>: Generate a report if both DKIM and SPF produce a result other than "Pass".</li>
-<li><code>d</code>: Generate a report if the email had failed the DKIM evaluation.</li>
-<li><code>s</code>: Generate a report if the email had failed the SPF evaluation.</li>
-</ul>
-
-<p>It's actually recommended to use <code>fo=1</code> which can help you look for any email delivery issues.</p>
-
-<p><code>rua</code> tells the receiving server on where to send the aggregate reports. This could provide insights into the health of the email server and can help identify any malicious activities.</p>
-
-<p>There are many optional tags that can be used but these are the tags are most commonly used by default.</p>
-
-<h2>Conclusion</h2>
-
-<p>With the increase in spam emails, it's good to take such preventive measures to ensure that you are following best practices and doing your part to prevent malicious emails and other security related issues.</p>
-
-<p>If you want to read more about these protocols, you can read the following links recommended below:</p>
-
-<ul>
-<li><a href="https://dmarcanalyzer.com/spf/">Sender Policy Framework (SPF)</a></li>
-<li><a href="https://dkim.org">DomainKeys Identified Mail</a></li>
-<li><a href="https://dmarc.org">Domain-based Message Authentication, Reporting and Conformance</a></li>
-</ul>
-
-<p>Hope you liked reading this article! &#x1F604;</p>
-
-	</div>
-	<div class="article-footer">
-		<time>April 10th, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/email/">
-					Email
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/security/">
-					Security
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/find-directories-created-within-a-date-range">Find directories created within a date range</a></h1>
+		<h1 class="heading"><a href="/til/posts/how-to-fetch-a-json-object-from-an-array-of-json-objects-by-property-value">How to fetch a JSON object from an array of JSON objects by property value?</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>Executing these commands helps me create a sorted list of files/directories created within a specific date range:</p>
+		<p>Say, for example, you have an array of JSON objects that contains the following data:</p>
 
 <div class="codehilite">
-<pre><span></span><code>touch<span class="w"> </span>-t<span class="w"> </span><span class="m">202104100000</span><span class="w"> </span>start
-touch<span class="w"> </span>-t<span class="w"> </span><span class="m">202104150000</span><span class="w"> </span>stop
-find<span class="w"> </span>.<span class="w"> </span>-type<span class="w"> </span>d<span class="w"> </span>-maxdepth<span class="w"> </span><span class="m">1</span><span class="w"> </span>-newer<span class="w"> </span>start<span class="w"> </span><span class="se">\!</span><span class="w"> </span>-newer<span class="w"> </span>stop<span class="w"> </span><span class="p">|</span><span class="w"> </span>sort<span class="w"> </span>&gt;&gt;<span class="w"> </span>directories.txt
+<pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">arrOfObjects</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;John Doe&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nx">age</span><span class="o">:</span><span class="w"> </span><span class="mf">20</span><span class="p">,</span>
+<span class="w">        </span><span class="nx">email</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;john.doe@email.com&quot;</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Bob Smith&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nx">age</span><span class="o">:</span><span class="w"> </span><span class="mf">56</span><span class="p">,</span>
+<span class="w">        </span><span class="nx">email</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;bob.smith@email.com&quot;</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="p">];</span>
 </code></pre>
 </div>
 
-<p>Someday, these commands shall come in handy, bud! &#x1F60E;</p>
+<p>Hmm, that's pretty basic but how will get the information of "Bob Smith" using his email? Well, that's where the <code>Array.find()</code> method comes into the picture.</p>
 
-	</div>
-	<div class="article-footer">
-		<time>April 10th, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/unix/">
-					UNIX
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/perform-git-operations-using-path-directory">Perform Git operations using path directory</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>The <code>-C</code> flag means the path of the directory and using this flag, you can perform any Git operations outside the project's directory without having to enter the directory all the time:</p>
+<p>Try reading the <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/find">Mozilla Documentation</a> on <code>Array.prototype.find()</code> and implement the following:</p>
 
 <div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>-C<span class="w"> </span>/path/to/directory<span class="w"> </span>&lt;command&gt;
+<pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;email&quot;</span><span class="p">;</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">valueToFind</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;bob.smith@email.com&quot;</span><span class="p">;</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">arrOfObjects</span><span class="p">.</span><span class="nx">find</span><span class="p">(</span><span class="nx">obj</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">obj</span><span class="p">[</span><span class="nx">key</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nx">value</span><span class="p">;</span>
+<span class="p">});</span>
+
+<span class="c1">//This should give you the record of Bob Smith.</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">result</span><span class="p">)</span><span class="w"> </span>
 </code></pre>
 </div>
 
-<p>Hope this tip helps you out!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>April 10th, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/git/">
-					Git
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/exclude-directories-while-searching-for-a-pattern-in-files">Exclude directories while searching for a pattern in files</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Looking for a specific text pattern in a directory but wanted to avoid some paths? Here's a quick command that you can try:</p>
-
-<div class="codehilite">
-<pre><span></span><code>grep<span class="w"> </span>-R<span class="w"> </span>--exclude-dir<span class="o">=</span>path/to/directory<span class="w"> </span><span class="s1">&#39;some pattern&#39;</span><span class="w"> </span>/path/to/search
-</code></pre>
-</div>
-
-<p>Hope this helps you out!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>April 10th, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/unix/">
-					UNIX
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/fetch-selected-files-from-your-remote-repository">Fetch selected files from your remote repository</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Wanted to fetch a specific file from your Git repository except that the repository doesn't exist in your local machine?</p>
-
-<p>Try this out:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>init
-git<span class="w"> </span>remote<span class="w"> </span>add<span class="w"> </span>origin<span class="w"> </span>&lt;your_repo_link&gt;.git
-git<span class="w"> </span>fetch
-git<span class="w"> </span>checkout<span class="w"> </span>&lt;your_branch_name&gt;<span class="w"> </span>--<span class="w"> </span>&lt;/path/to/file&gt;
-</code></pre>
-</div>
-
-<p>After executing these commands, you should be able to see the selected directory/file in your project directory.</p>
+<p>This works fine on all browsers except <strong>Internet Explorer</strong> (I mean, it sucks anyways!), which is okay!</p>
 
 <p>Hope you found this useful!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>April 10th, 2021</time>
+		<time>August 13th, 2021</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/git/">
-					Git
+				<a href="/category/javascript/">
+					JavaScript
 				</a>
 			</li>
 			
@@ -423,14 +139,201 @@ git<span class="w"> </span>checkout<span class="w"> </span>&lt;your_branch_name&
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/find-directories-older-than-a-specific-date-and-sorted-by-size">Find directories older than a specific date and sorted by size</a></h1>
+		<h1 class="heading"><a href="/til/posts/how-to-update-values-of-a-column-from-one-table-to-another">How to update values of a column from one table to another?</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>Wanted to see which directories were created on an older date along with their sizes? Try this:</p>
+		<p>Sometimes, I come across situations where I would need to update a newly added in a pivot table and this query does come in handy:</p>
 
 <div class="codehilite">
-<pre><span></span><code>find<span class="w"> </span>.<span class="w"> </span>-type<span class="w"> </span>d<span class="w"> </span>-maxdepth<span class="w"> </span><span class="m">1</span><span class="w"> </span>!<span class="w"> </span>-newermt<span class="w"> </span><span class="s2">&quot;2021-04-10&quot;</span><span class="w"> </span>-exec<span class="w"> </span>du<span class="w"> </span>-sh<span class="w"> </span><span class="o">{}</span><span class="w"> </span><span class="se">\;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sort<span class="w"> </span>-h<span class="w"> </span>&gt;&gt;<span class="w"> </span>oldprojectsizes.txt
+<pre><span></span><code><span class="k">UPDATE</span><span class="w"> </span><span class="n">table_a</span><span class="w"> </span><span class="k">INNER</span><span class="w"> </span><span class="k">JOIN</span><span class="w"> </span><span class="n">table_b</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">table_b</span><span class="p">.</span><span class="n">col_x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">table_a</span><span class="p">.</span><span class="n">col_x</span><span class="w"> </span><span class="k">SET</span><span class="w"> </span><span class="n">table_a</span><span class="p">.</span><span class="n">col_y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">table_b</span><span class="p">.</span><span class="n">col_y</span><span class="p">;</span>
+</code></pre>
+</div>
+
+<p>Hope you found this useful too!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>August 13th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/mysql/">
+					MySQL
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-switch-between-integrated-terminal-and-editor-in-visual-studio-code">How to switch between integrated terminal and editor in Visual Studio Code?</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>While, I'm trying to adjust myself to using Visual Studio Code, I found it quite annoying that there isn't a shortcut to switch focus between the editor and the integrated terminal. For a guy, like me, who makes use of the keyboard all the time, that's pretty important.</p>
+
+<p>I did some research and found a way on how to do it. Just type <code>Ctrl+Shift+P</code> and type <code>Open Keyboard Shortcuts</code> and add these lines:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span><span class="nt">&quot;key&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ctrl+`&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;command&quot;</span><span class="p">:</span><span class="s2">&quot;workbench.action.terminal.focus&quot;</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="nt">&quot;key&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ctrl+`&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;command&quot;</span><span class="p">:</span><span class="s2">&quot;workbench.action.focusActiveEditorGroup&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;when&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;terminalFocus&quot;</span><span class="p">},</span>
+<span class="p">]</span>
+</code></pre>
+</div>
+
+<p>Save the file and now, you'll be able to switch between the two by pressing <code>Ctrl+`</code> keys.</p>
+
+<p>Hope you found this tip useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>July 21st, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/vscode/">
+					VSCode
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/redirect-from-http-to-https-in-apache-virtualhosts">Redirect from HTTP to HTTPS in Apache VirtualHosts</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Here's a simple technique on how I learned to redirect a site from HTTP to HTTPS automatically using Apache's VirtualHost configuration.</p>
+
+<p>Go to your configuration file or <code>000-default.conf</code> and modify your configuration to something like this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>&lt;VirtualHost<span class="w"> </span>*:80&gt;
+<span class="w">    </span>ServerName<span class="w"> </span>your.domain.com
+<span class="w">    </span>Redirect<span class="w"> </span>permanent<span class="w"> </span>/<span class="w"> </span>https://your.domain.com/
+&lt;/VirtualHost&gt;
+
+&lt;VirtualHost<span class="w"> </span>*:443&gt;
+<span class="w">    </span>ServerName<span class="w"> </span>your.domain.com
+<span class="w">    </span>SSLEngine<span class="w"> </span>On
+<span class="w">    </span><span class="c1"># insert code here...</span>
+&lt;/VirtualHost&gt;
+</code></pre>
+</div>
+
+<p>Save the file and check if the configuration is correct before your restart the server:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>apachectl<span class="w"> </span>configtest
+</code></pre>
+</div>
+
+<p>If you get the message, <code>Syntax OK</code>, then go ahead and restart the server:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class="w"> </span>apache2
+</code></pre>
+</div>
+
+<p>Now, your visitors will be redirected from HTTP to HTTPS automatically!</p>
+
+<p>Hope you found this tip useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>July 9th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/quick-search-for-file-in-your-workspace-in-visual-studio-code">Quick Search for file in your workspace in Visual Studio Code</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Recently, started using Visual Studio Code as I'm yet figure out a way to install Sublime Text on Void Linux (using it as my current daily driver).</p>
+
+<p>I'm always used to looking for my files using keyboard shortcuts in Sublime Text and I was kind of surprised this feature isn't enabled by default in Visual Studio Code.</p>
+
+<p>Anyway, after a little digging, I found out that adding this line to your <code>settings.json</code> file would allow you to look for files in your workspace:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nt">&quot;search.useIgnoreFiles&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+</code></pre>
+</div>
+
+<p>And, now try <code>Ctrl+P</code> and you'll be able to search for your file(s) easily.</p>
+
+<p>Hope you found this tip useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>July 9th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/vscode/">
+					VSCode
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-install-composer-manually">How to install Composer manually?</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>You may wonder <strong>"why not install Composer via apt or yum package manager?"</strong> and yes, it can be installed that way too.</p>
+
+<p>But what if you are using old composer packages or you wanted to skip the checks done during the interactive installation routine, this could be the way for you.</p>
+
+<p>I wouldn't really call it an advanced technique or something but if you know what you're doing, then you should be in the right direction.</p>
+
+<p>The below snippet will show you how to install it manually:</p>
+
+<div class="codehilite">
+<pre><span></span><code>wget<span class="w"> </span><span class="s2">&quot;https://getcomposer.org/download/VERSION_X.X.X/composer.phar&quot;</span>
+sudo<span class="w"> </span>mv<span class="w"> </span>composer.phar<span class="w"> </span>/usr/local/bin/composer
+sudo<span class="w"> </span>chmod<span class="w"> </span>a+x<span class="w"> </span>/usr/local/bin/composer
+</code></pre>
+</div>
+
+<h2>Yes, that's it!</h2>
+
+<p>By placing Composer in the <code>/usr/local/bin</code> directory, it will be accessible from any directory within the system and you can run it globally.</p>
+
+<p>To check if you've installed it correctly, just do the following:</p>
+
+<div class="codehilite">
+<pre><span></span><code>composer<span class="w"> </span>-V
 </code></pre>
 </div>
 
@@ -438,12 +341,12 @@ git<span class="w"> </span>checkout<span class="w"> </span>&lt;your_branch_name&
 
 	</div>
 	<div class="article-footer">
-		<time>April 10th, 2021</time>
+		<time>July 3rd, 2021</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/unix/">
-					UNIX
+				<a href="/category/tooling/">
+					Tooling
 				</a>
 			</li>
 			
@@ -455,29 +358,114 @@ git<span class="w"> </span>checkout<span class="w"> </span>&lt;your_branch_name&
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-change-the-character-encoding-of-a-file-via-terminal">How to change the character encoding of a file via Terminal?</a></h1>
+		<h1 class="heading"><a href="/til/posts/prevent-vim-from-creating-swapfiles">Prevent VIM from creating swapfiles</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>Sometimes, I face character encoding issues while making minor edits via a SFTP console connected to a Linux server. I found a quick hack to change the file encoding using <code>vim</code> on the command line.</p>
+		<p>I like VIM and use it regularly to write and edit code on a daily basis but I always find the creation of <code>.swp</code> files really annoying.</p>
 
-<p>In this example, I'm changing the encoding of the file to <code>unix</code>:</p>
+<p>If you find them annoying too, you disable them temporarily in the editor, like this:</p>
 
 <div class="codehilite">
-<pre><span></span><code>vim<span class="w"> </span><span class="nv">$filename</span><span class="w"> </span>+<span class="s2">&quot;set ff=unix&quot;</span><span class="w"> </span>+wq
+<pre><span></span><code><span class="p">:</span><span class="k">set</span> <span class="nb">noswapfile</span>
 </code></pre>
 </div>
 
-<p>Hope you found this helpful!</p>
+<p>Or if you want to disable it permanently, just add this line in your <code>.vimrc</code> file:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">set</span> <span class="nb">noswapfile</span>
+</code></pre>
+</div>
+
+<p>Don't get me wrong, I'm not saying that you should dislike <code>.swp</code> files because if the editor crashes or your computer/server crashes in midway, those files can save your progress.</p>
+
+<p>Hope you found this tip useful!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>April 10th, 2021</time>
+		<time>July 3rd, 2021</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/unix/">
-					UNIX
+				<a href="/category/vim/">
+					VIM
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-setup-rsync-with-passwordless-ssh-on-unixlinux">How to setup rsync with passwordless SSH on UNIX/Linux?</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Tired of ensuring if whether each file in every server is synced? Planning on doing automated backups? If so, then this technique should come in handy for you.</p>
+
+<p>Interested? Then follow the steps below:</p>
+
+<h2>Check if rsync over SSH works</h2>
+
+<p>Before you start, please ensure that you can <code>rsync</code> to your intended server over <code>ssh</code> using a password.
+With the following example, you can just send a simple file over to the intended server and see if it works or not:</p>
+
+<div class="codehilite">
+<pre><span></span><code>rsync<span class="w"> </span>-avz<span class="w"> </span>-e<span class="w"> </span>ssh<span class="w"> </span>test.txt<span class="w"> </span>username@REMOTE_SERVER_IP_OR_DOMAIN:/path/to/folder/
+</code></pre>
+</div>
+
+<p>Once you execute this command on the terminal, it'll prompt you for a password on the remote server, if it does, then it works.</p>
+
+<h2>Generate SSH Keys</h2>
+
+<p>If you want to do a passwordless SSH, you need to generate public and private SSH keys on the local server by typing the following command on the terminal:</p>
+
+<div class="codehilite">
+<pre><span></span><code>ssh-keygen
+Enter<span class="w"> </span>passphrase<span class="w"> </span><span class="o">(</span>empty<span class="w"> </span><span class="k">for</span><span class="w"> </span>no<span class="w"> </span>passphrase<span class="o">)</span>:
+Enter<span class="w"> </span>same<span class="w"> </span>passphrase<span class="w"> </span>again:
+</code></pre>
+</div>
+
+<p>If you're prompted to enter a passphrase, just hit <code>Enter</code> and proceed until the key is generated. Once the keys are generated, they'll be in the <code>~/.ssh</code> directory on your local server.</p>
+
+<h2>Copy public key to remote server</h2>
+
+<p>Using <code>ssh-copy-id</code>, you can copy the public key to the remote server:</p>
+
+<div class="codehilite">
+<pre><span></span><code>ssh-copy-id<span class="w"> </span>-i<span class="w"> </span>~/.ssh/id_rsa.pub<span class="w"> </span>REMOTE_SERVER_IP_OR_DOMAIN
+</code></pre>
+</div>
+
+<p>Once executed, you'll be prompted to enter the password of the account on the remote server and if successful, the public key will be copied to the remote server and will be stored in it's appropriate location.</p>
+
+<h2>Perform Rsync over passwordless SSH</h2>
+
+<p>If you've come this far, then you should be able to SSH to the remote server without entering the password:</p>
+
+<div class="codehilite">
+<pre><span></span><code>ssh<span class="w"> </span>REMOTE_SERVER_IP_OR_DOMAIN
+</code></pre>
+</div>
+
+<p>If it works, then perform the <code>rsync</code> operation again <a href="#rsync-operation">(above)</a> and this time, it shouldn't prompt you to enter any password.</p>
+
+<p>Hope you liked reading this short article!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>July 3rd, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
 				</a>
 			</li>
 			
@@ -525,11 +513,11 @@ git<span class="w"> </span>checkout<span class="w"> </span>&lt;your_branch_name&
 		
 	
 		
-			<a class="" href="/pages/17">...</a>
+			<a class="" href="/pages/18">...</a>
 		
 	
 		
-			<a class="" href="/pages/27">27</a>
+			<a class="" href="/pages/28">28</a>
 		
 	
 
@@ -592,6 +580,20 @@ git<span class="w"> </span>checkout<span class="w"> </span>&lt;your_branch_name&
 		</li>
 		
 		<li>
+			<a href="/category/cryptography/">
+				Cryptography
+				<span class="count">12</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/programming/">
+				Programming
+				<span class="count">11</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/javascript/">
 				JavaScript
 				<span class="count">11</span>
@@ -613,9 +615,9 @@ git<span class="w"> </span>checkout<span class="w"> </span>&lt;your_branch_name&
 		</li>
 		
 		<li>
-			<a href="/category/cryptography/">
-				Cryptography
-				<span class="count">11</span>
+			<a href="/category/productivity/">
+				Productivity
+				<span class="count">10</span>
 			</a>
 		</li>
 		
@@ -623,20 +625,6 @@ git<span class="w"> </span>checkout<span class="w"> </span>&lt;your_branch_name&
 			<a href="/category/git/">
 				Git
 				<span class="count">10</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/productivity/">
-				Productivity
-				<span class="count">9</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/programming/">
-				Programming
-				<span class="count">9</span>
 			</a>
 		</li>
 		
@@ -683,6 +671,13 @@ git<span class="w"> </span>checkout<span class="w"> </span>&lt;your_branch_name&
 		</li>
 		
 		<li>
+			<a href="/category/vscode/">
+				VSCode
+				<span class="count">5</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/blogmarks/">
 				Blogmarks
 				<span class="count">5</span>
@@ -704,16 +699,16 @@ git<span class="w"> </span>checkout<span class="w"> </span>&lt;your_branch_name&
 		</li>
 		
 		<li>
-			<a href="/category/arcade-challenge/">
-				Arcade Challenge
+			<a href="/category/c/">
+				C#
 				<span class="count">4</span>
 			</a>
 		</li>
 		
 		<li>
-			<a href="/category/vscode/">
-				VSCode
-				<span class="count">3</span>
+			<a href="/category/arcade-challenge/">
+				Arcade Challenge
+				<span class="count">4</span>
 			</a>
 		</li>
 		
@@ -756,6 +751,34 @@ git<span class="w"> </span>checkout<span class="w"> </span>&lt;your_branch_name&
 			<a href="/category/general/">
 				General
 				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/clean-code/">
+				Clean Code
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/refactoring/">
+				Refactoring
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/security/">
+				Security
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/sql-server/">
+				SQL Server
+				<span class="count">2</span>
 			</a>
 		</li>
 		
@@ -837,6 +860,34 @@ git<span class="w"> </span>checkout<span class="w"> </span>&lt;your_branch_name&
 		</li>
 		
 		<li>
+			<a href="/category/net-core/">
+				.NET Core
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/oop/">
+				OOP
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/troubleshooting/">
+				Troubleshooting
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/documentary/">
+				Documentary
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/xdebug/">
 				XDebug
 				<span class="count">1</span>
@@ -860,13 +911,6 @@ git<span class="w"> </span>checkout<span class="w"> </span>&lt;your_branch_name&
 		<li>
 			<a href="/category/csr/">
 				CSR
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/clean-code/">
-				Clean Code
 				<span class="count">1</span>
 			</a>
 		</li>
@@ -942,13 +986,6 @@ git<span class="w"> </span>checkout<span class="w"> </span>&lt;your_branch_name&
 		</li>
 		
 		<li>
-			<a href="/category/security/">
-				Security
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/cpanel/">
 				cPanel
 				<span class="count">1</span>
@@ -958,13 +995,6 @@ git<span class="w"> </span>checkout<span class="w"> </span>&lt;your_branch_name&
 		<li>
 			<a href="/category/introduction/">
 				Introduction
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/refactoring/">
-				Refactoring
 				<span class="count">1</span>
 			</a>
 		</li>

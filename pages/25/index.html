@@ -78,338 +78,76 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/convert-svg-from-image-to-code-using-javascript">Convert SVG from Image to Code using Javascript</a></h1>
-		<p class="description">Two weeks ago, I wrote a small script to convert SVG from Image to Code using Javascript that allowed me to play around with it's attributes and properties.</p>
+		<h1 class="heading"><a href="/writings/posts/built-a-2048-clone-in-15-minutes">Built a 2048 clone in 15 minutes</a></h1>
+		<p class="description">An implementation of the famous 2048 game using JavaScript and HTML5 Canvas.</p>
 	</div>
 	<div class="article-body">
-		<p>Have you ever downloaded minimal and beautiful looking SVG icons and
-added them into your HTML code as an <strong><em>&lt;img&gt;</em></strong> instead of
-<strong><em>&lt;svg&gt;</em></strong> tag? The answer is: <strong><em>"yes, you're right!"</em></strong>.</p>
-
-<p>Okay, how about another question?</p>
-
-<p>What would you do if you want to change all of those SVG icons to black,
-red or blue? Your answer would be: <strong><em>"Well, I would edit the colors of
-all the vector images in Adobe Illustrator and then refresh my page to
-see the changes."</em></strong>, if that's your answer, then what would you do if
-you have to do it for multiple icons in multiple pages in a short amount
-of time?</p>
-
-<p>Two weeks ago, I faced this same scenario and I found a quick solution
-to it and I will be sharing it in this article on how to convert SVG
-from image to code using Javascript and how it allowed me to play around
-with attributes and properties.</p>
-
-<h2>Why convert from Image to Code?</h2>
-
-<p>Well, as a developer, it allows me to interact with every part of the
-SVG such as changing the colors, adjusting the height and width, animate
-it and so on. In this article, I will show you an example on how I could
-do a simple color change on an SVG image that I had downloaded from
-<a href="https://www.flaticon.com">flaticon</a>.</p>
+		<script defer src="/static/projects/2048/script.js"></script>
 
 <figure>
-    <img src="/static/images/space.svg"/>
-    <figcaption>
-        Figure 1. Original SVG Space Icon
-    </figcaption>
+    <canvas id="game-grid" width="500" height="500"></canvas>
 </figure>
 
-<h2>How to convert from Image to Code?</h2>
+<p>Before you read more about this article, play with the above game. You
+can move the tiles around using your <kbd>&uarr;</kbd><kbd>&larr;</kbd><kbd>&darr;</kbd><kbd>&rarr;</kbd>
+or <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> keys. The rule is simple, when two tiles with the same
+number touch, they merge into one tile. Press the <kbd>R</kbd> key to restart
+the game.</p>
 
-<p>Simple, just convert the SVG image into an XML format using
-<strong><em>XMLSerializer()</em></strong> then give it a class name like <strong><em>"custom-svg-icon"</em></strong>
-and execute the code! Below, I have provided a code snippet, I hope the
-comments will help you out!</p>
+<p>Please make sure that you have JavaScript enabled and running in your
+browser, otherwise you won't be able to play this game. Oh, just a
+little heads up, it might get a little buggy and freeze your browser
+window, so keep calm and play patiently.</p>
 
-<p><strong>Code snippet:</strong></p>
+<p>As for the source code, you can view it in my <a href="https://www.github.com/megacolorboy">GitHub
+repository</a> or can be found near
+the end of this article.</p>
 
-<div class="codehilite">
-<pre><span></span><code><span class="w">    </span><span class="nx">$</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
-<span class="w">     </span><span class="c1">//Change the class name, if it has to be applied for more SVG elements</span>
-<span class="w">     </span><span class="nx">jQuery</span><span class="p">(</span><span class="s1">&#39;img.custom-svg-icon&#39;</span><span class="p">).</span><span class="nx">each</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
-<span class="w">     </span><span class="kd">var</span><span class="w"> </span><span class="nx">$img</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">jQuery</span><span class="p">(</span><span class="k">this</span><span class="p">);</span><span class="w"> </span><span class="c1">// The image</span>
-<span class="w">     </span><span class="kd">var</span><span class="w"> </span><span class="nx">imgID</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">$img</span><span class="p">.</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">);</span><span class="w"> </span><span class="c1">// ID attribute</span>
-<span class="w">     </span><span class="kd">var</span><span class="w"> </span><span class="nx">imgClass</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">$img</span><span class="p">.</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;class&#39;</span><span class="p">);</span><span class="w"> </span><span class="c1">// Class Name</span>
-<span class="w">     </span><span class="kd">var</span><span class="w"> </span><span class="nx">imgURL</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">$img</span><span class="p">.</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;src&#39;</span><span class="p">);</span><span class="w"> </span><span class="c1">// URL of the SVG image</span>
+<h2>Background</h2>
 
-<span class="w">     </span><span class="nx">jQuery</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="nx">imgURL</span><span class="p">,</span><span class="w"> </span><span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">     </span><span class="c1">//The data param contains the XML data of the SVG image</span>
-<span class="w">     </span><span class="c1">//alert(new XMLSerializer().serializeToString(data));</span>
+<p>I was always fond of puzzle games and <strong>2048</strong> is one of them. The first
+time I got to play this game was back in 2014 and I would play it on my
+iPhone during my train commute to university.</p>
 
-<span class="w">     </span><span class="c1">// Get the SVG tag, ignore the rest</span>
-<span class="w">     </span><span class="kd">var</span><span class="w"> </span><span class="nx">$svg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">jQuery</span><span class="p">(</span><span class="nx">data</span><span class="p">).</span><span class="nx">find</span><span class="p">(</span><span class="s1">&#39;svg&#39;</span><span class="p">);</span>
+<p>Yesterday, I thought of building a clone and turns out it wasn't as hard
+as I had expected it to be, in fact, I was able to build a functional
+version in just 15 minutes.</p>
 
-<span class="w">     </span><span class="c1">// Give the image&#39;s ID to the SVG</span>
-<span class="w">     </span><span class="k">if</span><span class="p">(</span><span class="ow">typeof</span><span class="w"> </span><span class="nx">imgID</span><span class="w"> </span><span class="o">!==</span><span class="w"> </span><span class="s1">&#39;undefined&#39;</span><span class="p">)</span><span class="w"> </span>
-<span class="w">     </span><span class="p">{</span>
-<span class="w">     </span><span class="nx">$svg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">$svg</span><span class="p">.</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">imgID</span><span class="p">);</span>
-<span class="w">     </span><span class="p">}</span>
+<h2>What are the game mechanics?</h2>
 
-<span class="w">     </span><span class="c1">// Give the image&#39;s class to the SVG</span>
-<span class="w">     </span><span class="k">if</span><span class="p">(</span><span class="ow">typeof</span><span class="w"> </span><span class="nx">imgClass</span><span class="w"> </span><span class="o">!==</span><span class="w"> </span><span class="s1">&#39;undefined&#39;</span><span class="p">)</span><span class="w"> </span>
-<span class="w">     </span><span class="p">{</span>
-<span class="w">     </span><span class="nx">$svg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">$svg</span><span class="p">.</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;class&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">imgClass</span><span class="o">+</span><span class="s1">&#39; replaced-svg&#39;</span><span class="p">);</span>
-<span class="w">     </span><span class="p">}</span>
+<p>The sliding-puzzle game is played on a <strong>four-by-four</strong> grid with
+numbered tiles that is moved by the player in all four directions.</p>
 
-<span class="w">     </span><span class="c1">// Remove any invalid XML tags as per http://validator.w3.org</span>
-<span class="w">     </span><span class="nx">$svg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">$svg</span><span class="p">.</span><span class="nx">removeAttr</span><span class="p">(</span><span class="s1">&#39;xmlns:a&#39;</span><span class="p">);</span>
+<p>In every move, a new tile would randomly appear in an empty spot in the
+grid with a value that consists of <strong>2</strong> or <strong>4</strong>. These tiles are moved
+towards any direction as far as it could and if there are two tiles that
+collide with the same value, they merge into one tile and as a result,
+the score is updated.</p>
 
-<span class="w">     </span><span class="c1">// Check if the viewport is set, else we gonna set it if we can.</span>
-<span class="w">     </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">$svg</span><span class="p">.</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;viewBox&#39;</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">$svg</span><span class="p">.</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;height&#39;</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">$svg</span><span class="p">.</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;width&#39;</span><span class="p">))</span><span class="w"> </span>
-<span class="w">     </span><span class="p">{</span>
-<span class="w">     </span><span class="nx">$svg</span><span class="p">.</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;viewBox&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;0 0 &#39;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">$svg</span><span class="p">.</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;height&#39;</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s1">&#39; &#39;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">$svg</span><span class="p">.</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;width&#39;</span><span class="p">))</span>
-<span class="w">     </span><span class="p">}</span>
+<p>The player wins the game once the tile of <strong>2048</strong> appears on the grid,
+thus is the name of the game.</p>
 
-<span class="w">     </span><span class="c1">// Replace image with new SVG</span>
-<span class="w">     </span><span class="nx">$img</span><span class="p">.</span><span class="nx">replaceWith</span><span class="p">(</span><span class="nx">$svg</span><span class="p">);</span>
+<h2>Source code</h2>
 
-<span class="w">     </span><span class="p">},</span><span class="w"> </span><span class="s1">&#39;xml&#39;</span><span class="p">);</span><span class="w"> </span><span class="c1">//Returns as XML</span>
-<span class="w">     </span><span class="p">});</span>
-<span class="w">    </span><span class="p">});</span>
-</code></pre>
-</div>
+<script src="https://gist.github.com/MegaColorBoy/fcce2a2029a1b0352884cbbc1f059cb1.js"></script>
 
-<p>Give it some custom CSS to change the color and width of the SVG image:</p>
+<p>Well then, that's all for the game. Just like the previous ones, I had
+fun building this sliding-puzzle game. I'm looking forward to building
+more puzzle games and talking about them in my blog.</p>
 
-<div class="codehilite">
-<pre><span></span><code><span class="w">    </span><span class="nt">svg</span><span class="w"> </span><span class="nt">path</span><span class="o">,</span><span class="w"> </span><span class="nt">svg</span><span class="w"> </span><span class="nt">rect</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="k">fill</span><span class="p">:</span><span class="w"> </span><span class="mh">#ff5a5f</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="p">.</span><span class="nc">custom-svg-icon</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="k">width</span><span class="p">:</span><span class="w"> </span><span class="mi">170</span><span class="kt">px</span><span class="p">;</span>
-<span class="w">        </span><span class="k">height</span><span class="p">:</span><span class="w"> </span><span class="mi">170</span><span class="kt">px</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-</code></pre>
-</div>
-
-<p>Right-click on the image, hit <strong><em>"Inspect Element"</em></strong> and view the
-converted image below but this time, you'll see it as an SVG element:</p>
-
-<script defer src="/static/projects/svg-img-to-code/script.js"></script>
-
-<figure>
-    <img class="custom-svg-icon" src="/static/images/space.svg"/>
-    <figcaption>
-        Figure 2. Converted SVG Space Icon
-    </figcaption>
-</figure>
-
-<p>However, there are a few downsides to this as SVG code is hard to
-maintain, pretty messy and sometimes quite complex especially if it
-contains a lot of paths, circles and rectangles but in a scenario that
-is similar to what I have faced, I think it's pretty useful, otherwise,
-just stick to adding your SVG images using the <strong><em>&lt;img&gt;</em></strong> tag.</p>
-
-<p>Hope you have found this article useful!</p>
-
-<h2>Credit</h2>
-
-<p>Icons made by <a href="https://www.flaticon.com/authors/eucalyp">Eucalyp</a> from <a href="https://www.flaticon.com/">www.flaticon.com</a> is licensed by <a href="http://creativecommons.org/licenses/by/3.0/">CC 3.0
-BY</a></p>
-
-	</div>
-	<div class="article-footer">
-		<time>February 24th, 2018</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/programming/">
-					Programming
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/i-decided-to-learn-python">I decided to learn Python</a></h1>
-		<p class="description">I decided to get back on solving algorithmic and programming puzzles by adding a new programming language to my tech arsenal, Python.</p>
-	</div>
-	<div class="article-body">
-		<p>Hello Folks!</p>
-
-<p>Happy New Year! I know I'm late at this point but hey, it's better late
-than never!</p>
-
-<p>As the year had begun, I got busy with work and I barely found any time
-to post anything new but that doesn't mean I didn't do anything new.</p>
-
-<p>At the end of December, I decided to get back on solving algorithmic and
-programming puzzles again (The last time I did was back on 2016) and for
-starters, I decided to solve <a href="http://projecteuler.net">Project Euler</a>
-problems by adding a new programming language to my tech arsenal,
-<strong><em>Python</em></strong>.</p>
-
-<h2>Why solve it using Python?</h2>
-
-<p>Previously, I'd solved around 57 problems using <strong><em>C++</em></strong> and it got
-paused for a while after I got into internships and work life. But now
-that I have found the time for it, I thought that this would be the
-perfect opportunity for me to learn Python. It has a really good
-community, good documentation and the code looks so clean, simple and
-readable without those curly brackets!</p>
-
-<h2>What is Project Euler?</h2>
-
-<p>It's a website that hosts a series of challenging algorithmic and
-mathematical programming puzzles in which you will have to produce
-solutions that'd <strong><em>clock in under a minute</em></strong> with decent computer
-specifications.</p>
-
-<p>By solving these puzzles, you will be experiencing an <strong><em>inductive chain
-learning</em></strong> i.e. when you solve one problem, you'll be exposed to a
-completely new concept that allows you to delve into unfamiliar areas of
-mathematics and programming.</p>
-
-<p>As I'm writing this article, I'm taking it slow and I have solved around
-21 problems in 3 weekends. I will be posting a walkthrough for each
-problem but for now, I will talk about one of my favorite problems:
-<strong><em>Maximum Path Sum</em></strong>.</p>
-
-<h2>Maximum Path Sum</h2>
-
-<p>Problem definition of <a href="https://projecteuler.net/problem=18">Problem 18</a>:</p>
-
-<p>By starting at the top of the Binary Tree below and moving to adjacent
-numbers on the row below, the maximum total from top to bottom is 23.</p>
-
-<p style="text-align:center;font-family:'FiraMono';font-size:12pt;"><span style="color:#ff0000;"><b>3</b></span><br><span style="color:#ff0000;"><b>7</b></span> 4<br>
-2 <span style="color:#ff0000;"><b>4</b></span> 6<br>
-8 5 <span style="color:#ff0000;"><b>9</b></span> 3</p>
-
-<p>That is, 3 + 7 + 4 + 9 = 23. Now, find the maximum total from top to bottom of the Binary Tree below:</p>
-
-<p style="text-align:center;font-family:'FiraMono';">
-75<br>
-95 64<br>
-17 47 82<br>
-18 35 87 10<br>
-20 04 82 47 65<br>
-19 01 23 75 03 34<br>
-88 02 77 73 07 63 67<br>
-99 65 04 28 06 16 70 92<br>
-41 41 26 56 83 40 80 70 33<br>
-41 48 72 33 47 32 37 16 94 29<br>
-53 71 44 65 25 43 91 52 97 51 14<br>
-70 11 33 28 77 73 17 78 39 68 17 57<br>
-91 71 52 38 17 14 91 43 58 50 27 29 48<br>
-63 66 04 68 89 53 67 30 73 16 69 87 40 31<br>
-04 62 98 27 23 09 70 98 73 93 38 53 60 04 23
-</p>
-
-<p>Since there are fifteen rows, you can solve this puzzle using Brute
-Force by trying every route possible but if you're going to use that
-same technique for <a href="https://projecteuler.net/problem=67">Problem 67</a>
-that has a Binary Tree containing one hundred rows, it will not be
-efficient. So this problem forces you to avoid brute force and instead
-wants you to come up with a clever solution!</p>
-
-<h2>Solution</h2>
-
-<p>As I had mentioned above, a brute force technique is going to be very
-inefficient, instead I did a bottom-up approach:</p>
-
-<p><strong>Implementation of the method(s):</strong></p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="c1"># Sum of numbers</span>
-<span class="k">def</span> <span class="nf">sumOfNumbers</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
-    <span class="k">return</span> <span class="p">(</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span><span class="o">/</span><span class="mi">2</span>
-
-<span class="c1"># Return the maximum path sum in a Binary Tree</span>
-<span class="c1"># Bottom Up Approach</span>
-<span class="k">def</span> <span class="nf">maxPathSum</span><span class="p">(</span><span class="nb">list</span><span class="p">):</span>
-    <span class="c1"># the last number of the list</span>
-    <span class="n">last</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
-
-    <span class="c1"># number of rows in the Binary Tree</span>
-    <span class="n">nrow</span> <span class="o">=</span> <span class="mi">1</span>
-
-    <span class="c1"># count the number of rows in the Binary Tree</span>
-    <span class="c1"># use the sum of numbers method to count the number of rows</span>
-    <span class="k">while</span> <span class="n">sumOfNumbers</span><span class="p">(</span><span class="n">nrow</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">last</span><span class="p">:</span>
-        <span class="c1"># print (sumOfNumbers(nrow))</span>
-        <span class="n">nrow</span> <span class="o">+=</span> <span class="mi">1</span>
-
-    <span class="n">last</span> <span class="o">-=</span> <span class="mi">1</span>
-
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nrow</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
-        <span class="c1"># print list[last - i]</span>
-
-        <span class="c1"># iterate through each number in each row</span>
-        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
-            <span class="c1"># pick a number from the row above the current row</span>
-            <span class="c1"># and pick the 2 numbers from the current row</span>
-            <span class="c1"># Find the max between the two numbers and add it</span>
-            <span class="nb">list</span><span class="p">[</span><span class="n">last</span> <span class="o">-</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">[</span><span class="n">last</span> <span class="o">-</span> <span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="nb">max</span><span class="p">(</span><span class="nb">list</span><span class="p">[</span><span class="n">last</span> <span class="o">-</span> <span class="mi">1</span><span class="p">],</span> <span class="nb">list</span><span class="p">[</span><span class="n">last</span><span class="p">])</span>
-
-            <span class="c1"># shift to the next number in the row above</span>
-            <span class="n">last</span> <span class="o">-=</span> <span class="mi">1</span>
-
-        <span class="c1"># shift to the next number in the row above</span>
-        <span class="n">last</span> <span class="o">-=</span> <span class="mi">1</span>
-
-    <span class="c1"># return the max sum</span>
-    <span class="k">return</span> <span class="nb">list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-</code></pre>
-</div>
-
-<p><strong>Final code:</strong></p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="c1"># Project Euler: Problem 18 and 67 - Maximum Path Sum I and II</span>
-
-<span class="c1">#!usr/bin/python</span>
-<span class="kn">import</span> <span class="nn">time</span><span class="o">,</span> <span class="nn">math</span><span class="o">,</span> <span class="nn">pe_lib</span>
-
-<span class="n">num_str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-
-<span class="c1"># read text file</span>
-<span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;triangle2.txt&quot;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span>
-<span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
-    <span class="n">num_str</span> <span class="o">+=</span> <span class="n">line</span>
-<span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-
-<span class="c1"># convert the string numbers to integers in the list</span>
-<span class="nb">list</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">num_str</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;n&#39;</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">))</span>
-
-<span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
-<span class="nb">print</span> <span class="n">pe_lib</span><span class="o">.</span><span class="n">maxPathSum</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
-<span class="nb">print</span> <span class="s2">&quot;Finished: </span><span class="si">%f</span><span class="s2"> seconds&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span>
-</code></pre>
-</div>
-
-<p>The maximum path sum for <strong><em>Problem 67</em></strong> is <strong><em>7273</em></strong> and it compiled in
-<strong><em>0.003990</em></strong> seconds.</p>
-
-<p><strong><em>Note: This solution and the library named <mark>pe_lib.py</mark> was
-built using the Python programming language. The source code for this
-solution can be found on Github.</em></strong></p>
+<p>Hope you guys liked reading this article and have fun playing the game
+as many times as you like!</p>
 
 <p>Stay tuned for more!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>February 3rd, 2018</time>
+		<time>August 21st, 2018</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/algorithms/">
-					Algorithms
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/programming/">
-					Programming
+				<a href="/category/personal-challenge/">
+					Personal Challenge
 				</a>
 			</li>
 			
@@ -421,582 +159,149 @@ solution can be found on Github.</em></strong></p>
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/the-cryptopals-crypto-challenges-set-1--detect-aes-in-ecb-mode">The Cryptopals Crypto Challenges: Set 1 - Detect AES in ECB Mode</a></h1>
-		<p class="description">Find the string that has been encrypted with AES-128 cipher with an ECB mode in a file of ciphertexts.</p>
+		<h1 class="heading"><a href="/writings/posts/can-we-eliminate-traffic-congestion-with-the-help-of-computer-vision">Can we eliminate traffic congestion with the help of Computer Vision?</a></h1>
+		<p class="description">Writing out my thoughts on eradicating traffic congestion in highly populated cities.</p>
 	</div>
 	<div class="article-body">
-		<p>This is the <a href="http://cryptopals.com/sets/1/challenges/8">eighth challenge</a> of Set 1 in The Cryptopals Crypto Challenges website. Previously, I spoke about these challenges and provided walkthroughs for the previous challenges, if you haven't read them, here are the links:</p>
+		<p>Whether it's being implemented or not, I have been thinking on how we
+could use <strong><em>Computer Vision</em></strong> to solve traffic congestion.</p>
+
+<p>Since, I live in the <strong><em>United Arab Emirates</em></strong>, I have always observed
+that people who commute from <strong><em>Sharjah</em></strong> to <strong><em>Dubai</em></strong> and vice-versa
+face a lot of traffic jams despite all the new roads and toll-gates
+(yes, I don't seem to understand how does that solve the problem).</p>
+
+<figure>
+    <img src="https://images.khaleejtimes.com/storyimage/KT/20160203/ARTICLE/302039854/AR/0/AR-302039854.jpg&MaxW=780&imageVersion=16by9&NCS_modified=20160203204300"/>
+    <figcaption>
+        Traffic in Al Ittihad Highway.
+    </figcaption>
+</figure>
+
+<p>Well, the problem is not only faced in this country but many countries
+such as China, Indonesia and so on.</p>
+
+<h2>What are the causes of traffic congestion?</h2>
+
+<p>Anyways, I jotted down some facts to consider what causes traffic
+congestion in the first place:</p>
 
 <ul>
-<li><a href="/posts/the-cryptopals-crypto-challenges">The Cryptopals Crypto Challenges</a></li>
-<li><a href="/posts/the-cryptopals-crypto-challenges-set-1-convert-hex-to-base64">The Cryptopals Crypto Challenges: Set 1 - Convert Hex to Base64</a></li>
-<li><a href="/posts/base64-encoding-decoding-using-bitwise-manipulation-in-c">Base64 Encoding / Decoding using Bitwise Manipulation in C++</a></li>
-<li><a href="/posts/the-cryptopals-crypto-challenges-set-1-fixed-xor">The Cryptopals Crypto Challenges: Set 1 - Fixed XOR Cipher</a></li>
-<li><a href="/posts/the-cryptopals-crypto-challenges-set-1-single-byte-xor-cipher">The Cryptopals Crypto Challenges: Set 1 - Single-Byte XOR Cipher</a></li>
-<li><a href="/posts/the-cryptopals-crypto-challenges-set-1-detect-single-character-xor">The Cryptopals Crypto Challenges: Set 1 - Detect Single-Character XOR</a></li>
-<li><a href="/posts/the-cryptopals-crypto-challenges-set-1-implement-repeating-key-xor">The Cryptopals Crypto Challenges: Set 1 - Implement Repeating-Key XOR</a></li>
-<li><a href="/posts/hamming-distance-algorithm-in-c">Hamming Distance Algorithm in C++</a></li>
-<li><a href="/posts/the-cryptopals-crypto-challenges-set-1-break-repeating-key-xor">The Cryptopals Crypto Challenges: Set 1 - Break Repeating-Key XOR</a></li>
-<li><a href="/posts/the-cryptopals-crypto-challenges-set-1-aes-in-ecb-mode">The Cryptopals Crypto Challenges: Set 1 - AES in ECB Mode</a></li>
+<li>Tail-gating</li>
+<li>Inconsistent travel speeds</li>
+<li>Uneven vehicular distances</li>
+<li>Spontaneous accidents and road rages</li>
+<li>Changing from one lane to another</li>
+<li>Increase in car population</li>
+<li>Peak hours i.e. people going to work and leaving from work</li>
 </ul>
 
-<p>For this challenge, you are given a <a href="http://cryptopals.com/static/challenge-data/8.txt">file</a>, which contains a bunch of ciphertexts that has been encrypted using <strong><em>AES-128 Cipher</em></strong> but only one of them has an <strong><em>ECB (Electronic Codebook)</em></strong> mode. Find the string the string that has the ECB mode.</p>
+<p>I'm sure that there could be more but these are the facts that I can
+come up with for now.</p>
 
-<p>In the <a href="/posts/the-cryptopals-crypto-challenges-set-1-aes-in-ecb-mode">previous post</a>, I had explained that <strong><em>ECB</em></strong> is a cipher mode that is used to repeat the key until it covers the entire plaintext i.e. the same 16 byte plaintext will have the same 16 byte ciphertext.</p>
+<h2>How can Computer Vision solve this problem?</h2>
 
-<p>Well, the solution is pretty much trivial, so here's the solution:</p>
+<p><a href="https://en.wikipedia.org/wiki/Computer_vision">Computer Vision</a> is a
+field that intersects with multiple areas of technologies in which it
+aims to develop an understanding of objects by extracting information
+from various digital media sources like images and videos and automate
+those tasks that a normal human would do in their daily lives.</p>
 
-<p><strong>Implementation of the method(s):</strong></p>
+<figure>
+    <img src="https://www.onlinebooksreview.com/uploads/blog_images/2018/04/16_computer_vision.jpg"/>
+    <figcaption>
+        Visualization of Computer Vision.
+    </figcaption>
+</figure>
 
-<div class="codehilite">
-<pre><span></span><code><span class="c1">//Detect ECB Mode in AES Cipher</span>
-<span class="kt">bool</span><span class="w"> </span><span class="nf">CryptoLib::detect_ecb_mode</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="n">str</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">keyLength</span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="c1">//Divide into equal amount of blocks</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">blocks</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">str</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">keyLength</span><span class="p">;</span>
-
-<span class="w">    </span><span class="cm">/*</span>
-<span class="cm">        Theory: the problem with ECB as I had mentioned</span>
-<span class="cm">        in the previous post, it uses the exact number of bytes of the ciphertext</span>
-<span class="cm">        to encrypt the plaintext repeatedly.</span>
-
-<span class="cm">        In that case, just do the reverse.</span>
-
-<span class="cm">        Divide it into equal amount of blocks, in this case, we</span>
-<span class="cm">        know the key is &quot;YELLOW SUBMARINE&quot;, which is 16 bytes.</span>
-
-<span class="cm">        Then, all you have to do is take two substrings of a string and compare,</span>
-<span class="cm">        if they have the same string, we found it!</span>
-<span class="cm">    */</span>
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">blocks</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="c1">//Take a substring of x number of bytes</span>
-<span class="w">        </span><span class="n">string</span><span class="w"> </span><span class="n">strA</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">str</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="n">i</span><span class="o">*</span><span class="n">keyLength</span><span class="p">,</span><span class="w"> </span><span class="n">keyLength</span><span class="p">);</span>
-
-<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="n">blocks</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">)</span>
-<span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="c1">//Take another substring of x number of bytes</span>
-<span class="w">            </span><span class="n">string</span><span class="w"> </span><span class="n">strB</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">str</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="n">j</span><span class="o">*</span><span class="n">keyLength</span><span class="p">,</span><span class="w"> </span><span class="n">keyLength</span><span class="p">);</span>
-<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">strA</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">strB</span><span class="p">)</span>
-<span class="w">            </span><span class="p">{</span>
-<span class="w">                </span><span class="c1">//Found</span>
-<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
-<span class="w">            </span><span class="p">}</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
-<span class="p">}</span>
-</code></pre>
-</div>
-
-<p><strong>Final code:</strong></p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="c1">//The Cryptopals Crypto Challenges - Set 1 Challenge 8</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;crypto.h&quot;</span>
-
-<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="n">CryptoLib</span><span class="w"> </span><span class="n">crypt</span><span class="p">;</span>
-
-<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">str</span><span class="p">;</span>
-
-<span class="w">    </span><span class="n">ifstream</span><span class="w"> </span><span class="n">infile</span><span class="p">;</span>
-<span class="w">    </span><span class="n">infile</span><span class="p">.</span><span class="n">open</span><span class="p">(</span><span class="s">&quot;8.txt&quot;</span><span class="p">);</span>
-
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="o">!</span><span class="n">infile</span><span class="p">.</span><span class="n">eof</span><span class="p">())</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="n">getline</span><span class="p">(</span><span class="n">infile</span><span class="p">,</span><span class="w"> </span><span class="n">str</span><span class="p">);</span>
-
-<span class="w">        </span><span class="c1">//Check if this string has ECB mode</span>
-<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">crypt</span><span class="p">.</span><span class="n">detect_ecb_mode</span><span class="p">(</span><span class="n">str</span><span class="p">,</span><span class="w"> </span><span class="mi">16</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span>
-<span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;FOUND AT LINE &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; =&gt; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">str</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
-<span class="w">            </span><span class="k">break</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">        </span><span class="n">count</span><span class="o">++</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="p">}</span>
-</code></pre>
-</div>
-
-<p><strong><em>Note: This solution and the library named <mark>crypto.h</mark> was
-built using the C++ programming language. The source code for this
-solution can be found on Github.</em></strong></p>
-
-<p>Well, this challenge marks the end of Set 1 from The Cryptopals Crypto
-Challenges. However, I do intend to continue solving all these crypto
-challenges, let's see how it goes!</p>
-
-<p>Until next time, then!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>December 29th, 2017</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/cryptography/">
-					Cryptography
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/the-cryptopals-crypto-challenges-set-1---aes-in-ecb-mode">The Cryptopals Crypto Challenges: Set 1 -  AES in ECB Mode</a></h1>
-		<p class="description">Decrypt a Base64 encoded file that is encrypted with an AES-128 Cipher in ECB mode.</p>
-	</div>
-	<div class="article-body">
-		<p>This is the <a href="http://cryptopals.com/sets/1/challenges/7">seventh challenge</a> of Set 1 in The Cryptopals Crypto Challenges website. Previously, I spoke about these challenges and provided walkthroughs for the previous challenges, if you haven't read them, here are the links:</p>
+<p>There are various types of problems that Computer Vision algorithms are
+able to solve but not limited to:</p>
 
 <ul>
-<li><a href="/posts/the-cryptopals-crypto-challenges">The Cryptopals Crypto Challenges</a></li>
-<li><a href="/posts/the-cryptopals-crypto-challenges-set-1-convert-hex-to-base64">The Cryptopals Crypto Challenges: Set 1 - Convert Hex to Base64</a></li>
-<li><a href="/posts/base64-encoding-decoding-using-bitwise-manipulation-in-c">Base64 Encoding / Decoding using Bitwise Manipulation in C++</a></li>
-<li><a href="/posts/the-cryptopals-crypto-challenges-set-1-fixed-xor">The Cryptopals Crypto Challenges: Set 1 - Fixed XOR Cipher</a></li>
-<li><a href="/posts/the-cryptopals-crypto-challenges-set-1-single-byte-xor-cipher">The Cryptopals Crypto Challenges: Set 1 - Single-Byte XOR Cipher</a></li>
-<li><a href="/posts/the-cryptopals-crypto-challenges-set-1-detect-single-character-xor">The Cryptopals Crypto Challenges: Set 1 - Detect Single-Character XOR</a></li>
-<li><a href="/posts/the-cryptopals-crypto-challenges-set-1-implement-repeating-key-xor">The Cryptopals Crypto Challenges: Set 1 - Implement Repeating-Key XOR</a></li>
-<li><a href="/posts/hamming-distance-algorithm-in-c">Hamming Distance Algorithm in C++</a></li>
-<li><a href="/posts/the-cryptopals-crypto-challenges-set-1-break-repeating-key-xor">The Cryptopals Crypto Challenges: Set 1 - Break Repeating-Key XOR</a></li>
+<li>Object Recognition or Object Classification</li>
+<li>Identification of Objects</li>
+<li>Object Detection</li>
+<li>Analysis of Motion</li>
 </ul>
 
-<p>For this challenge, you are given a <a href="http://cryptopals.com/static/challenge-data/7.txt">file</a>, which contains a ciphertext that has been encrypted using <strong><em>AES-128 Cipher</em></strong> with <strong><em>ECB (Electronic Codebook)</em></strong> mode and then encoded using Base64. Decrypt it.</p>
+<p>Now, it's not only about implementing these <strong><em>CNN</em></strong>-based
+(<a href="https://en.wikipedia.org/wiki/Convolutional_neural_network">Convolutional Neural
+Network</a>)
+algorithms but you also need hardware to be able to compute and process
+data. </p>
 
-<p>In order to decrypt it, you are given a key:</p>
+<h2>How would this work?</h2>
 
-<div class="codehilite">
-<pre><span></span><code>YELLOW SUBMARINE
-</code></pre>
-</div>
+<p>There are two scenarios that I had thought while writing this article
+and I hope that I'm able to translate my thoughts into accurate
+examples.</p>
 
-<h2>What is AES?</h2>
+<p>Let's pretend we have four car drivers: Alex, Bob, Charlie and Dylan.</p>
 
-<p><a href="https://en.wikipedia.org/wiki/Advanced_Encryption_Standard">Advanced Encryption Standard</a> a.k.a <strong><em>Rjindael</em></strong>, which was developed by two belgian cryptographers, <a href="https://en.wikipedia.org/wiki/Vincent_Rijmen">Vincent Rijmen</a> and <a href="https://en.wikipedia.org/wiki/Joan_Daemen">Joan Daemen</a>. <strong><em>Rjindael</em></strong> is a family of ciphers with various block and key sizes.</p>
+<h3>Speed-Distance equilibrium</h3>
 
-<p><strong><em>AES-128</em></strong> is commonly used but there are also larger key sizes such as <strong><em>192</em></strong> and <strong><em>256</em></strong> bits. Similar to <strong><em>XOR cipher</em></strong>, it uses the same key to encrypt and decrypt the message. Till date, there isn't any publication that states if whether <strong><em>AES</em></strong> is broken but even if you were to break it, it will take atleast a <strong><em>billion years</em></strong> with a supercomputer, which could beyond the age of the universe.</p>
+<p>Alex, Bob and Charlie are driving on the same lane. Alex hits the brake
+slowly to shift to another lane, the sensors of Bob's car detects a
+change in speed in Alex's car, Bob's car adjusts it's speed to match
+Alex's current speed based on the variables of distance and travel time,
+Charlie's car adapts the changes of Bob's car and thus, it's a chain
+reaction.</p>
 
-<h2>What is ECB Mode?</h2>
+<h3>Shifting from one lane to another</h3>
 
-<p>What if your plaintext is longer than (in this case, 128 bits) the keysize? This is where <strong><em>ECB</em></strong> comes into the picture. <a href="https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation">ECB (Electronic Codebook)</a> is a cipher mode that is used to repeat the key until it covers the entire plaintext (similar to <a href="/posts/the-cryptopals-crypto-challenges-set-1-implement-repeating-key-xor">Repeating-Key XOR Cipher</a>) and then each <strong><em>block</em></strong> is independently encrypted using the <strong><em>AES</em></strong> algorithm to produce the desired ciphertext.</p>
+<p>Alex is driving in Lane A and Dylan is driving in Lane B. Alex wants to
+shift to Lane B, so he switches on the indicator and Dylan's car sensors
+identify that Alex's car wants to change lanes. So Dylan's car slows
+down and Alex is able to shift lanes with ease. I thought of it to be
+some sort of a <strong><em>"elastic"</em></strong> effect when this occurs.</p>
 
-<p>This challenge is not that hard, in fact, it's completely trivial and more like an introduction of <strong><em>AES Cipher</em></strong>. There are so many ways to solve this problem but I chose to solve this problem using <strong><em>OpenSSL</em></strong> and other commandline tools such as <strong><em>xxd</em></strong> (used to print the hexdump of a file) on my UNIX terminal.</p>
+<p>Well, you might argue that some cars have a system called <strong><em>"Cruise
+Control"</em></strong> but here's the part that I'm trying to pitch, as I had
+mentioned above, I just wanted to integrate sensors to the front and
+rear sides of a vehicle, which means that these sensors can be
+integrated in almost any vehicle.</p>
 
-<p>Here's the solution:</p>
+<h2>How is this going to be helpful?</h2>
 
-<div class="codehilite">
-<pre><span></span><code>openssl<span class="w"> </span>enc<span class="w"> </span>-aes-128-ecb<span class="w"> </span>-d<span class="w"> </span>-a<span class="w"> </span>-in<span class="w"> </span>secret.txt<span class="w"> </span>-K<span class="w"> </span><span class="k">$(</span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;YELLOW SUBMARINE&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>xxd<span class="w"> </span>-p<span class="k">)</span><span class="w"> </span>-iv<span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>head
-</code></pre>
-</div>
-
-<p>This is the decrypted message:</p>
-
-<div class="codehilite">
-<pre><span></span><code>I&#39;m back and I&#39;m ringin&#39; the bell
-A rockin&#39; on the mike while the fly girls yell
-In ecstasy in the back of me
-Well that&#39;s my DJ Deshay cuttin&#39; all them Z&#39;s
-Hittin&#39; hard and the girlies goin&#39; crazy
-Vanilla&#39;s on the mike, man I&#39;m not lazy.
-
-I&#39;m lettin&#39; my drug kick in
-It controls my mouth and I begin
-To just let it flow, let my concepts go
-</code></pre>
-</div>
-
-<p>Initially, I was planning to write an implementation of <strong><em>AES</em></strong> for fun, but then I decided to make it a side project that I can work on as there are a lot of things about <strong><em>AES</em></strong> that I'd like to talk about in the future.</p>
-
-<p>Stay tuned for the next challenge!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>December 21st, 2017</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/cryptography/">
-					Cryptography
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/hamming-distance-algorithm-in-c">Hamming Distance Algorithm in C++</a></h1>
-		<p class="description">An article about the Hamming Distance algorithm that will be used in the next challenge.</p>
-	</div>
-	<div class="article-body">
-		<p>This is a short article about the <strong><em>Hamming Distance</em></strong> algorithm, which will be used in The Cryptopals Crypto Challenges: Set 1 - Break Repeating-Key XOR challenge.</p>
-
-<p>In <a href="http://cryptopals.com/sets/1/challenges/6">Challenge 6</a>, the first step states that you have to write a function to compute the <strong><em>edit distance/Hamming distance</em></strong> between two strings:</p>
-
-<div class="codehilite">
-<pre><span></span><code>this is a test
-</code></pre>
-</div>
-
-<p>And</p>
-
-<div class="codehilite">
-<pre><span></span><code>wokka wokka!!!
-</code></pre>
-</div>
-
-<p>When this function is executed, the expected result must be <strong><em>37</em></strong>. If you we're able to make this function work, you can proceed with the next steps in the challenge.</p>
-
-<h2>What is Hamming Distance?</h2>
-
-<p>Applied in domains like Cryptography, Information theory and Coding theory, Hamming distance is just the number of differing bits between two strings of equal length. Named after the American Mathematician, <a href="https://en.wikipedia.org/wiki/Richard_Hamming">Richard Hamming</a>, this algorithm mainly used for Error Detection and Error Correction (and yes, this also makes use of <a href="/posts/base64-encoding-decoding-using-bitwise-manipulation-in-c">Bitwise Operators</a>).</p>
-
-<p>Using the example above, let's see how this works, in theory:</p>
-
-<div class="codehilite">
-<pre><span></span><code>ASCII Format: this is a test
-Binary Format: 011101[0][0] 01101[0][0][0] 011010[0]1 011[1][0]011 0[0]10000[0] 0[1]10[1]00[1] 01110[0]11 0[0]10[0][0][0][0] 0110[0]0[0]1 0[0]10[0]0[0][0] 011[1]0[1]0[0] 0[1]100[1]01 0[1]1[1]00[1]1 0[1]1[1]0[1]0[0]
-
-ASCII Format: wokka wokka!!!
-Binary Format: 011101[1][1] 01101[1][1][1] 011010[1]1 011[0][1]011 0[1]10000[1] 0[0]10[0]00[0] 01110[1]11 0[1]10[1][1][1][1] 0110[1]0[1]1 0[1]10[1]0[1][1] 011[0]0[0]0[1] 0[0]100[0]01 0[0]1[0]00[0]1 0[0]1[0]0[0]0[1]
-</code></pre>
-</div>
-
-<p>As per the given example, when you count the number of differing bits (the bits marked in brackets) between the two strings, the result is <strong><em>37</em></strong>.</p>
-
-<p>With help of <strong><em>Google</em></strong> and <strong><em>Wikipedia</em></strong>, I was able to build an implementation of this algorithm using the C++ programming language:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="c1">//Hamming Distance</span>
-<span class="kt">int</span><span class="w"> </span><span class="nf">CryptoLib::hamming_distance</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="n">str1</span><span class="p">,</span><span class="w"> </span><span class="n">string</span><span class="w"> </span><span class="n">str2</span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">count</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">str1</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">partial</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">str1</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="mh">0xFF</span><span class="p">)</span><span class="w"> </span><span class="o">^</span><span class="w"> </span><span class="p">(</span><span class="n">str2</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="mh">0xFF</span><span class="p">);</span>
-<span class="w">        </span><span class="k">while</span><span class="p">(</span><span class="n">partial</span><span class="p">)</span>
-<span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="n">count</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">partial</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
-<span class="w">            </span><span class="n">partial</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">partial</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="mi">1</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">count</span><span class="p">;</span>
-<span class="p">}</span>
-</code></pre>
-</div>
-
-<p><strong><em>Note: This solution and the library named <code>crypto.h</code> was built using the C++ programming language. The source code for this solution can be found on Github.</em></strong></p>
-
-<p>Hope you found this article useful!</p>
-
-<p>Adios Amigo!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>December 18th, 2017</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/algorithms/">
-					Algorithms
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/programming/">
-					Programming
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/the-cryptopals-crypto-challenges-set-1--break-repeatingkey-xor">The Cryptopals Crypto Challenges: Set 1 - Break Repeating-Key XOR</a></h1>
-		<p class="description">Write a method that decodes a message which is encrypted using the Repeating-Key XOR cipher.</p>
-	</div>
-	<div class="article-body">
-		<p>This is the <a href="http://cryptopals.com/sets/1/challenges/6">sixth challenge</a> of Set 1 in The Cryptopals Crypto Challenges website. Previously, I spoke about these challenges and provided walkthroughs for the previous challenges, if you haven't read them, here are the links:</p>
+<p>For starters, traffic congestion will gradually reduce, if not, be
+eliminated but there are other beneficial factors to it, such as:</p>
 
 <ul>
-<li><a href="/posts/the-cryptopals-crypto-challenges">The Cryptopals Crypto Challenges</a></li>
-<li><a href="/posts/the-cryptopals-crypto-challenges-set-1--convert-hex-to-base64">The Cryptopals Crypto Challenges: Set 1 - Convert Hex to Base64</a></li>
-<li><a href="/posts/base64-encodingdecoding-using-bitwise-manipulation-in-c">Base64 Encoding / Decoding using Bitwise Manipulation in C++</a></li>
-<li><a href="/posts/the-cryptopals-crypto-challenges-set-1--fixed-xor">The Cryptopals Crypto Challenges: Set 1 - Fixed XOR Cipher</a></li>
-<li><a href="/posts/the-cryptopals-crypto-challenges-set-1--singlebyte-xor-cipher">The Cryptopals Crypto Challenges: Set 1 - Single-Byte XOR Cipher</a></li>
-<li><a href="/posts/the-cryptopals-crypto-challenges-set-1--detect-singlecharacter-xor">The Cryptopals Crypto Challenges: Set 1 - Detect Single-Character XOR</a></li>
-<li><a href="/posts/the-cryptopals-crypto-challenges-set-1--implement-repeatingkey-xor">The Cryptopals Crypto Challenges: Set 1 - Implement Repeating-Key XOR</a></li>
-<li><a href="/posts/hamming-distance-algorithm-in-c">Hamming Distance Algorithm in C++</a></li>
+<li>Less fuel consumption</li>
+<li>Less time is required to reach a destination</li>
+<li>No tail-gating</li>
+<li>Could prevent major road accidents</li>
 </ul>
 
-<p>For this challenge, you are given a <a href="http://cryptopals.com/static/challenge-data/6.txt">file</a>, which contains a ciphertext that has been encrypted using <a href="/posts/the-cryptopals-crypto-challenges-set-1--implement-repeatingkey-xor">Repeating-Key XOR</a> and then encoded using Base64. Decrypt it.</p>
+<p>However, if the sensors fail to work, the car driver will still be safe
+because it's surrounded by other cars that have the sensors. This made
+me think of another question, does that mean do all cars require sensors
+or only a few? I find it quite intriguing.</p>
 
-<p>According to the problem description on the website:</p>
+<h2>Conclusion</h2>
 
-<blockquote>
-  <p>It is officially on, now.</p>
-  
-  <p>This challenge isn't conceptually hard, but it involves actual
-  error-prone coding. The other challenges in this set are there to
-  bring you up to speed. This one is there to qualify you. If you can do
-  this one, you're probably just fine up to Set 6.</p>
-</blockquote>
+<p>Although, these sensors might require a vehicle to have some intelligent
+capabilities, it may not require the type of network found in an
+autonomous vehicle.</p>
 
-<p>Well, conceptually, this may not be the hardest but practically, it is the first hardest challenge in this set and it really did take me a while to understand how to decrypt the ciphertext through <strong><em>trial-and-error</em></strong> despite the instructions given on the website. In this challenge, it's more like connecting all the puzzles and looking at the big picture, in this case, all of the previous code that I had written, is to break the Repeating-Key XOR cipher.</p>
+<figure>
+    <img src="https://i.pinimg.com/originals/b4/7c/00/b47c00d89eb8527be3f47578958f691e.gif"/>
+</figure>
 
-<h2>How to break it?</h2>
-
-<p>The challenge had given some steps to follow. Here's how:</p>
-
-<ol>
-<li>Let <strong><em>KEYSIZE</em></strong> be the guessed length of the key; try values from 2 to (say) 40</li>
-<li>Write a function to compute the edit distance/Hamming distance between two strings. To know more about it, <a href="/posts/hamming-distance-algorithm-in-c">click here</a> </li>
-<li>For each <strong><em>KEYSIZE</em></strong>, take the first <strong><em>KEYSIZE</em></strong> worth of bytes, and the second <strong><em>KEYSIZE</em></strong> worth of bytes, and find the edit distance between them. Normalize this result by dividing by <strong><em>KEYSIZE</em></strong></li>
-<li>The <strong><em>KEYSIZE</em></strong> with the smallest normalized edit distance is probably the key. You could proceed perhaps with the smallest 2-3 <strong><em>KEYSIZE</em></strong> values. Or take 4 <strong><em>KEYSIZE</em></strong> blocks instead of 2 and average the distances</li>
-<li>Now that you probably know the <strong><em>KEYSIZE</em></strong>: break the ciphertext into blocks of <strong><em>KEYSIZE</em></strong> length</li>
-<li>Now transpose the blocks: make a block that is the first byte of every block, and a block that is the second byte of every block, and so on</li>
-<li>Solve each block as if it was single-character XOR. You already have code to do this</li>
-<li>For each block, the single-byte XOR key that produces the best looking histogram is the repeating-key XOR key byte for that block. Put them together and you have the key</li>
-</ol>
-
-<p>Let's dive in to the code (I hope the comments, help you out!):</p>
-
-<p><strong>Implementation of the method(s):</strong></p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="c1">//Single Byte XOR V2 - a better version</span>
-<span class="n">string</span><span class="w"> </span><span class="nf">CryptoLib::singleByteXOR_V2</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="n">str</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="n">key</span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="c1">//Don&#39;t forget to add a NULL character to the string, it broke when I didn&#39;t add it previously.</span>
-<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">newStr</span><span class="p">(</span><span class="n">str</span><span class="p">.</span><span class="n">size</span><span class="p">(),</span><span class="err">&#39;&#39;</span><span class="p">);</span><span class="w"> </span>
-
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">str</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">){</span>
-<span class="w">        </span><span class="n">newStr</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">str</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">^</span><span class="w"> </span><span class="n">key</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">newStr</span><span class="p">;</span>
-<span class="p">}</span>
-
-<span class="c1">//Return the Single Byte XOR key via Bruteforce</span>
-<span class="kt">char</span><span class="w"> </span><span class="nf">CryptoLib::singleByteXOR_Bruteforce_key</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="n">cipherBlock</span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="n">key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">maxCount</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>
-<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">decodedMessage</span><span class="p">;</span>
-
-<span class="w">    </span><span class="c1">//Brute force all 256 possibilities</span>
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;=</span><span class="mi">256</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="kt">char</span><span class="w"> </span><span class="n">ch</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="kt">char</span><span class="p">)</span><span class="w"> </span><span class="n">i</span><span class="p">;</span>
-
-<span class="w">        </span><span class="c1">//Perform Single Byte XOR -- modified version</span>
-<span class="w">        </span><span class="n">string</span><span class="w"> </span><span class="n">attempt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">singleByteXOR_V2</span><span class="p">(</span><span class="n">cipherBlock</span><span class="p">,</span><span class="w"> </span><span class="n">ch</span><span class="p">);</span>
-
-<span class="w">        </span><span class="c1">// cout &lt;&lt; &quot;Message: &quot; &lt;&lt; attempt &lt;&lt; endl;</span>
-
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="w">        </span><span class="cm">/*</span>
-<span class="cm">            Look for characters that are alphabetic and the space character,</span>
-<span class="cm">            if it finds, increment the counter</span>
-<span class="cm">        */</span>
-<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="n">attempt</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">)</span>
-<span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="k">if</span><span class="p">((</span><span class="n">attempt</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mi">65</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">attempt</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mi">122</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">attempt</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">&#39; &#39;</span><span class="p">)</span>
-<span class="w">            </span><span class="p">{</span>
-<span class="w">                </span><span class="n">count</span><span class="o">++</span><span class="p">;</span>
-<span class="w">            </span><span class="p">}</span>
-<span class="w">        </span><span class="p">}</span>
-
-<span class="w">        </span><span class="c1">//The one with the highest count, has the predicted key</span>
-<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">count</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">maxCount</span><span class="p">)</span>
-<span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="n">maxCount</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">count</span><span class="p">;</span>
-<span class="w">            </span><span class="n">key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ch</span><span class="p">;</span>
-<span class="w">            </span><span class="c1">// decrypted = attempt;</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="c1">// cout &lt;&lt; &quot;KEY: &quot; &lt;&lt; key &lt;&lt; endl;</span>
-<span class="w">    </span><span class="c1">// cout &lt;&lt; &quot;MESSAGE: &quot; &lt;&lt; decrypted &lt;&lt; endl;</span>
-
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">key</span><span class="p">;</span>
-<span class="p">}</span>
-
-<span class="c1">//Guess Key length of the cipher</span>
-<span class="kt">int</span><span class="w"> </span><span class="nf">CryptoLib::guess_key_length</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="n">cipherText</span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">KEYSIZE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span>
-<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">leastNormalized</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">INT_MAX</span><span class="p">;</span>
-
-<span class="w">    </span><span class="c1">//Guess a keysize from 2 to 40</span>
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">2</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;=</span><span class="mi">40</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="kt">double</span><span class="w"> </span><span class="n">normalize</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0f</span><span class="p">;</span>
-
-<span class="w">        </span><span class="c1">//Number of bytes per key size</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">bytes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cipherText</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="o">/</span><span class="n">i</span><span class="p">;</span>
-
-<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="n">bytes</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">)</span>
-<span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="n">string</span><span class="w"> </span><span class="n">blockA</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cipherText</span><span class="p">.</span><span class="n">substr</span><span class="p">((</span><span class="n">j</span><span class="o">*</span><span class="n">i</span><span class="p">),</span><span class="w"> </span><span class="n">i</span><span class="p">);</span>
-<span class="w">            </span><span class="n">string</span><span class="w"> </span><span class="n">blockB</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cipherText</span><span class="p">.</span><span class="n">substr</span><span class="p">(((</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">i</span><span class="p">),</span><span class="w"> </span><span class="n">i</span><span class="p">);</span>
-
-<span class="w">            </span><span class="c1">//Calculate Hamming Distance between 2 strings</span>
-<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">edit_distance</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">hamming_distance</span><span class="p">(</span><span class="n">blockA</span><span class="p">,</span><span class="w"> </span><span class="n">blockB</span><span class="p">);</span>
-
-<span class="w">            </span><span class="n">normalize</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="p">((</span><span class="kt">double</span><span class="p">)</span><span class="n">edit_distance</span><span class="p">)</span><span class="o">/</span><span class="p">((</span><span class="kt">double</span><span class="p">)</span><span class="n">blockA</span><span class="p">.</span><span class="n">size</span><span class="p">());</span>
-<span class="w">        </span><span class="p">}</span>
-
-<span class="w">        </span><span class="c1">//Now, take an average </span>
-<span class="w">        </span><span class="n">normalize</span><span class="w"> </span><span class="o">/=</span><span class="w"> </span><span class="n">bytes</span><span class="p">;</span>
-
-<span class="w">        </span><span class="c1">//The key size that has the least edit distance is the key size required</span>
-<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">normalize</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">normalize</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">leastNormalized</span><span class="p">)</span>
-<span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="n">leastNormalized</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">normalize</span><span class="p">;</span>
-<span class="w">            </span><span class="n">KEYSIZE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="c1">//Return the key size</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">KEYSIZE</span><span class="p">;</span>
-<span class="p">}</span>
-</code></pre>
-</div>
-
-<p><strong>Final code:</strong></p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="c1">//The Cryptopals Crypto Challenges - Set 1 Challenge 6</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;crypto.h&quot;</span>
-
-<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="n">CryptoLib</span><span class="w"> </span><span class="n">crypt</span><span class="p">;</span>
-<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">message</span><span class="p">;</span>
-<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">binary</span><span class="p">;</span>
-<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">key</span><span class="p">;</span>
-
-<span class="w">    </span><span class="c1">//if this returns 37, then the function is working correct!</span>
-<span class="w">    </span><span class="c1">// cout &lt;&lt; crypt.hamming_distance(&quot;this is a test&quot;, &quot;wokka wokka!!!&quot;) &lt;&lt; endl;</span>
-
-<span class="w">    </span><span class="c1">//Read the file content</span>
-<span class="w">    </span><span class="n">ifstream</span><span class="w"> </span><span class="n">infile</span><span class="p">;</span>
-
-<span class="w">    </span><span class="c1">//Converted the B64 text to Hexadecimals through an online converter</span>
-<span class="w">    </span><span class="c1">//as it wasn&#39;t accurate with b64 decoder that I&#39;d built</span>
-<span class="w">    </span><span class="n">infile</span><span class="p">.</span><span class="n">open</span><span class="p">(</span><span class="s">&quot;message.txt&quot;</span><span class="p">);</span>
-<span class="w">    </span><span class="n">getline</span><span class="p">(</span><span class="n">infile</span><span class="p">,</span><span class="w"> </span><span class="n">message</span><span class="p">,</span><span class="w"> </span><span class="err">&#39;&#39;</span><span class="p">);</span>
-<span class="w">    </span><span class="n">infile</span><span class="p">.</span><span class="n">close</span><span class="p">();</span>
-
-<span class="w">    </span><span class="c1">//Convert the hexadecimal string to ASCII</span>
-<span class="w">    </span><span class="n">message</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">crypt</span><span class="p">.</span><span class="n">con_hex_2_ascii</span><span class="p">(</span><span class="n">message</span><span class="p">);</span>
-
-<span class="w">    </span><span class="c1">//Guess the length of the key</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">keyLength</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">crypt</span><span class="p">.</span><span class="n">guess_key_length</span><span class="p">(</span><span class="n">message</span><span class="p">);</span>
-
-<span class="w">    </span><span class="c1">//Transpose the message based on keysize length</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">blocks</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">message</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">keyLength</span><span class="p">;</span>
-
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">keyLength</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="n">string</span><span class="w"> </span><span class="n">block</span><span class="p">;</span>
-<span class="w">        </span><span class="kt">char</span><span class="w"> </span><span class="n">indexKey</span><span class="o">=</span><span class="err">&#39;&#39;</span><span class="p">;</span>
-
-<span class="w">        </span><span class="cm">/*</span>
-<span class="cm">            Transpose the message into blocks </span>
-<span class="cm">            based on keysize and concatenate it </span>
-<span class="cm">            into one string</span>
-<span class="cm">        */</span>
-<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="n">blocks</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">){</span>
-<span class="w">            </span><span class="n">block</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">message</span><span class="p">.</span><span class="n">substr</span><span class="p">((</span><span class="n">j</span><span class="o">*</span><span class="n">keyLength</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="mi">1</span><span class="p">);</span>
-<span class="w">        </span><span class="p">}</span>
-
-<span class="w">        </span><span class="c1">//Concatenate the selected characters, which will become the predicted key</span>
-<span class="w">        </span><span class="n">key</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">crypt</span><span class="p">.</span><span class="n">singleByteXOR_Bruteforce_key</span><span class="p">(</span><span class="n">block</span><span class="p">);</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;KEY: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">key</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
-<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;DECODED: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">crypt</span><span class="p">.</span><span class="n">con_hex_2_ascii</span><span class="p">(</span><span class="n">crypt</span><span class="p">.</span><span class="n">repeatingKeyXOR</span><span class="p">(</span><span class="n">message</span><span class="p">,</span><span class="w"> </span><span class="n">key</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
-
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">   </span>
-<span class="p">}</span>
-</code></pre>
-</div>
-
-<p><strong><em>Note: This solution and the library named <code>crypto.h</code> was built using the C++ programming language. The source code for this solution can be found on Github.</em></strong></p>
-
-<p>When the following code is executed, the most probable <strong><em>KEYSIZE</em></strong> is <strong><em>29</em></strong> and after transposing the message and decrypting the blocks, you get a key of that length:</p>
-
-<div class="codehilite">
-<pre><span></span><code>Terminator X: Bring the noise
-</code></pre>
-</div>
-
-<p>Lastly, use the <strong><em>Repeating-Key XOR</em></strong> method to decrypt the message with the cracked key (which looks like lyrics to some music track!):</p>
-
-<div class="codehilite">
-<pre><span></span><code>A rockin&#39; on the mike while the fly girls yell
-Well that&#39;s my DJ Deshay cuttin&#39; all them Z&#39;s
-Vanilla&#39;s on the mike, man I&#39;m not lazy. ?I&#39;m lettin&#39; my drug kick in
-To just let it flow, let my concepts go
-And if you don&#39;t give a damn, then
-So get off &#39;cause I control the stage
-I&#39;m in my own phase
-And I can dance better than any kid n&#39; play ?
-Stage 2 -- Yea the one ya&#39; wanna listen to
-So I can funk it up and make it sound good
-For good luck, I like my rhymes atrocious
-I&#39;m an effect and that you can bet
-There&#39;s no denyin&#39;, You can try to hang 
-Over and over, practice makes perfect
-Soon -- Oh my God, homebody, you probably eat
-Intoxicating so you stagger like a wino
-Vanilla Ice is sellin&#39; and you people are buyin&#39;
-Movin&#39; and groovin&#39; trying to sing along
-Now you&#39;re amazed by the VIP posse. ?
-Steppin&#39; so hard like a German Nazi
-There&#39;s no trippin&#39; on mine, I&#39;m just gettin&#39; down
-You trapped me once and I thought that
-So step down and lend me your ear 
-Your body&#39;s gettin&#39; hot, so, so I can smell it
-&#39;Cause the lyrics belong to ICE, You can call me Dad 
-Let the witch doctor, Ice, do the dance to cure 
-You wanna battle me -- Anytime, anywhere ?
-You thought that I was weak, Boy, you&#39;re dead wrong 
-play that funky music Go white boy, go white boy, go
-Play that funky music white boy you say it, say it 
-Play that funky music, white boy Come on, Come on, Come on
-</code></pre>
-</div>
-
-<p>As mentioned above, this was really challenging and fun, at the same time. Although, Most people (academically) know <strong><em>"how-to"</em></strong> break a Repeating-Key XOR (Vignere Cipher) but being <strong><em>able</em></strong> to break it, is another thing.</p>
+<p>The idea of placing sensors in the front and rear of a vehicle can
+optimize the flow of traffic and thus, it might help eliminate traffic
+congestion.</p>
 
 <p>Hope you liked reading this article!</p>
 
-<p>But, hang in there, surprisingly, this code will be useful later on for many problems.</p>
-
 	</div>
 	<div class="article-footer">
-		<time>December 18th, 2017</time>
+		<time>August 19th, 2018</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/cryptography/">
-					Cryptography
+				<a href="/category/essay/">
+					Essay
 				</a>
 			</li>
 			
@@ -1008,140 +313,401 @@ Play that funky music, white boy Come on, Come on, Come on
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/the-cryptopals-crypto-challenges-set-1--implement-repeatingkey-xor">The Cryptopals Crypto Challenges: Set 1 - Implement Repeating-Key XOR</a></h1>
-		<p class="description">Write a method that encrypts messages using the Repeating-Key XOR method with a given key.</p>
+		<h1 class="heading"><a href="/writings/posts/meet-blog-engine-20">Meet Blog Engine 2.0</a></h1>
+		<p class="description">Basically, a minimal blog engine with a paper-like user interface with better enhancements.</p>
 	</div>
 	<div class="article-body">
-		<p>This is the <a href="http://cryptopals.com/sets/1/challenges/5">fifth challenge</a> of Set 1 in The Cryptopals Crypto Challenges website. Previously, I spoke about these challenges and provided walkthroughs for the previous challenges, if you haven't read them, here are the links:</p>
+		<div class="post-notification">
+    <h3>Blog engine updated!</h3>
+    <p>As of March 1st 2019, I have changed my blog engine from a dynamic website to a custom-built static site generator. <a href="../writings/posts/say-hello-new-blog/">Read more &rarr;</a></p>
+</div>
+
+<p>Whenever I'm writing a new blog post, I would write it using HTML on my
+text editor i.e. using <strong><em>Sublime Text</em></strong> and copy-paste the source code
+into my blog engine and hit "Submit" and that was really annoying.</p>
+
+<p>You might be thinking to yourself as to why I'm putting myself through
+such a tedious process to write a blog article when there are several
+<strong><em>WYSIWYG</em></strong> text editor plugins.</p>
+
+<p>Truth is, I have to admit that I was lazy and I cared a lot about
+writing my blog articles but never cared about the tool I had built that
+to write my blog articles, so I decided to upgrade it and make it even
+better than what it was previously!</p>
+
+<h2>Why rewrite it?</h2>
+
+<p>For starters, the old one had a clunky and pretty much boring user
+interface. I used <strong><em>CKEditor</em></strong> text editor plugin but to be honest, I
+rarely used any of it's features as I was just directly copy-pasting my
+source code from Sublime Text to the text field box.</p>
+
+<p>Over time, it became slow due to spaghetti code and it required a lot of
+code refactoring as I wrote this code during my earlier days of
+programming by following various programming tutorials.</p>
+
+<p>Here's some screenshots of the old blog engine:</p>
+
+<figure>
+    <img src="/static/images/be-v1-1.png" />
+    <figcaption>
+        Fig.1: Index Page
+    </figcaption>
+</figure>
+
+<figure>
+    <img src="/static/images/be-v1-2.png" />
+    <figcaption>
+        Fig.2: List of blog posts
+    </figcaption>
+</figure>
+
+<figure>
+    <img src="/static/images/be-v1-3.png" />
+    <figcaption>
+    Fig.3: Edit page
+    </figcaption>
+</figure>
+
+<p>And, last but not the least, it didn't make me feel like I was writing a
+blog but rather felt like writing HTML code in a more tedious manner.</p>
+
+<h2>Time for a change!</h2>
+
+<p>For the past two weeks, I have been working on a new version of the blog
+engine and I had decided to give it some new features like:</p>
 
 <ul>
-<li><a href="/posts/the-cryptopals-crypto-challenges">The Cryptopals Crypto Challenges</a></li>
-<li><a href="/posts/the-cryptopals-crypto-challenges-set-1--convert-hex-to-base64">The Cryptopals Crypto Challenges: Set 1 - Convert Hex to Base64</a></li>
-<li><a href="/posts/base64-encoding--decoding-using-bitwise-manipulation-in-c">Base64 Encoding / Decoding using Bitwise Manipulation in C++</a></li>
-<li><a href="/posts/the-cryptopals-crypto-challenges-set-1--fixed-xor">The Cryptopals Crypto Challenges: Set 1 - Fixed XOR Cipher</a></li>
-<li><a href="/posts/the-cryptopals-crypto-challenges-set-1--singlebyte-xor-cipher">The Cryptopals Crypto Challenges: Set 1 - Single-Byte XOR Cipher</a></li>
-<li><a href="/posts/the-cryptopals-crypto-challenges-set-1--detect-singlecharacter-xor">The Cryptopals Crypto Challenges: Set 1 - Detect Single-Character XOR</a></li>
+<li>Clean and paper-like user interface by taking inspiration from Google's Material Theming Design guidelines</li>
+<li>Minimal text editor built from scratch that can be extensible in the future</li>
+<li>Auto-save article every minute</li>
+<li>Emojis, LaTeX syntax, JavaScript files and IFRAME windows</li>
+<li>Live search bar to filter articles by keywords or categories</li>
 </ul>
 
-<p>For this challenge, you have to implement a <strong><em>Repeating-Key XOR</em></strong> method to encrypt the following message:</p>
+<p>In case, you're wondering, I built this using vanilla JavaScript and a
+custom-built MVC PHP framework with a MySQL database.</p>
+
+<p>Here's some screenshots of the new blog engine:</p>
+
+<figure>
+    <img src="/static/images/be-v2-1.png" />
+    <figcaption>
+        Fig.4: Index page with a better UI
+    </figcaption>
+</figure>
+
+<figure>
+    <img src="/static/images/be-v2-2.png" />
+    <figcaption>
+        Fig.5: Minimal Text Editor
+    </figcaption>
+</figure>
+
+<p>What I really wanted to achieve with the new blog engine is that I want
+to give myself an enjoyable writing experience besides, this blog post
+was written from the new blog engine.</p>
+
+<p>Well, it's stable as of yet but I need to run a few tests and build more
+functionalities before deploying it on my production server and finally
+saying good-bye to the old version.</p>
+
+<p>Hope you liked reading this article!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>August 3rd, 2018</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/general/">
+					General
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/writings/posts/build-and-design-software-with-empathy">Build and Design software with Empathy</a></h1>
+		<p class="description">Can seeing things from another's perspective create empathy and help solve technical challenges?</p>
+	</div>
+	<div class="article-body">
+		<p>Recently, I've started reading this book named <a href="https://abookapart.com/products/designing-for-emotion">Designing For
+Emotion</a> by
+<a href="http://aarronwalter.com/">Aarron Walter</a> and I've made it a point to
+read it during my free time and so far I have completed three chapters
+of the book.</p>
+
+<p>In the first chapter of the book, I found a really interesting sentence,
+written by the author:</p>
+
+<blockquote>
+  <p>Keep in mind that ignoring human needs is not a history we are doomed
+  to repeat. Through our designs, we can see and connect with other
+  human beings.</p>
+</blockquote>
+
+<p>Do you think a good software builds strong connections with other human
+beings? Well, we have good examples like Facebook, Google, Netflix, and
+Microsoft are proof that they have a massive pool of audience who likes
+to use their products on a daily basis.</p>
+
+<p>In this article, I will share some of my thoughts on how empathy can be
+used to build and design powerful applications.</p>
+
+<h2>User Interface Matters</h2>
+
+<p>To any user, whatever is displayed on the application matters the most,
+in this case, it's the <strong><em>User Interface</em></strong> of an application. If it
+doesn't allow a user to perform their desired task, it will end up in
+their Recycle Bin.</p>
+
+<figure>
+    <img src="https://cdn.cultofmac.com/wp-content/uploads/2017/08/Ping-780x604.jpg"/>
+    <figcaption>
+        Fig. 1: Apple's Ping
+    </figcaption>
+</figure>
+
+<p>There are many examples in the book and one of the examples is about
+<strong><em>Apple's Ping</em></strong> (refer to Fig. 1), which was an attempt in creating a
+social network on <strong><em>iTunes</em></strong> but it turned out to be unsuccessful as
+users learned that they weren't able to share songs on Facebook or
+Twitter and it lacked basic features. As a result, users didn't come
+back to it again.</p>
+
+<p>In my opinion, a good user interface should be relatively easy to use
+and be more reliable in terms of pagespeed or simple and easy navigation
+for the user. I mean, think about it, if your user is able to complete
+their desired task and that puts a smile on their face, the user will
+share their experiences to their friends and you'll get more people to
+use your application, thus making your application more powerful.</p>
+
+<h2>A Universal Design</h2>
+
+<p>A door knob comes with multiple designs such as rotating knobs and
+levers but what matters the most to the people? The design or the
+functionality? I personally prefer a lever knob over a rotating knob as
+I find it quite annoying. Weird analogy but the point is, it should just
+open the door, nothing fancy.</p>
+
+<p>Similarly, when we build our software, by following proper techniques,
+we can choose to make it beautiful but also choose to make it accessible
+and functional for everybody, at all costs.</p>
+
+<h2>Listen to your users</h2>
+
+<p>When building and designing a piece of code, it should and always be for
+the people that uses or will use your product. By understanding what's
+important to the users, it can help you get to the core of the problem
+and surpass technical challenges easily.</p>
+
+<p>This can be achieved by gathering user requirements in the form of
+surveys, user feedback and A/B testing. Remember, software is just an
+expressive form of bringing your ideas to life and writing code is
+building on top of the idea to achieve a certain goal but empathy is the
+secret sauce to the success of your application.</p>
+
+<h2>UX is not UI</h2>
+
+<p>What's the first thing that comes to your mind when a friend of yours
+tells you: <em>"Hey, I'm working as a UX Designer at UberCoolCorp!"</em>? Does
+he build User Interfaces? Is he a Visual Graphics Designer? Neither,
+actually!</p>
+
+<p>User Experience is not about how your application looks but how it feels
+and makes it simple and easier to interact with your users. I'd like to
+share an interesting quote from Usabilla's UX Expert, Erik Flowers:</p>
+
+<blockquote>
+  <p>UX is the intangible design of a strategy that brings us to a
+  solution.</p>
+</blockquote>
+
+<p>User Experience encompasses a lot of elements such as Information
+Architecture, Interaction Design, Usability, Product Design and so on.
+Below is a picture for your reference about why User Experience is not
+User Interface:</p>
+
+<figure>
+    <img src="http://www.uxisnotui.com/downloads/with-title.png"/>
+    <figcaption>
+        Fig. 2: How UX wants to be seen.
+    </figcaption>
+</figure>
+
+<p>Although, it does have a lot of elements, UI is a huge part of the
+design process because strong visual aesthetics are still essential in
+UX, which is also one of the aspects of your user's interactions with
+the application.</p>
+
+<h2>Progressive Enhancement</h2>
+
+<p>A strategy that is known to take you on journey from simplicity to
+complexity. It's about starting off with a strong, practical foundation
+and then building on top of it. It's easier to maintain and make small
+yet incremental changes, renders the application to be more robust and
+it works for all users.</p>
+
+<h2>Conclusion</h2>
+
+<p>Well, I'm sure there a lot of elements to this topic but I thought of
+highlighting some of the most important parts of building and designing
+software with empathy. As engineers or developers, it is our job to
+ensure that our final product is usable and accessible to our end-user.</p>
+
+<p>Hope you liked reading this article!</p>
+
+<p>Stay tuned for more!</p>
+
+<h2>Extras</h2>
+
+<ul>
+<li><a href="https://medium.com/design-ibm/empathy-is-not-a-soft-skill-its-a-superpower-81f11e32201e">Empathy is not a soft skill. It's a superpower.</a></li>
+<li><a href="https://simpleprogrammer.com/empathy-software-developers/">How Empathy can be a Software Developer's superpower</a></li>
+</ul>
+
+	</div>
+	<div class="article-footer">
+		<time>July 6th, 2018</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/user-interface/">
+					User Interface
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/user-experience/">
+					User Experience
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/writings/posts/lexicographic-permutations">Lexicographic Permutations</a></h1>
+		<p class="description">How to generate the next permutation of any given sequence in lexicographical order.</p>
+	</div>
+	<div class="article-body">
+		<p>According to <a href="https://projecteuler.net/problem=24">Problem 24</a> in Project Euler, you are asked to find the millionth permutation using the following sequence of 10 digits (0, 1, 2, 3, 4, 5, 6, 7, 8, 9). Well, if you do the math, there are around <strong><em>10! = 3,628,800 unique permutations</em></strong> and that means, you have to come up with an efficient algorithm.</p>
+
+<p>I tried writing a recursive function but it turned out to be a bit tricky, so I thought of writing a brute-force solution which seemed far more simpler to understand and it's quite efficient.</p>
+
+<h2>Algorithm Description</h2>
+
+<p>The following algorithm is quite simple and easy to understand:</p>
 
 <div class="codehilite">
-<pre><span></span><code>Burning &#39;em, if you ain&#39;t quick and nimble
-I go crazy when I hear a cymbal
+<pre><span></span><code>1. Find i such that a[i-1] is greater than or equal to a[i].
+2. Find j such that a[j-1] is less than or equal to a[i-1].
+3. Swap a[i] with a[j].
+4. Reverse the suffix from a[i+1] to the last element.
 </code></pre>
 </div>
 
-<p>With a given key:</p>
+<p>Suppose, if the first step fails, it means the current permutation is the last one because such an index that does not exist. However, it's simple to implement the following algorithm correctly and efficiently, so let's take a look at the implementation.</p>
 
-<div class="codehilite">
-<pre><span></span><code>ICE
-</code></pre>
-</div>
+<h2>Python Implementation</h2>
 
-<p>The final message should look like this:</p>
-
-<div class="codehilite">
-<pre><span></span><code>0b3637272a2b2e63622c2e69692a23693a2a3c6324202d623d63343c2a26226324272765272
-a282b2f20430a652e2c652a3124333a653e2b2027630c692b20283165286326302e27282f
-</code></pre>
-</div>
-
-<p>If you've already understood the concept of <a href="/posts/base64-encoding-decoding-using-bitwise-manipulation-in-c">XOR</a> and had no issues implementing both <a href="/posts/the-cryptopals-crypto-challenges-set-1--fixed-xor">Fixed XOR Cipher</a> and <a href="/posts/the-cryptopals-crypto-challenges-set-1--singlebyte-xor-cipher">Single-Byte XOR Cipher</a>, then this should be a piece of cake for you when it comes to implementing <strong><em>Repeating-Key XOR Cipher</em></strong>.</p>
-
-<h2>How does this work?</h2>
-
-<p>With <strong><em>Repeating-Key XOR</em></strong>, you'll sequentially apply each byte of the key (which is "ICE", in this case); the first byte of plaintext will be XOR'd against <strong><em>"I"</em></strong>, the next <strong><em>"C"</em></strong>, the next <strong><em>"E"</em></strong>, then <strong><em>"I"</em></strong> again for the 4th byte, and so on.</p>
-
-<p>You can use this method to encrypt anything you want. Emails, Passwords, Secret messages and so on. You'll definitely get a feel for it because things will get interesting after this challenge.</p>
-
-<p>Let's dive in to the code:</p>
+<p>The following method only generates the next permutation of any given sequence, so if you're interested in generating all the permutations, especially, for very large lists, this function can be useful.</p>
 
 <p><strong>Implementation of the method(s):</strong></p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="c1">//Convert ASCII to HEX</span>
-<span class="n">string</span><span class="w"> </span><span class="nf">CryptoLib::con_ascii_2_hex</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="n">str</span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="n">stringstream</span><span class="w"> </span><span class="n">ss</span><span class="p">;</span>
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">str</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="n">ss</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">hex</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="n">str</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">ss</span><span class="p">.</span><span class="n">str</span><span class="p">();</span>
-<span class="p">}</span>
+<pre><span></span><code><span class="c1"># Swap numbers in a list</span>
+<span class="k">def</span> <span class="nf">swap</span><span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
+    <span class="nb">list</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="nb">list</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="nb">list</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
 
-<span class="c1">//Repeating Key XOR implementation</span>
-<span class="n">string</span><span class="w"> </span><span class="nf">CryptoLib::repeatingKeyXOR</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="n">str</span><span class="p">,</span><span class="w"> </span><span class="n">string</span><span class="w"> </span><span class="n">key</span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">newStr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">;</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="c1"># Get the next permutation</span>
+<span class="k">def</span> <span class="nf">nextPermutation</span><span class="p">(</span><span class="nb">list</span><span class="p">):</span>
 
-<span class="w">    </span><span class="cm">/*</span>
-<span class="cm">        1. Perform XOR against each character of the message </span>
-<span class="cm">        against each character of the key. </span>
-<span class="cm">        So if the key was &quot;ICE&quot; and the message is &quot;abcdefg&quot;,</span>
-<span class="cm">        it would be &quot;a&quot; against &quot;I&quot;, then &quot;b&quot; against &quot;C&quot; and &quot;c&quot; against &quot;E&quot;</span>
-<span class="cm">        but once it reaches the key&#39;s limit, you start again from the beginning</span>
-<span class="cm">        of the key, which should be like: &quot;d&quot; against &quot;I&quot;, &quot;e&quot; against &quot;C&quot; and so on.</span>
-<span class="cm">    */</span>
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">str</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">key</span><span class="p">[</span><span class="n">count</span><span class="p">];</span>
-<span class="w">        </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">str</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
-<span class="w">        </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">^</span><span class="w"> </span><span class="n">a</span><span class="p">;</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
 
-<span class="w">        </span><span class="n">newStr</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">c</span><span class="p">;</span>
+    <span class="c1"># As long as the f(x-1) &gt;= f(x), decrement the first index</span>
+    <span class="k">while</span> <span class="nb">list</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="nb">list</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="n">i</span><span class="o">-</span><span class="mi">1</span>
 
-<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">count</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">key</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="mi">-1</span><span class="p">)</span>
-<span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">        </span><span class="k">else</span>
-<span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="n">count</span><span class="o">++</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">}</span>
+    <span class="n">j</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
 
-<span class="w">    </span><span class="c1">//2. Convert the ASCII message to Hexadecimal</span>
-<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="k">final</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;0&quot;</span><span class="p">;</span>
-<span class="w">    </span><span class="k">final</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">con_ascii_2_hex</span><span class="p">(</span><span class="n">newStr</span><span class="p">);</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="k">final</span><span class="p">;</span>
-<span class="p">}</span>
+    <span class="c1"># As long as the f(y-1) &lt;= f(x-1), decrement the second index</span>
+    <span class="k">while</span> <span class="nb">list</span><span class="p">[</span><span class="n">j</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="nb">list</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="n">j</span> <span class="o">=</span> <span class="n">j</span><span class="o">-</span><span class="mi">1</span>
+
+    <span class="c1"># make a swap</span>
+    <span class="n">swap</span><span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">j</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">i</span> <span class="o">=</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span>
+    <span class="n">j</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+
+    <span class="c1"># keep swapping until you get the next permutation</span>
+    <span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">j</span><span class="p">:</span>
+        <span class="n">swap</span><span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">j</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span>
+        <span class="n">j</span> <span class="o">=</span> <span class="n">j</span><span class="o">-</span><span class="mi">1</span>
+
+    <span class="k">return</span> <span class="nb">list</span>
 </code></pre>
 </div>
 
 <p><strong>Final code:</strong></p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="c1">//Cryptopals Set 1 Challenge 5</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;crypto.h&quot;</span>
+<pre><span></span><code><span class="ch">#!usr/bin/python</span>
+<span class="kn">import</span> <span class="nn">math</span><span class="o">,</span> <span class="nn">time</span><span class="o">,</span> <span class="nn">pe_lib</span>
 
-<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="n">CryptoLib</span><span class="w"> </span><span class="n">crypt</span><span class="p">;</span>
+<span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
 
-<span class="w">    </span><span class="c1">//Test cases provided</span>
-<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">str</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;Burning &#39;em, if you ain&#39;t quick and nimble I go crazy when I hear a cymbal&quot;</span><span class="p">;</span>
-<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;ICE&quot;</span><span class="p">;</span>
+<span class="nb">list</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">9</span><span class="p">]</span>
 
-<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;ENCODED: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">crypt</span><span class="p">.</span><span class="n">repeatingKeyXOR</span><span class="p">(</span><span class="n">str</span><span class="p">,</span><span class="w"> </span><span class="n">key</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="p">}</span>
+<span class="n">count</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">limit</span> <span class="o">=</span> <span class="mi">1000000</span>
+
+<span class="k">while</span> <span class="n">count</span> <span class="o">&lt;</span> <span class="n">limit</span><span class="p">:</span>
+    <span class="n">pe_lib</span><span class="o">.</span><span class="n">nextPermutation</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+    <span class="n">count</span> <span class="o">=</span> <span class="n">count</span> <span class="o">+</span> <span class="mi">1</span>
+
+<span class="nb">print</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">)</span>
+<span class="nb">print</span> <span class="s2">&quot;Finished: </span><span class="si">%f</span><span class="s2"> seconds&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span>
 </code></pre>
 </div>
 
-<p><strong><em>Note: This solution and the library named <mark>crypto.h</mark> was built using the C++ programming language. The source code for this solution can be found on Github.</em></strong></p>
+<p>This code in executed in approximately <strong>2.37 seconds</strong> with an algorithmic complexity of <strong>O(n)</strong> i.e. linear time complexity and the replacements of the numbers were done <a href="https://en.wikipedia.org/wiki/In-place_algorithm">in-place</a> since no extra space was used.</p>
 
-<p>Stay tuned for the next challenge!</p>
+<p>Hope you liked reading this article!</p>
+
+<h2>References</h2>
+
+<ul>
+<li><a href="https://www.cut-the-knot.org/do_you_know/AllPerm.shtml">Counting and Listing all Permutations</a></li>
+<li><a href="https://leetcode.com/articles/next-permutation">LeetCode: Next Permutation</a></li>
+</ul>
 
 	</div>
 	<div class="article-footer">
-		<time>December 15th, 2017</time>
+		<time>May 25th, 2018</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/cryptography/">
-					Cryptography
+				<a href="/category/algorithms/">
+					Algorithms
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/data-structures/">
+					Data Structures
 				</a>
 			</li>
 			
@@ -1153,152 +719,311 @@ a282b2f20430a652e2c652a3124333a653e2b2027630c692b20283165286326302e27282f
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/the-cryptopals-crypto-challenges-set-1--singlebyte-xor-cipher">The Cryptopals Crypto Challenges: Set 1 - Single-Byte XOR Cipher</a></h1>
-		<p class="description">Write a method that decrypts a hexadecimal message that has been XOR'd against a single character.</p>
+		<h1 class="heading"><a href="/writings/posts/finding-the-1000-digit-fibonacci-number-using-the-golden-ratio">Finding the 1000 digit Fibonacci number using the Golden Ratio</a></h1>
+		<p class="description">Rather than sticking to using a brute force solution, I decided to find the 1000 digit fibonacci number using the Golden Ratio.</p>
 	</div>
 	<div class="article-body">
-		<p>This is the <a href="http://cryptopals.com/sets/1/challenges/3">third challenge</a> of Set 1 in The Cryptopals Crypto Challenges website. Previously, I spoke about these challenges and provided walkthroughs for the previous challenges, if you haven't read them, here are the links:</p>
+		<p>Back in February, I said that I'm going to start <a href="/posts/i-decided-to-learn-python">solving Project Euler
+problems using Python</a> and yes, I
+have been doing it actively but sometimes, I don't find the time to post
+the solutions.</p>
+
+<p>If you're someone who has tried Project Euler before, you'll know that
+you'll get to encounter problems that require you to implement smart
+solutions to crunch big numbers efficiently. One of those problems is
+<a href="https://www.projecteuler.net/problem=25">Problem 25</a>, which states to
+find the first term in the <a href="https://en.wikipedia.org/wiki/Fibonacci_number">Fibonacci
+Sequence</a> that contains
+1000 digits.</p>
+
+<p>This problem can be easily solved using a Brute Force solution, instead,
+I opted to try out a mathematical solution that makes use of the <a href="https://en.wikipedia.org/wiki/Golden_ratio">Golden
+Ratio</a> and also, it gave me
+the perfect excuse to try writing those formulas using
+<a href="https://en.wikipedia.org/wiki/LaTeX">LaTeX</a> markup.</p>
+
+<h2>What is Golden Ratio?</h2>
+
+<p>Famously known as <strong><em>Phi</em></strong> that represents the Golden Ratio is an
+irrational number that's approximately equal to <strong><em>1.6180</em></strong> and just like
+it's cousin, <strong><em>Pi</em></strong>, it has a never ending pattern of decimal digits.</p>
+
+<p>\[\Phi = 1.6180339887... \]</p>
+
+<p>According to the <a href="https://en.wikipedia.org/wiki/Golden_ratio">article</a>
+in Wikipedia, back in the Twentieth Century, architects and artists had
+proportioned their works to approximate the Golden Ratio in the form of
+a <a href="https://en.wikipedia.org/wiki/Golden_rectangle">Golden Rectangle</a>,
+that is believed to be aesthetically pleasing.</p>
+
+<h2>Time for some Calculus!</h2>
+
+<p>This is the equation used to find the <strong><em>n<sup>th</sup></em></strong> Fibonacci Number:</p>
+
+<p>\[ F(n) = {log(\Phi)^n \over \sqrt{5}} \]</p>
+
+<p>Now, let's modify this formula to find the smallest integer i.e. the
+first term of the 1000 digit number that fulfills this inequality:</p>
+
+<p>\[ {log(\Phi)^n \over \sqrt{5}} \gt {10^{999}} \]</p>
+
+<p>Expand the formula a little bit more:</p>
+
+<p>\[ n \times log(\Phi) - {log(5) \over 2} \gt {999 \times log(10)} \]</p>
+
+<p>\[ n \times log(\Phi) \gt {999 \times log(10)} + {log(5) \over 2} \]</p>
+
+<p>We need to find n, so let's isolate it:</p>
+
+<p>\[ n = {{999 \times log(10) + {log(5) \over 2}} \over
+{log(\Phi)}} = 4782.06 \]</p>
+
+<p>\[ n \cong 4782 \]</p>
+
+<p>So, the first term that contains the 1000 digit Fibonacci Number is
+<strong><em>4782</em></strong>.</p>
+
+<p>Here's the solution using Python that solved in 0.000194 seconds:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="kn">import</span> <span class="nn">math</span>
+
+<span class="n">limit</span> <span class="o">=</span> <span class="mi">999</span>
+<span class="n">golden_ratio</span> <span class="o">=</span> <span class="mf">1.6180</span>
+
+<span class="n">n</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(((</span><span class="n">limit</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">10</span><span class="p">))</span> <span class="o">+</span> <span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">))</span><span class="o">/</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">golden_ratio</span><span class="p">)))</span>
+
+<span class="nb">print</span> <span class="n">n</span>
+</code></pre>
+</div>
+
+<p>So, this is how it would look in our first equation above:</p>
+
+<p>\[F(4782) = {log(\Phi)^{4782} \over \sqrt{5}} = Some Large
+Number \]</p>
+
+<p>Well, if you try to find the number using a calculator or compile it on
+your computer, you'll end up having a compile error that says <strong><em>"Math
+Error"</em></strong>!</p>
+
+<p>Hope you liked reading this article!</p>
+
+<h2>References</h2>
 
 <ul>
-<li><a href="/posts/the-cryptopals-crypto-challenges">The Cryptopals Crypto Challenges</a></li>
-<li><a href="/posts/the-cryptopals-crypto-challenges-set-1--convert-hex-to-base64">The Cryptopals Crypto Challenges: Set 1 - Convert Hex to Base64</a></li>
-<li><a href="/posts/base64-encoding--decoding-using-bitwise-manipulation-in-c">Base64 Encoding / Decoding using Bitwise Manipulation in C++</a></li>
-<li><a href="/posts/the-cryptopals-crypto-challenges-set-1--fixed-xor">The Cryptopals Crypto Challenges: Set 1 - Fixed XOR Cipher</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Fibonacci_number">Fibonacci Number Sequence</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Golden_ratio">Golden Ratio</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Golden_rectangle">Golden Rectangle</a></li>
 </ul>
-
-<p>For this challenge, you have to write a method that decodes a
-Hexadecimal string:</p>
-
-<div class="codehilite">
-<pre><span></span><code>1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736
-</code></pre>
-</div>
-
-<p>That has been <strong><em>XOR'd</em></strong> against a <strong><em>single character</em></strong>. You must find the key and decrypt the message.</p>
-
-<p>If you have read the <a href="/posts/the-cryptopals-crypto-challenges-set-1--fixed-xor">previous article</a>, it was clearly setup for this problem. There are so many ways to solve this problem but the most efficient way to solve it is by using a <strong><em>Frequency table</em></strong>.</p>
-
-<p>Assuming the message is supposed to be in English, when decrypted, we need to only generate a frequency table using the given Hexadecimal string that shows the frequencies of each <strong><em>alphabet</em></strong>. The character that has the highest frequency is the key required, which is then used to perform an <strong><em>XOR (\^)</em></strong> operation against each character, to decrypt the encrypted message.</p>
-
-<p>Let's have a look at the code:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="c1">//Return Character frequency of a string</span>
-<span class="n">map</span><span class="o">&lt;</span><span class="kt">char</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">CryptoLib</span><span class="o">::</span><span class="n">frequency_table</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="n">str</span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="n">map</span><span class="o">&lt;</span><span class="kt">char</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span>
-<span class="w">    </span><span class="n">map</span><span class="o">&lt;</span><span class="kt">char</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;::</span><span class="n">iterator</span><span class="w"> </span><span class="n">it</span><span class="p">;</span>
-
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">str</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="kt">char</span><span class="w"> </span><span class="n">ch</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">str</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
-<span class="w">        </span><span class="n">it</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">m</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="n">ch</span><span class="p">);</span>
-
-<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">it</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">m</span><span class="p">.</span><span class="n">end</span><span class="p">())</span>
-<span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="n">m</span><span class="p">.</span><span class="n">insert</span><span class="p">(</span><span class="n">make_pair</span><span class="p">(</span><span class="n">ch</span><span class="p">,</span><span class="mi">1</span><span class="p">));</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">        </span><span class="k">else</span>
-<span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="n">it</span><span class="o">-&gt;</span><span class="n">second</span><span class="o">++</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">m</span><span class="p">;</span>
-<span class="p">}</span>
-
-<span class="c1">//Return character with the highest frequency</span>
-<span class="kt">char</span><span class="w"> </span><span class="n">CryptoLib</span><span class="o">::</span><span class="n">ret_high_freq_char</span><span class="p">(</span><span class="n">map</span><span class="o">&lt;</span><span class="kt">char</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">m</span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">max_count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="n">max_char</span><span class="p">;</span>
-
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="k">auto</span><span class="w"> </span><span class="n">p</span><span class="o">:</span><span class="w"> </span><span class="n">m</span><span class="p">)</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">isalpha</span><span class="p">(</span><span class="n">p</span><span class="p">.</span><span class="n">first</span><span class="p">))</span>
-<span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">p</span><span class="p">.</span><span class="n">second</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">max_count</span><span class="p">)</span>
-<span class="w">            </span><span class="p">{</span>
-<span class="w">                </span><span class="n">max_char</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">first</span><span class="p">;</span>
-<span class="w">                </span><span class="n">max_count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">second</span><span class="p">;</span>
-<span class="w">            </span><span class="p">}</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">max_char</span><span class="p">;</span>
-<span class="p">}</span>
-
-<span class="c1">//Single Byte XOR</span>
-<span class="n">string</span><span class="w"> </span><span class="n">CryptoLib</span><span class="o">::</span><span class="n">singleByteXOR</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="n">str</span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">newStr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">;</span>
-
-<span class="w">    </span><span class="c1">//1. Convert Hexadecimal to Binary</span>
-<span class="w">    </span><span class="n">str</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">add_spaces</span><span class="p">(</span><span class="n">con_hex_2_bin</span><span class="p">(</span><span class="n">str</span><span class="p">),</span><span class="w"> </span><span class="mi">8</span><span class="p">);</span>
-
-<span class="w">    </span><span class="c1">//2. Convert Binary to Decimals</span>
-<span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">con_bin_2_dec</span><span class="p">(</span><span class="n">str</span><span class="p">,</span><span class="w"> </span><span class="mf">7.0</span><span class="p">);</span>
-
-
-<span class="w">    </span><span class="c1">// What&#39;s happening here?</span>
-<span class="w">    </span><span class="c1">// 4. Generate a frequency table using the characters from the ASCII string</span>
-<span class="w">    </span><span class="c1">// 5. Look for characters that are English and also has the highest frequency</span>
-<span class="w">    </span><span class="c1">// 6. The character that has the highest frequency is the KEY!</span>
-
-<span class="w">    </span><span class="c1">//The key</span>
-<span class="w">    </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">toupper</span><span class="p">(</span><span class="n">ret_high_freq_char</span><span class="p">(</span><span class="n">frequency_table</span><span class="p">(</span><span class="n">con_dec_2_ascii</span><span class="p">(</span><span class="n">v</span><span class="p">))));</span>
-
-<span class="w">    </span><span class="c1">//7. Perform XOR with the KEY against each character</span>
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">v</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
-<span class="w">        </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">^</span><span class="w"> </span><span class="n">a</span><span class="p">;</span>
-<span class="w">        </span><span class="n">newStr</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">c</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="c1">//8. Decoded message</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">newStr</span><span class="p">;</span>
-<span class="p">}</span>
-</code></pre>
-</div>
-
-<p><strong>Final code:</strong></p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="c1">//CryptoPals Set 1 Challenge 3</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;crypto.h&quot;</span>
-
-<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="n">CryptoLib</span><span class="w"> </span><span class="n">crypt</span><span class="p">;</span>
-
-<span class="w">    </span><span class="c1">//Test case provided</span>
-<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">str</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736&quot;</span><span class="p">;</span>
-<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;DECODED: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">crypt</span><span class="p">.</span><span class="n">singleByteXOR</span><span class="p">(</span><span class="n">str</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="p">}</span><span class="w">   </span>
-</code></pre>
-</div>
-
-<p><strong>Decrypted message:</strong></p>
-
-<div class="codehilite">
-<pre><span></span><code>Key with the highest frequency: &#39;X&#39;
-Message: Cooking MC&#39;s like a pound of bacon
-</code></pre>
-</div>
-
-<p><strong><em>Note: This solution and the library named <code>crypto.h</code> was built using the C++ programming language. The source code for this solution can be found on Github.</em></strong></p>
-
-<p>Stay tuned for the next challenge!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>December 13th, 2017</time>
+		<time>May 18th, 2018</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/cryptography/">
-					Cryptography
+				<a href="/category/mathematics/">
+					Mathematics
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/writings/posts/the-game-of-life">The Game of Life</a></h1>
+		<p class="description">An essay about The Game of Life and it's unpredictable behaviour of creating different yet unique patterns.</p>
+	</div>
+	<div class="article-body">
+		<figure>
+    <canvas id="game-of-life" height="500px" width="500px"></canvas>
+    <script defer src="/static/projects/game-of-life/script.js" type="text/javascript"></script>
+</figure>
+
+<p>Life is full of surprises, isn't it?</p>
+
+<p>We can't state what could possibly happen in the future based on the
+present events. It's like a pattern but except you don't know what it
+would turn to be in the end.</p>
+
+<p>This is what the Cambridge Mathematician <a href="https://en.wikipedia.org/wiki/John_Horton_Conway">John H.
+Conway</a> must have
+thought about when he invented the <strong>Game of Life</strong>, who was really
+interested in <a href="https://en.wikipedia.org/wiki/Cellular_automaton">Cellular
+Automaton</a>, a field of
+mathematical research, that is often used in the earlier days to
+simulate systems in real world scenario.</p>
+
+<p>His work was influenced by Hungarian-American Mathematician <a href="https://en.wikipedia.org/wiki/John_von_Neumann">John von
+Neumann</a>, who aimed to
+build a machine that had the ability to self-replicate itself and thus,
+Conway became successful when he was able to simplify Neumann's ideas
+using a mathematical model that he had discovered.</p>
+
+<p>I'd like to share a quote that I found really inspiring:</p>
+
+<blockquote>
+  <p>"You know, people think mathematics is complicated. Mathematics is the
+  simple bit. Its the stuff we can understand. Its cats that are
+  complicated. I mean, what is it in those little molecules and stuff
+  that make one cat behave differently than another, or that make a cat?
+  And how do you define a cat? I have no idea." - John H. Conway</p>
+</blockquote>
+
+<h2>What is Game of Life?</h2>
+
+<p>It's a zero-player game on a two-dimensional grid of squares that has no
+winners or losers except a certain set of simple mathematical rules that
+achieves an unpredictable behavior of whether a pattern (or population)
+will die, become stable or grow out of control.</p>
+
+<p>According to the <a href="https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life">Wikipedia</a> article, these are the following rules:</p>
+
+<ol>
+<li>Any live cell with fewer than two live neighbours dies, as if caused
+by underpopulation.</li>
+<li>Any live cell with two or three live neighbours lives on to the next
+generation.</li>
+<li>Any live cell with more than three live neighbours dies, as if by
+overpopulation.</li>
+<li>Any dead cell with exactly three neighbours becomes a live cell, as
+if by reproduction.</li>
+</ol>
+
+<p>This is one of the simplest examples of a <strong><em>self-organizing</em></strong> system. I
+find it really interesting as how unique yet different patterns emerge
+from a simple set of rules and might be considered as a form of
+<strong><em>mathematical beauty</em></strong>. However, did this help mathematicians or
+scientists to understand the diversity of life that has evolved on
+earth? Perhaps, but I do believe that <strong><em>Mother Nature</em></strong> is far more
+complicated than that. However, it did help me realize that I have to
+study and understand different patterns and behaviours in order to build
+complex systems.</p>
+
+<p>Studying the behavior of cells or animals using a simple set of rules
+can help understand how things really work and this influences
+scientists and engineers to come up with brilliant solutions to solve
+existing problems in this world.</p>
+
+<p>For example, studying the intelligent behavior of ants being able to
+build complex ant colonies, trying to understand the cause of traffic
+congestions and how to prevent them (which I will be talking about in
+another post), finding the cure for cancer and many other human diseases
+and so on.</p>
+
+<p>Well, the point that I'm trying to make is, perhaps, the solution to all
+of today's current problems could be hidden inside the patterns of this
+simple game.</p>
+
+<p>Hope you enjoyed reading this article!</p>
+
+<p>Adios Amigo!</p>
+
+<h2>References</h2>
+
+<ul>
+<li><a href="http://web.stanford.edu/~cdebs/GameOfLife">The Game of Life by Stanford University</a></li>
+</ul>
+
+	</div>
+	<div class="article-footer">
+		<time>April 14th, 2018</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/essay/">
+					Essay
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/writings/posts/ui-design-pattern-editinplace">UI Design Pattern: Edit-in-Place</a></h1>
+		<p class="description">I implemented a design pattern that could help my team edit content on-the-fly instead of having to navigate through a sea of web pages in a separate portal.</p>
+	</div>
+	<div class="article-body">
+		<p>Two weeks ago, I was thinking of making an improvement on my <a href="https://www.kit.ae">company
+website</a>'s custom-built Content Management System
+(CMS) in order to make it easier for my team to edit and push content
+with ease.</p>
+
+<p>As a matter of coincidence, I came across a book named <a href="http://www.designinginterfaces.com">Designing
+Interfaces: Patterns for Effective Interaction
+Design</a> by Jennifer Tidwell, which
+contains several User Interface and Interaction Design patterns that
+inspired me to implement one of the patterns that I had discovered in
+the book, <strong><em>"Edit-in-Place"</em></strong>.</p>
+
+<h2>What's Edit-in-Place?</h2>
+
+<p>It's like a tiny WYSIWYG text-editor that allows users to change the
+text directly on top of the original text instead of going through a
+separate portal or dialog box.</p>
+
+<h2>Why did I build it?</h2>
+
+<p>The fact that my team has to navigate through a sea of pages in the CMS
+to edit content is annoying and sometimes, it could be just opening a
+lot of new tabs on the browser. Hence, a feature like this would allow
+them to edit content <strong><em>"on-the-fly"</em></strong> with zero navigation.</p>
+
+<p>Below, I have made an implementation of it using Javascript and an
+experimental design for my blog.</p>
+
+<p><strong>How to use Edit-in-Place:</strong></p>
+
+<ul>
+<li>Hover on top of any text element.</li>
+<li>Double-click on the selected element.</li>
+<li>Click <strong><em>Save</em></strong> to save changes.</li>
+<li>Click <strong><em>Cancel</em></strong> to cancel changes.</li>
+</ul>
+
+<figure>
+    <iframe width="500" height="1993" src="/static/projects/edit-in-place">
+    </iframe>
+</figure>
+
+<p>The book claims that <strong><em>Flickr</em></strong> is one of them who implemented this
+feature, you can find this feature in most modern Content Management
+Systems like Wordpress, Joomla or Drupal or a better example, you have
+used this feature while renaming a file on your computer.</p>
+
+<p>However, there are some limits to this i.e. you can only apply this
+feature on dynamic webpages as you'll have to write a few additional
+lines of <strong><em>AJAX</em></strong> that sends a <strong><em>POST</em></strong> request to your server to
+reflect the saved changes on your database.</p>
+
+<p>Hope you guys found this article useful!</p>
+
+<h2>Credit</h2>
+
+<p>Icons used are from <a href="https://www.flaticon.com/">www.flaticon.com</a> is licensed by <a href="http://creativecommons.org/licenses/by/3.0/">CC 3.0 BY</a></p>
+
+	</div>
+	<div class="article-footer">
+		<time>March 24th, 2018</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/user-interface/">
+					User Interface
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/user-experience/">
+					User Experience
 				</a>
 			</li>
 			
@@ -1343,6 +1068,10 @@ Message: Cooking MC&#39;s like a pound of bacon
 	
 		
 			<a class="" href="/pages/27">27</a>
+		
+	
+		
+			<a class="" href="/pages/28">28</a>
 		
 	
 
@@ -1405,6 +1134,20 @@ Message: Cooking MC&#39;s like a pound of bacon
 		</li>
 		
 		<li>
+			<a href="/category/cryptography/">
+				Cryptography
+				<span class="count">12</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/programming/">
+				Programming
+				<span class="count">11</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/javascript/">
 				JavaScript
 				<span class="count">11</span>
@@ -1426,9 +1169,9 @@ Message: Cooking MC&#39;s like a pound of bacon
 		</li>
 		
 		<li>
-			<a href="/category/cryptography/">
-				Cryptography
-				<span class="count">11</span>
+			<a href="/category/productivity/">
+				Productivity
+				<span class="count">10</span>
 			</a>
 		</li>
 		
@@ -1436,20 +1179,6 @@ Message: Cooking MC&#39;s like a pound of bacon
 			<a href="/category/git/">
 				Git
 				<span class="count">10</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/productivity/">
-				Productivity
-				<span class="count">9</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/programming/">
-				Programming
-				<span class="count">9</span>
 			</a>
 		</li>
 		
@@ -1496,6 +1225,13 @@ Message: Cooking MC&#39;s like a pound of bacon
 		</li>
 		
 		<li>
+			<a href="/category/vscode/">
+				VSCode
+				<span class="count">5</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/blogmarks/">
 				Blogmarks
 				<span class="count">5</span>
@@ -1517,16 +1253,16 @@ Message: Cooking MC&#39;s like a pound of bacon
 		</li>
 		
 		<li>
-			<a href="/category/arcade-challenge/">
-				Arcade Challenge
+			<a href="/category/c/">
+				C#
 				<span class="count">4</span>
 			</a>
 		</li>
 		
 		<li>
-			<a href="/category/vscode/">
-				VSCode
-				<span class="count">3</span>
+			<a href="/category/arcade-challenge/">
+				Arcade Challenge
+				<span class="count">4</span>
 			</a>
 		</li>
 		
@@ -1569,6 +1305,34 @@ Message: Cooking MC&#39;s like a pound of bacon
 			<a href="/category/general/">
 				General
 				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/clean-code/">
+				Clean Code
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/refactoring/">
+				Refactoring
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/security/">
+				Security
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/sql-server/">
+				SQL Server
+				<span class="count">2</span>
 			</a>
 		</li>
 		
@@ -1650,6 +1414,34 @@ Message: Cooking MC&#39;s like a pound of bacon
 		</li>
 		
 		<li>
+			<a href="/category/net-core/">
+				.NET Core
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/oop/">
+				OOP
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/troubleshooting/">
+				Troubleshooting
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/documentary/">
+				Documentary
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/xdebug/">
 				XDebug
 				<span class="count">1</span>
@@ -1673,13 +1465,6 @@ Message: Cooking MC&#39;s like a pound of bacon
 		<li>
 			<a href="/category/csr/">
 				CSR
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/clean-code/">
-				Clean Code
 				<span class="count">1</span>
 			</a>
 		</li>
@@ -1755,13 +1540,6 @@ Message: Cooking MC&#39;s like a pound of bacon
 		</li>
 		
 		<li>
-			<a href="/category/security/">
-				Security
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/cpanel/">
 				cPanel
 				<span class="count">1</span>
@@ -1771,13 +1549,6 @@ Message: Cooking MC&#39;s like a pound of bacon
 		<li>
 			<a href="/category/introduction/">
 				Introduction
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/refactoring/">
-				Refactoring
 				<span class="count">1</span>
 			</a>
 		</li>

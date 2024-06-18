@@ -78,29 +78,306 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-perform-mysqldump-without-a-password-prompt">How to perform mysqldump without a password prompt?</a></h1>
+		<h1 class="heading"><a href="/til/posts/render-a-simple-rgb-colored-image-in-c">Render a simple RGB colored image in C++</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>If you're performing a mass database backup using <code>mysqldump</code>, you'll pretty much find it annoying to type in the password every single time.</p>
+		<p><img src="../../../static/til_images/rgb-colored-spectrum.png" style="width: 500px; height: 300px;" /></p>
 
-<p>To get rid of it, open <code>/etc/mysql/my.cnf</code> configuration file and add your database credentials:</p>
+<p>Recently, I started reading a book called <a href="https://graphicscodex.courses.nvidia.com/app.html">The Graphics Codex</a>, it's an amazing book about Computer Graphics covering a lot of content and I find it quite resourceful. I wanted to build my own toy raytracer for the sake of exploring, so that's why I started to refresh my graphics coding knowledge a bit.</p>
+
+<p>Just like any graphics renderer, in order to view your image. you must be able to write your image to a file, right?</p>
+
+<p>Below, I wrote a really simple code to generate the entire RGB colored spectrum from top to bottom:</p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="err">[</span><span class="n">mysqldump</span><span class="err">]</span>
-<span class="k">user</span><span class="o">=</span><span class="s2">&quot;your_username&quot;</span>
-<span class="k">password</span><span class="o">=</span><span class="s2">&quot;your_password&quot;</span>
+<pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">800</span><span class="p">;</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">height</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">800</span><span class="p">;</span>
+
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;P3</span><span class="se">\n</span><span class="s">&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">width</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">height</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">255</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="n">height</span><span class="mi">-1</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&gt;=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">--</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">width</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">auto</span><span class="w"> </span><span class="n">r</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kt">double</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="n">width</span><span class="mi">-1</span><span class="p">);</span>
+<span class="w">            </span><span class="k">auto</span><span class="w"> </span><span class="n">g</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kt">double</span><span class="p">(</span><span class="n">j</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="n">height</span><span class="mi">-1</span><span class="p">);</span>
+<span class="w">            </span><span class="k">auto</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.25</span><span class="p">;</span>
+
+<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">ir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="mf">255.999</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">r</span><span class="p">);</span>
+<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">ig</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="mf">255.999</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">g</span><span class="p">);</span>
+<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">ib</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="mf">255.999</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">b</span><span class="p">);</span>
+
+<span class="w">            </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">ir</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">ig</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">ib</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
 </code></pre>
 </div>
 
-<p>Once done, save the <code>my.cnf</code> configuration file and now, you can try exporting your database without a hassle like this:</p>
+<p>You can generate it by simply creating an executable like this:</p>
 
 <div class="codehilite">
-<pre><span></span><code>mysqldump<span class="w"> </span>-u<span class="w"> </span>your_username<span class="w"> </span>database_name<span class="w"> </span>&gt;<span class="w"> </span>database.sql
+<pre><span></span><code>g++<span class="w"> </span>-o<span class="w"> </span>pixels<span class="w"> </span>pixels.cpp
 </code></pre>
 </div>
 
-<p>Hope this trick helps you out!</p>
+<p>Now, when you execute it by typing <code>./pixels</code>, you'll get a list of numbers that's pretty much a combination and permutation of RGB color values.</p>
+
+<p>Lastly, to generate a colored image, like the one above, just redirect the output to an image format, in this example, I used PPM image format:</p>
+
+<div class="codehilite">
+<pre><span></span><code>./pixels<span class="w"> </span>&gt;<span class="w"> </span>image.ppm<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>xdg-open<span class="w"> </span>image.ppm
+</code></pre>
+</div>
+
+<p>And that's it, you have generated your own colored image! &#x1F601;</p>
+
+<p>Hope you found this useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>June 11th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/graphics/">
+					Graphics
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/writings/posts/one-year-of-writing-til-articles">One year of writing TIL articles</a></h1>
+		<p class="description">A little self-reflection on how writing TIL articles has improved my productivity and learning.</p>
+	</div>
+	<div class="article-body">
+		<p>Last year, around this time, I was working from home due to the COVID-19 restrictions placed by the UAE Government.</p>
+
+<p>During this time, I noticed that I ran out of ideas for my blog and didn't even get time to maintain it for a long time.</p>
+
+<p>Then, I came across <a href="https://github.com/jbranchaud/til">Josh Branchaud's TIL collection</a>, which inspired me to start my own TIL section in my blog. At first, I had the idea of merging it with my main blog but then, I thought of keeping it separate and well, fast-forward to a year now, it's been one of the most productive platforms for writing short articles based on whatever I have learnt or solved.</p>
+
+<p>As for those of you who might not know, TIL a.k.a stands for <strong>Today I Learned</strong> and what I really liked about it is that there isn't any barrier that stops you from writing a short article and that was the one thing that motivated me to write something on my blog.</p>
+
+<h2>Has it helped it you?</h2>
+
+<p>Yes, it did help me in two ways.</p>
+
+<p>Professionally, it has motivated me to learn more about my field and share my knowledge about whatever I learned while solving a particular problem or a tip that I found useful. The idea was likened to a personal StackOverflow repository that I would often revisit to refresh my memory.</p>
+
+<p>Personally, it helped me reflect my values as a programmer and made me realize that there's a lot of things to learn out there and it's pretty much endless as there's always something to learn every single day. And yes, it helped me improve my writing abilities too.</p>
+
+<p>Although, this article resides in a what I would call it as a "Technical blog", I guess, this applies to everyone who wants to refresh their writing productivity and help them get started back on the tracks again.</p>
+
+<p>Hope you liked reading this article.</p>
+
+<p>Stay tuned for more!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>June 4th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/selfreflection/">
+					Self-reflection
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/writings/posts/understanding-spf-dkim-and-dmarc-protocols">Understanding SPF, DKIM and DMARC protocols</a></h1>
+		<p class="description">An insight into the three main email security protocols that protects your email from malicious attackers.</p>
+	</div>
+	<div class="article-body">
+		<p>Today, email spam is one of the most common cyberattacks conducted by people with malicious intent intending to steal your passwords and personal credentials, leading users to phishing sites to steal bank account details, identity theft and so on.</p>
+
+<p>Because of this, ISPs and email providers such as Gmail and Office 365 are taking anti-spam measures by enforcing stricter protocols in the type of emails that they receive, so it's good to implement those protocols and ensure that your email gets delivered and not delayed or worse, rejected by the mail servers.</p>
+
+<h2>So, what are those protocols?</h2>
+
+<p><a href="#spf-record">SPF</a>, <a href="#dkim-record">DKIM</a> and <a href="#dmarc-record">DMARC</a> are the three main secure protocols used to authenticate your mail server and this will prove the ISPs and other mail service providers that the mail being sent is legitimate and authorized.</p>
+
+<h2><a id="spf-record"></a> What is SPF?</h2>
+
+<p>It's an acronym for <strong>Sender Policy Framework</strong>. SPF is nothing but a DNS TXT record that specifies the server(s) and IP addresses that are allowed to send email from a specific domain.</p>
+
+<p>Assuming you are the sender, just think of sending a postcard to your friend in which you add your address as well, so that your friend knows who the recipient is and he/she would most likely open it because they trust it.</p>
+
+<p>But in technical terms, the actual recipient is not the user but rather the mail server that receives the mail.</p>
+
+<h3>Create an SPF record</h3>
+
+<p>An SPF record is a very simple string and it can be easily created. However, there are a few parts to it:</p>
+
+<ol>
+<li>Version of SPF used.</li>
+<li>IP addresses that are authorized to send emails.</li>
+<li>Third party domain(s) that are authorized to send emails.</li>
+<li>An ending tag named "all" which tells the receiving server on what policy to apply if the sending server is not a part of the SPF record.</li>
+</ol>
+
+<p>So, let's what does it look like and what each part of it does:</p>
+
+<div class="codehilite">
+<pre><span></span><code>v=spf1 ip4:111.111.111.111 include:example-domain.com -all
+</code></pre>
+</div>
+
+<p><code>v=spf1</code> states the SPF version being implemented. Currently, there's no any other version at this point. So, it should always stay as this version until another version is released.</p>
+
+<p><code>ip4:111.111.111.111</code> is the IP address of the mail server/domain that's authorized to send emails for that domain. You can use multiple IP addresses and can be listed individually like this <code>ip4:111.111.111.111 ip4:222.222.222.222</code> or through a <a href="https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing">CIDR</a> like <code>ip4:111.111.111.0/20</code>. If both IPv4 and IPv6 addresses are being used by mail server, make sure that both of those addresses are being listed.</p>
+
+<p><code>include:example-domain.com</code> is a secondary domain that's authorized to send emails on behalf of the primary mail domain(s) listed. Just like the previous rule above, you can add multiple secondary domains but bear in mind that only a maximum of 10 domains are allowed for any sending domain.</p>
+
+<p><code>-all</code> is a tag that instructs the receiving server on how to handle messages from a domain that isn't a part of the SPF record. There are some options and they are all dictated by a single character that precedes the <code>all</code> keyword. The options are:</p>
+
+<ul>
+<li><code>-all</code> means hard fail. The receiving server should reject the email if the sender domain is not authorized.</li>
+<li><code>~all</code> means soft fail. The receiving server can flag it as a possible spam if the sender domain is not authorized. </li>
+<li><code>+all</code> means authorized. The receiving server allows the email even if the sender domain is not authorized. Now, this is not recommended and please do not use this option.</li>
+</ul>
+
+<h2><a id="dkim-record"></a> What is DKIM?</h2>
+
+<p>It's an acronym for <strong>DomainKeys Identified Mail</strong> a.k.a Email signing. Just like <a href="#spf-record">SPF</a>, DKIM is also a simple DNS TXT record that tells the receiving server that the mail is certified which allows to build a trust between both the sending and receiving servers.</p>
+
+<p>To handle this trust, DKIM makes uses of an RSA cryptographic algorithm to create a pair of <strong>public</strong> and <strong>private</strong> encryption keys. The private key will remain on the server (i.e. the mail server) whereas the public key is placed in your DNS records.</p>
+
+<h2>How to create a DKIM record?</h2>
+
+<p>Depending on your mail provider, it can be easily generated by tools provided by them and once generated, it can be copy-pasted to the DNS records.</p>
+
+<p>This is how a typical DKIM record would look like:</p>
+
+<div class="codehilite">
+<pre><span></span><code>v=DKIM1; k=rsa;
+p=iHeFQ+7rCiSQs3DPjR2eUSZSv4i/Kp+sipRfVH7BGf+SxcwOkX7X8R1RVObMQsFcbIxnrq7Ba2QCf0YZlL9iqJf32V+baDI8IykuDztuoNUF2Kk0pawZkbSPNHYRtLxV2CTOtc+x4eIeSeYptaiu7g7GupekLZ2DE1ODHhuP4I=
+</code></pre>
+</div>
+
+<p>Regardless of how it's being generated, this is what each part of the header means:</p>
+
+<p><code>v=DKIM1</code> is the DKIM protocol version used.</p>
+
+<p><code>p=</code> is the Base64 encoded public key generated.</p>
+
+<p><code>k=</code> is the mechanism used to decode the DKIM signature. The encryption key is usually based on <code>rsa-sha1</code> or <code>rsa-sha256</code> signing algorithm.</p>
+
+<p>You can use DMARC analyzer's <a href="https://dmarcanalyzer.com/dkim/dkim-checker">DKIM checker</a> to check if your DKIM record is valid.</p>
+
+<h2><a id="dmarc-record"></a> What is DMARC?</h2>
+
+<p>It's an acronym for <strong>Domain-based Message Authentication, Reporting and Conformance</strong>. This protocol is built around SPF and DKIM and it ensures the following:</p>
+
+<ol>
+<li>Verifies that the sender's email is protected by SPF and DKIM protocols.</li>
+<li>Instructs the receiving mail server on what to do if the authentication fails.</li>
+<li>Provides a way for the receiving server to send a report to the sender about the DMARC evaluation i.e. whether it passed or failed.</li>
+</ol>
+
+<p>If you have come this far in the article, you might have understood why both <a href="#spf-record">SPF</a> and <a href="#dkim-record">DKIM</a> were explained and why they are quite necessary.</p>
+
+<h2>How to create a DMARC record?</h2>
+
+<p>Once you have both SPF and DKIM records in place, then it's easy to create your DMARC record. There are many sites and I would recommend you to try MXToolbox's <a href="https://mxtoolbox.com/DMARCRecordGenerator.aspx">DMARC Record Generator</a>.</p>
+
+<p>This is how a DMARC record would look like:</p>
+
+<div class="codehilite">
+<pre><span></span><code>v=DMARC1; p=none; fo=1; rua=mailto:address@example.com;
+</code></pre>
+</div>
+
+<p>And here's what each part of the header translates to:</p>
+
+<p><code>v</code> is the version tag, similar to the SPF record. It should always be <code>DMARC1</code> in the record.</p>
+
+<p><code>p</code> is the policy tag. <code>none</code> means to not do anything to the email, <code>quarantine</code> means to flag it as spam and <code>reject</code> means to reject the email.</p>
+
+<p><code>fo</code> is the tag that lets the receiving servers know that failed messages must be returned to the sender or not. There are four values for this tag:</p>
+
+<ul>
+<li><code>0</code>: Generate a report if both DKIM and SPF produce a "Pass" result.</li>
+<li><code>1</code>: Generate a report if both DKIM and SPF produce a result other than "Pass".</li>
+<li><code>d</code>: Generate a report if the email had failed the DKIM evaluation.</li>
+<li><code>s</code>: Generate a report if the email had failed the SPF evaluation.</li>
+</ul>
+
+<p>It's actually recommended to use <code>fo=1</code> which can help you look for any email delivery issues.</p>
+
+<p><code>rua</code> tells the receiving server on where to send the aggregate reports. This could provide insights into the health of the email server and can help identify any malicious activities.</p>
+
+<p>There are many optional tags that can be used but these are the tags are most commonly used by default.</p>
+
+<h2>Conclusion</h2>
+
+<p>With the increase in spam emails, it's good to take such preventive measures to ensure that you are following best practices and doing your part to prevent malicious emails and other security related issues.</p>
+
+<p>If you want to read more about these protocols, you can read the following links recommended below:</p>
+
+<ul>
+<li><a href="https://dmarcanalyzer.com/spf/">Sender Policy Framework (SPF)</a></li>
+<li><a href="https://dkim.org">DomainKeys Identified Mail</a></li>
+<li><a href="https://dmarc.org">Domain-based Message Authentication, Reporting and Conformance</a></li>
+</ul>
+
+<p>Hope you liked reading this article! &#x1F604;</p>
+
+	</div>
+	<div class="article-footer">
+		<time>April 10th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/email/">
+					Email
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/security/">
+					Security
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/find-directories-created-within-a-date-range">Find directories created within a date range</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Executing these commands helps me create a sorted list of files/directories created within a specific date range:</p>
+
+<div class="codehilite">
+<pre><span></span><code>touch<span class="w"> </span>-t<span class="w"> </span><span class="m">202104100000</span><span class="w"> </span>start
+touch<span class="w"> </span>-t<span class="w"> </span><span class="m">202104150000</span><span class="w"> </span>stop
+find<span class="w"> </span>.<span class="w"> </span>-type<span class="w"> </span>d<span class="w"> </span>-maxdepth<span class="w"> </span><span class="m">1</span><span class="w"> </span>-newer<span class="w"> </span>start<span class="w"> </span><span class="se">\!</span><span class="w"> </span>-newer<span class="w"> </span>stop<span class="w"> </span><span class="p">|</span><span class="w"> </span>sort<span class="w"> </span>&gt;&gt;<span class="w"> </span>directories.txt
+</code></pre>
+</div>
+
+<p>Someday, these commands shall come in handy, bud! &#x1F60E;</p>
 
 	</div>
 	<div class="article-footer">
@@ -121,39 +398,48 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-recover-from-an-errorneous-forced-git-commit">How to recover from an errorneous forced git commit?</a></h1>
+		<h1 class="heading"><a href="/til/posts/perform-git-operations-using-path-directory">Perform Git operations using path directory</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>If you're the type of person who types <code>git push -f origin master</code>, please don't do that as it might overwrite your entire branch. I'm saying this because I did this once and I thought I lost all the files.</p>
+		<p>The <code>-C</code> flag means the path of the directory and using this flag, you can perform any Git operations outside the project's directory without having to enter the directory all the time:</p>
 
-<p>Luckily, I was a bit relieved as <code>git</code> is a VCS (Version Control Software), which means the files are most likely not <strong>deleted</strong>. This is when I came across <code>git reflog</code> command.</p>
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>-C<span class="w"> </span>/path/to/directory<span class="w"> </span>&lt;command&gt;
+</code></pre>
+</div>
 
-<p>According to the <a href="https://git-scm.com/docs/git-reflog">Git manual</a>, this is what it does:</p>
+<p>Hope this tip helps you out!</p>
 
-<blockquote>
-  <p>Reference logs, or "reflogs", record when the tips of branches and other references were updated in the local repository.</p>
-</blockquote>
+	</div>
+	<div class="article-footer">
+		<time>April 10th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/git/">
+					Git
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
 
-<p>This is a life-saver especially if you wanted to return back to the previous point in time. Here's how I recovered my files back again:</p>
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/exclude-directories-while-searching-for-a-pattern-in-files">Exclude directories while searching for a pattern in files</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Looking for a specific text pattern in a directory but wanted to avoid some paths? Here's a quick command that you can try:</p>
 
-<ol>
-<li>Type <code>git reflog show remotes/origin/master</code></li>
-<li>Find and make note of the previous commit hash.</li>
-<li>Create a new branch with using the previous commit hash like this: <code>git branch &lt;new_branch_name&gt; &lt;previous_commit_hash&gt;</code></li>
-<li>Then finally, push the files to the new branch: <code>git add . &amp;&amp; git commit -m "pushing recovered files" &amp;&amp; git push origin &lt;new_branch_name&gt;</code></li>
-<li>Checkout to the newly created branch: <code>git checkout &lt;new_branch_name&gt;</code></li>
-<li>Delete the corrupted branch and replace it with the newly created branch that contains your restored files.</li>
-</ol>
-
-<p>If I didn't discover this, I don't really know what I would have done to recover those files.</p>
-
-<h2>References</h2>
-
-<ul>
-<li><a href="https://git-scm.com/docs/git-reflog">Git reflog documentation</a></li>
-<li><a href="https://stackoverflow.com/questions/3973994/how-can-i-recover-from-an-erronous-git-push-f-origin-master">How can I recover from an erronous git push -f origin master?</a></li>
-</ul>
+<div class="codehilite">
+<pre><span></span><code>grep<span class="w"> </span>-R<span class="w"> </span>--exclude-dir<span class="o">=</span>path/to/directory<span class="w"> </span><span class="s1">&#39;some pattern&#39;</span><span class="w"> </span>/path/to/search
+</code></pre>
+</div>
 
 <p>Hope this helps you out!</p>
 
@@ -163,8 +449,8 @@
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/git/">
-					Git
+				<a href="/category/unix/">
+					UNIX
 				</a>
 			</li>
 			
@@ -176,25 +462,23 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-resolve-the-fatal-refusing-to-merge-unrelated-histories-git-error">How to resolve the "fatal: refusing to merge unrelated histories" Git error?</a></h1>
+		<h1 class="heading"><a href="/til/posts/fetch-selected-files-from-your-remote-repository">Fetch selected files from your remote repository</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>This error shows up when two different projects are merged (i.e. they both could be the same project but unaware of each other's existence and have different commit histories).</p>
+		<p>Wanted to fetch a specific file from your Git repository except that the repository doesn't exist in your local machine?</p>
 
-<p>If you are facing this, chances are that:</p>
-
-<ol>
-<li><p>You must have cloned a project and the <code>.git</code> directory must have corrupted or got deleted and at this point, Git is unaware of the changes being made and will throw this error when you try to <em>push to</em> or <em>pull from</em> the remote repository.</p></li>
-<li><p>You created a new repository, made some changes and added the commits and then you tried to pull from the remote repository.</p></li>
-</ol>
-
-<p>Well, you can easily resolve by passing the <code>--allow-unrelated-histories</code> flag when pulling the latest updates from the remote repository:</p>
+<p>Try this out:</p>
 
 <div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>pull<span class="w"> </span>origin<span class="w"> </span>master<span class="w"> </span>--allow-unrelated-histories
+<pre><span></span><code>git<span class="w"> </span>init
+git<span class="w"> </span>remote<span class="w"> </span>add<span class="w"> </span>origin<span class="w"> </span>&lt;your_repo_link&gt;.git
+git<span class="w"> </span>fetch
+git<span class="w"> </span>checkout<span class="w"> </span>&lt;your_branch_name&gt;<span class="w"> </span>--<span class="w"> </span>&lt;/path/to/file&gt;
 </code></pre>
 </div>
+
+<p>After executing these commands, you should be able to see the selected directory/file in your project directory.</p>
 
 <p>Hope you found this useful!</p>
 
@@ -217,197 +501,14 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/zip-all-files-that-are-modified-on-a-specific-date">Zip all files that are modified on a specific date</a></h1>
+		<h1 class="heading"><a href="/til/posts/find-directories-older-than-a-specific-date-and-sorted-by-size">Find directories older than a specific date and sorted by size</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>I wrote a nifty command to make an archive of the files that I have modified on a particular date. By doing so, this script comes in handy during urgent deployments, so that I don't lose track of the files that I should be updating.</p>
-
-<p>Here's the command at your disposal:</p>
+		<p>Wanted to see which directories were created on an older date along with their sizes? Try this:</p>
 
 <div class="codehilite">
-<pre><span></span><code>find<span class="w"> </span>.<span class="w"> </span>-maxdepth<span class="w"> </span><span class="m">10</span><span class="w"> </span>-type<span class="w"> </span>f<span class="w"> </span>-newermt<span class="w"> </span><span class="s2">&quot;2021-04-10&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>zip<span class="w"> </span>-qur<span class="w"> </span>archive.zip<span class="w"> </span>-@
-</code></pre>
-</div>
-
-<h2>How this works?</h2>
-
-<p>Let's see what this command does in pieces:</p>
-
-<p><code>find</code> is the utility tool used to return the filenames that match the specified parameters in the given directory.</p>
-
-<p><code>-maxdepth</code> is the flag that allows you to specify the depth of recursive searches it should perform.</p>
-
-<p><code>-type</code> is the flag that determines if you're looking for file or a directory.</p>
-
-<p><code>-newermt</code> is the flag that determines if the file has been modified on and/or after the given date.</p>
-
-<p>Once, the file has been found, the output is being <a href="https://www.geeksforgeeks.org/piping-in-unix-or-linux/">redirected</a> to the <code>zip</code> utility function, which would then add the files to the <code>.zip</code> file.
-The <code>-q</code> flag would perform the operation in silent mode, <code>-u</code> flag would update the files in the archive if modified or add it as a new file if it doesn't exist and <code>-@</code> takes the list of files from the standard input.</p>
-
-<p>If you want to ignore certain directories or file extensions, in that case, you can exclude them like so:</p>
-
-<div class="codehilite">
-<pre><span></span><code>find<span class="w"> </span>.<span class="w"> </span>-maxdepth<span class="w"> </span><span class="m">30</span><span class="w"> </span>-type<span class="w"> </span>f<span class="w"> </span>!<span class="w"> </span>-path<span class="w"> </span><span class="s2">&quot;./path/to/directory/*&quot;</span><span class="w"> </span>!<span class="w">  </span>-path<span class="w"> </span><span class="s2">&quot;*.ext&quot;</span><span class="w"> </span>-newermt<span class="w"> </span><span class="s2">&quot;2021-04-10&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>zip<span class="w"> </span>-qur<span class="w"> </span>archive.zip<span class="w"> </span>-@
-</code></pre>
-</div>
-
-<p>Or, you can even archive the modified files by specifying a date range:</p>
-
-<div class="codehilite">
-<pre><span></span><code>touch<span class="w"> </span>--date<span class="w"> </span><span class="s2">&quot;2021-04-10&quot;</span><span class="w"> </span>startdate
-touch<span class="w"> </span>--date<span class="w"> </span><span class="s2">&quot;2021-04-15&quot;</span><span class="w"> </span>enddate
-find<span class="w"> </span>.<span class="w"> </span>-maxdepth<span class="w"> </span><span class="m">30</span><span class="w"> </span>-type<span class="w"> </span>f<span class="w"> </span>-newer<span class="w"> </span>startdate<span class="w"> </span>-not<span class="w"> </span>-newer<span class="w"> </span>enddate<span class="w"> </span><span class="p">|</span><span class="w"> </span>zip<span class="w"> </span>-ur<span class="w"> </span>archive.zip<span class="w"> </span>-@
-</code></pre>
-</div>
-
-<p>Hope you found this tip useful! &#x1F601;</p>
-
-	</div>
-	<div class="article-footer">
-		<time>April 10th, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/unix/">
-					UNIX
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/get-a-list-of-directories-with-their-sizes-in-the-current-directory">Get a list of directories with their sizes in the current directory</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>If you want to sizes of each directory in a list, try the following command:</p>
-
-<div class="codehilite">
-<pre><span></span><code>du<span class="w"> </span>-sh<span class="w"> </span>*<span class="w"> </span><span class="p">|</span><span class="w"> </span>sort<span class="w"> </span>-h<span class="w"> </span>&gt;&gt;<span class="w"> </span>directories-sorted.txt
-</code></pre>
-</div>
-
-<p>And, if you wanted to find the directory that takes consumes a lot of space in your directory, you can try this:</p>
-
-<div class="codehilite">
-<pre><span></span><code>du<span class="w"> </span>-sh<span class="w"> </span>*<span class="w"> </span><span class="p">|</span><span class="w"> </span>sort<span class="w"> </span>-h<span class="w"> </span><span class="p">|</span><span class="w"> </span>tail<span class="w"> </span>-n<span class="w"> </span><span class="m">1</span>
-</code></pre>
-</div>
-
-<p>Hope these tips do come in handy! &#x1F60A;</p>
-
-	</div>
-	<div class="article-footer">
-		<time>April 10th, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/unix/">
-					UNIX
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-update-your-git-remote-origin-url">How to update your Git remote origin URL?</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Did you make a typo while typing out your Git remote origin URL? Is it pointing towards the wrong repository?</p>
-
-<p>You can easily update it using the following command:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>remote<span class="w"> </span>set-url<span class="w"> </span>origin<span class="w"> </span>https://example.com/username/repository.git
-</code></pre>
-</div>
-
-<p>Hope you found this useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>April 10th, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/git/">
-					Git
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/convert-numbers-from-english-to-arabic-in-php">Convert numbers from English to Arabic in PHP</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>If you're a developer working in the Middle East, it's quite common that you'll work on a project that bilingual, in our case, it's english and arabic.</p>
-
-<p>In my opinion, it's not aesthetically pleasing and logical to have english numbers in arabic text, so, write a simple helper function to convert the numerals from english to arabic:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="k">function</span> <span class="nf">convertEnglishToArabicNumerals</span><span class="p">(</span><span class="nv">$str</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">if</span> <span class="p">(</span><span class="nx">\App</span><span class="o">::</span><span class="na">getLocale</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;ar&#39;</span><span class="p">)</span> <span class="p">{</span>
-        <span class="nv">$westernArabic</span> <span class="o">=</span> <span class="k">array</span><span class="p">(</span><span class="s1">&#39;0&#39;</span><span class="p">,</span> <span class="s1">&#39;1&#39;</span><span class="p">,</span> <span class="s1">&#39;2&#39;</span><span class="p">,</span> <span class="s1">&#39;3&#39;</span><span class="p">,</span> <span class="s1">&#39;4&#39;</span><span class="p">,</span> <span class="s1">&#39;5&#39;</span><span class="p">,</span> <span class="s1">&#39;6&#39;</span><span class="p">,</span> <span class="s1">&#39;7&#39;</span><span class="p">,</span> <span class="s1">&#39;8&#39;</span><span class="p">,</span> <span class="s1">&#39;9&#39;</span><span class="p">);</span>
-        <span class="nv">$easternArabic</span> <span class="o">=</span> <span class="k">array</span><span class="p">(</span><span class="s1">&#39;٠&#39;</span><span class="p">,</span> <span class="s1">&#39;١&#39;</span><span class="p">,</span> <span class="s1">&#39;٢&#39;</span><span class="p">,</span> <span class="s1">&#39;٣&#39;</span><span class="p">,</span> <span class="s1">&#39;٤&#39;</span><span class="p">,</span> <span class="s1">&#39;٥&#39;</span><span class="p">,</span> <span class="s1">&#39;٦&#39;</span><span class="p">,</span> <span class="s1">&#39;٧&#39;</span><span class="p">,</span> <span class="s1">&#39;٨&#39;</span><span class="p">,</span> <span class="s1">&#39;٩&#39;</span><span class="p">);</span>
-        <span class="nv">$str</span> <span class="o">=</span> <span class="nb">str_replace</span><span class="p">(</span><span class="nv">$westernArabic</span><span class="p">,</span> <span class="nv">$easternArabic</span><span class="p">,</span> <span class="nv">$str</span><span class="p">);</span>
-    <span class="p">}</span>
-    <span class="k">return</span> <span class="nv">$str</span><span class="p">;</span>
-<span class="p">}</span>
-<span class="cp">?&gt;</span>
-</code></pre>
-</div>
-
-<p>And since most browsers can handle RTL, you don't have to worry about how the arabic numerals are being displayed in your application.</p>
-
-	</div>
-	<div class="article-footer">
-		<time>March 12th, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/php/">
-					PHP
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/convert-string-from-snake-case-to-camel-case">Convert string from snake case to camel case</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Thought of sharing a simple regular expression that I use on VIM to convert <strong>snake_case</strong> letters to <strong>camelCase</strong> letters (see what I did there) &#x1F61C;</p>
-
-<p>Here's the pattern for you to use:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="p">:</span>s<span class="sr">/ \([a-zA-Z]\)/</span>\<span class="k">u</span>\<span class="m">1</span>/<span class="k">g</span>
+<pre><span></span><code>find<span class="w"> </span>.<span class="w"> </span>-type<span class="w"> </span>d<span class="w"> </span>-maxdepth<span class="w"> </span><span class="m">1</span><span class="w"> </span>!<span class="w"> </span>-newermt<span class="w"> </span><span class="s2">&quot;2021-04-10&quot;</span><span class="w"> </span>-exec<span class="w"> </span>du<span class="w"> </span>-sh<span class="w"> </span><span class="o">{}</span><span class="w"> </span><span class="se">\;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sort<span class="w"> </span>-h<span class="w"> </span>&gt;&gt;<span class="w"> </span>oldprojectsizes.txt
 </code></pre>
 </div>
 
@@ -415,12 +516,12 @@ find<span class="w"> </span>.<span class="w"> </span>-maxdepth<span class="w"> <
 
 	</div>
 	<div class="article-footer">
-		<time>March 12th, 2021</time>
+		<time>April 10th, 2021</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/vim/">
-					VIM
+				<a href="/category/unix/">
+					UNIX
 				</a>
 			</li>
 			
@@ -468,11 +569,11 @@ find<span class="w"> </span>.<span class="w"> </span>-maxdepth<span class="w"> <
 		
 	
 		
-			<a class="" href="/pages/16">...</a>
+			<a class="" href="/pages/17">...</a>
 		
 	
 		
-			<a class="" href="/pages/27">27</a>
+			<a class="" href="/pages/28">28</a>
 		
 	
 
@@ -535,6 +636,20 @@ find<span class="w"> </span>.<span class="w"> </span>-maxdepth<span class="w"> <
 		</li>
 		
 		<li>
+			<a href="/category/cryptography/">
+				Cryptography
+				<span class="count">12</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/programming/">
+				Programming
+				<span class="count">11</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/javascript/">
 				JavaScript
 				<span class="count">11</span>
@@ -556,9 +671,9 @@ find<span class="w"> </span>.<span class="w"> </span>-maxdepth<span class="w"> <
 		</li>
 		
 		<li>
-			<a href="/category/cryptography/">
-				Cryptography
-				<span class="count">11</span>
+			<a href="/category/productivity/">
+				Productivity
+				<span class="count">10</span>
 			</a>
 		</li>
 		
@@ -566,20 +681,6 @@ find<span class="w"> </span>.<span class="w"> </span>-maxdepth<span class="w"> <
 			<a href="/category/git/">
 				Git
 				<span class="count">10</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/productivity/">
-				Productivity
-				<span class="count">9</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/programming/">
-				Programming
-				<span class="count">9</span>
 			</a>
 		</li>
 		
@@ -626,6 +727,13 @@ find<span class="w"> </span>.<span class="w"> </span>-maxdepth<span class="w"> <
 		</li>
 		
 		<li>
+			<a href="/category/vscode/">
+				VSCode
+				<span class="count">5</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/blogmarks/">
 				Blogmarks
 				<span class="count">5</span>
@@ -647,16 +755,16 @@ find<span class="w"> </span>.<span class="w"> </span>-maxdepth<span class="w"> <
 		</li>
 		
 		<li>
-			<a href="/category/arcade-challenge/">
-				Arcade Challenge
+			<a href="/category/c/">
+				C#
 				<span class="count">4</span>
 			</a>
 		</li>
 		
 		<li>
-			<a href="/category/vscode/">
-				VSCode
-				<span class="count">3</span>
+			<a href="/category/arcade-challenge/">
+				Arcade Challenge
+				<span class="count">4</span>
 			</a>
 		</li>
 		
@@ -699,6 +807,34 @@ find<span class="w"> </span>.<span class="w"> </span>-maxdepth<span class="w"> <
 			<a href="/category/general/">
 				General
 				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/clean-code/">
+				Clean Code
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/refactoring/">
+				Refactoring
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/security/">
+				Security
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/sql-server/">
+				SQL Server
+				<span class="count">2</span>
 			</a>
 		</li>
 		
@@ -780,6 +916,34 @@ find<span class="w"> </span>.<span class="w"> </span>-maxdepth<span class="w"> <
 		</li>
 		
 		<li>
+			<a href="/category/net-core/">
+				.NET Core
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/oop/">
+				OOP
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/troubleshooting/">
+				Troubleshooting
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/documentary/">
+				Documentary
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/xdebug/">
 				XDebug
 				<span class="count">1</span>
@@ -803,13 +967,6 @@ find<span class="w"> </span>.<span class="w"> </span>-maxdepth<span class="w"> <
 		<li>
 			<a href="/category/csr/">
 				CSR
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/clean-code/">
-				Clean Code
 				<span class="count">1</span>
 			</a>
 		</li>
@@ -885,13 +1042,6 @@ find<span class="w"> </span>.<span class="w"> </span>-maxdepth<span class="w"> <
 		</li>
 		
 		<li>
-			<a href="/category/security/">
-				Security
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/cpanel/">
 				cPanel
 				<span class="count">1</span>
@@ -901,13 +1051,6 @@ find<span class="w"> </span>.<span class="w"> </span>-maxdepth<span class="w"> <
 		<li>
 			<a href="/category/introduction/">
 				Introduction
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/refactoring/">
-				Refactoring
 				<span class="count">1</span>
 			</a>
 		</li>

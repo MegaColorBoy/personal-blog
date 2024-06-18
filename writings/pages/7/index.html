@@ -77,6 +77,110 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/writings/posts/convert-iis-webconfig-to-apache-htaccess-using-javascript">Convert IIS web.config to Apache .htaccess using Javascript</a></h1>
+		<p class="description">Last week, I built a small tool that converts IIS web.config to Apache .htaccess using Javascript</p>
+	</div>
+	<div class="article-body">
+		<p>Last week, I was migrating my company's website from our in-house IIS
+Virtual Private Server to a Dedicated Apache Server in order to improve
+the website's overall performance and handle more traffic efficiently.
+For those of you who have hosted a website using Microsoft's IIS
+Manager, you'll know that it makes use of an XML document named
+<strong><em>web.config</em></strong> file, whereas in an Apache Server, it's an <strong><em>.htaccess</em></strong>
+file, which is also used to store rules to write clean and friendly
+URLs.</p>
+
+<p>Converting from <strong><em>.htaccess</em></strong> to <strong><em>web.config</em></strong> is easy as it's a matter
+of importing the rules directly on IIS Manager's <strong><em>URL Rewrite</em></strong> module
+but doing the other way around was also possible but only if you did it
+manually and I really don't want to waste time on such mundane tasks.</p>
+
+<h2>How did I convert it?</h2>
+
+<p>A little bit of <a href="https://en.wikipedia.org/wiki/Regular_expression">Regular
+Expressions</a>, a dash
+of Javascript and an understanding on how Apache's <strong><em>mod_rewrite</em></strong>
+works, I decided to build a tool that converts <strong><em>web.config</em></strong> to
+<strong><em>.htaccess</em></strong> format.</p>
+
+<p><strong>How to use this converter:</strong></p>
+
+<ul>
+<li>Paste your <strong><em>web.config</em></strong> XML code on the textfield</li>
+<li>Hit <strong><em>"Convert"</em></strong> to convert to <strong><em>.htaccess</em></strong> format</li>
+<li>Please use a valid XML format before converting your code</li>
+</ul>
+
+<!-- DEMO -->
+
+<div id="js-code"></div>
+
+<script defer src="/static/projects/iis-to-apache/script.js" type="text/javascript"></script>
+
+<!-- DEMO -->
+
+<p><strong>Code snippet:</strong></p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="c1">//web.config to .htaccess converter</span>
+<span class="kd">function</span><span class="w"> </span><span class="nx">webConfigToHtaccess</span><span class="p">()</span>
+<span class="p">{</span>
+
+<span class="w">    </span><span class="c1">// Take input from textarea</span>
+<span class="w">    </span><span class="c1">// and parse it into XML</span>
+
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">xml</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#webconfig-xml&quot;</span><span class="p">).</span><span class="nx">val</span><span class="p">(),</span><span class="w"> </span>
+<span class="w">    </span><span class="nx">xmlDoc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">$</span><span class="p">.</span><span class="nx">parseXML</span><span class="p">(</span><span class="nx">xml</span><span class="p">),</span><span class="w"> </span>
+<span class="w">    </span><span class="nx">$xml</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">$</span><span class="p">(</span><span class="nx">xmlDoc</span><span class="p">);</span>
+
+
+<span class="w">    </span><span class="c1">// - Inside each &quot;rule&quot;, look for the &quot;action&quot; child node</span>
+<span class="w">    </span><span class="c1">// - If it contains multiple parameters, follow the </span>
+<span class="w">    </span><span class="c1">// regular expression pattern: /{R:(d{1})}/</span>
+<span class="w">    </span><span class="c1">// - Replace that pattern with a dollar sign and it&#39;s parameter</span>
+<span class="w">    </span><span class="c1">// - Append &quot;RewriteRule&quot; along with the url and it&#39;s rules</span>
+
+<span class="w">    </span><span class="nx">$xml</span><span class="p">.</span><span class="nx">find</span><span class="p">(</span><span class="s1">&#39;rule&#39;</span><span class="p">).</span><span class="nx">each</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
+<span class="w">        </span><span class="kd">var</span><span class="w"> </span><span class="nx">str</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">$</span><span class="p">(</span><span class="k">this</span><span class="p">).</span><span class="nx">find</span><span class="p">(</span><span class="s2">&quot;rule&gt;action&quot;</span><span class="p">).</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;url&#39;</span><span class="p">);</span>
+<span class="w">        </span><span class="kd">var</span><span class="w"> </span><span class="nx">regex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sr">/{R:(d{1})}/</span><span class="p">;</span>
+<span class="w">        </span><span class="k">while</span><span class="p">(</span><span class="nx">regex</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="nx">str</span><span class="p">))</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="nx">str</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">str</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="nx">regex</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;$&#39;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nb">RegExp</span><span class="p">.</span><span class="nx">$1</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#htaccess-code&quot;</span><span class="p">).</span><span class="nx">append</span><span class="p">(</span><span class="s2">&quot;RewriteRule &quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">$</span><span class="p">(</span><span class="k">this</span><span class="p">).</span><span class="nx">find</span><span class="p">(</span><span class="s2">&quot;rule&gt;match&quot;</span><span class="p">).</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;url&#39;</span><span class="p">)</span>
+<span class="w">            </span><span class="o">+</span><span class="w"> </span><span class="s2">&quot; &quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">str</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s2">&quot;&lt;br&gt;&quot;</span>
+<span class="w">        </span><span class="p">);</span>
+<span class="w">    </span><span class="p">});</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<p>Although, I can't really say that it's perfect because I had to make
+some changes but hey, it's just minor changes and yes, it did save me a
+lot of time!</p>
+
+<p>Hope you found this article useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>February 24th, 2018</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/programming/">
+					Programming
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/writings/posts/convert-svg-from-image-to-code-using-javascript">Convert SVG from Image to Code using Javascript</a></h1>
 		<p class="description">Two weeks ago, I wrote a small script to convert SVG from Image to Code using Javascript that allowed me to play around with it's attributes and properties.</p>
 	</div>
@@ -1149,163 +1253,6 @@ a282b2f20430a652e2c652a3124333a653e2b2027630c692b20283165286326302e27282f
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/the-cryptopals-crypto-challenges-set-1--singlebyte-xor-cipher">The Cryptopals Crypto Challenges: Set 1 - Single-Byte XOR Cipher</a></h1>
-		<p class="description">Write a method that decrypts a hexadecimal message that has been XOR'd against a single character.</p>
-	</div>
-	<div class="article-body">
-		<p>This is the <a href="http://cryptopals.com/sets/1/challenges/3">third challenge</a> of Set 1 in The Cryptopals Crypto Challenges website. Previously, I spoke about these challenges and provided walkthroughs for the previous challenges, if you haven't read them, here are the links:</p>
-
-<ul>
-<li><a href="/posts/the-cryptopals-crypto-challenges">The Cryptopals Crypto Challenges</a></li>
-<li><a href="/posts/the-cryptopals-crypto-challenges-set-1--convert-hex-to-base64">The Cryptopals Crypto Challenges: Set 1 - Convert Hex to Base64</a></li>
-<li><a href="/posts/base64-encoding--decoding-using-bitwise-manipulation-in-c">Base64 Encoding / Decoding using Bitwise Manipulation in C++</a></li>
-<li><a href="/posts/the-cryptopals-crypto-challenges-set-1--fixed-xor">The Cryptopals Crypto Challenges: Set 1 - Fixed XOR Cipher</a></li>
-</ul>
-
-<p>For this challenge, you have to write a method that decodes a
-Hexadecimal string:</p>
-
-<div class="codehilite">
-<pre><span></span><code>1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736
-</code></pre>
-</div>
-
-<p>That has been <strong><em>XOR'd</em></strong> against a <strong><em>single character</em></strong>. You must find the key and decrypt the message.</p>
-
-<p>If you have read the <a href="/posts/the-cryptopals-crypto-challenges-set-1--fixed-xor">previous article</a>, it was clearly setup for this problem. There are so many ways to solve this problem but the most efficient way to solve it is by using a <strong><em>Frequency table</em></strong>.</p>
-
-<p>Assuming the message is supposed to be in English, when decrypted, we need to only generate a frequency table using the given Hexadecimal string that shows the frequencies of each <strong><em>alphabet</em></strong>. The character that has the highest frequency is the key required, which is then used to perform an <strong><em>XOR (\^)</em></strong> operation against each character, to decrypt the encrypted message.</p>
-
-<p>Let's have a look at the code:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="c1">//Return Character frequency of a string</span>
-<span class="n">map</span><span class="o">&lt;</span><span class="kt">char</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">CryptoLib</span><span class="o">::</span><span class="n">frequency_table</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="n">str</span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="n">map</span><span class="o">&lt;</span><span class="kt">char</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span>
-<span class="w">    </span><span class="n">map</span><span class="o">&lt;</span><span class="kt">char</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;::</span><span class="n">iterator</span><span class="w"> </span><span class="n">it</span><span class="p">;</span>
-
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">str</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="kt">char</span><span class="w"> </span><span class="n">ch</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">str</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
-<span class="w">        </span><span class="n">it</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">m</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="n">ch</span><span class="p">);</span>
-
-<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">it</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">m</span><span class="p">.</span><span class="n">end</span><span class="p">())</span>
-<span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="n">m</span><span class="p">.</span><span class="n">insert</span><span class="p">(</span><span class="n">make_pair</span><span class="p">(</span><span class="n">ch</span><span class="p">,</span><span class="mi">1</span><span class="p">));</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">        </span><span class="k">else</span>
-<span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="n">it</span><span class="o">-&gt;</span><span class="n">second</span><span class="o">++</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">m</span><span class="p">;</span>
-<span class="p">}</span>
-
-<span class="c1">//Return character with the highest frequency</span>
-<span class="kt">char</span><span class="w"> </span><span class="n">CryptoLib</span><span class="o">::</span><span class="n">ret_high_freq_char</span><span class="p">(</span><span class="n">map</span><span class="o">&lt;</span><span class="kt">char</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">m</span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">max_count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="n">max_char</span><span class="p">;</span>
-
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="k">auto</span><span class="w"> </span><span class="n">p</span><span class="o">:</span><span class="w"> </span><span class="n">m</span><span class="p">)</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">isalpha</span><span class="p">(</span><span class="n">p</span><span class="p">.</span><span class="n">first</span><span class="p">))</span>
-<span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">p</span><span class="p">.</span><span class="n">second</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">max_count</span><span class="p">)</span>
-<span class="w">            </span><span class="p">{</span>
-<span class="w">                </span><span class="n">max_char</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">first</span><span class="p">;</span>
-<span class="w">                </span><span class="n">max_count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">second</span><span class="p">;</span>
-<span class="w">            </span><span class="p">}</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">max_char</span><span class="p">;</span>
-<span class="p">}</span>
-
-<span class="c1">//Single Byte XOR</span>
-<span class="n">string</span><span class="w"> </span><span class="n">CryptoLib</span><span class="o">::</span><span class="n">singleByteXOR</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="n">str</span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">newStr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">;</span>
-
-<span class="w">    </span><span class="c1">//1. Convert Hexadecimal to Binary</span>
-<span class="w">    </span><span class="n">str</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">add_spaces</span><span class="p">(</span><span class="n">con_hex_2_bin</span><span class="p">(</span><span class="n">str</span><span class="p">),</span><span class="w"> </span><span class="mi">8</span><span class="p">);</span>
-
-<span class="w">    </span><span class="c1">//2. Convert Binary to Decimals</span>
-<span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">con_bin_2_dec</span><span class="p">(</span><span class="n">str</span><span class="p">,</span><span class="w"> </span><span class="mf">7.0</span><span class="p">);</span>
-
-
-<span class="w">    </span><span class="c1">// What&#39;s happening here?</span>
-<span class="w">    </span><span class="c1">// 4. Generate a frequency table using the characters from the ASCII string</span>
-<span class="w">    </span><span class="c1">// 5. Look for characters that are English and also has the highest frequency</span>
-<span class="w">    </span><span class="c1">// 6. The character that has the highest frequency is the KEY!</span>
-
-<span class="w">    </span><span class="c1">//The key</span>
-<span class="w">    </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">toupper</span><span class="p">(</span><span class="n">ret_high_freq_char</span><span class="p">(</span><span class="n">frequency_table</span><span class="p">(</span><span class="n">con_dec_2_ascii</span><span class="p">(</span><span class="n">v</span><span class="p">))));</span>
-
-<span class="w">    </span><span class="c1">//7. Perform XOR with the KEY against each character</span>
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">v</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
-<span class="w">        </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">^</span><span class="w"> </span><span class="n">a</span><span class="p">;</span>
-<span class="w">        </span><span class="n">newStr</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">c</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="c1">//8. Decoded message</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">newStr</span><span class="p">;</span>
-<span class="p">}</span>
-</code></pre>
-</div>
-
-<p><strong>Final code:</strong></p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="c1">//CryptoPals Set 1 Challenge 3</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;crypto.h&quot;</span>
-
-<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="n">CryptoLib</span><span class="w"> </span><span class="n">crypt</span><span class="p">;</span>
-
-<span class="w">    </span><span class="c1">//Test case provided</span>
-<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">str</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736&quot;</span><span class="p">;</span>
-<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;DECODED: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">crypt</span><span class="p">.</span><span class="n">singleByteXOR</span><span class="p">(</span><span class="n">str</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="p">}</span><span class="w">   </span>
-</code></pre>
-</div>
-
-<p><strong>Decrypted message:</strong></p>
-
-<div class="codehilite">
-<pre><span></span><code>Key with the highest frequency: &#39;X&#39;
-Message: Cooking MC&#39;s like a pound of bacon
-</code></pre>
-</div>
-
-<p><strong><em>Note: This solution and the library named <code>crypto.h</code> was built using the C++ programming language. The source code for this solution can be found on Github.</em></strong></p>
-
-<p>Stay tuned for the next challenge!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>December 13th, 2017</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/cryptography/">
-					Cryptography
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -1394,6 +1341,20 @@ Message: Cooking MC&#39;s like a pound of bacon
 		</li>
 		
 		<li>
+			<a href="/category/cryptography/">
+				Cryptography
+				<span class="count">12</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/programming/">
+				Programming
+				<span class="count">11</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/javascript/">
 				JavaScript
 				<span class="count">11</span>
@@ -1415,9 +1376,9 @@ Message: Cooking MC&#39;s like a pound of bacon
 		</li>
 		
 		<li>
-			<a href="/category/cryptography/">
-				Cryptography
-				<span class="count">11</span>
+			<a href="/category/productivity/">
+				Productivity
+				<span class="count">10</span>
 			</a>
 		</li>
 		
@@ -1425,20 +1386,6 @@ Message: Cooking MC&#39;s like a pound of bacon
 			<a href="/category/git/">
 				Git
 				<span class="count">10</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/productivity/">
-				Productivity
-				<span class="count">9</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/programming/">
-				Programming
-				<span class="count">9</span>
 			</a>
 		</li>
 		
@@ -1485,6 +1432,13 @@ Message: Cooking MC&#39;s like a pound of bacon
 		</li>
 		
 		<li>
+			<a href="/category/vscode/">
+				VSCode
+				<span class="count">5</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/blogmarks/">
 				Blogmarks
 				<span class="count">5</span>
@@ -1506,16 +1460,16 @@ Message: Cooking MC&#39;s like a pound of bacon
 		</li>
 		
 		<li>
-			<a href="/category/arcade-challenge/">
-				Arcade Challenge
+			<a href="/category/c/">
+				C#
 				<span class="count">4</span>
 			</a>
 		</li>
 		
 		<li>
-			<a href="/category/vscode/">
-				VSCode
-				<span class="count">3</span>
+			<a href="/category/arcade-challenge/">
+				Arcade Challenge
+				<span class="count">4</span>
 			</a>
 		</li>
 		
@@ -1558,6 +1512,34 @@ Message: Cooking MC&#39;s like a pound of bacon
 			<a href="/category/general/">
 				General
 				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/clean-code/">
+				Clean Code
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/refactoring/">
+				Refactoring
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/security/">
+				Security
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/sql-server/">
+				SQL Server
+				<span class="count">2</span>
 			</a>
 		</li>
 		
@@ -1639,6 +1621,34 @@ Message: Cooking MC&#39;s like a pound of bacon
 		</li>
 		
 		<li>
+			<a href="/category/net-core/">
+				.NET Core
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/oop/">
+				OOP
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/troubleshooting/">
+				Troubleshooting
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/documentary/">
+				Documentary
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/xdebug/">
 				XDebug
 				<span class="count">1</span>
@@ -1662,13 +1672,6 @@ Message: Cooking MC&#39;s like a pound of bacon
 		<li>
 			<a href="/category/csr/">
 				CSR
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/clean-code/">
-				Clean Code
 				<span class="count">1</span>
 			</a>
 		</li>
@@ -1744,13 +1747,6 @@ Message: Cooking MC&#39;s like a pound of bacon
 		</li>
 		
 		<li>
-			<a href="/category/security/">
-				Security
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/cpanel/">
 				cPanel
 				<span class="count">1</span>
@@ -1760,13 +1756,6 @@ Message: Cooking MC&#39;s like a pound of bacon
 		<li>
 			<a href="/category/introduction/">
 				Introduction
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/refactoring/">
-				Refactoring
 				<span class="count">1</span>
 			</a>
 		</li>

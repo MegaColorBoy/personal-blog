@@ -77,52 +77,34 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/find-the-difference-between-two-arrays">Find the difference between two arrays</a></h1>
+		<h1 class="heading"><a href="/til/posts/prevent-loading-webpage-from-backforward-cache">Prevent loading a webpage from Back-Forward cache</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>Finding the difference between two sets i.e. Set A and Set B is basically returning a new set that contains values of Set A that don't exist in Set B or vice-versa.</p>
+		<p>I'm working on an eCommerce project and I encountered a really weird problem, whenever I saved items into my cart and proceed to the checkout page and then go back to previous page, my cart isn't updated until I refresh the page.</p>
 
-<p>Here's an example:</p>
+<p>Honestly, I thought this was a bug until I came around to learn about <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Firefox/Releases/1.5/Using_Firefox_1.5_caching">Back-Forward Caching</a> a.k.a <strong>bfcache</strong>, which allows the user to navigate between pages faster. That's a good thing, though!</p>
+
+<p>But that didn't help resolve my issue, so I thought of going around with a tiny hack:</p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="mf">1</span><span class="p">,</span><span class="mf">2</span><span class="p">,</span><span class="mf">3</span><span class="p">,</span><span class="mf">4</span><span class="p">,</span><span class="mf">5</span><span class="p">];</span>
-<span class="kd">var</span><span class="w"> </span><span class="nx">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="mf">1</span><span class="p">,</span><span class="mf">1</span><span class="p">,</span><span class="mf">2</span><span class="p">,</span><span class="mf">3</span><span class="p">,</span><span class="mf">4</span><span class="p">];</span>
+<pre><span></span><code><span class="nb">window</span><span class="p">.</span><span class="nx">onpageshow</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">event</span><span class="p">.</span><span class="nx">persisted</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="p">.</span><span class="nx">reload</span><span class="p">()</span><span class="w"> </span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">};</span>
 </code></pre>
 </div>
 
-<p>I wrote a shorter implementation using JavaScript's <code>.filter()</code> method:</p>
+<p>The code above will look any persistence of the <code>onpageshow</code> event. Initially, it's set to <code>false</code> and if the page is loaded from <strong>bfcache</strong>, it'll set to <code>true</code>.</p>
 
-<div class="codehilite">
-<pre><span></span><code><span class="kd">function</span><span class="w"> </span><span class="nx">array_diff</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span><span class="nx">b</span><span class="p">){</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">a</span><span class="p">.</span><span class="nx">filter</span><span class="p">(</span><span class="nx">i</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">b</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="o">-</span><span class="mf">1</span><span class="p">);</span>
-<span class="p">}</span><span class="w">    </span>
-</code></pre>
-</div>
+<p>I wouldn't really consider this as a solution as it only worked on Safari instead of Chrome or Firefox.</p>
 
-<p>Once you execute this method, you'll get the following as a result:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">array_diff</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span><span class="nx">b</span><span class="p">);</span>
-<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">c</span><span class="p">)</span><span class="w"> </span><span class="c1">// returns [5]</span>
-</code></pre>
-</div>
-
-<h2>BONUS: What does the .filter() method do?</h2>
-
-<p>This method returns a new array with elements that pass the conditions provided by a callback function.</p>
-
-<p>If the conditions aren't passed, you'll receive an empty array.</p>
-
-<p>In this article, <code>(i =&gt; b.indexOf(i) === -1)</code> is considered as the callback function in which the <code>i</code> refers to the index of the current element of array A and is then used as a parameter to check if the element doesn't exist in array B.</p>
-
-<p>The neat thing about this method is that it doesn't mutate on the array that it's being called from.</p>
-
-<p>Read more about <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter">Array.prototype.filter()</a> on Mozilla's developer documentation.</p>
+<p>But hey, it gets the job done! &#x1F602;</p>
 
 	</div>
 	<div class="article-footer">
-		<time>July 18th, 2020</time>
+		<time>August 30th, 2020</time>
 		<ul class="tags">
 			
 			<li>
@@ -139,269 +121,38 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-duplicate-tables-in-mysql">How to duplicate tables in MySQL?</a></h1>
+		<h1 class="heading"><a href="/til/posts/refresh-browser-window-without-query-parameters">Refresh browser window without query parameters</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>This trick comes in handy whenever you wanted to reuse a table, perform data migrations or maybe even take a backup of the table before any of your experiments mess up your data.</p>
-
-<p>Executing the following query will help you create a new table with the structure of the old table:</p>
+		<p>If you want to reload the current page in your browser without any query string or parameters, here's how you can do it:</p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="k">schema</span><span class="p">.</span><span class="n">new_table</span><span class="w"> </span><span class="k">LIKE</span><span class="w"> </span><span class="k">schema</span><span class="p">.</span><span class="n">old_table</span><span class="p">;</span>
+<pre><span></span><code><span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="p">.</span><span class="nx">pathname</span><span class="p">;</span>
 </code></pre>
 </div>
 
-<p>If you want the data as well, try this:</p>
+<p>By doing so, it'll preserve the HTTP/HTTPS protocols of the URL and also remove the fragments that start with a <code>#</code>.</p>
+
+<p>If you want to preserve the fragments, you can try this:</p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="k">schema</span><span class="p">.</span><span class="n">new_table</span><span class="w"> </span><span class="k">LIKE</span><span class="w"> </span><span class="k">schema</span><span class="p">.</span><span class="n">old_table</span><span class="p">;</span>
-<span class="k">INSERT</span><span class="w"> </span><span class="k">schema</span><span class="p">.</span><span class="n">new_table</span><span class="w"> </span><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="k">schema</span><span class="p">.</span><span class="n">old_table</span><span class="p">;</span>
+<pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">reloadURL</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="p">.</span><span class="nx">pathname</span><span class="p">;</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">fragments</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="p">.</span><span class="nx">part</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="kc">undefined</span><span class="p">)</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;#&quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="p">.</span><span class="nx">part</span><span class="p">;</span>
+<span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">reloadURL</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">fragments</span><span class="p">;</span>
 </code></pre>
 </div>
-
-<p>You can use this query to copy tables from one schema to another schema too. Hope this helps you out! &#x1F604;</p>
-
-	</div>
-	<div class="article-footer">
-		<time>July 18th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/mysql/">
-					MySQL
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/find-the-number-of-uppercase-and-lowercase-letters-in-a-string">Find the number of uppercase and lowercase letters in a string</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>The usual approach of counting the number of uppercase and lower letters in a string is done by using a counter and a loop:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">upperCount</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0</span><span class="p">;</span>
-<span class="kd">var</span><span class="w"> </span><span class="nx">lowerCount</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0</span><span class="p">;</span>
-<span class="kd">var</span><span class="w"> </span><span class="nx">str</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;AbCdEfGhiJkL&quot;</span><span class="p">;</span>
-<span class="k">for</span><span class="p">(</span><span class="kd">var</span><span class="w"> </span><span class="nx">i</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">&lt;</span><span class="nx">str</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">++</span><span class="p">){</span>
-<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="nx">str</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nx">str</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">toUpperCase</span><span class="p">()){</span>
-<span class="w">        </span><span class="nx">upperCount</span><span class="o">++</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="k">else</span><span class="p">{</span>
-<span class="w">        </span><span class="nx">lowerCount</span><span class="o">++</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="p">}</span>
-</code></pre>
-</div>
-
-<p>That's nice but here's shorter and faster implementation:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">str</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;AbCdEfGhiJkL&quot;</span><span class="p">;</span>
-<span class="kd">var</span><span class="w"> </span><span class="nx">lowerCount</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">str</span><span class="p">.</span><span class="nx">length</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">str</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/[A-Z]/g</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">).</span><span class="nx">length</span><span class="p">;</span>
-<span class="kd">var</span><span class="w"> </span><span class="nx">upperCount</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">str</span><span class="p">.</span><span class="nx">length</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">str</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/[a-z]/g</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">).</span><span class="nx">length</span><span class="p">;</span>
-</code></pre>
-</div>
-
-<p>The <code>lowerCount</code> variable is taking the difference of the lengths between the original string and the string with lowercase letters only because the <code>.replace()</code> method replaced the pattern of uppercase letters <code>[A-Z]</code> with empty spaces. The <code>upperCount</code> variable does the opposite of what the <code>lowerCount</code> variable does.</p>
-
-<p>Hope you found this trick useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>July 18th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/regular-expressions/">
-					Regular Expressions
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/replace-all-occurrences-found-on-a-string-using-regular-expressions">Replace all occurrences found on a string using Regular Expressions</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Let's say you have the following string and you must replace all occurrences of <strong>"Hello"</strong> with <strong>"Bye"</strong>:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">str</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Hello Hello Hello World&quot;</span><span class="p">;</span>
-</code></pre>
-</div>
-
-<p>You may think of using the <code>.replace()</code> method to solve this problem:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">newStr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">str</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="s2">&quot;Hello&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Bye&quot;</span><span class="p">)</span>
-</code></pre>
-</div>
-
-<p>But unfortunately, it only replaces the first occurrence in the string:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">newStr</span><span class="p">);</span><span class="w"> </span><span class="c1">// returns &quot;Bye Hello Hello World&quot; as the output.</span>
-</code></pre>
-</div>
-
-<p>Using the power of Regular Expressions, you can replace all occurrences in one go:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="kd">function</span><span class="w"> </span><span class="nx">replaceAll</span><span class="p">(</span><span class="nx">str</span><span class="p">,</span><span class="w"> </span><span class="nx">search</span><span class="p">,</span><span class="w"> </span><span class="nx">replace</span><span class="p">){</span>
-<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">re</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nb">RegExp</span><span class="p">(</span><span class="nx">search</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;g&quot;</span><span class="p">);</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">str</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="nx">re</span><span class="p">,</span><span class="w"> </span><span class="nx">replace</span><span class="p">);</span>
-<span class="p">}</span><span class="w">    </span>
-</code></pre>
-</div>
-
-<p>Now, when you execute the following, you'll get a string that replaced all occurrences:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">newStr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">replaceAll</span><span class="p">(</span><span class="nx">str</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Hello&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Bye&quot;</span><span class="p">);</span>
-<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">newStr</span><span class="p">);</span><span class="w"> </span><span class="c1">// returns &quot;Bye Bye Bye World&quot; as the output.</span>
-</code></pre>
-</div>
-
-<p>Until next time, then!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>July 18th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/regular-expressions/">
-					Regular Expressions
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/create-a-unique-multidimensional-array-using-a-key-index">Create a unique multidimensional array using a key index</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Let's say, you have a multidimensional array like this:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="nv">$cars</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="p">[</span>
-        <span class="s2">&quot;id&quot;</span> <span class="o">=&gt;</span> <span class="mi">1</span><span class="p">,</span>
-        <span class="s2">&quot;name&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;Mercedes Benz&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;color&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;Black&quot;</span>
-    <span class="p">],</span>
-    <span class="p">[</span>
-        <span class="s2">&quot;id&quot;</span> <span class="o">=&gt;</span> <span class="mi">2</span><span class="p">,</span>
-        <span class="s2">&quot;name&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;Toyota&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;color&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;Red&quot;</span>
-    <span class="p">],</span>
-    <span class="p">[</span>
-        <span class="s2">&quot;id&quot;</span> <span class="o">=&gt;</span> <span class="mi">3</span><span class="p">,</span>
-        <span class="s2">&quot;name&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;Toyota&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;color&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;White&quot;</span>
-    <span class="p">],</span>
-    <span class="p">[</span>
-        <span class="s2">&quot;id&quot;</span> <span class="o">=&gt;</span> <span class="mi">4</span><span class="p">,</span>
-        <span class="s2">&quot;name&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;Nissan&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;color&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;Grey&quot;</span>
-    <span class="p">],</span>
-<span class="p">];</span>
-<span class="cp">?&gt;</span>
-</code></pre>
-</div>
-
-<p>And say, you want to be able to return unique cars by <code>name</code> or <code>color</code>, use this method:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="k">function</span> <span class="nf">multi_array_unique</span><span class="p">(</span><span class="nv">$array</span><span class="p">,</span> <span class="nv">$key</span><span class="p">)</span> <span class="p">{</span>
-    <span class="nv">$i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-    <span class="nv">$temp_array</span> <span class="o">=</span> <span class="p">[];</span>
-    <span class="nv">$key_array</span> <span class="o">=</span> <span class="p">[];</span>
-
-    <span class="k">foreach</span><span class="p">(</span><span class="nv">$array</span> <span class="k">as</span> <span class="nv">$val</span><span class="p">)</span> <span class="p">{</span>
-        <span class="c1">// insert only unique keys</span>
-        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nb">in_array</span><span class="p">(</span><span class="nv">$val</span><span class="p">[</span><span class="nv">$key</span><span class="p">],</span> <span class="nv">$key_array</span><span class="p">))</span> <span class="p">{</span>
-            <span class="nv">$key_array</span><span class="p">[</span><span class="nv">$i</span><span class="p">]</span> <span class="o">=</span> <span class="nv">$val</span><span class="p">[</span><span class="nv">$key</span><span class="p">];</span>
-            <span class="nv">$temp_array</span><span class="p">[</span><span class="nv">$i</span><span class="p">]</span> <span class="o">=</span> <span class="nv">$val</span><span class="p">;</span>
-        <span class="p">}</span>
-        <span class="nv">$i</span><span class="o">++</span><span class="p">;</span>
-    <span class="p">}</span>
-    <span class="k">return</span> <span class="nv">$temp_array</span><span class="p">;</span>
-<span class="p">}</span>
-<span class="cp">?&gt;</span>
-</code></pre>
-</div>
-
-<p>Call this method from anywhere in your code like this:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="nv">$unique_cars</span> <span class="o">=</span> <span class="nx">multi_array_unique</span><span class="p">(</span><span class="nv">$cars</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">);</span>
-<span class="nx">dd</span><span class="p">(</span><span class="nv">$unique_cars</span><span class="p">);</span>
-<span class="cp">?&gt;</span>
-</code></pre>
-</div>
-
-<p>And now, you'll get something like this:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="p">[</span>
-    <span class="p">[</span>
-        <span class="s2">&quot;id&quot;</span> <span class="o">=&gt;</span> <span class="mi">1</span><span class="p">,</span>
-        <span class="s2">&quot;name&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;Mercedes Benz&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;color&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;Black&quot;</span>
-    <span class="p">],</span>
-    <span class="p">[</span>
-        <span class="s2">&quot;id&quot;</span> <span class="o">=&gt;</span> <span class="mi">2</span><span class="p">,</span>
-        <span class="s2">&quot;name&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;Toyota&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;color&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;Red&quot;</span>
-    <span class="p">],</span>
-    <span class="p">[</span>
-        <span class="s2">&quot;id&quot;</span> <span class="o">=&gt;</span> <span class="mi">4</span><span class="p">,</span>
-        <span class="s2">&quot;name&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;Nissan&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;color&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;Grey&quot;</span>
-    <span class="p">],</span>
-<span class="p">];</span>
-<span class="cp">?&gt;</span>
-</code></pre>
-</div>
-
-<p>You might wonder why I tried this instead of PHP's <code>array_unique()</code> method and the reason I didn't use it is because it doesn't support multidimensional arrays.</p>
 
 <p>Hope you found this useful!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>July 18th, 2020</time>
+		<time>August 29th, 2020</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/php/">
-					PHP
+				<a href="/category/javascript/">
+					JavaScript
 				</a>
 			</li>
 			
@@ -413,37 +164,78 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/extract-youtube-channel-id-from-url">Extract YouTube Channel ID from URL</a></h1>
+		<h1 class="heading"><a href="/til/posts/input-sanitization-with-php">Input sanitization with PHP</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>Using PHP's in-built function, <code>parse_url</code>, you can write a helper method to pull the channel ID off a YouTube URL especially if you're pulling videos using YouTube's Data API. Here's the code:</p>
+		<p>This can come in handy when you're dealing with user inputs during a form submission and in most cases, your web application will be using a database query to store the data. </p>
+
+<h2>Using filter_var()</h2>
+
+<p>This method uses a number of flags to validate and sanitize a string. Here are some examples I have tried:</p>
+
+<h3>Removing special characters</h3>
+
+<p>Want to strip out all tags and certain characters? Try this:</p>
 
 <div class="codehilite">
 <pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="k">public</span> <span class="k">function</span> <span class="nf">extractChannelID</span><span class="p">(</span><span class="nv">$url</span><span class="p">){</span>
-    <span class="c1">// Parse the link and trim any whitespaces</span>
-    <span class="nv">$parsed_link</span> <span class="o">=</span> <span class="nb">parse_url</span><span class="p">(</span><span class="nb">rtrim</span><span class="p">(</span><span class="nv">$url</span><span class="p">,</span> <span class="s1">&#39;/&#39;</span><span class="p">));</span>
+<span class="nv">$str</span> <span class="o">=</span> <span class="s2">&quot;&lt;h1&gt;Hello World&lt;/h1&gt;&quot;</span><span class="p">;</span>
+<span class="nv">$filtered</span> <span class="o">=</span> <span class="nb">filter_var</span><span class="p">(</span><span class="nv">$str</span><span class="p">,</span> <span class="nx">FILTER_SANITIZE_STRING</span><span class="p">);</span>
+<span class="k">echo</span> <span class="nv">$filtered</span><span class="p">;</span>
+<span class="cp">?&gt;</span>
+</code></pre>
+</div>
 
-    <span class="c1">// Return the channel ID if it matches the pattern</span>
-    <span class="k">if</span> <span class="p">(</span><span class="nb">isset</span><span class="p">(</span><span class="nv">$parsed_link</span><span class="p">[</span><span class="s1">&#39;path&#39;</span><span class="p">])</span> <span class="o">&amp;&amp;</span> <span class="nb">preg_match</span><span class="p">(</span><span class="s1">&#39;/^\/channel\/(([^\/])+?)$/&#39;</span><span class="p">,</span> <span class="nv">$parsed_link</span><span class="p">[</span><span class="s1">&#39;path&#39;</span><span class="p">],</span> <span class="nv">$matches</span><span class="p">))</span> <span class="p">{</span>
-        <span class="k">return</span> <span class="nv">$matches</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
-    <span class="p">}</span>
+<h3>Integer validation</h3>
 
-    <span class="k">throw</span> <span class="k">new</span> <span class="nx">Exception</span><span class="p">(</span><span class="s2">&quot;This </span><span class="si">{</span><span class="nv">$url</span><span class="si">}</span><span class="s2"> is not a valid YouTube channel URL&quot;</span><span class="p">);</span>
-    <span class="k">return</span> <span class="k">null</span><span class="p">;</span>
+<p>You can check if the input is an integer and if it's a value between 1 and 20:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="nv">$x</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+<span class="nv">$min</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="nv">$max</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>
+<span class="nv">$options</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;min_range&quot;</span> <span class="o">=&gt;</span> <span class="nv">$min</span><span class="p">,</span>
+    <span class="s2">&quot;max_range&quot;</span> <span class="o">=&gt;</span> <span class="nv">$max</span>
+<span class="p">];</span>
+
+<span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nb">filter_var</span><span class="p">(</span><span class="nv">$x</span><span class="p">,</span> <span class="nx">FILTER_VALIDATE_INT</span><span class="p">,</span> <span class="nv">$options</span><span class="p">)){</span>
+    <span class="k">echo</span> <span class="s2">&quot;This input is invalid.&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="k">else</span> <span class="p">{</span>
+    <span class="k">echo</span> <span class="s2">&quot;This input is valid.&quot;</span><span class="p">;</span>
 <span class="p">}</span>
 <span class="cp">?&gt;</span>
 </code></pre>
 </div>
 
-<p>Writing tiny methods like these can help save time and be reusable in more than one context. </p>
+<h3>URL validation</h3>
 
-<p>Hope you find this tip useful! &#x1F601;</p>
+<p>Want to check if the input is a valid URL? Try this out:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="c1">// Make sure the URL is sanitized</span>
+<span class="nv">$url</span> <span class="o">=</span> <span class="nb">filter_var</span><span class="p">(</span><span class="s2">&quot;https://www.google.com&quot;</span><span class="p">,</span> <span class="nx">FILTER_SANITIZE_URL</span><span class="p">);</span>
+<span class="k">if</span><span class="p">(</span><span class="nb">filter_var</span><span class="p">(</span><span class="nv">$url</span><span class="p">,</span> <span class="nx">FILTER_VALIDATE_URL</span><span class="p">)){</span>
+    <span class="k">echo</span> <span class="s2">&quot;This URL is valid.&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="k">else</span> <span class="p">{</span>
+    <span class="k">echo</span> <span class="s2">&quot;This URL is invalid.&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="cp">?&gt;</span>
+</code></pre>
+</div>
+
+<p>Using these in-built features makes it easier for PHP developers to process data from external sources in a safer manner and also adds an extra layer of protection to your web application.</p>
+
+<p>Read more about this method in <a href="https://www.php.net/manual/en/function.filter-var.php">PHP's official documentation</a>.</p>
 
 	</div>
 	<div class="article-footer">
-		<time>July 13th, 2020</time>
+		<time>August 23rd, 2020</time>
 		<ul class="tags">
 			
 			<li>
@@ -460,49 +252,37 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/using-zipcloak-to-encrypt-files-within-an-archive">Using zipcloak to encrypt files within an archive</a></h1>
+		<h1 class="heading"><a href="/til/posts/extract-unique-characters-from-a-string">Extract unique characters from a string</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>Whenever you're sending a bunch of files or an archive that contains sensitive or confidential information, it's wise to encrypt before you send it to the person that you intend to.</p>
+		<p>I thought of getting back into competitive programming again and 
+started practicing my python coding-chops on <a href="https://www.codewars.com">Codewars</a>.</p>
 
-<p>Using <code>zipcloak</code>, you'll be able to encrypt files within your existing archive.</p>
-
-<p>Do the following after you've <a href="til/posts/zip-a-file">created a zip archive</a>:</p>
+<p>Here's a neat trick on how to extract unique characters from a string:</p>
 
 <div class="codehilite">
-<pre><span></span><code>zipcloak<span class="w"> </span>files.zip<span class="w">    </span>
+<pre><span></span><code><span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
+
+<span class="n">word</span> <span class="o">=</span> <span class="s2">&quot;HelloWorld&quot;</span>
+<span class="n">uniq</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">OrderedDict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">word</span><span class="p">)</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">uniq</span><span class="p">)</span> <span class="c1"># prints HeloWrd</span>
 </code></pre>
 </div>
 
-<p>Now, you'll be prompted twice to enter a new password and verify your entered password. If they match, your archive will get encrypted. So whenever, you try to unzip or open using an Archive Manager, you'll be prompted to enter the password or else, you won't be able to access it.</p>
+<p>Using <code>OrderedDict</code> allows you to preserve the order in which the keys are inserted as a normal <code>dict</code> doesn't track the order.</p>
 
-<p>You also have the choice of not encrypting the original archive and creating a new one instead, just like this:</p>
-
-<div class="codehilite">
-<pre><span></span><code>zipcloak<span class="w"> </span>files.zip<span class="w"> </span>-O<span class="w"> </span>encrypted.zip<span class="w">    </span>
-</code></pre>
-</div>
-
-<p>On the other hand, if you do wish to remove the encryption from your archive, just type the following:</p>
-
-<div class="codehilite">
-<pre><span></span><code>zipcloak<span class="w"> </span>-d<span class="w"> </span>files.zip
-</code></pre>
-</div>
-
-<p>And you'll be prompted again to enter your password before it removes it's encryption.</p>
-
-<p>Hope this helps you out! &#x1F601;</p>
+<p>Hope you found this useful!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>July 7th, 2020</time>
+		<time>August 23rd, 2020</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/linux/">
-					Linux
+				<a href="/category/python/">
+					Python
 				</a>
 			</li>
 			
@@ -514,54 +294,225 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-cache-your-queries-on-your-laravel-application">How to cache your queries on your Laravel application?</a></h1>
+		<h1 class="heading"><a href="/til/posts/increase-execution-time-in-php">Increase execution time in PHP</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>Although, Laravel is a good framework, it's quite heavy when it comes to executing queries especially if you're using the <a href="https://laravel.com/docs/7.x/eloquent">Eloquent ORM</a> instead of the normal <a href="https://laravel.com/docs/7.x/queries">query builder</a>.</p>
+		<p>Ever process a file that's larger than 2GB and got an error that said something like this:</p>
 
-<p>But Laravel does offer the option of caching your queries in the server and will only make calls to your database if there's a change in content.</p>
+<div class="codehilite">
+<pre><span></span><code>Maximum execution time of 30 seconds exceeded
+</code></pre>
+</div>
 
-<p>Quite handy when you're having a content-heavy website and huge amount of user traffic.</p>
-
-<p>Using the <code>Cache</code> class, you can cache your queries like this:</p>
+<p>Though, PHP doesn't have an efficient way of processing files of large sizes, you can prevent your web application from timing out by adding this to your code:</p>
 
 <div class="codehilite">
 <pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="nv">$apples</span> <span class="o">=</span> <span class="nx">\Cache</span><span class="o">::</span><span class="na">rememberForever</span><span class="p">(</span><span class="s1">&#39;apples_cache&#39;</span><span class="p">,</span> <span class="k">function</span><span class="p">(){</span>
-    <span class="k">return</span> <span class="nx">FruitsModel</span><span class="o">::</span><span class="na">where</span><span class="p">(</span><span class="s1">&#39;item_name&#39;</span><span class="p">,</span> <span class="s1">&#39;LIKE&#39;</span><span class="p">,</span> <span class="s1">&#39;%apples&#39;</span><span class="p">)</span>
-        <span class="o">-&gt;</span><span class="na">get</span><span class="p">();</span>
-<span class="p">});</span>
+<span class="c1">// 300 seconds == 5 minutes</span>
+<span class="nb">ini_set</span><span class="p">(</span><span class="s1">&#39;max_execution_time&#39;</span><span class="p">,</span> <span class="mi">300</span><span class="p">);</span>
 <span class="cp">?&gt;</span>
 </code></pre>
 </div>
 
-<p>In the above example, <code>apples_cache</code> is the key that stores your queries of apples forever and which will be used to obtain your cached results from the server. </p>
-
-<p>Oh, be sure to create distinctive names for different types of queries or else, you'll end up being confused! &#128540;</p>
-
-<p>You can also give it a time limit in milliseconds:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="nv">$apples</span> <span class="o">=</span> <span class="nx">\Cache</span><span class="o">::</span><span class="na">remember</span><span class="p">(</span><span class="s1">&#39;apples_cache&#39;</span><span class="p">,</span> <span class="mi">300000</span><span class="p">,</span> <span class="k">function</span><span class="p">(){</span>
-    <span class="k">return</span> <span class="nx">FruitsModel</span><span class="o">::</span><span class="na">where</span><span class="p">(</span><span class="s1">&#39;item_name&#39;</span><span class="p">,</span> <span class="s1">&#39;LIKE&#39;</span><span class="p">,</span> <span class="s1">&#39;%apples&#39;</span><span class="p">)</span>
-        <span class="o">-&gt;</span><span class="na">get</span><span class="p">();</span>
-<span class="p">});</span>
-<span class="cp">?&gt;</span>
-</code></pre>
-</div>
-
-<p>Hope this tip helps you out! &#x1F600;</p>
+<p>Hopefully, some day, this might come in handy for you! &#128540;</p>
 
 	</div>
 	<div class="article-footer">
-		<time>July 5th, 2020</time>
+		<time>August 23rd, 2020</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/laravel/">
-					Laravel
+				<a href="/category/php/">
+					PHP
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/increase-memory-limit-in-php">Increase memory limit in PHP</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Last month, I was building a web application that collected a lot of data via form submissions. I wrote a method to export attachments and form data by zipping them all together. </p>
+
+<p>It worked for a smaller archives but as the records grew larger, I got a fatal error which said that I've exhausted the PHP's memory limit.</p>
+
+<p>So, I found an easy way to increase the memory limit to 1024MB (1GB) like this:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="nb">ini_set</span><span class="p">(</span><span class="s1">&#39;memory_limit&#39;</span><span class="p">,</span> <span class="s1">&#39;1024M&#39;</span><span class="p">);</span>
+<span class="cp">?&gt;</span>
+</code></pre>
+</div>
+
+<p>Before you write this stub in your script, make sure you have enough resources in your system or else, it'll go splat!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>August 23rd, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/php/">
+					PHP
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/hello-go">Hello, Go!</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>After reading a lot of articles about using Go as a programming language to write high-performing concurrent web applications and services yet maintain a clean codebase, I thought of starting to learn it to see what's it about and so far, it's been great!</p>
+
+<p>This mini-tutorial will show you how to install Go on your system and write a simple "Hello, World" program.</p>
+
+<p><strong>Note: This tutorial will go through installing Go on Linux.</strong></p>
+
+<h2>Install Go</h2>
+
+<p>Make sure you have the latest updates and upgrades on your Linux system before installing Go.</p>
+
+<p>You need to download the binary file from their <a href="https://golang.org/dl/">official package</a>. Find the version that suits your OS and architecture.</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nb">cd</span><span class="w"> </span>/tmp
+wget<span class="w"> </span>https://golang.org/dl/go1.14.6.linux-amd64.tar.gz
+</code></pre>
+</div>
+
+<p>Extract the downloaded archive and install it in the <code>/usr/local</code> directory (as per the standards):</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>tar<span class="w"> </span>-xvf<span class="w"> </span>go1.14.6.linux-amd64.tar.gz
+sudo<span class="w"> </span>mv<span class="w"> </span>go<span class="w"> </span>/usr/local
+</code></pre>
+</div>
+
+<h2>Set up environment</h2>
+
+<p>Now, we need to set up three variables:</p>
+
+<ul>
+<li><code>GOROOT</code>: Location of where your Go package is installed.</li>
+<li><code>GOPATH</code>: Location of your work directory.'</li>
+<li><code>PATH</code>: Tells bash on where to look for programs that are being executed.</li>
+</ul>
+
+<p>Open up your <code>.bashrc</code> file and add these lines at the end of the file:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">GOROOT</span><span class="o">=</span>/usr/local/go
+<span class="nb">export</span><span class="w"> </span><span class="nv">GOPATH</span><span class="o">=</span><span class="nv">$HOME</span>/go
+<span class="nb">export</span><span class="w"> </span><span class="nv">PATH</span><span class="o">=</span><span class="nv">$GOPATH</span>/bin:<span class="nv">$GOROOT</span>/bin:<span class="nv">$PATH</span>
+</code></pre>
+</div>
+
+<p>Save your <code>.bashrc</code> file and update the current shell session:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nb">source</span><span class="w"> </span>~/.bashrc
+</code></pre>
+</div>
+
+<h2>Verify your installation</h2>
+
+<p>Type the following command to ensure that your Go installation is successful:</p>
+
+<div class="codehilite">
+<pre><span></span><code>go<span class="w"> </span>version<span class="w"> </span>go1.14.6<span class="w"> </span>linux/amd64
+</code></pre>
+</div>
+
+<h2>Hello, world!</h2>
+
+<p>As per traditions, whenever you learn a programming language, you start off with a "Hello, world!" program, so here it is:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="kn">package</span><span class="w"> </span><span class="nx">main</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="s">&quot;fmt&quot;</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="nx">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;Hello, world!\n&quot;</span><span class="p">)</span>
+<span class="p">}</span><span class="w"> </span>
+</code></pre>
+</div>
+
+<h2>Conclusion</h2>
+
+<p>I just started learning it today and at first, you might have the tendency to write code in Go the same way you write in any other language but beware, it doesn't work that way. It forces you to write good code including the way it formats the code using the <code>gofmt</code> tool.</p>
+
+<p>Lots of cool things are coming!</p>
+
+<p>Stay tuned for more.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>August 1st, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/go/">
+					Go
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-delete-files-inside-a-zip-file">How to delete files inside a zip file?</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Ever compressed your project directory but forgot to delete that useless file or folder and turns out the compresed file is larger than it's supposed to be? </p>
+
+<p>Here's a quick solution you can try:</p>
+
+<p>If you want to delete a file inside a <code>.zip</code> file, try this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>zip<span class="w"> </span>--delete<span class="w"> </span>file.zip<span class="w"> </span><span class="s2">&quot;file.ext&quot;</span>
+</code></pre>
+</div>
+
+<p>And if you want to delete a folder, try this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>zip<span class="w"> </span>--delete<span class="w"> </span>file.zip<span class="w"> </span><span class="s2">&quot;folder/*&quot;</span>
+</code></pre>
+</div>
+
+<p>Hope this helps you out!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>July 21st, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/terminal/">
+					Terminal
 				</a>
 			</li>
 			
@@ -609,11 +560,11 @@
 		
 	
 		
-			<a class="" href="/til/pages/3">...</a>
+			<a class="" href="/til/pages/4">...</a>
 		
 	
 		
-			<a class="" href="/til/pages/17">17</a>
+			<a class="" href="/til/pages/18">18</a>
 		
 	
 
@@ -666,6 +617,20 @@
 		</li>
 		
 		<li>
+			<a href="/category/cryptography/">
+				Cryptography
+				<span class="count">12</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/programming/">
+				Programming
+				<span class="count">11</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/javascript/">
 				JavaScript
 				<span class="count">11</span>
@@ -687,9 +652,9 @@
 		</li>
 		
 		<li>
-			<a href="/category/cryptography/">
-				Cryptography
-				<span class="count">11</span>
+			<a href="/category/productivity/">
+				Productivity
+				<span class="count">10</span>
 			</a>
 		</li>
 		
@@ -697,20 +662,6 @@
 			<a href="/category/git/">
 				Git
 				<span class="count">10</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/productivity/">
-				Productivity
-				<span class="count">9</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/programming/">
-				Programming
-				<span class="count">9</span>
 			</a>
 		</li>
 		
@@ -757,6 +708,13 @@
 		</li>
 		
 		<li>
+			<a href="/category/vscode/">
+				VSCode
+				<span class="count">5</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/blogmarks/">
 				Blogmarks
 				<span class="count">5</span>
@@ -778,16 +736,16 @@
 		</li>
 		
 		<li>
-			<a href="/category/arcade-challenge/">
-				Arcade Challenge
+			<a href="/category/c/">
+				C#
 				<span class="count">4</span>
 			</a>
 		</li>
 		
 		<li>
-			<a href="/category/vscode/">
-				VSCode
-				<span class="count">3</span>
+			<a href="/category/arcade-challenge/">
+				Arcade Challenge
+				<span class="count">4</span>
 			</a>
 		</li>
 		
@@ -830,6 +788,34 @@
 			<a href="/category/general/">
 				General
 				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/clean-code/">
+				Clean Code
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/refactoring/">
+				Refactoring
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/security/">
+				Security
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/sql-server/">
+				SQL Server
+				<span class="count">2</span>
 			</a>
 		</li>
 		
@@ -911,6 +897,34 @@
 		</li>
 		
 		<li>
+			<a href="/category/net-core/">
+				.NET Core
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/oop/">
+				OOP
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/troubleshooting/">
+				Troubleshooting
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/documentary/">
+				Documentary
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/xdebug/">
 				XDebug
 				<span class="count">1</span>
@@ -934,13 +948,6 @@
 		<li>
 			<a href="/category/csr/">
 				CSR
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/clean-code/">
-				Clean Code
 				<span class="count">1</span>
 			</a>
 		</li>
@@ -1016,13 +1023,6 @@
 		</li>
 		
 		<li>
-			<a href="/category/security/">
-				Security
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/cpanel/">
 				cPanel
 				<span class="count">1</span>
@@ -1032,13 +1032,6 @@
 		<li>
 			<a href="/category/introduction/">
 				Introduction
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/refactoring/">
-				Refactoring
 				<span class="count">1</span>
 			</a>
 		</li>

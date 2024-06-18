@@ -423,7 +423,8 @@ let generativeArt = (() => {
 	// Main function
 	_self.init = () => {
 		// let methods = ['truchetTriangles', 'truchetQuarterCircles', 'bauhaus', 'pixels'];
-		let methods = ['truchetTriangles', 'truchetQuarterCircles', 'bauhaus', 'lines'];
+		// let methods = ['truchetTriangles', 'truchetQuarterCircles', 'bauhaus', 'lines'];
+		let methods = ['truchetTriangles', 'bauhaus'];
 		_self[methods[_self.utils.generateRandomNumber(0,methods.length-1)]]();
 	};
 	return _self;
