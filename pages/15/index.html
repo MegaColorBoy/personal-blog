@@ -78,39 +78,74 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/prevent-loading-webpage-from-backforward-cache">Prevent loading a webpage from Back-Forward cache</a></h1>
+		<h1 class="heading"><a href="/til/posts/create-aliased-class-constants-in-laravel">Create aliased class constants in Laravel</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>I'm working on an eCommerce project and I encountered a really weird problem, whenever I saved items into my cart and proceed to the checkout page and then go back to previous page, my cart isn't updated until I refresh the page.</p>
+		<p>There are many ways to define constants in Laravel but I learnt a neat technique where you can define constants using an alias.</p>
 
-<p>Honestly, I thought this was a bug until I came around to learn about <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Firefox/Releases/1.5/Using_Firefox_1.5_caching">Back-Forward Caching</a> a.k.a <strong>bfcache</strong>, which allows the user to navigate between pages faster. That's a good thing, though!</p>
-
-<p>But that didn't help resolve my issue, so I thought of going around with a tiny hack:</p>
+<p>First off, create the following directory:</p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="nb">window</span><span class="p">.</span><span class="nx">onpageshow</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">event</span><span class="p">.</span><span class="nx">persisted</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="p">.</span><span class="nx">reload</span><span class="p">()</span><span class="w"> </span>
-<span class="w">    </span><span class="p">}</span>
-<span class="p">};</span>
+<pre><span></span><code>mkdir<span class="w"> </span>app/Constants
 </code></pre>
 </div>
 
-<p>The code above will look any persistence of the <code>onpageshow</code> event. Initially, it's set to <code>false</code> and if the page is loaded from <strong>bfcache</strong>, it'll set to <code>true</code>.</p>
+<p>Next, create a file named <code>MyConstants.php</code> in the <code>app/Constants</code> directory and copy-paste the following code:</p>
 
-<p>I wouldn't really consider this as a solution as it only worked on Safari instead of Chrome or Firefox.</p>
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="k">namespace</span> <span class="nx">App\Constants</span><span class="p">;</span>
 
-<p>But hey, it gets the job done! &#x1F602;</p>
+<span class="k">class</span> <span class="nc">MyConstants</span> <span class="p">{</span>
+    <span class="k">const</span> <span class="no">HELLO</span> <span class="o">=</span> <span class="s1">&#39;hello&#39;</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="cp">?&gt;</span>
+</code></pre>
+</div>
+
+<p>Then, go to the <code>config/app.php</code> file and define your new alias:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="s1">&#39;aliases&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span>
+    <span class="c1">// previously defined aliases...</span>
+    <span class="s1">&#39;MyConstants&#39;</span> <span class="o">=&gt;</span> <span class="nx">App\Constants\MyConstants</span><span class="o">::</span><span class="na">class</span><span class="p">,</span>
+<span class="p">]</span>
+<span class="cp">?&gt;</span>
+</code></pre>
+</div>
+
+<p>Lastly, execute the following commands to update your app's configuration:</p>
+
+<div class="codehilite">
+<pre><span></span><code>php<span class="w"> </span>artisan<span class="w"> </span>config:clear
+composer<span class="w"> </span>dump-autoload
+php<span class="w"> </span>artisan<span class="w"> </span>config:cache
+</code></pre>
+</div>
+
+<p>After that, you can use your new constants anywhere (Controllers, Models or Blades) like this:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="k">echo</span> <span class="nx">MyConstants</span><span class="o">::</span><span class="na">HELLO</span><span class="p">;</span>
+<span class="cp">?&gt;</span>
+</code></pre>
+</div>
+
+<p>Learning this new technique helps me keep the code clean and makes it easier to trace the constants.</p>
+
+<p>Hope you find this tip useful!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>August 30th, 2020</time>
+		<time>November 7th, 2020</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/javascript/">
-					JavaScript
+				<a href="/category/laravel/">
+					Laravel
 				</a>
 			</li>
 			
@@ -122,38 +157,60 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/refresh-browser-window-without-query-parameters">Refresh browser window without query parameters</a></h1>
+		<h1 class="heading"><a href="/til/posts/rename-a-git-branch">Rename a Git Branch</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>If you want to reload the current page in your browser without any query string or parameters, here's how you can do it:</p>
+		<p>Using branches are one of the most powerful features of Git and becomes a part of the software development process.</p>
+
+<p>Last night, I came across an issue where I created a new branch and committed my changes until the <code>git</code> tool rejected it because the branch was already created by someone else in the repository.</p>
+
+<p>Luckily, I was able to resolve this issue by renaming my branch using <code>git branch -m</code> command.</p>
+
+<p>Here's a short guide on how you can do that too!</p>
+
+<h2>1. Switch to the remote branch you want to rename</h2>
 
 <div class="codehilite">
-<pre><span></span><code><span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="p">.</span><span class="nx">pathname</span><span class="p">;</span>
+<pre><span></span><code>git<span class="w"> </span>checkout<span class="w"> </span>&lt;your_old_branch&gt;
 </code></pre>
 </div>
 
-<p>By doing so, it'll preserve the HTTP/HTTPS protocols of the URL and also remove the fragments that start with a <code>#</code>.</p>
-
-<p>If you want to preserve the fragments, you can try this:</p>
+<h2>2. Rename the current remote branch</h2>
 
 <div class="codehilite">
-<pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">reloadURL</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="p">.</span><span class="nx">pathname</span><span class="p">;</span>
-<span class="kd">var</span><span class="w"> </span><span class="nx">fragments</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="p">.</span><span class="nx">part</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="kc">undefined</span><span class="p">)</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;#&quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="p">.</span><span class="nx">part</span><span class="p">;</span>
-<span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">reloadURL</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">fragments</span><span class="p">;</span>
+<pre><span></span><code>git<span class="w"> </span>branch<span class="w"> </span>-m<span class="w"> </span>&lt;your_new_branch&gt;
 </code></pre>
 </div>
+
+<p>Proceed to the next step, if you've pushed your old branch to the remote repository.</p>
+
+<h2>3. Push the renamed remote branch</h2>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>-u<span class="w"> </span>&lt;your_new_branch&gt;
+</code></pre>
+</div>
+
+<h2>4. Delete the old remote branch</h2>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>--delete<span class="w"> </span>&lt;your_old_branch&gt;
+</code></pre>
+</div>
+
+<p>If you've come this far without any issues, you've successfully renamed your local and remote Git branch.</p>
 
 <p>Hope you found this useful!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>August 29th, 2020</time>
+		<time>November 4th, 2020</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/javascript/">
-					JavaScript
+				<a href="/category/git/">
+					Git
 				</a>
 			</li>
 			
@@ -165,83 +222,42 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/input-sanitization-with-php">Input sanitization with PHP</a></h1>
+		<h1 class="heading"><a href="/til/posts/import-and-export-mysql-database-via-terminal">Import and Export MySQL database via Terminal</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>This can come in handy when you're dealing with user inputs during a form submission and in most cases, your web application will be using a database query to store the data. </p>
+		<p>Sometimes, phpMyAdmin can be painful to use especially when you want to import/export a MySQL database.</p>
 
-<h2>Using filter_var()</h2>
+<p>If you're not afraid of using the Terminal, try these commands to save your time:</p>
 
-<p>This method uses a number of flags to validate and sanitize a string. Here are some examples I have tried:</p>
-
-<h3>Removing special characters</h3>
-
-<p>Want to strip out all tags and certain characters? Try this:</p>
+<h2>Import MySQL database</h2>
 
 <div class="codehilite">
-<pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="nv">$str</span> <span class="o">=</span> <span class="s2">&quot;&lt;h1&gt;Hello World&lt;/h1&gt;&quot;</span><span class="p">;</span>
-<span class="nv">$filtered</span> <span class="o">=</span> <span class="nb">filter_var</span><span class="p">(</span><span class="nv">$str</span><span class="p">,</span> <span class="nx">FILTER_SANITIZE_STRING</span><span class="p">);</span>
-<span class="k">echo</span> <span class="nv">$filtered</span><span class="p">;</span>
-<span class="cp">?&gt;</span>
+<pre><span></span><code>mysql<span class="w"> </span>-u<span class="w"> </span>username<span class="w"> </span>-p<span class="w"> </span>database_name<span class="w"> </span>&lt;<span class="w"> </span>your_sql_file.sql
 </code></pre>
 </div>
 
-<h3>Integer validation</h3>
+<p>Before you run this command, please make sure that you've created the <code>database_name</code> schema in your database or else, you might get an error especially if the <code>.sql</code> file doesn't have a <code>CREATE DATABASE</code> statement.</p>
 
-<p>You can check if the input is an integer and if it's a value between 1 and 20:</p>
+<h2>Export MySQL database</h2>
 
 <div class="codehilite">
-<pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="nv">$x</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
-<span class="nv">$min</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-<span class="nv">$max</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>
-<span class="nv">$options</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="s2">&quot;min_range&quot;</span> <span class="o">=&gt;</span> <span class="nv">$min</span><span class="p">,</span>
-    <span class="s2">&quot;max_range&quot;</span> <span class="o">=&gt;</span> <span class="nv">$max</span>
-<span class="p">];</span>
-
-<span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nb">filter_var</span><span class="p">(</span><span class="nv">$x</span><span class="p">,</span> <span class="nx">FILTER_VALIDATE_INT</span><span class="p">,</span> <span class="nv">$options</span><span class="p">)){</span>
-    <span class="k">echo</span> <span class="s2">&quot;This input is invalid.&quot;</span><span class="p">;</span>
-<span class="p">}</span>
-<span class="k">else</span> <span class="p">{</span>
-    <span class="k">echo</span> <span class="s2">&quot;This input is valid.&quot;</span><span class="p">;</span>
-<span class="p">}</span>
-<span class="cp">?&gt;</span>
+<pre><span></span><code>mysqldump<span class="w"> </span>-u<span class="w"> </span>username<span class="w"> </span>-p<span class="w"> </span>database_name<span class="w"> </span>&gt;<span class="w"> </span>your_sql_file.sql
 </code></pre>
 </div>
 
-<h3>URL validation</h3>
+<p>This command will export your database with the file name <code>your_sql_file.sql</code> to your current path.</p>
 
-<p>Want to check if the input is a valid URL? Try this out:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="c1">// Make sure the URL is sanitized</span>
-<span class="nv">$url</span> <span class="o">=</span> <span class="nb">filter_var</span><span class="p">(</span><span class="s2">&quot;https://www.google.com&quot;</span><span class="p">,</span> <span class="nx">FILTER_SANITIZE_URL</span><span class="p">);</span>
-<span class="k">if</span><span class="p">(</span><span class="nb">filter_var</span><span class="p">(</span><span class="nv">$url</span><span class="p">,</span> <span class="nx">FILTER_VALIDATE_URL</span><span class="p">)){</span>
-    <span class="k">echo</span> <span class="s2">&quot;This URL is valid.&quot;</span><span class="p">;</span>
-<span class="p">}</span>
-<span class="k">else</span> <span class="p">{</span>
-    <span class="k">echo</span> <span class="s2">&quot;This URL is invalid.&quot;</span><span class="p">;</span>
-<span class="p">}</span>
-<span class="cp">?&gt;</span>
-</code></pre>
-</div>
-
-<p>Using these in-built features makes it easier for PHP developers to process data from external sources in a safer manner and also adds an extra layer of protection to your web application.</p>
-
-<p>Read more about this method in <a href="https://www.php.net/manual/en/function.filter-var.php">PHP's official documentation</a>.</p>
+<p>Hope this helps you out!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>August 23rd, 2020</time>
+		<time>November 4th, 2020</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/php/">
-					PHP
+				<a href="/category/mysql/">
+					MySQL
 				</a>
 			</li>
 			
@@ -253,37 +269,59 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/extract-unique-characters-from-a-string">Extract unique characters from a string</a></h1>
+		<h1 class="heading"><a href="/til/posts/concatenate-multiple-rows-into-one-field">Concatenate multiple rows into one field</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>I thought of getting back into competitive programming again and 
-started practicing my python coding-chops on <a href="https://www.codewars.com">Codewars</a>.</p>
-
-<p>Here's a neat trick on how to extract unique characters from a string:</p>
+		<p>Say, you have a table named <code>hobbies</code> and wanted to display a list of hobbies based on <code>user_id</code>, you'd probably do something like this:</p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
-
-<span class="n">word</span> <span class="o">=</span> <span class="s2">&quot;HelloWorld&quot;</span>
-<span class="n">uniq</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">OrderedDict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">word</span><span class="p">)</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="n">uniq</span><span class="p">)</span> <span class="c1"># prints HeloWrd</span>
+<pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">title</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">hobbies</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">user_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">8</span><span class="p">;</span>
 </code></pre>
 </div>
 
-<p>Using <code>OrderedDict</code> allows you to preserve the order in which the keys are inserted as a normal <code>dict</code> doesn't track the order.</p>
+<p>This would return a list of hobbies like this:</p>
 
-<p>Hope you found this useful!</p>
+<div class="codehilite">
+<pre><span></span><code>Boxing
+Coding
+Reading
+Fishing
+</code></pre>
+</div>
+
+<p>That's simple but what if you wanted to display them in one row? Like this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>Boxing, Coding, Reading, Fishing
+</code></pre>
+</div>
+
+<p>You can make use of the <code>GROUP_CONCAT</code> method to achieve the same result by executing the following SQL query:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">GROUP_CONCAT</span><span class="p">(</span><span class="n">title</span><span class="p">,</span><span class="w"> </span><span class="n">SEPARATOR</span><span class="w"> </span><span class="s1">&#39;, &#39;</span><span class="p">)</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">hobbies</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">user_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">8</span><span class="p">;</span>
+</code></pre>
+</div>
+
+<p>Nice, what if you wanted to view a list of hobbies of all users? In most cases, a table like this might have a many-to-many relationship, so in order to avoid possible duplicates, you can try this:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">user_id</span><span class="p">,</span><span class="w"> </span><span class="n">GROUP_CONCAT</span><span class="p">(</span><span class="n">title</span><span class="p">,</span><span class="w"> </span><span class="n">SEPARATOR</span><span class="w"> </span><span class="s1">&#39;, &#39;</span><span class="p">)</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">hobbies</span>
+<span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">user_id</span>
+</code></pre>
+</div>
+
+<p>Hope this tip helps you out!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>August 23rd, 2020</time>
+		<time>November 4th, 2020</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/python/">
-					Python
+				<a href="/category/mysql/">
+					MySQL
 				</a>
 			</li>
 			
@@ -295,289 +333,199 @@ started practicing my python coding-chops on <a href="https://www.codewars.com">
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/increase-execution-time-in-php">Increase execution time in PHP</a></h1>
+		<h1 class="heading"><a href="/til/posts/find-your-public-ip-address-using-the-terminal">Find your Public IP address using the Terminal</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>Ever process a file that's larger than 2GB and got an error that said something like this:</p>
+		<p>Previously, I used to determine my Public IP address on Google Search by typing <strong><em>"What is my IP?"</em></strong> and I was good with it.</p>
+
+<p>Until, I thought of actually viewing it via the terminal itself. So, I wrote two lines of code in my <code>~/.bashrc</code> file:</p>
 
 <div class="codehilite">
-<pre><span></span><code>Maximum execution time of 30 seconds exceeded
+<pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">myip</span><span class="o">=</span><span class="s2">&quot;</span><span class="k">$(</span>dig<span class="w"> </span>+short<span class="w"> </span>myip.opendns.com<span class="w"> </span>@resolver1.opendns.com<span class="k">)</span><span class="s2">&quot;</span>
+<span class="nb">alias</span><span class="w"> </span><span class="nv">myip</span><span class="o">=</span><span class="s2">&quot;echo </span><span class="nv">$myip</span><span class="s2">&quot;</span>
 </code></pre>
 </div>
 
-<p>Though, PHP doesn't have an efficient way of processing files of large sizes, you can prevent your web application from timing out by adding this to your code:</p>
+<p>Alternatively, you could try this too:</p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="c1">// 300 seconds == 5 minutes</span>
-<span class="nb">ini_set</span><span class="p">(</span><span class="s1">&#39;max_execution_time&#39;</span><span class="p">,</span> <span class="mi">300</span><span class="p">);</span>
-<span class="cp">?&gt;</span>
+<pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">myip</span><span class="o">=</span><span class="s2">&quot;</span><span class="k">$(</span>dig<span class="w"> </span>TXT<span class="w"> </span>+short<span class="w"> </span>o-o.myaddr.l.google.com<span class="w"> </span>@ns1.google.com<span class="k">)</span><span class="s2">&quot;</span>
 </code></pre>
 </div>
 
-<p>Hopefully, some day, this might come in handy for you! &#128540;</p>
-
-	</div>
-	<div class="article-footer">
-		<time>August 23rd, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/php/">
-					PHP
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/increase-memory-limit-in-php">Increase memory limit in PHP</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Last month, I was building a web application that collected a lot of data via form submissions. I wrote a method to export attachments and form data by zipping them all together. </p>
-
-<p>It worked for a smaller archives but as the records grew larger, I got a fatal error which said that I've exhausted the PHP's memory limit.</p>
-
-<p>So, I found an easy way to increase the memory limit to 1024MB (1GB) like this:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="nb">ini_set</span><span class="p">(</span><span class="s1">&#39;memory_limit&#39;</span><span class="p">,</span> <span class="s1">&#39;1024M&#39;</span><span class="p">);</span>
-<span class="cp">?&gt;</span>
-</code></pre>
-</div>
-
-<p>Before you write this stub in your script, make sure you have enough resources in your system or else, it'll go splat!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>August 23rd, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/php/">
-					PHP
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/do-we-really-need-to-use-pointers">Do we really need to use pointers?</a></h1>
-		<p class="description">Did a little digging on whether it's useful to make use of pointers in your application</p>
-	</div>
-	<div class="article-body">
-		<p>The topic about pointers isn't new as you're probably introduced to this concept in your first computer science class. I started learning Go and once again, I came across the concept of using Pointers and wanted to finally understand, why are they used and do we really need to use it?</p>
-
-<p>Frankly, I don't really remember using pointers when I was developing web applications in PHP and JavaScript but it was quite a refresher to get back on track again.</p>
-
-<h2>Well, what is a pointer?</h2>
-
-<p>In it's basic form, a pointer is a variable that contains the memory address of another variable.</p>
-
-<p>For example, you have a variable named <mark>x</mark> that contains some data, in this case, we'll store an integer:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="kn">package</span><span class="w"> </span><span class="nx">main</span>
-
-<span class="kn">import</span><span class="w"> </span><span class="s">&quot;fmt&quot;</span>
-
-<span class="kd">func</span><span class="w"> </span><span class="nx">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nx">x</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="mi">10</span>
-<span class="w">    </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="nx">x</span><span class="p">)</span><span class="w"> </span><span class="c1">// prints 10</span>
-<span class="p">}</span>
-</code></pre>
-</div>
-
-<p>The code above prints the variable <mark>x</mark> by referring to it's name. We can do the same using pointers by referring to it's memory address via another variable that points to variable <mark>x</mark>.</p>
-
-<p>To do this, we must use <mark>&amp;</mark> operator to get the address and <code>*</code> to return the value stored in the address of variable <mark>x</mark> like this:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="kn">package</span><span class="w"> </span><span class="nx">main</span>
-
-<span class="kn">import</span><span class="w"> </span><span class="s">&quot;fmt&quot;</span>
-
-<span class="kd">func</span><span class="w"> </span><span class="nx">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nx">x</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="mi">10</span>
-<span class="w">    </span><span class="nx">p</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">x</span>
-<span class="w">    </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="nx">x</span><span class="p">)</span><span class="w">   </span><span class="c1">// prints 10</span>
-<span class="w">    </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="o">*</span><span class="nx">p</span><span class="p">)</span><span class="w">  </span><span class="c1">// also, prints 10</span>
-<span class="p">}</span>
-</code></pre>
-</div>
-
-<p>Hmm, that was pretty straight forward.</p>
-
-<h2>So, why was it created?</h2>
-
-<p>In the modern era, most high-level programming languages are capable of handling memory allocation (like <strong>Java</strong> or <strong>C#</strong>), automatically.</p>
-
-<p>But when <strong>C</strong> was developed, computers weren't as powerful as today but that also meant the programmers must create systems that made use of memory and speed, efficiently. Which is why some tasks do require it when programming low-level embedded systems or microcontrollers.</p>
-
-<h2>Why use them?</h2>
-
-<p>Whenever you pass a variable to a function, you're basically creating a copy of the variable. But if you're using pointers, you just have to pass the address of the variable and in most cases, a pointer is much smaller in size than the value being pointed at.</p>
-
-<p>It allows you share data and it's quite appropriate when it comes to modifying the data being passed to it.</p>
-
-<p>To some extent, it might seem efficient but there are some tradeoffs, when you're going to talk about optimization.</p>
-
-<h2>Do pointers really optimize your application?</h2>
-
-<p>I was thinking if pointers are used to optimize applications, I mean, you don't have to duplicate data and it saves memory, so why not?</p>
-
-<p>Turns out that there are a few points that I came across:</p>
-
-<ol>
-<li>Accessing values can use up memory though not so much but it can add up.</li>
-<li>Data will be placed on top of heap stack which increases the memory overhead and can be cleaned up the garbage collector.</li>
-</ol>
-
-<p>Most programmers tend to avoid using it in order to make their codebase less complex and reduce the increased work for the garbage collector.</p>
-
-<p>Apart from that, there are some concerns when it comes to the security of the application implying that it could be unsafe when using pointers.</p>
-
-<h2>Takeaway</h2>
-
-<p>Pointers are useful but don't think of using it, blindly, by assuming that it might give you a boost in performance.</p>
-
-<p>Hope you found this article useful!</p>
-
-<h2>Readings</h2>
-
-<ul>
-<li><a href="http://duramecho.com/ComputerInformation/WhyCPointers.html">Why C has pointers?</a></li>
-<li><a href="https://www.quora.com/Why-dont-we-use-pointers-in-Java-but-we-use-them-in-C-and-C++">Why do we use pointers in Java but we use them in C and C++</a></li>
-</ul>
-
-	</div>
-	<div class="article-footer">
-		<time>August 21st, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/programming/">
-					Programming
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/hello-go">Hello, Go!</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>After reading a lot of articles about using Go as a programming language to write high-performing concurrent web applications and services yet maintain a clean codebase, I thought of starting to learn it to see what's it about and so far, it's been great!</p>
-
-<p>This mini-tutorial will show you how to install Go on your system and write a simple "Hello, World" program.</p>
-
-<p><strong>Note: This tutorial will go through installing Go on Linux.</strong></p>
-
-<h2>Install Go</h2>
-
-<p>Make sure you have the latest updates and upgrades on your Linux system before installing Go.</p>
-
-<p>You need to download the binary file from their <a href="https://golang.org/dl/">official package</a>. Find the version that suits your OS and architecture.</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="nb">cd</span><span class="w"> </span>/tmp
-wget<span class="w"> </span>https://golang.org/dl/go1.14.6.linux-amd64.tar.gz
-</code></pre>
-</div>
-
-<p>Extract the downloaded archive and install it in the <code>/usr/local</code> directory (as per the standards):</p>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>tar<span class="w"> </span>-xvf<span class="w"> </span>go1.14.6.linux-amd64.tar.gz
-sudo<span class="w"> </span>mv<span class="w"> </span>go<span class="w"> </span>/usr/local
-</code></pre>
-</div>
-
-<h2>Set up environment</h2>
-
-<p>Now, we need to set up three variables:</p>
-
-<ul>
-<li><code>GOROOT</code>: Location of where your Go package is installed.</li>
-<li><code>GOPATH</code>: Location of your work directory.'</li>
-<li><code>PATH</code>: Tells bash on where to look for programs that are being executed.</li>
-</ul>
-
-<p>Open up your <code>.bashrc</code> file and add these lines at the end of the file:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">GOROOT</span><span class="o">=</span>/usr/local/go
-<span class="nb">export</span><span class="w"> </span><span class="nv">GOPATH</span><span class="o">=</span><span class="nv">$HOME</span>/go
-<span class="nb">export</span><span class="w"> </span><span class="nv">PATH</span><span class="o">=</span><span class="nv">$GOPATH</span>/bin:<span class="nv">$GOROOT</span>/bin:<span class="nv">$PATH</span>
-</code></pre>
-</div>
-
-<p>Save your <code>.bashrc</code> file and update the current shell session:</p>
+<p>Save the file and apply your new configuration by typing the following command:</p>
 
 <div class="codehilite">
 <pre><span></span><code><span class="nb">source</span><span class="w"> </span>~/.bashrc
 </code></pre>
 </div>
 
-<h2>Verify your installation</h2>
+<p>That's it, now all you have to do is type <code>myip</code> in your terminal and it will display your Public IP address.</p>
 
-<p>Type the following command to ensure that your Go installation is successful:</p>
-
-<div class="codehilite">
-<pre><span></span><code>go<span class="w"> </span>version<span class="w"> </span>go1.14.6<span class="w"> </span>linux/amd64
-</code></pre>
-</div>
-
-<h2>Hello, world!</h2>
-
-<p>As per traditions, whenever you learn a programming language, you start off with a "Hello, world!" program, so here it is:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="kn">package</span><span class="w"> </span><span class="nx">main</span>
-
-<span class="kn">import</span><span class="w"> </span><span class="s">&quot;fmt&quot;</span>
-
-<span class="kd">func</span><span class="w"> </span><span class="nx">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;Hello, world!\n&quot;</span><span class="p">)</span>
-<span class="p">}</span><span class="w"> </span>
-</code></pre>
-</div>
-
-<h2>Conclusion</h2>
-
-<p>I just started learning it today and at first, you might have the tendency to write code in Go the same way you write in any other language but beware, it doesn't work that way. It forces you to write good code including the way it formats the code using the <code>gofmt</code> tool.</p>
-
-<p>Lots of cool things are coming!</p>
-
-<p>Stay tuned for more.</p>
+<p>Hope you found this useful! &#x1F600;</p>
 
 	</div>
 	<div class="article-footer">
-		<time>August 1st, 2020</time>
+		<time>November 3rd, 2020</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/go/">
-					Go
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/fix-screen-tearing-in-xfce-desktop-environment">Fix screen tearing in XFCE desktop environment</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Yesterday, I decided to try XFCE desktop environment and boy, it's really faster than the GNOME desktop environment.</p>
+
+<p>As soon as I started to play around with it, I noticed a good amount of <a href="https://en.wikipedia.org/wiki/Screen_tearing">screen tearing</a> and to my surprise, I came to know that the XFCE environment is known to have such issues.</p>
+
+<p>After a few minutes of research, I was able to fix it. Here are the steps:</p>
+
+<p><strong>Note: This is done on Ubuntu 18.04 Bionic Beaver</strong></p>
+
+<p>If you dont have the package <code>inxi</code> installed in your system, do it right now:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>inxi
+</code></pre>
+</div>
+
+<p>After you're done installing, type the following command to find out which graphics you're using:</p>
+
+<div class="codehilite">
+<pre><span></span><code>inxi<span class="w"> </span>-G
+</code></pre>
+</div>
+
+<p>If you're using an Intel Graphics Driver, you'll probably get something like this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>Graphics:<span class="w">  </span>Card:<span class="w"> </span>Intel<span class="w"> </span>Device<span class="w"> </span><span class="m">5926</span>
+<span class="w">           </span>Display<span class="w"> </span>Server:<span class="w"> </span>x11<span class="w"> </span><span class="o">(</span>X.Org<span class="w"> </span><span class="m">1</span>.19.6<span class="w"> </span><span class="o">)</span><span class="w"> </span>driver:<span class="w"> </span>i915<span class="w"> </span>Resolution:<span class="w"> </span>1920x1080@60.00hz
+<span class="w">           </span>OpenGL:<span class="w"> </span>renderer:<span class="w"> </span>Mesa<span class="w"> </span>DRI<span class="w"> </span>Intel<span class="w"> </span>Iris<span class="w"> </span>Plus<span class="w"> </span>Graphics<span class="w"> </span><span class="m">640</span><span class="w"> </span><span class="o">(</span>Kaby<span class="w"> </span>Lake<span class="w"> </span>GT3e<span class="o">)</span><span class="w"> </span><span class="o">(</span>KBL<span class="w"> </span>GT3<span class="o">)</span>
+<span class="w">           </span>version:<span class="w"> </span><span class="m">4</span>.6<span class="w"> </span>Mesa<span class="w"> </span><span class="m">20</span>.0.8
+</code></pre>
+</div>
+
+<p>You can try go to <strong>Settings Manager->Window Manager Tweaks->Compositor" and enable **Synchronize drawing to the vertical blank</strong>. From <a href="https://techstop.github.io/fix-screen-tearing-xfce/">what I've read</a>, if you do that, it should stop but it didn't do anything for me.</p>
+
+<p>If the above technique didn't work, go to <code>/usr/shar/X11/xorg.conf.d/</code> and create a file for your graphics card named <code>10-intel.conf</code>.</p>
+
+<p>Copy-paste the following configuration into the file:</p>
+
+<div class="codehilite">
+<pre><span></span><code>Section<span class="w"> </span><span class="s2">&quot;Device&quot;</span>
+<span class="w">  </span>Identifier<span class="w">  </span><span class="s2">&quot;Intel Graphics&quot;</span>
+<span class="w">  </span>Driver<span class="w">      </span><span class="s2">&quot;intel&quot;</span>
+<span class="w">  </span>Option<span class="w"> </span><span class="s2">&quot;TearFree&quot;</span><span class="w"> </span><span class="s2">&quot;true&quot;</span>
+EndSection
+</code></pre>
+</div>
+
+<p>Save the file, reboot your system and look for any screen tearing issues. If you didn't face any, that means it worked! &#x1F601;</p>
+
+	</div>
+	<div class="article-footer">
+		<time>November 2nd, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/xfce/">
+					XFCE
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/clear-a-file-directory-using-filesystem-in-laravel">Clear a file directory using Filesystem in Laravel</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>I was working on a project that dealt with generating large .zip exports and as a result, the <code>storage/exports</code> directory, which was used to store all the .zip exports, ended up going all the way up to a whopping size of 10 gigabytes! &#x1F62E;</p>
+
+<p>I resolved it by calling the <code>Filesystem</code> package in my controller:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="k">use</span> <span class="nx">Illuminate\Filesystem\Filesystem</span><span class="p">;</span>
+<span class="cp">?&gt;</span>
+</code></pre>
+</div>
+
+<p>Then simply, create a new instance and define the directory you wanted to clear:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="nv">$folder</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Filesystem</span><span class="p">;</span>
+<span class="nv">$folder</span><span class="o">-&gt;</span><span class="na">cleanDirectory</span><span class="p">(</span><span class="s1">&#39;storage/exports&#39;</span><span class="p">);</span>
+<span class="cp">?&gt;</span>
+</code></pre>
+</div>
+
+<p>Hope this helps you out!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>September 28th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/laravel/">
+					Laravel
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-move-a-running-process-to-the-background">How to move a running process to the background?</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Pause the current process using <code>Ctrl + Z</code>, which will send it to the background and then type <code>bg</code> to allow the process to run in the background.</p>
+
+<p>Alternatively, you can add a <code>&amp;</code> after the desired process you wanted to execute and it'll automatically execute it as a background process.</p>
+
+<p>Hope this helps you out!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>September 28th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/unix/">
+					UNIX
 				</a>
 			</li>
 			
@@ -625,11 +573,11 @@ sudo<span class="w"> </span>mv<span class="w"> </span>go<span class="w"> </span>
 		
 	
 		
-			<a class="" href="/pages/11">...</a>
+			<a class="" href="/pages/13">...</a>
 		
 	
 		
-			<a class="" href="/pages/28">28</a>
+			<a class="" href="/pages/30">30</a>
 		
 	
 
@@ -666,28 +614,35 @@ sudo<span class="w"> </span>mv<span class="w"> </span>go<span class="w"> </span>
 		<li>
 			<a href="/category/linux/">
 				Linux
-				<span class="count">22</span>
+				<span class="count">24</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/laravel/">
 				Laravel
-				<span class="count">18</span>
+				<span class="count">20</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/devops/">
 				DevOps
-				<span class="count">15</span>
+				<span class="count">20</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/php/">
 				PHP
-				<span class="count">13</span>
+				<span class="count">14</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/git/">
+				Git
+				<span class="count">12</span>
 			</a>
 		</li>
 		
@@ -734,9 +689,9 @@ sudo<span class="w"> </span>mv<span class="w"> </span>go<span class="w"> </span>
 		</li>
 		
 		<li>
-			<a href="/category/git/">
-				Git
-				<span class="count">10</span>
+			<a href="/category/mysql/">
+				MySQL
+				<span class="count">9</span>
 			</a>
 		</li>
 		
@@ -751,13 +706,6 @@ sudo<span class="w"> </span>mv<span class="w"> </span>go<span class="w"> </span>
 			<a href="/category/unix/">
 				UNIX
 				<span class="count">8</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/mysql/">
-				MySQL
-				<span class="count">7</span>
 			</a>
 		</li>
 		
@@ -779,6 +727,13 @@ sudo<span class="w"> </span>mv<span class="w"> </span>go<span class="w"> </span>
 			<a href="/category/essay/">
 				Essay
 				<span class="count">6</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/c/">
+				C#
+				<span class="count">5</span>
 			</a>
 		</li>
 		
@@ -811,16 +766,16 @@ sudo<span class="w"> </span>mv<span class="w"> </span>go<span class="w"> </span>
 		</li>
 		
 		<li>
-			<a href="/category/c/">
-				C#
+			<a href="/category/arcade-challenge/">
+				Arcade Challenge
 				<span class="count">4</span>
 			</a>
 		</li>
 		
 		<li>
-			<a href="/category/arcade-challenge/">
-				Arcade Challenge
-				<span class="count">4</span>
+			<a href="/category/databases/">
+				Databases
+				<span class="count">3</span>
 			</a>
 		</li>
 		
@@ -863,6 +818,48 @@ sudo<span class="w"> </span>mv<span class="w"> </span>go<span class="w"> </span>
 			<a href="/category/general/">
 				General
 				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/vcs/">
+				VCS
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/ubuntu/">
+				Ubuntu
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/powershell/">
+				PowerShell
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/smtp/">
+				SMTP
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/sql/">
+				SQL
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/net/">
+				.NET
+				<span class="count">2</span>
 			</a>
 		</li>
 		
@@ -972,6 +969,55 @@ sudo<span class="w"> </span>mv<span class="w"> </span>go<span class="w"> </span>
 		</li>
 		
 		<li>
+			<a href="/category/phpstorm/">
+				PHPStorm
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/elastic-search/">
+				Elastic Search
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/kibana/">
+				Kibana
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/data-manipulation/">
+				Data Manipulation
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/telnet/">
+				Telnet
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/iis/">
+				IIS
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/centos/">
+				CentOS
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/net-core/">
 				.NET Core
 				<span class="count">1</span>
@@ -1063,22 +1109,8 @@ sudo<span class="w"> </span>mv<span class="w"> </span>go<span class="w"> </span>
 		</li>
 		
 		<li>
-			<a href="/category/ubuntu/">
-				Ubuntu
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/ssh/">
 				SSH
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/databases/">
-				Databases
 				<span class="count">1</span>
 			</a>
 		</li>

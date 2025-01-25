@@ -78,298 +78,220 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/filtering-results-by-weekdays-in-sql-server">Filtering results by weekdays in SQL Server</a></h1>
+		<h1 class="heading"><a href="/til/posts/how-to-check-if-smtp-is-reachable-from-my-machine-using-telnet">How to Check if SMTP is Reachable from My Machine Using Telnet?</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>Ever wanted to know how many people are actively posting something on a Monday? Or maybe during the weekends?</p>
+		<p>Recently, I learned how to test SMTP server connectivity using <code>telnet</code>. This is a handy way to verify if an SMTP server is reachable, troubleshoot email delivery issues, and manually interact with the server to diagnose problems. </p>
 
-<p>You can do that by using the <code>DATEPART</code> and <code>DATENAME</code> functions. Let me show you how they work.</p>
+<p>Here’s how I did it:</p>
 
-<h2>Using DATEPART</h2>
+<h2>1. Ensure Telnet is Installed</h2>
 
-<p>The <code>DATEPART</code> function represents weekdays as integers from 1 (Sunday) to 7 (Saturday).</p>
+<p>First, I made sure <code>telnet</code> was installed on my machine. Most Linux distributions come with <code>telnet</code> pre-installed, but if it’s missing, here’s how to install it:</p>
 
-<p>Let's say that you wanted to filter between Monday and Friday, you can achieve something like this:</p>
+<h3>For Ubuntu/Debian:</h3>
 
 <div class="codehilite">
-<pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">dbo</span><span class="p">.</span><span class="n">YourTable</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">DATEPART</span><span class="p">(</span><span class="n">WEEKDAY</span><span class="p">,</span><span class="w"> </span><span class="n">YourDateColumn</span><span class="p">)</span><span class="w"> </span><span class="k">BETWEEN</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="mi">6</span><span class="p">;</span>
+<pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>telnet
 </code></pre>
 </div>
 
-<p>One thing to note, in SQL Server, Sunday is the first day of the week. So, if you wanted to set the first day of the week, you can write the following statement before executing your query:</p>
+<h3>For CentOS/RHEL:</h3>
 
 <div class="codehilite">
-<pre><span></span><code><span class="k">SET</span><span class="w"> </span><span class="n">DATEFIRST</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w">  </span><span class="c1">-- Set Monday as the first day of the week</span>
-<span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">dbo</span><span class="p">.</span><span class="n">YourTable</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">DATEPART</span><span class="p">(</span><span class="n">WEEKDAY</span><span class="p">,</span><span class="w"> </span><span class="n">YourDateColumn</span><span class="p">)</span><span class="w"> </span><span class="k">BETWEEN</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="mi">5</span><span class="p">;</span>
+<pre><span></span><code>sudo<span class="w"> </span>yum<span class="w"> </span>install<span class="w"> </span>telnet
 </code></pre>
 </div>
 
-<p>In the example above, you'll achieve the same results as the previous one.</p>
+<h3>For Windows</h3>
 
-<h2>Using DATENAME</h2>
+<p>Ironically, <code>telnet</code> is not enabled by default on Windows, but you can enable it:</p>
 
-<p>The <code>DATENAME</code> function represents weekdays as a string from Monday to Sunday.</p>
+<ol>
+<li>Open the Control Panel.</li>
+<li>Go to <strong>Programs</strong> &gt; <strong>Programs and Features</strong> &gt; <strong>Turn Windows features on or off</strong>.</li>
+<li>Check the box for <strong>Telnet Client</strong> and click <strong>OK</strong>.</li>
+<li>Once enabled, open the Command Prompt (<code>cmd</code>) to use Telnet.</li>
+</ol>
 
-<p>Let's replicate the previous example using this function:</p>
+<h2>2. Open a Telnet Connection to the SMTP Server</h2>
+
+<p>To connect to the SMTP server, I used the following command:</p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">dbo</span><span class="p">.</span><span class="n">YourTable</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">DATENAME</span><span class="p">(</span><span class="n">WEEKDAY</span><span class="p">,</span><span class="w"> </span><span class="n">YourDateColumn</span><span class="p">)</span><span class="w"> </span><span class="k">IN</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;Monday&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Tuesday&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Wednesday&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Thursday&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Friday&#39;</span><span class="p">);</span>
+<pre><span></span><code>telnet<span class="w"> </span>&lt;smtp_server_address&gt;<span class="w"> </span><span class="m">25</span>
 </code></pre>
 </div>
 
-<p>If you want to know more about filtering your records effectively using these methods, you can the read the documentation:</p>
+<p>Replace <code>&lt;smtp_server_address&gt;</code> with the SMTP server’s hostname or IP address. For example:</p>
+
+<div class="codehilite">
+<pre><span></span><code>telnet<span class="w"> </span>smtp.example.com<span class="w"> </span><span class="m">25</span>
+</code></pre>
+</div>
+
+<p>If the connection is successful, the server responds with a <code>220</code> message, like this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>220 smtp.example.com ESMTP Postfix
+</code></pre>
+</div>
+
+<p>This means the SMTP server is reachable and ready to accept commands.</p>
+
+<h2>3. Test SMTP Commands (Optional)</h2>
+
+<p>To further test the SMTP server, I manually interacted with it using basic SMTP commands:</p>
+
+<h3>Greet the Server:</h3>
+
+<p>I sent an <code>EHLO</code> command to introduce myself:</p>
+
+<div class="codehilite">
+<pre><span></span><code>EHLO example.com
+</code></pre>
+</div>
+
+<p>The server responded with a list of supported features.</p>
+
+<h3>Start an Email Transaction:</h3>
+
+<p>I specified the sender using the <code>MAIL FROM</code> command:</p>
+
+<div class="codehilite">
+<pre><span></span><code>MAIL FROM:&lt;test@example.com&gt;
+</code></pre>
+</div>
+
+<p>The server responded with <code>250 OK</code>.</p>
+
+<h3>Specify the Recipient:</h3>
+
+<p>I added the recipient using the <code>RCPT TO</code> command:</p>
+
+<div class="codehilite">
+<pre><span></span><code>RCPT TO:&lt;user@example.com&gt;
+</code></pre>
+</div>
+
+<p>The server responded with <code>250 OK</code>.</p>
+
+<h3>Enter the Email Data:</h3>
+
+<p>I typed <code>DATA</code> to start composing the email:</p>
+
+<div class="codehilite">
+<pre><span></span><code>DATA
+</code></pre>
+</div>
+
+<p>After entering the email content, I ended the message with a single <code>.</code> on a new line:</p>
+
+<div class="codehilite">
+<pre><span></span><code>Subject: Test Email
+This is a test email sent via Telnet.
+.
+</code></pre>
+</div>
+
+<p>The server responded with <code>250 OK</code>, confirming that the email was accepted.</p>
+
+<h3>Quit the Session:</h3>
+
+<p>Finally, I ended the session with the <code>QUIT</code> command:</p>
+
+<div class="codehilite">
+<pre><span></span><code>QUIT
+</code></pre>
+</div>
+
+<h2>4. Troubleshoot Connection Issues</h2>
+
+<p>If the connection fails, I might see an error like:</p>
+
+<div class="codehilite">
+<pre><span></span><code>telnet: Unable to connect to remote host: Connection refused
+</code></pre>
+</div>
+
+<p>This could mean:</p>
 
 <ul>
-<li><a href="https://learn.microsoft.com/en-us/sql/t-sql/functions/datename-transact-sql?view=sql-server-ver16">DATENAME (Transact-SQL)</a></li>
-<li><a href="https://learn.microsoft.com/en-us/sql/t-sql/functions/datepart-transact-sql?view=sql-server-ver16">DATEPART (Transact-SQL)</a></li>
+<li>The SMTP server is not running.</li>
+<li>The port is blocked by a firewall.</li>
+<li>The server uses a different port (e.g., 587 for submission or 465 for SMTPS).</li>
 </ul>
 
-<p>Hope you found this tip useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>February 18th, 2024</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/sql-server/">
-					SQL Server
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/dont-forget-what-sparked-your-passion">Don't forget what sparked your passion</a></h1>
-		<p class="description">A short letter to myself and other fellow programmers.</p>
-	</div>
-	<div class="article-body">
-		<p>Do you ever remember falling in love with programming when learning to code during school days or while working on a client's project? Probably not.</p>
-
-<p>When I started learning to code, I never wrote code because I wanted to but because I desired to. No one to poke me around with tight deadlines, no need to race against time. Just the feeling of power and creativity in your hands to build something out of nothing but just pure code. It could have been anything as simple as building a small widget for my blog post, writing a game, solving a problem in LeetCode or Project Euler or maybe writing a bash script to automate my tasks.</p>
-
-<p>You could probably relate to some but for me, these are some of the examples that resonate with me.</p>
-
-<p>I'm writing this as a reminder to myself and other fellow programmers: <strong>don't ever forget that moment when your passion for programming had sparked</strong>. You might be older now and you're probably filled with a lot of responsibilities (especially if you're parenting).</p>
-
-<p>Perhaps, you might never even experience that same amount of adrenaline and rush that you had when you were behind the computer in your room while your siblings and friends were trying to distract you.</p>
-
-<p>There's never an end to learning. You can still find some passion projects that'll help you keep that spark. Have an open mind and be open to newer ideas. Solve a puzzle, read a book, write a game or maybe a blog post.</p>
-
-<p>Don't do this because you need to impress someone or for the sake of it rather because you can and it brings you joy.</p>
-
-<p>Oh and wishing you a Happy New Year! 😀🎄</p>
-
-	</div>
-	<div class="article-footer">
-		<time>January 1st, 2024</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/selfreflection/">
-					Self-reflection
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/configure-xdebug-in-visual-studio-code">Configure XDebug in Visual Studio Code</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>For the past 6 months, I've been writing code in C# 11 and .NET 7 Core and of course, using the amazing Visual Studio 2022 IDE was quite an amazing experience especially when it comes to debugging your code.</p>
-
-<p>Recently, I had to switch back to classic ol' PHP and now, I wanted a similar debugging experience in Visual Studio Code.</p>
-
-<p>Using XDebug and if configured correctly, it'll be quite useful in your debugging journey instead of using <code>var_dump()</code> or <code>dd()</code> your variables everytime.</p>
-
-<h2>Prerequisites</h2>
-
-<p>The only thing you need here is Visual Studio Code and ensure that it's the latest version. I'm writing this from a Windows Machine using the latest version of WAMP Server.</p>
-
-<h2>1. Download PHP Debug</h2>
-
-<p>The official XDebug team has released an extension that could be installed in your editor. So, here you go, first <a href="https://xdebug.org/download">download it</a>.</p>
-
-<h2>2. Install XDebug</h2>
-
-<p>In the previous step, we just installed the extension for the editor but that's just an adapter used between the editor and XDebug.
-Whereas, XDebug is a PHP extension that needs to be installed on your local system.</p>
-
-<p>I'm not going to show you the installation process as this <a href="https://xdebug.org/docs/install">documentation</a> explains that well enough and you can follow it based on your operating system of choice.</p>
-
-<h2>3. PHP Configuration</h2>
-
-<p>After you're done with installing the extension, open your <code>php.ini</code> file and add the following line in this file:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="na">zend_extension</span><span class="o">=</span><span class="s">path/to/xdebug</span>
-</code></pre>
-</div>
-
-<p>Now, it's time to enable remote debugging. Depending on your XDebug version:</p>
-
-<p>For XDebug <code>v3.x.x</code>:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="na">xdebug.mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">debug</span>
-<span class="na">xdebug.start_with_request</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">yes</span>
-</code></pre>
-</div>
-
-<p>For XDebug <code>v2.x.x</code>:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="na">xdebug.remote_enable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">1</span>
-<span class="na">xdebug.remote_autostart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">1</span>
-<span class="na">xdebug.remote_port</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">9000</span>
-</code></pre>
-</div>
-
-<p>If you are looking for more specific options, please see read the <a href="https://xdebug.org/docs/remote#starting">documentation on remote debugging</a>. Please note that the default port in XDebug <code>v3.x.x</code> has been changed from <code>9000</code> to <code>9003</code>.</p>
-
-<p>Once done, restart your PHP service and check if the configuration has taken effect. You can do this by creating a simple <code>test.php</code> with a <code>phpinfo();</code> statement in there and look for your XDebug extension under the <strong>Loaded Configuration File</strong> section.</p>
-
-<h2>4. Visual Studio Code Configuration</h2>
-
-<p>In your editor, hold <kbd>CTRL</kbd> + <kbd>SHIFT</kbd> + <kbd>P</kbd> and type "Debug: Add Configuration" and it'll prompt you to select your language of preference and this case, of course, you should "PHP".</p>
-
-<p>Upon selecting, it'll automatically generate a <code>launch.json</code> file in your <code>.vscode</code> folder in your project folder.</p>
-
-<p>There'll be three different configurations in your file:</p>
+<p>To resolve this, I checked:</p>
 
 <ul>
-<li>Listen for XDebug: This setting will simply start listening on the specified port (by default <code>9003</code>) for XDebug.</li>
-<li>Launch currently open script: It will launch the currently opened script as a CLI, show all stdout/stderr output in the debug console and end the debug session once the script exits.</li>
-<li>Launch Built-in web server: This configuration starts the PHP built-in web server on a random port and opens the browser with the <code>serverReadyAction</code> directive.</li>
+<li>If the SMTP server is running and listening on the correct port.</li>
+<li>If my firewall or network allows outbound connections to the SMTP port.</li>
 </ul>
 
-<p>Now, to test if it works, hit <kbd>F5</kbd> and add a breakpoint in your PHP code and if it lands on your breakpoint, that means it works fine.</p>
+<h2>Example Workflow:</h2>
 
-<p>Hope you found this article useful!</p>
+<p>Here’s what a successful Telnet session looks like:</p>
 
-<h2>References</h2>
+<div class="codehilite">
+<pre><span></span><code>$<span class="w"> </span>telnet<span class="w"> </span>smtp.example.com<span class="w"> </span><span class="m">25</span>
+Trying<span class="w"> </span><span class="m">192</span>.0.2.1...
+Connected<span class="w"> </span>to<span class="w"> </span>smtp.example.com.
+Escape<span class="w"> </span>character<span class="w"> </span>is<span class="w"> </span><span class="s1">&#39;^]&#39;</span>.
+<span class="m">220</span><span class="w"> </span>smtp.example.com<span class="w"> </span>ESMTP<span class="w"> </span>Postfix
+EHLO<span class="w"> </span>example.com
+<span class="m">250</span>-smtp.example.com
+<span class="m">250</span>-PIPELINING
+<span class="m">250</span>-SIZE<span class="w"> </span><span class="m">10240000</span>
+<span class="m">250</span>-VRFY
+<span class="m">250</span>-ETRN
+<span class="m">250</span>-STARTTLS
+<span class="m">250</span>-ENHANCEDSTATUSCODES
+<span class="m">250</span>-8BITMIME
+<span class="m">250</span><span class="w"> </span>DSN
+MAIL<span class="w"> </span>FROM:&lt;test@example.com&gt;
+<span class="m">250</span><span class="w"> </span><span class="m">2</span>.1.0<span class="w"> </span>Ok
+RCPT<span class="w"> </span>TO:&lt;user@example.com&gt;
+<span class="m">250</span><span class="w"> </span><span class="m">2</span>.1.5<span class="w"> </span>Ok
+DATA
+<span class="m">354</span><span class="w"> </span>End<span class="w"> </span>data<span class="w"> </span>with<span class="w"> </span>&lt;CR&gt;&lt;LF&gt;.&lt;CR&gt;&lt;LF&gt;
+Subject:<span class="w"> </span>Test<span class="w"> </span>Email
+This<span class="w"> </span>is<span class="w"> </span>a<span class="w"> </span><span class="nb">test</span><span class="w"> </span>email<span class="w"> </span>sent<span class="w"> </span>via<span class="w"> </span>Telnet.
+.
+<span class="m">250</span><span class="w"> </span><span class="m">2</span>.0.0<span class="w"> </span>Ok:<span class="w"> </span>queued<span class="w"> </span>as<span class="w"> </span><span class="m">12345</span>
+QUIT
+<span class="m">221</span><span class="w"> </span><span class="m">2</span>.0.0<span class="w"> </span>Bye
+Connection<span class="w"> </span>closed<span class="w"> </span>by<span class="w"> </span>foreign<span class="w"> </span>host.
+</code></pre>
+</div>
+
+<h2>Why This is Useful?</h2>
+
+<p>Using Telnet to test SMTP connectivity is a quick and effective way to:</p>
 
 <ul>
-<li><a href="https://marketplace.visualstudio.com/items?itemName=xdebug.php-debug">PHP Debug for VS Code</a></li>
-<li><a href="https://xdebug.org/docs/install">XDebug Installation Manual</a></li>
+<li>Verify if the SMTP server is reachable.</li>
+<li>Diagnose email delivery issues.</li>
+<li>Manually test SMTP commands and server responses.</li>
 </ul>
 
-	</div>
-	<div class="article-footer">
-		<time>December 31st, 2023</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/vscode/">
-					VSCode
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/php/">
-					PHP
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/xdebug/">
-					XDebug
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/development/">
-					Development
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/generate-csr-with-multiple-subdomains-using-openssl">Generate CSR with multiple subdomains using OpenSSL</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>I have done this many times but I never got to write about it and I felt that I should write about it after I helped a friend of mine with this.</p>
-
-<h2>Prerequisites</h2>
-
-<p>It doesn't matter which operating system you're going to do this on as long as you have <code>openssl</code> installed in your system, you should be fine.</p>
-
-<p>All you have to do is just create a simple configuration file and give it a name like <code>multiple-domains.cnf</code>:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">[req]</span>
-<span class="na">default_bits</span><span class="w">       </span><span class="o">=</span><span class="w"> </span><span class="s">2048</span>
-<span class="na">distinguished_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">req_distinguished_name</span>
-<span class="na">req_extensions</span><span class="w">     </span><span class="o">=</span><span class="w"> </span><span class="s">req_ext</span>
-
-<span class="k">[req_distinguished_name]</span>
-<span class="na">countryName</span><span class="w">         </span><span class="o">=</span><span class="w"> </span><span class="s">[COUNTRYCODE]</span>
-<span class="na">stateOrProvinceName</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">[STATE]</span>
-<span class="na">localityName</span><span class="w">        </span><span class="o">=</span><span class="w"> </span><span class="s">[LOCALITY]</span>
-<span class="na">organizationName</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="s">[ORGANIZATION]</span>
-<span class="na">commonName</span><span class="w">          </span><span class="o">=</span><span class="w"> </span><span class="s">website.com</span>
-
-<span class="k">[req_ext]</span>
-<span class="na">subjectAltName</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">@alt_names</span>
-
-<span class="k">[alt_names]</span>
-<span class="na">DNS.1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">website.org</span>
-<span class="na">DNS.2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">wesbite.ae</span>
-<span class="na">DNS.3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">wesbite.co.uk</span>
-</code></pre>
-</div>
-
-<p>Save the file and copy-paste this into your command prompt or terminal:</p>
-
-<div class="codehilite">
-<pre><span></span><code>openssl<span class="w"> </span>req<span class="w"> </span>-out<span class="w"> </span>&lt;your-csr-name&gt;.csr<span class="w"> </span>-newkey<span class="w"> </span>rsa:2048<span class="w"> </span>-nodes<span class="w"> </span>-keyout<span class="w"> </span>&lt;your-private-key-name&gt;.key<span class="w"> </span>-config<span class="w"> </span>multiple-domains.cnf
-</code></pre>
-</div>
-
-<p>Once executed, it should be generated for you and if not, verify your configuration file for any typos.</p>
-
-<p>Hope this helps you out!</p>
+<p>Hope you've found this article useful!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>December 31st, 2023</time>
+		<time>January 17th, 2025</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/openssl/">
-					OpenSSL
+				<a href="/category/smtp/">
+					SMTP
 				</a>
 			</li>
 			
 			<li>
-				<a href="/category/ssl/">
-					SSL
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/csr/">
-					CSR
+				<a href="/category/telnet/">
+					Telnet
 				</a>
 			</li>
 			
@@ -387,416 +309,571 @@ Whereas, XDebug is a PHP extension that needs to be installed on your local syst
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/clean-controllers-in-laravel-best-practices-for-handling-form-submissions">Clean Controllers in Laravel: Best practices for handling form submissions</a></h1>
-		<p class="description">Learn how to write clean Laravel controllers for efficient contact form handling using validation, Eloquent, Mail, and events.</p>
+		<h1 class="heading"><a href="/til/posts/how-to-change-the-modification-date-of-a-folder-using-power-shell">How to Change the Modification Date of a Folder Using PowerShell?</a></h1>
+		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>Unlike most frameworks, Laravel is an unopinionated framework and doesn't force the developer to follow a particular pattern.</p>
+		<p>Recently, I had an interesting experience with a client who can be a bit nosy—and occasionally bossy too. They have a strict policy of deploying updates during off-peak hours on Fridays. </p>
 
-<p>In this article, I'm going to show you how your codebase could benefit by following Laravel's best practices like separation of concerns, utilizing Laravel's in-built features like Eloquent models, Form Requests and Mail.</p>
+<p>Like most developers, I’m not a fan of deploying on Fridays 😡.</p>
 
-<p>To begin with, here's a dirty method that handles a simple contact form submission:</p>
+<p>To navigate this, I deploy the updates on the server earlier in the week (without their knowledge) and place them in a separate directory until we receive the green light to switch the website to the new directory via server settings.</p>
+
+<p>If you’re wondering why I use a separate directory, it’s to ensure I have a quick rollback option if needed. Oh, and did I mention they’ve blocked <code>git</code> on the production server? So, no version control system (VCS) for us.</p>
+
+<p>Anyway, once I deployed earlier than planned and realized they might check the deployment timestamps. To stay ahead, I wrote a quick PowerShell script to tweak the folder timestamps.</p>
+
+<h2>Steps to Change Folder Modification Date</h2>
+
+<h3>Open PowerShell as Administrator</h3>
+
+<ul>
+<li>Search for <strong>"PowerShell"</strong> in the Start menu.</li>
+<li>Right-click on it and select <strong>Run as Administrator</strong>.</li>
+</ul>
+
+<h3>Run the Command</h3>
+
+<p>Use the following command to set the modification date for a folder:</p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="k">use</span> <span class="nx">Illuminate\Http\Request</span><span class="p">;</span>
-<span class="k">use</span> <span class="nx">Illuminate\Support\Facades\Mail</span><span class="p">;</span>
-
-<span class="k">class</span> <span class="nc">ContactController</span> <span class="k">extends</span> <span class="nx">Controller</span>
-<span class="p">{</span>
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">submit</span><span class="p">(</span><span class="nx">Request</span> <span class="nv">$request</span><span class="p">)</span>
-    <span class="p">{</span>
-        <span class="c1">// Validate the form inputs</span>
-        <span class="nv">$request</span><span class="o">-&gt;</span><span class="na">validate</span><span class="p">([</span>
-            <span class="s1">&#39;name&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;required&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;email&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;required|email&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;message&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;required&#39;</span><span class="p">,</span>
-        <span class="p">]);</span>
-
-        <span class="c1">// Get the form data</span>
-        <span class="nv">$name</span> <span class="o">=</span> <span class="nv">$request</span><span class="o">-&gt;</span><span class="na">input</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">);</span>
-        <span class="nv">$email</span> <span class="o">=</span> <span class="nv">$request</span><span class="o">-&gt;</span><span class="na">input</span><span class="p">(</span><span class="s1">&#39;email&#39;</span><span class="p">);</span>
-        <span class="nv">$message</span> <span class="o">=</span> <span class="nv">$request</span><span class="o">-&gt;</span><span class="na">input</span><span class="p">(</span><span class="s1">&#39;message&#39;</span><span class="p">);</span>
-
-        <span class="c1">// Save the form data in the database</span>
-        <span class="nx">DB</span><span class="o">::</span><span class="na">table</span><span class="p">(</span><span class="s1">&#39;contact_forms&#39;</span><span class="p">)</span><span class="o">-&gt;</span><span class="na">insert</span><span class="p">([</span>
-            <span class="s1">&#39;name&#39;</span> <span class="o">=&gt;</span> <span class="nv">$name</span><span class="p">,</span>
-            <span class="s1">&#39;email&#39;</span> <span class="o">=&gt;</span> <span class="nv">$email</span><span class="p">,</span>
-            <span class="s1">&#39;message&#39;</span> <span class="o">=&gt;</span> <span class="nv">$message</span><span class="p">,</span>
-        <span class="p">]);</span>
-
-        <span class="c1">// Send an email to the user</span>
-        <span class="nv">$mailData</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="s1">&#39;name&#39;</span> <span class="o">=&gt;</span> <span class="nv">$name</span><span class="p">,</span>
-            <span class="s1">&#39;email&#39;</span> <span class="o">=&gt;</span> <span class="nv">$email</span><span class="p">,</span>
-            <span class="s1">&#39;message&#39;</span> <span class="o">=&gt;</span> <span class="nv">$message</span><span class="p">,</span>
-        <span class="p">];</span>
-
-        <span class="nx">Mail</span><span class="o">::</span><span class="na">send</span><span class="p">(</span><span class="s1">&#39;emails.contact&#39;</span><span class="p">,</span> <span class="nv">$mailData</span><span class="p">,</span> <span class="k">function</span> <span class="p">(</span><span class="nv">$message</span><span class="p">)</span> <span class="k">use</span> <span class="p">(</span><span class="nv">$email</span><span class="p">)</span> <span class="p">{</span>
-            <span class="nv">$message</span><span class="o">-&gt;</span><span class="na">to</span><span class="p">(</span><span class="nv">$email</span><span class="p">)</span><span class="o">-&gt;</span><span class="na">subject</span><span class="p">(</span><span class="s1">&#39;Thank you for contacting us&#39;</span><span class="p">);</span>
-        <span class="p">});</span>
-
-        <span class="c1">// Return a response to the user</span>
-        <span class="k">return</span> <span class="nx">redirect</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">back</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">with</span><span class="p">(</span><span class="s1">&#39;success&#39;</span><span class="p">,</span> <span class="s1">&#39;Thank you for contacting us! We will get back to you soon.&#39;</span><span class="p">);</span>
-    <span class="p">}</span>
-<span class="p">}</span>
+<pre><span></span><code><span class="nv">$path</span> <span class="p">=</span> <span class="s2">&quot;C:\Path\To\Your\Folder&quot;</span>
+<span class="nv">$date</span> <span class="p">=</span> <span class="nb">Get-Date</span> <span class="s2">&quot;2025-01-01 10:00:00&quot;</span>
+<span class="p">(</span><span class="nb">Get-Item</span> <span class="nv">$path</span><span class="p">).</span><span class="n">LastWriteTime</span> <span class="p">=</span> <span class="nv">$date</span>
 </code></pre>
 </div>
 
-<p>To most developers, this method might seem straight-forward and they might even debate with you that it's completely fine. But allow me to highlight the issues of that this method brings to the table:</p>
+<ul>
+<li>Replace <code>C:\Path\To\Your\Folder</code> with the full path of the folder.</li>
+<li>Replace <code>2025-01-01 10:00:00</code> with the desired date and time in the format <code>yyyy-MM-dd HH:mm:ss</code>.</li>
+</ul>
 
-<ol>
-<li><p><strong>Lack of separation of concerns</strong>: The controller is responsible for handling form validation, saving data to the database, and sending an email. This violates the Single Responsibility Principle.</p></li>
-<li><p><strong>Direct usage of the database query builder</strong>: Instead of utilizing Eloquent models for database interactions, the example directly uses the query builder, which can make the code less maintainable and harder to read.</p></li>
-<li><p><strong>Inline email sending</strong>: The email sending functionality is implemented inline within the controller method, making the code harder to test and reuse.</p></li>
-<li><p><strong>Lack of error handling</strong>: The example does not handle any potential errors that may occur during form validation, database insertion, or email sending.</p></li>
-</ol>
+<h3>Verify the Change</h3>
 
-<p>Now, it's time to make it cleaner.</p>
-
-<h2>Save data using Form Requests and Laravel's Eloquent ORM</h2>
-
-<p>Let's start with creating a form request that is dedicated to handling the validation logic:</p>
-
-<ol>
-<li>Quickly, open up your terminal and type the following command:</li>
-</ol>
+<p>To confirm the modification date has been updated, use:</p>
 
 <div class="codehilite">
-<pre><span></span><code>php<span class="w"> </span>artisan<span class="w"> </span>make:request<span class="w"> </span>ContactFormRequest
+<pre><span></span><code><span class="p">(</span><span class="nb">Get-Item</span> <span class="nv">$path</span><span class="p">).</span><span class="n">LastWriteTime</span>
 </code></pre>
 </div>
 
-<p>This command will generate a new file named <code>ContactFormRequest.php</code> in the <code>app/Http/Requests</code> directory.</p>
+<h2>Other Timestamps You Can Modify</h2>
 
-<ol start="2">
-<li>Open the <code>ContactFormRequest.php</code> file and modify it as follows:</li>
-</ol>
+<p>PowerShell allows you to adjust other timestamps as well:</p>
+
+<h3>Creation Date:</h3>
 
 <div class="codehilite">
-<pre><span></span><code><span class="cp">&lt;?php</span>
-
-<span class="k">namespace</span> <span class="nx">App\Http\Requests</span><span class="p">;</span>
-
-<span class="k">use</span> <span class="nx">Illuminate\Foundation\Http\FormRequest</span><span class="p">;</span>
-
-<span class="k">class</span> <span class="nc">ContactFormRequest</span> <span class="k">extends</span> <span class="nx">FormRequest</span>
-<span class="p">{</span>
-    <span class="sd">/**</span>
-<span class="sd">     * Determine if the user is authorized to make this request.</span>
-<span class="sd">     *</span>
-<span class="sd">     * @return bool</span>
-<span class="sd">     */</span>
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">authorize</span><span class="p">()</span>
-    <span class="p">{</span>
-        <span class="c1">// Set the authorization logic based on your requirements</span>
-        <span class="c1">// For example, you may check if the user is authenticated or has certain permissions.</span>
-        <span class="c1">// Return true if the user is authorized to submit the form; otherwise, return false.</span>
-        <span class="k">return</span> <span class="k">true</span><span class="p">;</span>
-    <span class="p">}</span>
-
-    <span class="sd">/**</span>
-<span class="sd">     * Get the validation rules that apply to the request.</span>
-<span class="sd">     *</span>
-<span class="sd">     * @return array</span>
-<span class="sd">     */</span>
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">rules</span><span class="p">()</span>
-    <span class="p">{</span>
-        <span class="k">return</span> <span class="p">[</span>
-            <span class="s1">&#39;name&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;required&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;email&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;required|email&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;message&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;required&#39;</span><span class="p">,</span>
-        <span class="p">];</span>
-    <span class="p">}</span>
-
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">messages</span><span class="p">()</span>
-    <span class="p">{</span>
-        <span class="k">return</span> <span class="p">[</span>
-            <span class="s1">&#39;name.required&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;Please enter your name&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;email.required&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;Please enter your email address&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;email.email&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;Please enter a valid email address&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;message.required&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;Write a message before submit the form&#39;</span><span class="p">,</span>
-        <span class="p">];</span>
-    <span class="p">}</span>
-<span class="p">}</span>
+<pre><span></span><code><span class="p">(</span><span class="nb">Get-Item</span> <span class="nv">$path</span><span class="p">).</span><span class="n">CreationTime</span> <span class="p">=</span> <span class="nv">$date</span>
 </code></pre>
 </div>
 
-<p>In the <code>rules()</code> method, you can define validation rules for each field in the form. You can adjust according to your own preferences and if you want to know more about them, <a href="https://laravel.com/docs/10.x/validation">read this documentation</a>.</p>
-
-<ol start="4">
-<li>Save the <code>ContactFormRequest.php</code> file.</li>
-</ol>
-
-<p>Great, now you have a separate class for validating your contact form and this promotes code-reusability, improves code readability and separates the validation logic from your controller.</p>
-
-<p>Now let's update the <code>submit()</code> method in the <code>ContactController.php</code> example:</p>
+<h3>Accessed Date:</h3>
 
 <div class="codehilite">
-<pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="k">use</span> <span class="nx">Illuminate\Http\Request</span><span class="p">;</span>
-<span class="k">use</span> <span class="nx">Illuminate\Support\Facades\Mail</span><span class="p">;</span>
-<span class="k">use</span> <span class="nx">App\Http\Requests\ContactFormRequest</span><span class="p">;</span>
-<span class="k">use</span> <span class="nx">App\Models\ContactFormModel</span><span class="p">;</span>
-
-<span class="k">class</span> <span class="nc">ContactController</span> <span class="k">extends</span> <span class="nx">Controller</span>
-<span class="p">{</span>
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">submit</span><span class="p">(</span><span class="nx">ContactFormRequest</span> <span class="nv">$request</span><span class="p">)</span>
-    <span class="p">{</span>
-        <span class="c1">// Validate the form inputs</span>
-        <span class="c1">// All of the validated form data is accessible via this property.</span>
-        <span class="nv">$validated</span> <span class="o">=</span> <span class="nv">$request</span><span class="o">-&gt;</span><span class="na">validated</span><span class="p">();</span>
-
-        <span class="c1">// Save the submission</span>
-        <span class="nx">ContactFormModel</span><span class="o">::</span><span class="na">create</span><span class="p">(</span><span class="nv">$validated</span><span class="p">);</span>
-
-        <span class="c1">// Send an email to the user</span>
-        <span class="nv">$mailData</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="s1">&#39;name&#39;</span> <span class="o">=&gt;</span> <span class="nv">$name</span><span class="p">,</span>
-            <span class="s1">&#39;email&#39;</span> <span class="o">=&gt;</span> <span class="nv">$email</span><span class="p">,</span>
-            <span class="s1">&#39;message&#39;</span> <span class="o">=&gt;</span> <span class="nv">$message</span><span class="p">,</span>
-        <span class="p">];</span>
-
-        <span class="nx">Mail</span><span class="o">::</span><span class="na">send</span><span class="p">(</span><span class="s1">&#39;emails.contact&#39;</span><span class="p">,</span> <span class="nv">$mailData</span><span class="p">,</span> <span class="k">function</span> <span class="p">(</span><span class="nv">$message</span><span class="p">)</span> <span class="k">use</span> <span class="p">(</span><span class="nv">$email</span><span class="p">)</span> <span class="p">{</span>
-            <span class="nv">$message</span><span class="o">-&gt;</span><span class="na">to</span><span class="p">(</span><span class="nv">$email</span><span class="p">)</span><span class="o">-&gt;</span><span class="na">subject</span><span class="p">(</span><span class="s1">&#39;Thank you for contacting us&#39;</span><span class="p">);</span>
-        <span class="p">});</span>
-
-        <span class="c1">// Return a response to the user</span>
-        <span class="k">return</span> <span class="nx">redirect</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">back</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">with</span><span class="p">(</span><span class="s1">&#39;success&#39;</span><span class="p">,</span> <span class="s1">&#39;Thank you for contacting us! We will get back to you soon.&#39;</span><span class="p">);</span>
-    <span class="p">}</span>
-<span class="p">}</span>
+<pre><span></span><code><span class="p">(</span><span class="nb">Get-Item</span> <span class="nv">$path</span><span class="p">).</span><span class="n">LastAccessTime</span> <span class="p">=</span> <span class="nv">$date</span>
 </code></pre>
 </div>
 
-<p>Ensure that you have an appropriate model for your <code>contact_forms</code> table like <code>ContactFormModel.php</code> and update the following like so:</p>
+<h2>Why This is Useful?</h2>
 
-<div class="codehilite">
-<pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="k">namespace</span> <span class="nx">App\Models</span><span class="p">;</span>
+<p>This method is great for:</p>
 
-<span class="k">use</span> <span class="nx">Illuminate\Database\Eloquent\Model</span><span class="p">;</span>
+<ul>
+<li>Organizing folders with custom timestamps.</li>
+<li>Simulating specific scenarios for testing.</li>
+<li>Avoiding the hassle of installing third-party tools.</li>
+</ul>
 
-<span class="k">class</span> <span class="nc">ContactForm</span> <span class="k">extends</span> <span class="nx">Model</span>
-<span class="p">{</span>
-    <span class="k">protected</span> <span class="nv">$table</span> <span class="o">=</span> <span class="s1">&#39;contact_forms&#39;</span><span class="p">;</span>
+<p>Situations like this has made me realize that the flexibility of PowerShell makes it the perfect tool for quick tasks. It’s amazing how a simple command can give you full control over folder metadata!</p>
 
-    <span class="c1">// Define any additional model configurations, relationships, or methods.</span>
-    <span class="k">protected</span> <span class="nv">$fillable</span> <span class="o">=</span> <span class="p">[</span>
-        <span class="s1">&#39;name&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;email&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;message&#39;</span>
-    <span class="p">];</span>
-
-    <span class="k">protected</span> <span class="nv">$timestamps</span> <span class="o">=</span> <span class="k">true</span><span class="p">;</span>
-<span class="p">}</span>
-</code></pre>
-</div>
-
-<p>This allows you to leverage Laravel's ORM in which you could benefit from easy quering, relationship management and automatic timestamps.</p>
-
-<h2>Making use of Laravel Events and Mail</h2>
-
-<ol>
-<li>Generate a new event class by writing the following artisan command:</li>
-</ol>
-
-<div class="codehilite">
-<pre><span></span><code>php<span class="w"> </span>artisan<span class="w"> </span>make:event<span class="w"> </span>ContactFormSubmitted
-</code></pre>
-</div>
-
-<p>This will generate a <code>ContactFormSubmitted</code> class in the <code>app/Events</code> directory.</p>
-
-<ol start="2">
-<li>Open up <code>ContactFormSubmitted.php</code> file and update as follows:</li>
-</ol>
-
-<div class="codehilite">
-<pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="k">namespace</span> <span class="nx">App\Events</span><span class="p">;</span>
-
-<span class="k">use</span> <span class="nx">App\Models\ContactForm</span><span class="p">;</span>
-<span class="k">use</span> <span class="nx">Illuminate\Foundation\Events\Dispatchable</span><span class="p">;</span>
-
-<span class="k">class</span> <span class="nc">ContactFormSubmitted</span>
-<span class="p">{</span>
-    <span class="k">use</span> <span class="nx">Dispatchable</span><span class="p">;</span>
-
-    <span class="k">public</span> <span class="nv">$contactForm</span><span class="p">;</span>
-
-    <span class="sd">/**</span>
-<span class="sd">     * Create a new event instance.</span>
-<span class="sd">     *</span>
-<span class="sd">     * @param  ContactForm  $contactForm</span>
-<span class="sd">     * @return void</span>
-<span class="sd">     */</span>
-    <span class="k">public</span> <span class="k">function</span> <span class="fm">__construct</span><span class="p">(</span><span class="nx">ContactForm</span> <span class="nv">$contactForm</span><span class="p">)</span>
-    <span class="p">{</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">contactForm</span> <span class="o">=</span> <span class="nv">$contactForm</span><span class="p">;</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</code></pre>
-</div>
-
-<ol start="3">
-<li>Next, let's generate an event listener using artisan command:</li>
-</ol>
-
-<div class="codehilite">
-<pre><span></span><code>php<span class="w"> </span>artisan<span class="w"> </span>make:listener<span class="w"> </span>SendContactFormEmail<span class="w"> </span>--event<span class="o">=</span>ContactFormSubmitted
-</code></pre>
-</div>
-
-<p>This command will generate <code>SendContactFormEmail</code> event listener in the <code>app/Listeners</code> directory.</p>
-
-<ol start="4">
-<li>Open the <code>SendContactFormEmail.php</code> file and update as follows:</li>
-</ol>
-
-<div class="codehilite">
-<pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="k">namespace</span> <span class="nx">App\Listeners</span><span class="p">;</span>
-
-<span class="k">use</span> <span class="nx">App\Events\ContactFormSubmitted</span><span class="p">;</span>
-<span class="k">use</span> <span class="nx">Illuminate\Contracts\Queue\ShouldQueue</span><span class="p">;</span>
-<span class="k">use</span> <span class="nx">Illuminate\Queue\InteractsWithQueue</span><span class="p">;</span>
-<span class="k">use</span> <span class="nx">Illuminate\Support\Facades\Mail</span><span class="p">;</span>
-<span class="k">use</span> <span class="nx">App\Mail\ContactFormSubmitted</span> <span class="k">as</span> <span class="nx">ContactFormSubmittedMail</span><span class="p">;</span>
-
-<span class="k">class</span> <span class="nc">SendContactFormEmail</span> <span class="k">implements</span> <span class="nx">ShouldQueue</span>
-<span class="p">{</span>
-    <span class="k">use</span> <span class="nx">InteractsWithQueue</span><span class="p">;</span>
-
-    <span class="sd">/**</span>
-<span class="sd">     * Handle the event.</span>
-<span class="sd">     *</span>
-<span class="sd">     * @param  ContactFormSubmitted  $event</span>
-<span class="sd">     * @return void</span>
-<span class="sd">     */</span>
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">handle</span><span class="p">(</span><span class="nx">ContactFormSubmitted</span> <span class="nv">$event</span><span class="p">)</span>
-    <span class="p">{</span>
-        <span class="nv">$contactForm</span> <span class="o">=</span> <span class="nv">$event</span><span class="o">-&gt;</span><span class="na">contactForm</span><span class="p">;</span>
-
-        <span class="c1">// Send an email to the user</span>
-        <span class="nx">Mail</span><span class="o">::</span><span class="na">to</span><span class="p">(</span><span class="nv">$contactForm</span><span class="o">-&gt;</span><span class="na">email</span><span class="p">)</span>
-            <span class="o">-&gt;</span><span class="na">send</span><span class="p">(</span><span class="k">new</span> <span class="nx">ContactFormSubmittedMail</span><span class="p">(</span><span class="nv">$contactForm</span><span class="p">));</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</code></pre>
-</div>
-
-<ol start="5">
-<li>Create a mailable class using the following artisan command:</li>
-</ol>
-
-<div class="codehilite">
-<pre><span></span><code>php<span class="w"> </span>artisan<span class="w"> </span>make:mail<span class="w"> </span>ContactFormSubmitted
-</code></pre>
-</div>
-
-<p>This command will generate a new <code>ContactFormSubmitted</code> mailable class in the <code>app/Mail</code> directory.</p>
-
-<p>Now, update the <code>ContactFormSubmitted.php</code> file as follows:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="k">namespace</span> <span class="nx">App\Mail</span><span class="p">;</span>
-
-<span class="k">use</span> <span class="nx">App\Models\ContactForm</span><span class="p">;</span>
-<span class="k">use</span> <span class="nx">Illuminate\Bus\Queueable</span><span class="p">;</span>
-<span class="k">use</span> <span class="nx">Illuminate\Contracts\Queue\ShouldQueue</span><span class="p">;</span>
-<span class="k">use</span> <span class="nx">Illuminate\Mail\Mailable</span><span class="p">;</span>
-<span class="k">use</span> <span class="nx">Illuminate\Queue\SerializesModels</span><span class="p">;</span>
-
-<span class="k">class</span> <span class="nc">ContactFormSubmitted</span> <span class="k">extends</span> <span class="nx">Mailable</span> <span class="k">implements</span> <span class="nx">ShouldQueue</span>
-<span class="p">{</span>
-    <span class="k">use</span> <span class="nx">Queueable</span><span class="p">,</span> <span class="nx">SerializesModels</span><span class="p">;</span>
-
-    <span class="k">public</span> <span class="nv">$contactForm</span><span class="p">;</span>
-
-    <span class="sd">/**</span>
-<span class="sd">     * Create a new message instance.</span>
-<span class="sd">     *</span>
-<span class="sd">     * @param  ContactForm  $contactForm</span>
-<span class="sd">     * @return void</span>
-<span class="sd">     */</span>
-    <span class="k">public</span> <span class="k">function</span> <span class="fm">__construct</span><span class="p">(</span><span class="nx">ContactForm</span> <span class="nv">$contactForm</span><span class="p">)</span>
-    <span class="p">{</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">contactForm</span> <span class="o">=</span> <span class="nv">$contactForm</span><span class="p">;</span>
-    <span class="p">}</span>
-
-    <span class="sd">/**</span>
-<span class="sd">     * Build the message.</span>
-<span class="sd">     *</span>
-<span class="sd">     * @return $this</span>
-<span class="sd">     */</span>
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">build</span><span class="p">()</span>
-    <span class="p">{</span>
-        <span class="k">return</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">subject</span><span class="p">(</span><span class="s1">&#39;Thank you for contacting us&#39;</span><span class="p">)</span>
-            <span class="o">-&gt;</span><span class="na">view</span><span class="p">(</span><span class="s1">&#39;emails.contact&#39;</span><span class="p">)</span>
-            <span class="o">-&gt;</span><span class="na">with</span><span class="p">(</span><span class="s1">&#39;contactForm&#39;</span><span class="p">,</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">contactForm</span><span class="p">);</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</code></pre>
-</div>
-
-<ol start="6">
-<li>Let's open up the <code>ContactController.php</code> and import the necessary classes on top:</li>
-</ol>
-
-<div class="codehilite">
-<pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="k">use</span> <span class="nx">App\Events\ContactFormSubmitted</span><span class="p">;</span>
-<span class="k">use</span> <span class="nx">Illuminate\Support\Facades\Mail</span><span class="p">;</span>
-</code></pre>
-</div>
-
-<ol start="7">
-<li>Lastly, update the <code>submit()</code> method as follows:</li>
-</ol>
-
-<div class="codehilite">
-<pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="k">use</span> <span class="nx">App\Http\Requests\ContactFormRequest</span><span class="p">;</span>
-<span class="k">use</span> <span class="nx">App\Models\ContactForm</span><span class="p">;</span>
-<span class="k">use</span> <span class="nx">App\Events\ContactFormSubmitted</span><span class="p">;</span>
-<span class="k">use</span> <span class="nx">Illuminate\Support\Facades\Mail</span><span class="p">;</span>
-<span class="k">use</span> <span class="nx">App\Mail\ContactFormSubmitted</span><span class="p">;</span>
-
-<span class="k">class</span> <span class="nc">ContactController</span> <span class="k">extends</span> <span class="nx">Controller</span>
-<span class="p">{</span>
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">submit</span><span class="p">(</span><span class="nx">ContactFormRequest</span> <span class="nv">$request</span><span class="p">)</span>
-    <span class="p">{</span>
-        <span class="c1">// Validated form data is accessible via the $validatedData property of the form request instance</span>
-        <span class="nv">$validatedData</span> <span class="o">=</span> <span class="nv">$request</span><span class="o">-&gt;</span><span class="na">validated</span><span class="p">();</span>
-
-        <span class="c1">// Save the form data in the database using Eloquent</span>
-        <span class="nv">$contactForm</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">ContactForm</span><span class="p">();</span>
-        <span class="nv">$contactForm</span><span class="o">-&gt;</span><span class="na">name</span> <span class="o">=</span> <span class="nv">$validatedData</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">];</span>
-        <span class="nv">$contactForm</span><span class="o">-&gt;</span><span class="na">email</span> <span class="o">=</span> <span class="nv">$validatedData</span><span class="p">[</span><span class="s1">&#39;email&#39;</span><span class="p">];</span>
-        <span class="nv">$contactForm</span><span class="o">-&gt;</span><span class="na">message</span> <span class="o">=</span> <span class="nv">$validatedData</span><span class="p">[</span><span class="s1">&#39;message&#39;</span><span class="p">];</span>
-        <span class="nv">$contactForm</span><span class="o">-&gt;</span><span class="na">save</span><span class="p">();</span>
-
-        <span class="c1">// Dispatch an event to handle email sending asynchronously</span>
-        <span class="nx">event</span><span class="p">(</span><span class="k">new</span> <span class="nx">ContactFormSubmitted</span><span class="p">(</span><span class="nv">$contactForm</span><span class="p">));</span>
-
-        <span class="c1">// Return a response to the user</span>
-        <span class="k">return</span> <span class="nx">redirect</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">back</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">with</span><span class="p">(</span><span class="s1">&#39;success&#39;</span><span class="p">,</span> <span class="s1">&#39;Thank you for contacting us! We will get back to you soon.&#39;</span><span class="p">);</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</code></pre>
-</div>
-
-<p>Ah! Finally, this looks much better now, doesn't it?</p>
-
-<p>By making use of Laravel's Mail method, events and listeners, we've separated the logic for sending emails from the controller. The email is now sent asynchronously using an event and listener combination. This approach improves code organization, maintainability, and scalability.</p>
-
-<p>Hope you found this article to be useful.</p>
+<p>Hope you found this useful (and keep your tracks clear!)</p>
 
 	</div>
 	<div class="article-footer">
-		<time>June 7th, 2023</time>
+		<time>January 16th, 2025</time>
 		<ul class="tags">
+			
+			<li>
+				<a href="/category/powershell/">
+					PowerShell
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/fixing-a-core-clr-load-error-in-iis-with-self-contained-deployment">Fixing a CoreCLR Load Error in IIS with Self-Contained Deployment</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Today I learned how to resolve a tricky issue I encountered while hosting an ASP.NET Core application in IIS. The error was:</p>
+
+<div class="codehilite">
+<pre><span></span><code>Application &#39;/LM/W3SVC/2/ROOT&#39; with physical root &#39;C:\inetpub\wwwroot\xxx_dev4&#39; failed to load coreclr.
+</code></pre>
+</div>
+
+<h2>Diagnosing the Issue</h2>
+
+<p>This error pointed to a failure in loading the .NET Core Common Language Runtime (CoreCLR). It’s a common problem when the server is missing the correct version of the .NET runtime required by the application. After some investigation, I found these potential causes:</p>
+
+<ul>
+<li>The .NET Core Hosting Bundle wasn’t installed on the server.</li>
+<li>The required .NET runtime version wasn’t present.</li>
+<li>The application pool in IIS was misconfigured.</li>
+<li>There were potential permission issues for the application folder.</li>
+</ul>
+
+<h2>The Self-Contained Solution</h2>
+
+<p>To avoid dependency on the server’s runtime installation, I decided to try publishing the application as Self-Contained from Visual Studio 2022. This method bundles the .NET runtime and all dependencies with the application, ensuring it runs regardless of the server’s configuration.</p>
+
+<h2>Steps to Publish as Self-Contained</h2>
+
+<p>Here’s how I published my app as Self-Contained in Visual Studio 2022:</p>
+
+<ol>
+<li>Right-click on the project in Solution Explorer and choose Publish.</li>
+<li>In the Pick a publish target dialog, I selected Folder.</li>
+<li>Clicked Next and Finish to confirm the target.</li>
+<li>Opened the Settings in the Publish tab.
+<ul>
+<li>Changed Deployment Mode to Self-Contained.</li>
+<li>Selected the appropriate Target Runtime for my server (e.g., win-x64).</li>
+</ul></li>
+<li>Saved the settings and clicked Publish.</li>
+</ol>
+
+<p>The published output included all the necessary files, including the .NET runtime, making the app ready to deploy to IIS without relying on the server’s runtime installation.</p>
+
+<h2>Results</h2>
+
+<p>After deploying the self-contained package to IIS, the application ran successfully! The CoreCLR error was resolved because the app now used the bundled runtime instead of depending on the server’s configuration.</p>
+
+<h2>Key Takeaways</h2>
+
+<ul>
+<li>Self-Contained Deployment is a lifesaver when hosting environments lack the required .NET runtime.</li>
+<li>It’s a great way to ensure version isolation, as the app always runs with the specific runtime version it was built with.</li>
+<li>The tradeoff is a larger deployment package and manual updates for runtime patches.</li>
+</ul>
+
+<h2>Conclusion</h2>
+
+<p>Publishing as Self-Contained eliminated the CoreCLR dependency on the server and saved me a lot of time. If you’re deploying .NET Core apps to environments where you don’t control the runtime installation, Self-Contained is the way to go!</p>
+
+<p>Hope you found this useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>January 15th, 2025</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/net/">
+					.NET
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/iis/">
+					IIS
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/centralizing-storage-for-multiple-websites-by-mounting-a-shared-windows-network-drive-on-cent-os-using-cifs">Centralizing Storage for Multiple Websites by Mounting a Shared Windows Network Drive on CentOS Using CIFS</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Running more than 45 websites on a CentOS server can be a challenge, especially when it comes to managing storage. In my case, these websites are hosted across two different servers, and each site has its own storage folder for images and uploads.</p>
+
+<p>To streamline this, I came up with a solution: centralizing all storage uploads in one place by hosting a shared Windows network drive and mounting it on the CentOS servers. </p>
+
+<p>This way, all websites can access the same centralized storage, making management much easier.</p>
+
+<p>Here’s how I did it, step by step:</p>
+
+<h4>Step 1: Install cifs-utils</h4>
+
+<p>First, you need to install the <code>cifs-utils</code> package, which provides the necessary tools to mount CIFS shares.</p>
+
+<div class="codehilite">
+<pre><span></span><code>yum<span class="w"> </span>install<span class="w"> </span>cifs-utils
+</code></pre>
+</div>
+
+<h4>Step 2: Create a Service Account</h4>
+
+<p>Next, I created a service account on the CentOS server. This account will be used to access the shared drive. I named it <code>svc_library_core</code> and assigned it a UID of 5000. You can choose any name and UID that isn’t already in use.</p>
+
+<div class="codehilite">
+<pre><span></span><code>useradd<span class="w"> </span>-u<span class="w"> </span><span class="m">5000</span><span class="w"> </span>svc_library_core
+</code></pre>
+</div>
+
+<h4>Step 3: Create a Group for the Share</h4>
+
+<p>I also created a group on the CentOS server that will map to the shared drive. This group will contain all the Linux accounts that need access to the share. I named the group <code>share_library_core</code> and gave it a GID of 6000.</p>
+
+<div class="codehilite">
+<pre><span></span><code>groupadd<span class="w"> </span>-g<span class="w"> </span><span class="m">6000</span><span class="w"> </span>share_library_core
+</code></pre>
+</div>
+
+<h4>Step 4: Add Users to the Group</h4>
+
+<p>After creating the group, I added the necessary users to it. For example, if you want the <code>apache</code> user to have access to the share, you can add it like this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>usermod<span class="w"> </span>-G<span class="w"> </span>share_library_core<span class="w"> </span>-a<span class="w"> </span>apache
+</code></pre>
+</div>
+
+<h4>Step 5: Prepare Credentials</h4>
+
+<p>To mount the drive, you’ll need to provide the credentials for the Windows share. You can either pass them directly using the <code>-o</code> option or save them in a file. I opted to save them in a file for security reasons.</p>
+
+<p>Switch to the root user and create a file to store the credentials:</p>
+
+<div class="codehilite">
+<pre><span></span><code>su<span class="w"> </span>-<span class="w"> </span>root
+touch<span class="w"> </span>/root/creds_smb_library_core
+chmod<span class="w"> </span><span class="m">0600</span><span class="w"> </span>/root/creds_smb_library_core
+vi<span class="w"> </span>/root/creds_smb_library_core
+</code></pre>
+</div>
+
+<p>Add the following lines to the file, replacing the placeholders with your actual Windows or Active Directory username and password:</p>
+
+<div class="codehilite">
+<pre><span></span><code>username=YourWindowsUsername
+password=YourWindowsPassword
+</code></pre>
+</div>
+
+<h4>Step 6: Mount the Drive</h4>
+
+<p>Now, you’re ready to mount the shared drive. Use the following command, replacing the placeholders with your actual values:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>mount<span class="w"> </span>-t<span class="w"> </span>cifs<span class="w"> </span>//&lt;destination_ip&gt;/path/to/directory<span class="w"> </span>/test-directory<span class="w"> </span>-o<span class="w"> </span><span class="nv">credentials</span><span class="o">=</span>/root/creds_smb_library_core,uid<span class="o">=</span><span class="m">5000</span>,gid<span class="o">=</span><span class="m">6000</span>,iocharset<span class="o">=</span>utf8,file_mode<span class="o">=</span><span class="m">0774</span>,dir_mode<span class="o">=</span><span class="m">0775</span>
+</code></pre>
+</div>
+
+<ul>
+<li><code>//&lt;destination_ip&gt;/path/to/directory</code> is the path to the shared drive on the Windows server.</li>
+<li><code>/test-directory</code> is the local directory where you want to mount the drive.</li>
+<li><code>credentials=/root/creds_smb_library_core</code> points to the file containing your credentials.</li>
+<li><code>uid=5000</code> and <code>gid=6000</code> map the mounted drive to the service account and group you created earlier.</li>
+<li><code>iocharset=utf8</code> ensures proper character encoding.</li>
+<li><code>file_mode=0774</code> and <code>dir_mode=0775</code> set the file and directory permissions.</li>
+</ul>
+
+<h4>Step 7: Unmounting the Drive</h4>
+
+<p>If you need to unmount the drive later, you can do so with the following command:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>umount<span class="w"> </span>/test-directory
+</code></pre>
+</div>
+
+<h3>Bonus: Automount Script for Server Reboots</h3>
+
+<p>One challenge I faced was ensuring that the shared drives were automatically remounted in case the servers went down or were rebooted. To handle this, I wrote a simple script that mounts the drives on startup.</p>
+
+<h4>Create the Script</h4>
+
+<p>Create a new script file, for example, <code>/usr/local/bin/mount_shares.sh</code>:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="ch">#!/bin/bash</span>
+mount<span class="w"> </span>-t<span class="w"> </span>cifs<span class="w"> </span>//&lt;destination_ip&gt;/path/to/directory<span class="w"> </span>/test-directory<span class="w"> </span>-o<span class="w"> </span><span class="nv">credentials</span><span class="o">=</span>/root/creds_smb_library_core,uid<span class="o">=</span><span class="m">5000</span>,gid<span class="o">=</span><span class="m">6000</span>,iocharset<span class="o">=</span>utf8,file_mode<span class="o">=</span><span class="m">0774</span>,dir_mode<span class="o">=</span><span class="m">0775</span>
+</code></pre>
+</div>
+
+<p>Make sure to replace the placeholders with your actual values.</p>
+
+<h4>Make the Script Executable</h4>
+
+<p>Set the executable permission on the script:</p>
+
+<div class="codehilite">
+<pre><span></span><code>chmod<span class="w"> </span>+x<span class="w"> </span>/usr/local/bin/mount_shares.sh
+</code></pre>
+</div>
+
+<h4>Add the Script to Startup</h4>
+
+<p>To ensure the script runs on startup, add it to the <code>/etc/rc.local</code> file:</p>
+
+<div class="codehilite">
+<pre><span></span><code>/usr/local/bin/mount_shares.sh
+</code></pre>
+</div>
+
+<p>Make sure <code>/etc/rc.local</code> is executable:</p>
+
+<div class="codehilite">
+<pre><span></span><code>chmod<span class="w"> </span>+x<span class="w"> </span>/etc/rc.local
+</code></pre>
+</div>
+
+<h4>Test the Script</h4>
+
+<p>Reboot your server and verify that the shared drives are automatically mounted.</p>
+
+<p>And that’s it! </p>
+
+<p>You’ve successfully mounted a shared Windows network drive on CentOS using CIFS and ensured it remounts automatically on server reboots. </p>
+
+<p>This setup has made managing storage for multiple websites much more efficient and centralized.</p>
+
+<p>Hope you found this article useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>January 14th, 2025</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/centos/">
+					CentOS
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/adding-timezones-to-date-time-strings-in-c-sharp">Adding Timezones to DateTime Strings in C#</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Whether you're dealing with UTC, local times, or specific timezone offsets, there's a simple way to format your <code>DateTime</code> objects properly.</p>
+
+<p>Here’s the rundown:</p>
+
+<h2>1. Using DateTimeOffset for Timezone-Aware DateTimes</h2>
+
+<p><code>DateTimeOffset</code> is my go-to for working with date and time when I need to include the timezone. It represents both the date, time, and the offset from UTC.</p>
+
+<h3>Example: Adding UTC or Specific Timezones</h3>
+
+<div class="codehilite">
+<pre><span></span><code><span class="n">DateTime</span><span class="w"> </span><span class="n">utcDateTime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DateTime</span><span class="p">.</span><span class="n">UtcNow</span><span class="p">;</span>
+<span class="n">DateTimeOffset</span><span class="w"> </span><span class="n">utcWithOffset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">DateTimeOffset</span><span class="p">(</span><span class="n">utcDateTime</span><span class="p">,</span><span class="w"> </span><span class="n">TimeSpan</span><span class="p">.</span><span class="n">Zero</span><span class="p">);</span><span class="w"> </span><span class="c1">// UTC timezone</span>
+
+<span class="c1">// For a specific timezone, like Eastern Standard Time (UTC-05:00)</span>
+<span class="n">TimeZoneInfo</span><span class="w"> </span><span class="n">easternZone</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">TimeZoneInfo</span><span class="p">.</span><span class="n">FindSystemTimeZoneById</span><span class="p">(</span><span class="s">&quot;Eastern Standard Time&quot;</span><span class="p">);</span>
+<span class="n">DateTimeOffset</span><span class="w"> </span><span class="n">easternTime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">TimeZoneInfo</span><span class="p">.</span><span class="n">ConvertTime</span><span class="p">(</span><span class="n">utcDateTime</span><span class="p">,</span><span class="w"> </span><span class="n">easternZone</span><span class="p">);</span>
+
+<span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="n">utcWithOffset</span><span class="p">.</span><span class="n">ToString</span><span class="p">(</span><span class="s">&quot;o&quot;</span><span class="p">));</span><span class="w"> </span><span class="c1">// 2025-01-23T12:00:00.000+00:00</span>
+<span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="n">easternTime</span><span class="p">.</span><span class="n">ToString</span><span class="p">(</span><span class="s">&quot;o&quot;</span><span class="p">));</span><span class="w">  </span><span class="c1">// 2025-01-23T07:00:00.000-05:00</span>
+</code></pre>
+</div>
+
+<p>The <code>"o"</code> format is particularly handy because it outputs the ISO 8601 standard, which is great for APIs or data exchange.</p>
+
+<h2>2. Appending Timezones to Strings Manually</h2>
+
+<p>Sometimes, all you need is a <code>DateTime</code> string with a simple timezone indicator (like <code>+00:00</code> for UTC). Here's how I did that:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="n">DateTime</span><span class="w"> </span><span class="n">dateTime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DateTime</span><span class="p">.</span><span class="n">Now</span><span class="p">;</span>
+<span class="kt">string</span><span class="w"> </span><span class="n">formattedDate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dateTime</span><span class="p">.</span><span class="n">ToString</span><span class="p">(</span><span class="s">&quot;yyyy-MM-ddTHH:mm:ss.fff&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s">&quot;Z&quot;</span><span class="p">;</span><span class="w"> </span><span class="c1">// Z = UTC</span>
+<span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="n">formattedDate</span><span class="p">);</span><span class="w"> </span><span class="c1">// Outputs: 2025-01-23T12:00:00.000Z</span>
+</code></pre>
+</div>
+
+<p>For more precision, you can include the actual offset:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="kt">string</span><span class="w"> </span><span class="n">formattedDateWithOffset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dateTime</span><span class="p">.</span><span class="n">ToString</span><span class="p">(</span><span class="s">&quot;yyyy-MM-ddTHH:mm:ss.fffzzz&quot;</span><span class="p">);</span>
+<span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="n">formattedDateWithOffset</span><span class="p">);</span><span class="w"> </span><span class="c1">// Outputs: 2025-01-23T07:00:00.000-05:00</span>
+</code></pre>
+</div>
+
+<h2>3. Custom Format Specifiers for Timezones</h2>
+
+<p>Need a custom date string with the timezone? The <code>"zzz"</code> specifier has you covered:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="n">DateTime</span><span class="w"> </span><span class="n">now</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DateTime</span><span class="p">.</span><span class="n">Now</span><span class="p">;</span>
+<span class="kt">string</span><span class="w"> </span><span class="n">dateTimeWithTimeZone</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">now</span><span class="p">.</span><span class="n">ToString</span><span class="p">(</span><span class="s">&quot;yyyy-MM-ddTHH:mm:ss.fff zzz&quot;</span><span class="p">);</span>
+<span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="n">dateTimeWithTimeZone</span><span class="p">);</span><span class="w"> </span><span class="c1">// Outputs: 2025-01-23T07:00:00.000 -05:00</span>
+</code></pre>
+</div>
+
+<h2>Why you should do this?</h2>
+
+<ul>
+<li>It’s straightforward to ensure your timestamps are timezone-aware.</li>
+<li>You can easily adjust for specific timezones or stick with UTC for consistency.</li>
+<li>The formatting options (<code>"o"</code>, <code>"zzz"</code>, etc.) give you flexibility to match the needs of APIs, logs, or user-facing systems.</li>
+</ul>
+
+<p>If you've ever struggled with timezone handling in C#, give these approaches a shot. Timestamps are tricky, but with these tools in your belt, you'll nail it every time!</p>
+
+<p>Hope you found this article useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>January 13th, 2025</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/net/">
+					.NET
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/c/">
+					C#
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/a-faster-way-to-apply-linux-permissions-for-large-laravel-projects-using-xargs-and-find">A Faster Way to Apply Linux Permissions for Large Laravel Projects Using xargs and find</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Today, I learned a more efficient way to apply Linux permissions to large projects by leveraging the power of <code>xargs</code> and <code>find</code>. This method is particularly useful when dealing with Laravel projects that have many files and directories, as it allows for parallel processing and excludes specific folders (like a <code>storage</code> directory) from the permission changes.</p>
+
+<p>Here’s the step-by-step process I followed:</p>
+
+<h2>1. Set Ownership of the Entire Project Folder</h2>
+
+<p>To ensure the correct ownership for the entire project, I used the <code>chown</code> command recursively:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>chown<span class="w"> </span>-R<span class="w"> </span><span class="o">[</span>username<span class="o">]</span>:<span class="o">[</span>groupname<span class="o">]</span><span class="w"> </span><span class="o">[</span>foldername<span class="o">]</span>
+</code></pre>
+</div>
+
+<p>This command sets the owner and group for all files and directories within the specified folder.</p>
+
+<h2>2. Set Permissions for the Project Folder and Its Top-Level Directories</h2>
+
+<p>Next, I applied the desired permissions to the project folder and its top-level directories using <code>chmod</code>:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>chmod<span class="w"> </span><span class="m">2775</span><span class="w"> </span><span class="o">[</span>foldername<span class="o">]</span>
+</code></pre>
+</div>
+
+<p>The <code>2775</code> permission sets the folder to allow read, write, and execute for the owner and group, and read and execute for others. The <code>2</code> enables the <strong>setgid bit</strong>, which ensures that new files and directories inherit the group of the parent folder.</p>
+
+<h2>3. Find and Change Permissions for All Directories (Except the Storage Folder) in Parallel</h2>
+
+<p>To apply permissions to all directories while excluding the <code>storage</code> folder, I combined <code>find</code>, <code>xargs</code>, and <code>chmod</code>:</p>
+
+<div class="codehilite">
+<pre><span></span><code>find<span class="w"> </span><span class="o">[</span>foldername<span class="o">]</span><span class="w"> </span>-path<span class="w"> </span><span class="o">[</span>foldername<span class="o">]</span>/storage<span class="w"> </span>-prune<span class="w"> </span>-o<span class="w"> </span>-type<span class="w"> </span>d<span class="w"> </span>-print0<span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>xargs<span class="w"> </span>-0<span class="w"> </span>-P<span class="w"> </span><span class="m">2</span><span class="w"> </span>chmod<span class="w"> </span><span class="m">2775</span>
+</code></pre>
+</div>
+
+<ul>
+<li><code>find [foldername] -path [foldername]/storage -prune -o -type d</code>: Finds all directories except the <code>storage</code> folder.</li>
+<li><code>-print0</code>: Outputs the results in a null-terminated format to handle spaces in filenames.</li>
+<li><code>xargs -0 -P 2</code>: Processes the results in parallel (2 processes at a time) for faster execution.</li>
+<li><code>chmod 2775</code>: Applies the desired permissions to the directories.</li>
+</ul>
+
+<h2>4. Find and Change Permissions for All Files (Except the Storage Folder) in Parallel</h2>
+
+<p>Similarly, I applied permissions to all files while excluding the <code>storage</code> folder:</p>
+
+<div class="codehilite">
+<pre><span></span><code>find<span class="w"> </span><span class="o">[</span>foldername<span class="o">]</span><span class="w"> </span>-path<span class="w"> </span><span class="o">[</span>foldername<span class="o">]</span>/storage<span class="w"> </span>-prune<span class="w"> </span>-o<span class="w"> </span>-type<span class="w"> </span>f<span class="w"> </span>-print0<span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>xargs<span class="w"> </span>-0<span class="w"> </span>-P<span class="w"> </span><span class="m">2</span><span class="w"> </span>chmod<span class="w"> </span><span class="m">0664</span>
+</code></pre>
+</div>
+
+<ul>
+<li><code>-type f</code>: Finds all files.</li>
+<li><code>chmod 0664</code>: Sets read and write permissions for the owner and group, and read-only for others.</li>
+</ul>
+
+<h2>5. Handle the Storage Folder Separately (If It’s Too Large)</h2>
+
+<p>For the <code>storage</code> folder, I applied permissions separately to avoid overloading the system:</p>
+
+<div class="codehilite">
+<pre><span></span><code>find<span class="w"> </span><span class="o">[</span>foldername<span class="o">]</span>/storage<span class="w"> </span>-type<span class="w"> </span>d<span class="w"> </span>-print0<span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>xargs<span class="w"> </span>-0<span class="w"> </span>-P<span class="w"> </span><span class="m">2</span><span class="w"> </span>chmod<span class="w"> </span><span class="m">2775</span>
+find<span class="w"> </span><span class="o">[</span>foldername<span class="o">]</span>/storage<span class="w"> </span>-type<span class="w"> </span>f<span class="w"> </span>-print0<span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>xargs<span class="w"> </span>-0<span class="w"> </span>-P<span class="w"> </span><span class="m">2</span><span class="w"> </span>chmod<span class="w"> </span><span class="m">0664</span>
+</code></pre>
+</div>
+
+<p>This ensures that the <code>storage</code> folder and its contents have the correct permissions without affecting the rest of the project.</p>
+
+<h2>Why This Approach?</h2>
+
+<p>Using <code>xargs</code> with <code>-P</code> allows for parallel processing, which speeds up permission changes significantly for large projects. Additionally, excluding specific folders (like <code>storage</code>) ensures that sensitive or frequently accessed directories are handled separately.</p>
+
+<p>This method has saved me a lot of time and effort when managing permissions for large projects.</p>
+
+<p>Hope you found this article useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>January 12th, 2025</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
 			
 			<li>
 				<a href="/category/laravel/">
@@ -804,18 +881,6 @@ Whereas, XDebug is a PHP extension that needs to be installed on your local syst
 				</a>
 			</li>
 			
-			<li>
-				<a href="/category/php/">
-					PHP
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/clean-code/">
-					Clean Code
-				</a>
-			</li>
-			
 		</ul>
 	</div>
 </div>
@@ -824,159 +889,131 @@ Whereas, XDebug is a PHP extension that needs to be installed on your local syst
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/thoughts-about-chatgpt-and-the-impact-on-software-developers">Thoughts about ChatGPT and the impact on software developers</a></h1>
-		<p class="description">Will AI-powered tools replace developers in the near future?</p>
-	</div>
-	<div class="article-body">
-		<p>This is something I wanted to address for quite sometime but never got the time to talk about my opinions/views about it.</p>
-
-<p>I have been reading many articles and watching a few videos on YouTube in which the authors often contemplate about the future of developers and whether their jobs might be replaced.</p>
-
-<p>If you think that's the case, I'd like to share one of my favorite quotes that might change your mindset:</p>
-
-<blockquote>
-  <p>Software is just a tool to help accomplish something for people – many programmers never understood that. Keep your eyes on the delivered value, and don’t over-focus on the specifics of the tools. &mdash; <a href="https://twitter.com/ID_AA_Carmack">John Carmack</a></p>
-</blockquote>
-
-<p>Ever since, ChatGPT went viral, I (and some of my team members) thought of incorporating it to help educate myself during development.</p>
-
-<h2>Will it ever replace humans?</h2>
-
-<p>Just like the quote above, software is just a mere tool that helps accomplish your end goals. It definitely isn't going to replace a developer with years of experience, let alone, a human being but rather, as a tool or learning aid to help accelerate our ways of being productive.</p>
-
-<p>There are tools like GitHub Copilot (powered by ChatGPT) that helps developers in troubleshooting, refactoring and solving <strong>well-defined</strong> problems but however, I feel it still has a long way to be able to solve really complex problems in which otherwise could be solved by a software developer.</p>
-
-<p>I'd say that it's crucially important for you to know and be aware of the capabilities and potential of AI-based tools but not to worry too much about it's impact in the industry.</p>
-
-<p>In my opinion, I'd say that a developer who knows how to be effective using AI-powered tools as a learning aid are more likely to replace an developer who aren't aware of them at all.</p>
-
-<p>Here's another quote from John Carmack:</p>
-
-<blockquote>
-  <p>If you build full "product skills" and use the best tools for the job, which today might be hand coding, but later maybe AI guiding, you will be probably be fine. &mdash; <a href="https://twitter.com/ID_AA_Carmack">John Carmack</a></p>
-</blockquote>
-
-<p>It's important to view yourself as a problem solver who uses technology rather than someone who simply "codes" for a living and would get replaced in the near future.</p>
-
-<p>What many people don't realize is that a software developer isn't someone who only writes code but also someone who solves complex problems and makes critical decisions. From my experience, I can tell you that it takes a lot of decisions to go from design to deployment and that involves a team that's made up of various skillsets that includes project management, design, development, QA and deployment.</p>
-
-<p>Currently, AI might be good at solving well-defined or common problems but it can never replace the decision-making needed for a successful project.</p>
-
-<h2>Can we trust it?</h2>
-
-<p>Not yet. ChatGPT ain't <a href="https://en.wikipedia.org/wiki/Artificial_general_intelligence">AGI</a> thus it has limitations such as that it "<a href="https://www.cspinet.org/blog/chatgpt-amazing-beware-its-hallucinations">hallucinates</a>" i.e. comes up with random facts or solutions that aren't even logical to the problem defined. Whereas, if you look for the problem on StackOverflow, you're more likely to copy/paste a solution that's already recommended by the community.</p>
-
-<h2>Exploring ChatGPT</h2>
-
-<p>As I had mentioned above, it's quite good at solving well-defined problems and here are a few examples that has helped saved me time: </p>
-
-<ul>
-<li>Refactoring methods and repetitive code</li>
-<li>Writing a method that validates email using regular expressions</li>
-<li>Writing a simple image gallery component using ReactJS</li>
-<li>Helped me learn new languages and concepts faster</li>
-</ul>
-
-<p>Oh yes, it did make plenty of mistakes but with all that said, I think it's a great time to learn something new.</p>
-
-<h2>Conclusion</h2>
-
-<p>My take is that to not overestimate the progression of AI in the near future and underestimate it's impact in the distant future.</p>
-
-<p>Hope you liked reading this article.</p>
-
-	</div>
-	<div class="article-footer">
-		<time>April 23rd, 2023</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/artificial-intelligence/">
-					Artificial Intelligence
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/productivity/">
-					Productivity
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/software-development/">
-					Software Development
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/list-tables-that-dont-have-primary-keys-in-a-mysql-database">List tables that don't have primary keys in a MySQL database</a></h1>
+		<h1 class="heading"><a href="/til/posts/using-records-for-dtos">Using records for DTOs</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>Whenever I restore a database dump on a MySQL InnoDB Cluster, most of the time, the error I face is related to missing <code>PRIMARY KEY</code> attribute because as per <a href="https://dev.mysql.com/doc/refman/8.0/en/group-replication-requirements.html">MySQL's official documentation</a>:</p>
+		<p>If you're building an application or API using .NET Core in where you might have to integrate with any external services or third-party APIs, this is for you.</p>
 
-<blockquote>
-  <p>Every table that is to be replicated by the group must have a defined primary key, or primary key equivalent where the equivalent is non-null unique key.</p>
-</blockquote>
+<h2>What are records?</h2>
 
-<p>What I would usually do is, run a simple query to determine the list of the tables that don't the <code>PRIMARY KEY</code> attribute:</p>
+<p>It's a feature introduced since <strong>C# 9.0</strong> that allows you to create simple and immutable data types. When representing DTOs (Data Transfer Objects), it comes in handy because the syntax in concise and it's primarily used to transfer data between layers of an application such as the Core and Presentation Layer. </p>
+
+<p>Here's an example of a car using a regular <code>class</code> type:</p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="k">select</span><span class="w"> </span><span class="n">tab</span><span class="p">.</span><span class="n">table_schema</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">database_name</span><span class="p">,</span>
-<span class="w">       </span><span class="n">tab</span><span class="p">.</span><span class="k">table_name</span>
-<span class="k">from</span><span class="w"> </span><span class="n">information_schema</span><span class="p">.</span><span class="k">tables</span><span class="w"> </span><span class="n">tab</span>
-<span class="k">left</span><span class="w"> </span><span class="k">join</span><span class="w"> </span><span class="n">information_schema</span><span class="p">.</span><span class="n">table_constraints</span><span class="w"> </span><span class="n">tco</span>
-<span class="w">          </span><span class="k">on</span><span class="w"> </span><span class="n">tab</span><span class="p">.</span><span class="n">table_schema</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tco</span><span class="p">.</span><span class="n">table_schema</span>
-<span class="w">          </span><span class="k">and</span><span class="w"> </span><span class="n">tab</span><span class="p">.</span><span class="k">table_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tco</span><span class="p">.</span><span class="k">table_name</span>
-<span class="w">          </span><span class="k">and</span><span class="w"> </span><span class="n">tco</span><span class="p">.</span><span class="n">constraint_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;PRIMARY KEY&#39;</span>
-<span class="k">where</span><span class="w"> </span><span class="n">tco</span><span class="p">.</span><span class="n">constraint_type</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="no">null</span>
-<span class="w">      </span><span class="k">and</span><span class="w"> </span><span class="n">tab</span><span class="p">.</span><span class="n">table_schema</span><span class="w"> </span><span class="k">not</span><span class="w"> </span><span class="k">in</span><span class="p">(</span><span class="s1">&#39;mysql&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;information_schema&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;performance_schema&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;sys&#39;</span><span class="p">)</span>
-<span class="w">      </span><span class="k">and</span><span class="w"> </span><span class="n">tab</span><span class="p">.</span><span class="n">table_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;BASE TABLE&#39;</span>
-<span class="w">      </span><span class="k">and</span><span class="w"> </span><span class="n">tab</span><span class="p">.</span><span class="n">table_schema</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;your_database_name_here&#39;</span>
-<span class="k">order</span><span class="w"> </span><span class="k">by</span><span class="w"> </span><span class="n">tab</span><span class="p">.</span><span class="n">table_schema</span><span class="p">,</span>
-<span class="w">         </span><span class="n">tab</span><span class="p">.</span><span class="k">table_name</span><span class="p">;</span>
+<pre><span></span><code><span class="k">public</span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">Car</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">public</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="n">Manufacturer</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">get</span><span class="p">;</span><span class="w"> </span><span class="k">init</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+<span class="w">    </span><span class="k">public</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">Price</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">get</span><span class="p">;</span><span class="w"> </span><span class="k">init</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+<span class="w">    </span><span class="k">public</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="n">Color</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">get</span><span class="p">;</span><span class="w"> </span><span class="k">init</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+<span class="p">}</span>
 </code></pre>
 </div>
+
+<p>And here's a simplified version of that using <code>record</code> type:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">public</span><span class="w"> </span><span class="k">record</span><span class="w"> </span><span class="nf">Car</span><span class="p">(</span>
+<span class="w">    </span><span class="kt">string</span><span class="w"> </span><span class="n">Manufacturer</span><span class="p">,</span>
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">Price</span><span class="p">,</span>
+<span class="w">    </span><span class="kt">string</span><span class="w"> </span><span class="n">Color</span>
+<span class="p">);</span>
+</code></pre>
+</div>
+
+<p>Making use of the <code>record</code> type to manage Data Transfer Objects makes use of clean coding practicies by writing concise yet maintainable code.</p>
+
+<h2>So, no need of using classes?</h2>
+
+<p>Well, it depends because records aren't meant to replace classes for all scenarios. It's still recommended to use regular classes for complex types with complex behavior and whereas, records can be used for simple data structures.</p>
+
+<p>Hope you found this article useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>June 18th, 2024</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/net-core/">
+					.NET Core
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/c/">
+					C#
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/oop/">
+					OOP
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/using-property-pattern-matching-in-c">Using Property Pattern Matching in C#</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Alright, we've all been there especially when it comes to writing IF conditions with multiple checks in a single line like the example below:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">if</span><span class="p">(</span><span class="n">employee</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="k">null</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">employee</span><span class="p">.</span><span class="n">Age</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">20</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">employee</span><span class="p">.</span><span class="n">Address</span><span class="p">.</span><span class="n">City</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s">&quot;Dubai&quot;</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="c1">// Do something here...</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<p>As you can see, this condition is straight-forward but can sometimes hinder readability and doesn't really ensure type safety.</p>
+
+<p>Here's where you can make use <strong>Property Pattern Matching</strong>.</p>
+
+<h2>What's Property Pattern Matching?</h2>
+
+<p>This type of pattern matching is used to match the defined expression if the conditions/nested conditions successfully matches the corresponding property or the field of the result and output of the result is not null. Here's an example of how it might be like:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">if</span><span class="p">(</span><span class="n">employee</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">Age</span><span class="p">:</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">20</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">Address</span><span class="p">.</span><span class="n">City</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s">&quot;Dubai&quot;</span><span class="w"> </span><span class="p">})</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="c1">// Do something here...</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<p>This pattern elevates your code's readability, ensures type safety and enable flexibility in terms of data manipulation.</p>
 
 <p>Hope you found this tip useful!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>February 11th, 2023</time>
+		<time>June 17th, 2024</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/mysql/">
-					MySQL
+				<a href="/category/c/">
+					C#
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/programming/">
+					Programming
 				</a>
 			</li>
 			
 		</ul>
 	</div>
-</div>
-
-				
-					
-<div class="day article">
-	<h2><a href="/blogmarks/posts/5th-february-2023">5th February 2023 &mdash; Blogmarks</a></h2>
-	<ul>
-<li><a href="https://github.com/sickcodes/Docker-OSX">Docker-OSX</a> &mdash; Able to run macOS in a docker container with near-native performance. Has an active community on Discord too.</li>
-<li><a href="https://www.joshwcomeau.com/blog/how-to-learn-stuff-quickly/">How To Learn Stuff Quickly</a> &mdash; Josh Comeau is one of my favorite bloggers and this article of mixing guided and unguided learning really helped me out.</li>
-<li><a href="https://stackoverflow.blog/2022/12/30/you-should-be-reading-academic-computer-science-papers/">You should be reading academic computer science papers</a> &mdash; To some extent, I do believe the fact that if you want to become a better programmer, you should read some cutting-edge papers.</li>
-<li><blockquote>The computer was born to solve problems that didn't exist before. &mdash; <cite>Bill Gates</cite></blockquote></li>
-<li><a href="https://eta.st/2023/01/31/rail-tickets.html">Reversing UK mobile rail tickets</a> &mdash; Good read and always a huge fan of reverse engineering.</li>
-<li><a href="https://linuxupskillchallenge.com/">Linux Upskill Challenge</a> &mdash; I came across this today and it was quite refreshing to read it. Gotta try this out someday.</li>
-<li><a href="https://www.philipotoole.com/how-i-found-a-bug-in-sqlite/">How I found a bug in SQLite</a> &mdash; An interesting article by <a href="https://www.philipotoole.com">Philip O'Toole</a>.</li>
-<li><a href="https://nan-archive.vercel.app/how-arrays-work">How do arrays work?</a> &mdash; I really love the way he explains it visually. Looks like I got something to steal 😈.</li>
-</ul>
-
 </div>
 
 				
@@ -1007,11 +1044,11 @@ Whereas, XDebug is a PHP extension that needs to be installed on your local syst
 		
 	
 		
-			<a class="" href="/pages/24">...</a>
+			<a class="" href="/pages/26">...</a>
 		
 	
 		
-			<a class="" href="/pages/28">28</a>
+			<a class="" href="/pages/30">30</a>
 		
 	
 
@@ -1048,28 +1085,35 @@ Whereas, XDebug is a PHP extension that needs to be installed on your local syst
 		<li>
 			<a href="/category/linux/">
 				Linux
-				<span class="count">22</span>
+				<span class="count">24</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/laravel/">
 				Laravel
-				<span class="count">18</span>
+				<span class="count">20</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/devops/">
 				DevOps
-				<span class="count">15</span>
+				<span class="count">20</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/php/">
 				PHP
-				<span class="count">13</span>
+				<span class="count">14</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/git/">
+				Git
+				<span class="count">12</span>
 			</a>
 		</li>
 		
@@ -1116,9 +1160,9 @@ Whereas, XDebug is a PHP extension that needs to be installed on your local syst
 		</li>
 		
 		<li>
-			<a href="/category/git/">
-				Git
-				<span class="count">10</span>
+			<a href="/category/mysql/">
+				MySQL
+				<span class="count">9</span>
 			</a>
 		</li>
 		
@@ -1133,13 +1177,6 @@ Whereas, XDebug is a PHP extension that needs to be installed on your local syst
 			<a href="/category/unix/">
 				UNIX
 				<span class="count">8</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/mysql/">
-				MySQL
-				<span class="count">7</span>
 			</a>
 		</li>
 		
@@ -1161,6 +1198,13 @@ Whereas, XDebug is a PHP extension that needs to be installed on your local syst
 			<a href="/category/essay/">
 				Essay
 				<span class="count">6</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/c/">
+				C#
+				<span class="count">5</span>
 			</a>
 		</li>
 		
@@ -1193,16 +1237,16 @@ Whereas, XDebug is a PHP extension that needs to be installed on your local syst
 		</li>
 		
 		<li>
-			<a href="/category/c/">
-				C#
+			<a href="/category/arcade-challenge/">
+				Arcade Challenge
 				<span class="count">4</span>
 			</a>
 		</li>
 		
 		<li>
-			<a href="/category/arcade-challenge/">
-				Arcade Challenge
-				<span class="count">4</span>
+			<a href="/category/databases/">
+				Databases
+				<span class="count">3</span>
 			</a>
 		</li>
 		
@@ -1245,6 +1289,48 @@ Whereas, XDebug is a PHP extension that needs to be installed on your local syst
 			<a href="/category/general/">
 				General
 				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/vcs/">
+				VCS
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/ubuntu/">
+				Ubuntu
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/powershell/">
+				PowerShell
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/smtp/">
+				SMTP
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/sql/">
+				SQL
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/net/">
+				.NET
+				<span class="count">2</span>
 			</a>
 		</li>
 		
@@ -1354,6 +1440,55 @@ Whereas, XDebug is a PHP extension that needs to be installed on your local syst
 		</li>
 		
 		<li>
+			<a href="/category/phpstorm/">
+				PHPStorm
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/elastic-search/">
+				Elastic Search
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/kibana/">
+				Kibana
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/data-manipulation/">
+				Data Manipulation
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/telnet/">
+				Telnet
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/iis/">
+				IIS
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/centos/">
+				CentOS
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/net-core/">
 				.NET Core
 				<span class="count">1</span>
@@ -1445,22 +1580,8 @@ Whereas, XDebug is a PHP extension that needs to be installed on your local syst
 		</li>
 		
 		<li>
-			<a href="/category/ubuntu/">
-				Ubuntu
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/ssh/">
 				SSH
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/databases/">
-				Databases
 				<span class="count">1</span>
 			</a>
 		</li>

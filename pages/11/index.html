@@ -78,130 +78,148 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/convert-string-from-snake-case-to-camel-case">Convert string from snake case to camel case</a></h1>
-		<p class="description"></p>
+		<h1 class="heading"><a href="/writings/posts/understanding-spf-dkim-and-dmarc-protocols">Understanding SPF, DKIM and DMARC protocols</a></h1>
+		<p class="description">An insight into the three main email security protocols that protects your email from malicious attackers.</p>
 	</div>
 	<div class="article-body">
-		<p>Thought of sharing a simple regular expression that I use on VIM to convert <strong>snake_case</strong> letters to <strong>camelCase</strong> letters (see what I did there) &#x1F61C;</p>
+		<p>Today, email spam is one of the most common cyberattacks conducted by people with malicious intent intending to steal your passwords and personal credentials, leading users to phishing sites to steal bank account details, identity theft and so on.</p>
 
-<p>Here's the pattern for you to use:</p>
+<p>Because of this, ISPs and email providers such as Gmail and Office 365 are taking anti-spam measures by enforcing stricter protocols in the type of emails that they receive, so it's good to implement those protocols and ensure that your email gets delivered and not delayed or worse, rejected by the mail servers.</p>
+
+<h2>So, what are those protocols?</h2>
+
+<p><a href="#spf-record">SPF</a>, <a href="#dkim-record">DKIM</a> and <a href="#dmarc-record">DMARC</a> are the three main secure protocols used to authenticate your mail server and this will prove the ISPs and other mail service providers that the mail being sent is legitimate and authorized.</p>
+
+<h2><a id="spf-record"></a> What is SPF?</h2>
+
+<p>It's an acronym for <strong>Sender Policy Framework</strong>. SPF is nothing but a DNS TXT record that specifies the server(s) and IP addresses that are allowed to send email from a specific domain.</p>
+
+<p>Assuming you are the sender, just think of sending a postcard to your friend in which you add your address as well, so that your friend knows who the recipient is and he/she would most likely open it because they trust it.</p>
+
+<p>But in technical terms, the actual recipient is not the user but rather the mail server that receives the mail.</p>
+
+<h3>Create an SPF record</h3>
+
+<p>An SPF record is a very simple string and it can be easily created. However, there are a few parts to it:</p>
+
+<ol>
+<li>Version of SPF used.</li>
+<li>IP addresses that are authorized to send emails.</li>
+<li>Third party domain(s) that are authorized to send emails.</li>
+<li>An ending tag named "all" which tells the receiving server on what policy to apply if the sending server is not a part of the SPF record.</li>
+</ol>
+
+<p>So, let's what does it look like and what each part of it does:</p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="p">:</span>s<span class="sr">/ \([a-zA-Z]\)/</span>\<span class="k">u</span>\<span class="m">1</span>/<span class="k">g</span>
+<pre><span></span><code>v=spf1 ip4:111.111.111.111 include:example-domain.com -all
 </code></pre>
 </div>
 
-<p>Hope you found this tip useful!</p>
+<p><code>v=spf1</code> states the SPF version being implemented. Currently, there's no any other version at this point. So, it should always stay as this version until another version is released.</p>
 
-	</div>
-	<div class="article-footer">
-		<time>March 12th, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/vim/">
-					VIM
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
+<p><code>ip4:111.111.111.111</code> is the IP address of the mail server/domain that's authorized to send emails for that domain. You can use multiple IP addresses and can be listed individually like this <code>ip4:111.111.111.111 ip4:222.222.222.222</code> or through a <a href="https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing">CIDR</a> like <code>ip4:111.111.111.0/20</code>. If both IPv4 and IPv6 addresses are being used by mail server, make sure that both of those addresses are being listed.</p>
 
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/check-if-trait-is-being-used-in-your-class">Check if trait is being used in your class</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Want to know if a trait is being used in your current class? Try this:</p>
+<p><code>include:example-domain.com</code> is a secondary domain that's authorized to send emails on behalf of the primary mail domain(s) listed. Just like the previous rule above, you can add multiple secondary domains but bear in mind that only a maximum of 10 domains are allowed for any sending domain.</p>
 
-<div class="codehilite">
-<pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="nb">in_array</span><span class="p">(</span><span class="nx">Foo</span><span class="o">::</span><span class="na">class</span><span class="p">,</span> <span class="nb">class_uses</span><span class="p">(</span><span class="nv">$this</span><span class="p">))</span>
-<span class="cp">?&gt;</span>
-</code></pre>
-</div>
-
-<p>By any chance, if the current class is inherited, please note that the <code>class_uses()</code> method will only return the list of traits used by the current class and won't include any traits of it's parent class.</p>
-
-	</div>
-	<div class="article-footer">
-		<time>March 12th, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/php/">
-					PHP
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-resolve-the-issue-of-not-receiving-emails-on-the-same-domain">How to resolve the issue of not receiving emails on the same domain?</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Recently, we hosted our company's redesigned website on GoDaddy, which offers cPanel to manage your website. I was dealing with an annoying email bug in which I was able to send/receive emails to any account except the ones that share the company domain.</p>
-
-<p>The company's current email setup makes use of Google Workspace and since we're using a Shared Hosting account, GoDaddy allows you to use their SMTP relay and prohibits the use of third-party SMTP services such as Google Workspace, Outlook, etc.</p>
-
-<p>After configuring it with Google's MX records in the DNS settings, I wasn't receiving any email on my own company email yet I was able to receive on other email accounts that didn't share the company's domain.</p>
-
-<p>I did a little R&amp;D and ran into this documentation about <a href="https://docs.cpanel.net/cpanel/email/email-routing/">email routing</a> and figured out that there could be an issue with it's configuration.</p>
-
-<p>Here's what I did:</p>
-
-<ol>
-<li>Open cPanel </li>
-<li>Search or look for <strong>Email Routing</strong></li>
-<li>Click on <strong>Email Routing</strong></li>
-<li>If your MX records are not pointing to the IP address of the hosting server, then select <strong>Remote Mail Exchanger</strong></li>
-<li>Save changes</li>
-</ol>
-
-<p>After following these steps, I was able to receive mails on the same domain!</p>
-
-<h2>So what really caused the issue?</h2>
-
-<p>Since, we didn't have a default email address set up in cPanel, the current mode to send all unrouted emails was set to <code>:blackhole:</code>, by default. I guess, it's set up that way to prevent the server from sending/receiving spam mails from the domain.</p>
-
-<p>This makes sense because:</p>
-
-<ol>
-<li>The MX records are not pointing to the current server</li>
-<li>There are no email accounts created for the domain on cPanel</li>
-<li>By setting the mode to <code>:blackhole</code>, all emails with the same domain are being discarded or rejected</li>
-</ol>
-
-<p>Not really sure if this is what caused the issue but judging from the facts, I was able to reach to this conclusion.</p>
-
-<p>Hope you found this tip useful.</p>
-
-<h2>Reference</h2>
+<p><code>-all</code> is a tag that instructs the receiving server on how to handle messages from a domain that isn't a part of the SPF record. There are some options and they are all dictated by a single character that precedes the <code>all</code> keyword. The options are:</p>
 
 <ul>
-<li><a href="https://stackoverflow.com/questions/1107730/cant-send-email-to-addresses-at-my-own-domain">Can't send email to addresses at my own domain</a></li>
+<li><code>-all</code> means hard fail. The receiving server should reject the email if the sender domain is not authorized.</li>
+<li><code>~all</code> means soft fail. The receiving server can flag it as a possible spam if the sender domain is not authorized. </li>
+<li><code>+all</code> means authorized. The receiving server allows the email even if the sender domain is not authorized. Now, this is not recommended and please do not use this option.</li>
 </ul>
+
+<h2><a id="dkim-record"></a> What is DKIM?</h2>
+
+<p>It's an acronym for <strong>DomainKeys Identified Mail</strong> a.k.a Email signing. Just like <a href="#spf-record">SPF</a>, DKIM is also a simple DNS TXT record that tells the receiving server that the mail is certified which allows to build a trust between both the sending and receiving servers.</p>
+
+<p>To handle this trust, DKIM makes uses of an RSA cryptographic algorithm to create a pair of <strong>public</strong> and <strong>private</strong> encryption keys. The private key will remain on the server (i.e. the mail server) whereas the public key is placed in your DNS records.</p>
+
+<h2>How to create a DKIM record?</h2>
+
+<p>Depending on your mail provider, it can be easily generated by tools provided by them and once generated, it can be copy-pasted to the DNS records.</p>
+
+<p>This is how a typical DKIM record would look like:</p>
+
+<div class="codehilite">
+<pre><span></span><code>v=DKIM1; k=rsa;
+p=iHeFQ+7rCiSQs3DPjR2eUSZSv4i/Kp+sipRfVH7BGf+SxcwOkX7X8R1RVObMQsFcbIxnrq7Ba2QCf0YZlL9iqJf32V+baDI8IykuDztuoNUF2Kk0pawZkbSPNHYRtLxV2CTOtc+x4eIeSeYptaiu7g7GupekLZ2DE1ODHhuP4I=
+</code></pre>
+</div>
+
+<p>Regardless of how it's being generated, this is what each part of the header means:</p>
+
+<p><code>v=DKIM1</code> is the DKIM protocol version used.</p>
+
+<p><code>p=</code> is the Base64 encoded public key generated.</p>
+
+<p><code>k=</code> is the mechanism used to decode the DKIM signature. The encryption key is usually based on <code>rsa-sha1</code> or <code>rsa-sha256</code> signing algorithm.</p>
+
+<p>You can use DMARC analyzer's <a href="https://dmarcanalyzer.com/dkim/dkim-checker">DKIM checker</a> to check if your DKIM record is valid.</p>
+
+<h2><a id="dmarc-record"></a> What is DMARC?</h2>
+
+<p>It's an acronym for <strong>Domain-based Message Authentication, Reporting and Conformance</strong>. This protocol is built around SPF and DKIM and it ensures the following:</p>
+
+<ol>
+<li>Verifies that the sender's email is protected by SPF and DKIM protocols.</li>
+<li>Instructs the receiving mail server on what to do if the authentication fails.</li>
+<li>Provides a way for the receiving server to send a report to the sender about the DMARC evaluation i.e. whether it passed or failed.</li>
+</ol>
+
+<p>If you have come this far in the article, you might have understood why both <a href="#spf-record">SPF</a> and <a href="#dkim-record">DKIM</a> were explained and why they are quite necessary.</p>
+
+<h2>How to create a DMARC record?</h2>
+
+<p>Once you have both SPF and DKIM records in place, then it's easy to create your DMARC record. There are many sites and I would recommend you to try MXToolbox's <a href="https://mxtoolbox.com/DMARCRecordGenerator.aspx">DMARC Record Generator</a>.</p>
+
+<p>This is how a DMARC record would look like:</p>
+
+<div class="codehilite">
+<pre><span></span><code>v=DMARC1; p=none; fo=1; rua=mailto:address@example.com;
+</code></pre>
+</div>
+
+<p>And here's what each part of the header translates to:</p>
+
+<p><code>v</code> is the version tag, similar to the SPF record. It should always be <code>DMARC1</code> in the record.</p>
+
+<p><code>p</code> is the policy tag. <code>none</code> means to not do anything to the email, <code>quarantine</code> means to flag it as spam and <code>reject</code> means to reject the email.</p>
+
+<p><code>fo</code> is the tag that lets the receiving servers know that failed messages must be returned to the sender or not. There are four values for this tag:</p>
+
+<ul>
+<li><code>0</code>: Generate a report if both DKIM and SPF produce a "Pass" result.</li>
+<li><code>1</code>: Generate a report if both DKIM and SPF produce a result other than "Pass".</li>
+<li><code>d</code>: Generate a report if the email had failed the DKIM evaluation.</li>
+<li><code>s</code>: Generate a report if the email had failed the SPF evaluation.</li>
+</ul>
+
+<p>It's actually recommended to use <code>fo=1</code> which can help you look for any email delivery issues.</p>
+
+<p><code>rua</code> tells the receiving server on where to send the aggregate reports. This could provide insights into the health of the email server and can help identify any malicious activities.</p>
+
+<p>There are many optional tags that can be used but these are the tags are most commonly used by default.</p>
+
+<h2>Conclusion</h2>
+
+<p>With the increase in spam emails, it's good to take such preventive measures to ensure that you are following best practices and doing your part to prevent malicious emails and other security related issues.</p>
+
+<p>If you want to read more about these protocols, you can read the following links recommended below:</p>
+
+<ul>
+<li><a href="https://dmarcanalyzer.com/spf/">Sender Policy Framework (SPF)</a></li>
+<li><a href="https://dkim.org">DomainKeys Identified Mail</a></li>
+<li><a href="https://dmarc.org">Domain-based Message Authentication, Reporting and Conformance</a></li>
+</ul>
+
+<p>Hope you liked reading this article! &#x1F604;</p>
 
 	</div>
 	<div class="article-footer">
-		<time>March 12th, 2021</time>
+		<time>April 10th, 2021</time>
 		<ul class="tags">
-			
-			<li>
-				<a href="/category/cpanel/">
-					cPanel
-				</a>
-			</li>
 			
 			<li>
 				<a href="/category/email/">
@@ -209,42 +227,9 @@
 				</a>
 			</li>
 			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/convert-string-to-variable-in-php">Convert string to variable in PHP</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>I read about <a href="https://www.php.net/language.variables.variable">variable variables</a> in PHP's official documentation.</p>
-
-<p>Here's a sample:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="cp">&lt;?php</span>
-    <span class="nv">$a</span> <span class="o">=</span> <span class="s2">&quot;hello&quot;</span><span class="p">;</span>
-    <span class="c1">// Remove special characters and tags to prevent it from crashing.</span>
-    <span class="nv">$foo</span> <span class="o">=</span> <span class="nb">preg_replace</span><span class="p">(</span><span class="s1">&#39;/[^a-zA-Z0-9\s]/&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="nv">$$a</span><span class="p">);</span>
-    <span class="k">echo</span> <span class="nv">$foo</span><span class="p">;</span>
-<span class="cp">?&gt;</span>
-</code></pre>
-</div>
-
-<p>Not sure if this is a good practice but it sure gets the job done!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>March 12th, 2021</time>
-		<ul class="tags">
-			
 			<li>
-				<a href="/category/php/">
-					PHP
+				<a href="/category/security/">
+					Security
 				</a>
 			</li>
 			
@@ -256,44 +241,29 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-resolve-the-filegetcontents-ssl-operation-failed-error">How to resolve the "file_get_contents(): SSL operation failed" error</a></h1>
+		<h1 class="heading"><a href="/til/posts/find-directories-created-within-a-date-range">Find directories created within a date range</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>If you're facing this error while trying to download a file from your server, it's most probably the SSL certificate that has been hosted on your server isn't correctly verified or maybe, you're using OpenSSL on a server running PHP 5.6.</p>
-
-<p>As per the <a href="http://php.net/manual/en/migration56.openssl.php">documentation</a>, there are some changes that can be made to resolve it, like the following method:</p>
+		<p>Executing these commands helps me create a sorted list of files/directories created within a specific date range:</p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="k">public</span> <span class="k">function</span> <span class="nf">foo</span><span class="p">(</span><span class="nx">Request</span> <span class="nv">$request</span><span class="p">)</span> <span class="p">{</span>
-    <span class="nv">$arrContextOptions</span> <span class="o">=</span> <span class="k">array</span><span class="p">(</span>
-        <span class="s2">&quot;ssl&quot;</span> <span class="o">=&gt;</span> <span class="k">array</span><span class="p">(</span>
-            <span class="s2">&quot;verify_peer&quot;</span> <span class="o">=&gt;</span> <span class="k">false</span><span class="p">,</span>
-            <span class="s2">&quot;verify_peer_name&quot;</span> <span class="o">=&gt;</span> <span class="k">false</span><span class="p">,</span>
-        <span class="p">),</span>
-    <span class="p">);</span>
-    <span class="k">return</span> <span class="nx">Response</span><span class="o">::</span><span class="na">make</span><span class="p">(</span><span class="nb">file_get_contents</span><span class="p">(</span><span class="nx">asset</span><span class="p">(</span><span class="s1">&#39;pdf/file.pdf&#39;</span><span class="p">),</span> <span class="k">false</span><span class="p">,</span> <span class="nb">stream_context_create</span><span class="p">(</span><span class="nv">$arrContextOptions</span><span class="p">)),</span> <span class="mi">200</span><span class="p">,</span> <span class="p">[</span>
-        <span class="s1">&#39;Content-Type&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;application/pdf&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;Content-Disposition&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;inline; filename=&quot;file.pdf&quot;&#39;</span><span class="p">,</span>
-    <span class="p">]);</span>
-<span class="p">}</span>
-<span class="cp">?&gt;</span>
+<pre><span></span><code>touch<span class="w"> </span>-t<span class="w"> </span><span class="m">202104100000</span><span class="w"> </span>start
+touch<span class="w"> </span>-t<span class="w"> </span><span class="m">202104150000</span><span class="w"> </span>stop
+find<span class="w"> </span>.<span class="w"> </span>-type<span class="w"> </span>d<span class="w"> </span>-maxdepth<span class="w"> </span><span class="m">1</span><span class="w"> </span>-newer<span class="w"> </span>start<span class="w"> </span><span class="se">\!</span><span class="w"> </span>-newer<span class="w"> </span>stop<span class="w"> </span><span class="p">|</span><span class="w"> </span>sort<span class="w"> </span>&gt;&gt;<span class="w"> </span>directories.txt
 </code></pre>
 </div>
 
-<p>Although, I won't recommend this unless you are testing it on a <code>localhost</code> environment as it's not secure and could have significant security implications because disabling verification can permit a <a href="https://en.wikipedia.org/wiki/Man-in-the-middle_attack">Man in the Middle attack</a> to take place.</p>
-
-<p>Use it at your own risk!</p>
+<p>Someday, these commands shall come in handy, bud! &#x1F60E;</p>
 
 	</div>
 	<div class="article-footer">
-		<time>March 12th, 2021</time>
+		<time>April 10th, 2021</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/php/">
-					PHP
+				<a href="/category/unix/">
+					UNIX
 				</a>
 			</li>
 			
@@ -305,22 +275,27 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-resolve-the-failed-to-clear-cache-make-sure-you-have-the-appropriate-permissions-error">How to resolve the "Failed to clear cache. Make sure you have the appropriate permissions." error</a></h1>
+		<h1 class="heading"><a href="/til/posts/perform-git-operations-using-path-directory">Perform Git operations using path directory</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>This error is annoying and mostly happens if the <code>data</code> directory is missing under the <code>storage/framework/cache/data</code> directory. For some reason, this folder doesn't exist by default.</p>
+		<p>The <code>-C</code> flag means the path of the directory and using this flag, you can perform any Git operations outside the project's directory without having to enter the directory all the time:</p>
 
-<p>To resolve it, just manually create the <code>data</code> directory under the <code>storage/framework/cache/data</code> directory and it should fix the issue.</p>
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>-C<span class="w"> </span>/path/to/directory<span class="w"> </span>&lt;command&gt;
+</code></pre>
+</div>
+
+<p>Hope this tip helps you out!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>March 12th, 2021</time>
+		<time>April 10th, 2021</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/laravel/">
-					Laravel
+				<a href="/category/git/">
+					Git
 				</a>
 			</li>
 			
@@ -332,29 +307,66 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-exclude-certain-slugs-in-laravel">How to exclude certain slugs in Laravel</a></h1>
+		<h1 class="heading"><a href="/til/posts/exclude-directories-while-searching-for-a-pattern-in-files">Exclude directories while searching for a pattern in files</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>Using plain Regular Expressions, you can exclude certain slug from your routes, try adding the following to your <code>routes/web.php</code> file:</p>
+		<p>Looking for a specific text pattern in a directory but wanted to avoid some paths? Here's a quick command that you can try:</p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="cp">&lt;?php</span>
-    <span class="nx">Route</span><span class="o">::</span><span class="na">match</span><span class="p">(</span><span class="k">array</span><span class="p">(</span><span class="s1">&#39;GET&#39;</span><span class="p">,</span> <span class="s1">&#39;POST&#39;</span><span class="p">),</span> <span class="s1">&#39;/{slug}&#39;</span><span class="p">,</span> <span class="s1">&#39;YourController@index&#39;</span><span class="p">)</span><span class="o">-&gt;</span><span class="na">name</span><span class="p">(</span><span class="s1">&#39;page&#39;</span><span class="p">)</span><span class="o">-&gt;</span><span class="na">where</span><span class="p">(</span><span class="s1">&#39;slug&#39;</span><span class="p">,</span> <span class="s1">&#39;^(?!pattern).*$&#39;</span><span class="p">);</span>
-<span class="cp">?&gt;</span>
+<pre><span></span><code>grep<span class="w"> </span>-R<span class="w"> </span>--exclude-dir<span class="o">=</span>path/to/directory<span class="w"> </span><span class="s1">&#39;some pattern&#39;</span><span class="w"> </span>/path/to/search
 </code></pre>
 </div>
+
+<p>Hope this helps you out!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>April 10th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/unix/">
+					UNIX
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/fetch-selected-files-from-your-remote-repository">Fetch selected files from your remote repository</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Wanted to fetch a specific file from your Git repository except that the repository doesn't exist in your local machine?</p>
+
+<p>Try this out:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>init
+git<span class="w"> </span>remote<span class="w"> </span>add<span class="w"> </span>origin<span class="w"> </span>&lt;your_repo_link&gt;.git
+git<span class="w"> </span>fetch
+git<span class="w"> </span>checkout<span class="w"> </span>&lt;your_branch_name&gt;<span class="w"> </span>--<span class="w"> </span>&lt;/path/to/file&gt;
+</code></pre>
+</div>
+
+<p>After executing these commands, you should be able to see the selected directory/file in your project directory.</p>
 
 <p>Hope you found this useful!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>March 12th, 2021</time>
+		<time>April 10th, 2021</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/laravel/">
-					Laravel
+				<a href="/category/git/">
+					Git
 				</a>
 			</li>
 			
@@ -366,33 +378,104 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/convert-to-date-from-timestamp-using-carbon">Convert to date from timestamp using Carbon</a></h1>
+		<h1 class="heading"><a href="/til/posts/find-directories-older-than-a-specific-date-and-sorted-by-size">Find directories older than a specific date and sorted by size</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>Using Carbon's <code>createFromFormat()</code> method is basically a wrapper for <code>DateTime::createFromFormat()</code>, the main difference between the two methods is that you can add a timezone to Carbon's method.</p>
-
-<p>Here's a sample on how you can convert to date using timestamp using Carbon:</p>
+		<p>Wanted to see which directories were created on an older date along with their sizes? Try this:</p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="cp">&lt;?php</span>
-    <span class="k">function</span> <span class="nf">formatDate</span><span class="p">(</span><span class="nx">Request</span> <span class="nv">$request</span><span class="p">)</span> <span class="p">{</span>
-        <span class="k">return</span> <span class="nx">\Carbon\Carbon</span><span class="o">::</span><span class="na">createFromFormat</span><span class="p">(</span><span class="s1">&#39;Y-m-d H:i:s&#39;</span><span class="p">,</span> <span class="nv">$request</span><span class="o">-&gt;</span><span class="na">date</span><span class="p">)</span><span class="o">-&gt;</span><span class="na">format</span><span class="p">(</span><span class="s1">&#39;Y-m-d&#39;</span><span class="p">);</span>
-    <span class="p">}</span>
-<span class="cp">?&gt;</span>
+<pre><span></span><code>find<span class="w"> </span>.<span class="w"> </span>-type<span class="w"> </span>d<span class="w"> </span>-maxdepth<span class="w"> </span><span class="m">1</span><span class="w"> </span>!<span class="w"> </span>-newermt<span class="w"> </span><span class="s2">&quot;2021-04-10&quot;</span><span class="w"> </span>-exec<span class="w"> </span>du<span class="w"> </span>-sh<span class="w"> </span><span class="o">{}</span><span class="w"> </span><span class="se">\;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sort<span class="w"> </span>-h<span class="w"> </span>&gt;&gt;<span class="w"> </span>oldprojectsizes.txt
 </code></pre>
 </div>
 
-<p>Hope you found this useful!</p>
+<p>Hope you found this tip useful!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>March 12th, 2021</time>
+		<time>April 10th, 2021</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/laravel/">
-					Laravel
+				<a href="/category/unix/">
+					UNIX
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-change-the-character-encoding-of-a-file-via-terminal">How to change the character encoding of a file via Terminal?</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Sometimes, I face character encoding issues while making minor edits via a SFTP console connected to a Linux server. I found a quick hack to change the file encoding using <code>vim</code> on the command line.</p>
+
+<p>In this example, I'm changing the encoding of the file to <code>unix</code>:</p>
+
+<div class="codehilite">
+<pre><span></span><code>vim<span class="w"> </span><span class="nv">$filename</span><span class="w"> </span>+<span class="s2">&quot;set ff=unix&quot;</span><span class="w"> </span>+wq
+</code></pre>
+</div>
+
+<p>Hope you found this helpful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>April 10th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/unix/">
+					UNIX
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-perform-mysqldump-without-a-password-prompt">How to perform mysqldump without a password prompt?</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>If you're performing a mass database backup using <code>mysqldump</code>, you'll pretty much find it annoying to type in the password every single time.</p>
+
+<p>To get rid of it, open <code>/etc/mysql/my.cnf</code> configuration file and add your database credentials:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="err">[</span><span class="n">mysqldump</span><span class="err">]</span>
+<span class="k">user</span><span class="o">=</span><span class="s2">&quot;your_username&quot;</span>
+<span class="k">password</span><span class="o">=</span><span class="s2">&quot;your_password&quot;</span>
+</code></pre>
+</div>
+
+<p>Once done, save the <code>my.cnf</code> configuration file and now, you can try exporting your database without a hassle like this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>mysqldump<span class="w"> </span>-u<span class="w"> </span>your_username<span class="w"> </span>database_name<span class="w"> </span>&gt;<span class="w"> </span>database.sql
+</code></pre>
+</div>
+
+<p>Hope this trick helps you out!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>April 10th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/unix/">
+					UNIX
 				</a>
 			</li>
 			
@@ -440,11 +523,11 @@
 		
 	
 		
-			<a class="" href="/pages/15">...</a>
+			<a class="" href="/pages/17">...</a>
 		
 	
 		
-			<a class="" href="/pages/28">28</a>
+			<a class="" href="/pages/30">30</a>
 		
 	
 
@@ -481,28 +564,35 @@
 		<li>
 			<a href="/category/linux/">
 				Linux
-				<span class="count">22</span>
+				<span class="count">24</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/laravel/">
 				Laravel
-				<span class="count">18</span>
+				<span class="count">20</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/devops/">
 				DevOps
-				<span class="count">15</span>
+				<span class="count">20</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/php/">
 				PHP
-				<span class="count">13</span>
+				<span class="count">14</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/git/">
+				Git
+				<span class="count">12</span>
 			</a>
 		</li>
 		
@@ -549,9 +639,9 @@
 		</li>
 		
 		<li>
-			<a href="/category/git/">
-				Git
-				<span class="count">10</span>
+			<a href="/category/mysql/">
+				MySQL
+				<span class="count">9</span>
 			</a>
 		</li>
 		
@@ -566,13 +656,6 @@
 			<a href="/category/unix/">
 				UNIX
 				<span class="count">8</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/mysql/">
-				MySQL
-				<span class="count">7</span>
 			</a>
 		</li>
 		
@@ -594,6 +677,13 @@
 			<a href="/category/essay/">
 				Essay
 				<span class="count">6</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/c/">
+				C#
+				<span class="count">5</span>
 			</a>
 		</li>
 		
@@ -626,16 +716,16 @@
 		</li>
 		
 		<li>
-			<a href="/category/c/">
-				C#
+			<a href="/category/arcade-challenge/">
+				Arcade Challenge
 				<span class="count">4</span>
 			</a>
 		</li>
 		
 		<li>
-			<a href="/category/arcade-challenge/">
-				Arcade Challenge
-				<span class="count">4</span>
+			<a href="/category/databases/">
+				Databases
+				<span class="count">3</span>
 			</a>
 		</li>
 		
@@ -678,6 +768,48 @@
 			<a href="/category/general/">
 				General
 				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/vcs/">
+				VCS
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/ubuntu/">
+				Ubuntu
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/powershell/">
+				PowerShell
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/smtp/">
+				SMTP
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/sql/">
+				SQL
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/net/">
+				.NET
+				<span class="count">2</span>
 			</a>
 		</li>
 		
@@ -787,6 +919,55 @@
 		</li>
 		
 		<li>
+			<a href="/category/phpstorm/">
+				PHPStorm
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/elastic-search/">
+				Elastic Search
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/kibana/">
+				Kibana
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/data-manipulation/">
+				Data Manipulation
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/telnet/">
+				Telnet
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/iis/">
+				IIS
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/centos/">
+				CentOS
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/net-core/">
 				.NET Core
 				<span class="count">1</span>
@@ -878,22 +1059,8 @@
 		</li>
 		
 		<li>
-			<a href="/category/ubuntu/">
-				Ubuntu
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/ssh/">
 				SSH
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/databases/">
-				Databases
 				<span class="count">1</span>
 			</a>
 		</li>

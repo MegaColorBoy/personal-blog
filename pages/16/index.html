@@ -78,38 +78,41 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-delete-files-inside-a-zip-file">How to delete files inside a zip file?</a></h1>
+		<h1 class="heading"><a href="/til/posts/get-pagination-data-by-page-number">Get pagination data by page number</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>Ever compressed your project directory but forgot to delete that useless file or folder and turns out the compresed file is larger than it's supposed to be? </p>
+		<p>By default, Laravel's paginator checks the value of the page based on the query string and uses that to display the results and also, it generates links to previous and next pages as well.</p>
 
-<p>Here's a quick solution you can try:</p>
-
-<p>If you want to delete a file inside a <code>.zip</code> file, try this:</p>
+<p>The <code>paginate()</code> method takes the following parameters by default:</p>
 
 <div class="codehilite">
-<pre><span></span><code>zip<span class="w"> </span>--delete<span class="w"> </span>file.zip<span class="w"> </span><span class="s2">&quot;file.ext&quot;</span>
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="k">public</span> <span class="k">function</span> <span class="nf">paginate</span><span class="p">(</span><span class="nv">$perPage</span> <span class="o">=</span> <span class="k">null</span><span class="p">,</span> <span class="nv">$columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;*&#39;</span><span class="p">],</span> <span class="nv">$pageName</span> <span class="o">=</span> <span class="s1">&#39;page&#39;</span><span class="p">,</span> <span class="nv">$page</span> <span class="o">=</span> <span class="k">null</span><span class="p">);</span>
+<span class="cp">?&gt;</span>
 </code></pre>
 </div>
 
-<p>And if you want to delete a folder, try this:</p>
+<p>So, if you want to fetch the pagination data of a specific page, then just write this:</p>
 
 <div class="codehilite">
-<pre><span></span><code>zip<span class="w"> </span>--delete<span class="w"> </span>file.zip<span class="w"> </span><span class="s2">&quot;folder/*&quot;</span>
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="nv">$pageNumber</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span>
+<span class="nv">$data</span> <span class="o">=</span> <span class="nx">ExampleModel</span><span class="o">::</span><span class="na">paginate</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;*&#39;</span><span class="p">],</span> <span class="s1">&#39;page&#39;</span><span class="p">,</span> <span class="nv">$pageNumber</span><span class="p">);</span>
+<span class="cp">?&gt;</span>
 </code></pre>
 </div>
 
-<p>Hope this helps you out!</p>
+<p>Hope you found this article useful!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>July 21st, 2020</time>
+		<time>September 28th, 2020</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/terminal/">
-					Terminal
+				<a href="/category/laravel/">
+					Laravel
 				</a>
 			</li>
 			
@@ -121,52 +124,339 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/find-the-difference-between-two-arrays">Find the difference between two arrays</a></h1>
+		<h1 class="heading"><a href="/til/posts/resolve-curl-error-60-ssl-certificate-problem-on-localhost">Resolve cURL error 60: SSL certificate problem on localhost</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>Finding the difference between two sets i.e. Set A and Set B is basically returning a new set that contains values of Set A that don't exist in Set B or vice-versa.</p>
-
-<p>Here's an example:</p>
+		<p>You'll get this error when you're hosting a Laravel project with using HTTPS/SSL protocol on <code>localhost</code> or <code>127.0.0.1</code>:</p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="mf">1</span><span class="p">,</span><span class="mf">2</span><span class="p">,</span><span class="mf">3</span><span class="p">,</span><span class="mf">4</span><span class="p">,</span><span class="mf">5</span><span class="p">];</span>
-<span class="kd">var</span><span class="w"> </span><span class="nx">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="mf">1</span><span class="p">,</span><span class="mf">1</span><span class="p">,</span><span class="mf">2</span><span class="p">,</span><span class="mf">3</span><span class="p">,</span><span class="mf">4</span><span class="p">];</span>
+<pre><span></span><code>cURL error 60: SSL certificate problem: unable to get local issuer certificate (see https://curl.haxx.se/libcurl/c/libcurl-errors.html)
 </code></pre>
 </div>
 
-<p>I wrote a shorter implementation using JavaScript's <code>.filter()</code> method:</p>
+<p>I read some article on trying to install <code>cacert.pem</code> authorization certificate on your WAMP/XAMPP setup but it didn't really work out for me as I was running out of time.</p>
+
+<p>So, I did a little digging and learnt that I can just modify the <code>verify</code> flag to <code>false</code> in the <code>vendor/guzzlehttp/guzzle/src/Client.php</code> file:</p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="kd">function</span><span class="w"> </span><span class="nx">array_diff</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span><span class="nx">b</span><span class="p">){</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">a</span><span class="p">.</span><span class="nx">filter</span><span class="p">(</span><span class="nx">i</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">b</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="o">-</span><span class="mf">1</span><span class="p">);</span>
-<span class="p">}</span><span class="w">    </span>
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="nv">$defaults</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s1">&#39;allow_redirects&#39;</span> <span class="o">=&gt;</span> <span class="nx">RedirectMiddleware</span><span class="o">::</span><span class="nv">$defaultSettings</span><span class="p">,</span>
+    <span class="s1">&#39;http_errors&#39;</span>     <span class="o">=&gt;</span> <span class="k">true</span><span class="p">,</span>
+    <span class="s1">&#39;decode_content&#39;</span>  <span class="o">=&gt;</span> <span class="k">true</span><span class="p">,</span>
+    <span class="s1">&#39;verify&#39;</span>          <span class="o">=&gt;</span> <span class="k">false</span><span class="p">,</span> <span class="c1">// changed it to false</span>
+    <span class="s1">&#39;cookies&#39;</span>         <span class="o">=&gt;</span> <span class="k">false</span>
+<span class="p">];</span>
+<span class="cp">?&gt;</span>
 </code></pre>
 </div>
 
-<p>Once you execute this method, you'll get the following as a result:</p>
+<p>By changing to it <code>false</code>, you'll not face that error again but please keep in mind, you should do this only if you're developing on localhost.</p>
 
-<div class="codehilite">
-<pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">array_diff</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span><span class="nx">b</span><span class="p">);</span>
-<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">c</span><span class="p">)</span><span class="w"> </span><span class="c1">// returns [5]</span>
-</code></pre>
-</div>
-
-<h2>BONUS: What does the .filter() method do?</h2>
-
-<p>This method returns a new array with elements that pass the conditions provided by a callback function.</p>
-
-<p>If the conditions aren't passed, you'll receive an empty array.</p>
-
-<p>In this article, <code>(i =&gt; b.indexOf(i) === -1)</code> is considered as the callback function in which the <code>i</code> refers to the index of the current element of array A and is then used as a parameter to check if the element doesn't exist in array B.</p>
-
-<p>The neat thing about this method is that it doesn't mutate on the array that it's being called from.</p>
-
-<p>Read more about <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter">Array.prototype.filter()</a> on Mozilla's developer documentation.</p>
+<p>Happy coding!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>July 18th, 2020</time>
+		<time>September 28th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/laravel/">
+					Laravel
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-resolve-the-no-application-encryption-key-has-been-specified-error">How to resolve the "No application encryption key has been specified" error</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Are you facing the same error as this article's title? Then this article might help you out.</p>
+
+<p>If you're developing applications using HTTP/SSL Protocols (regardless, you should!) on Laravel, by default, you'll be using Laravel's encrypter but in it's <a href="https://laravel.com/docs/7.x/encryption#configuration">official documentation</a>, it says:</p>
+
+<blockquote>
+  <p>Before using Laravel's encrypter, you must set a <code>key</code> option in your <code>config/app.php</code> configuration file. You should use the <code>php artisan key:generate</code> command to generate this key since this Artisan command will use PHP's secure random bytes generator to build your key. If this value is not properly set, all values encrypted by Laravel will be insecure.</p>
+</blockquote>
+
+<p>Just execute the following command in your root directory:</p>
+
+<div class="codehilite">
+<pre><span></span><code>php<span class="w"> </span>artisan<span class="w"> </span>key:generate
+</code></pre>
+</div>
+
+<p>If the error still persists, try clearing the cache by doing the following:</p>
+
+<div class="codehilite">
+<pre><span></span><code>php<span class="w"> </span>artisan<span class="w"> </span>config:cache
+php<span class="w"> </span>artisan<span class="w"> </span>cache:clear
+php<span class="w"> </span>artisan<span class="w"> </span>config:clear
+</code></pre>
+</div>
+
+<p>Hope you found this article useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>September 19th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/laravel/">
+					Laravel
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-filter-requests-with-errors-on-chromes-devtools">How to filter requests with errors on Chrome's DevTools</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Tired of trying to look for errors in DevTools by scrolling a long list of HTTP responses?</p>
+
+<p>Open up your <strong>Chrome DevTools</strong> and hit the <strong>Network</strong> tab and then try filtering the responses by typing the <code>status-code</code> property in the filter box.</p>
+
+<p>It comes in handy when you want to narrow down to a specific list of HTTP responses. For instance, if you're looking for responses with error 404, you can filter it by typing like this: <code>status-code:404</code>.</p>
+
+<p>Another trick is, you can filter out the responses that you don't want to see by just adding a hyphen like this: <code>-status-code:200</code>.</p>
+
+<p>Hope this tip helps you out!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>September 19th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/chrome-devtools/">
+					Chrome DevTools
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/enable-httpsssl-on-wamp-server">Enable HTTPS/SSL on WAMP Server</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Building a website with HTTPS/SSL in mind can help resolve a lot of problems when you're going to deploy it on production server.</p>
+
+<p>So, here's a small tutorial on how to enable HTTPS mode and install SSL certificate on your local WAMP Server.</p>
+
+<p><strong>Note: This tutorial assumes that you have a Windows PC and have installed WAMP Server 3.2.0 in your local system, if not, <a href="https://www.wampserver.com/en/">download it from here</a>.</strong></p>
+
+<h2>Download OpenSSL</h2>
+
+<p>Based on your system's architecture, you can download either a 32 or 64-bit installer. You can find the latest version of OpenSSL from here. While installing, please make sure all the options selected are default.</p>
+
+<h2>Generate SSL Key and Certificate</h2>
+
+<p>Open your terminal or command-line prompt and navigate to the following folder:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nb">cd</span><span class="w"> </span><span class="s2">&quot;C:\Program Files\OpenSSL-Win64\bin&quot;</span>
+</code></pre>
+</div>
+
+<p>Next, you need to create a private key. While generating a private key, you'll have to enter a passphrase, it can be anything but make sure that you can remember it for the next step &#x1F602;.</p>
+
+<p>Execute the following command:</p>
+
+<div class="codehilite">
+<pre><span></span><code>openssl<span class="w"> </span>genrsa<span class="w"> </span>-aes256<span class="w"> </span>-out<span class="w"> </span>private.key<span class="w"> </span><span class="m">2048</span>
+</code></pre>
+</div>
+
+<p>Good, now let's generate our certificate and in this step, you'll be prompted with several questions. You can fill as per your wish or just hit "Enter" to leave it as default. The only thing that matters is <strong>Common Name</strong> and this should named as <code>localhost</code></p>
+
+<p>Execute the following command:</p>
+
+<div class="codehilite">
+<pre><span></span><code>openssl<span class="w"> </span>req<span class="w"> </span>-new<span class="w"> </span>-x509<span class="w"> </span>-nodes<span class="w"> </span>-sha1<span class="w"> </span>-key<span class="w"> </span>private.key<span class="w"> </span>-out<span class="w"> </span>certificate.crt<span class="w"> </span>-days<span class="w"> </span><span class="m">36500</span>
+</code></pre>
+</div>
+
+<h2>Move the certificate and key to Apache's directory</h2>
+
+<p>Create a folder named <code>keys</code> and move both <code>private.key</code> and <code>certificate.crt</code> to this directory: <code>C:\wamp64\bin\apache\apache2.4.41\conf</code>.</p>
+
+<h2>Modify your httpd.conf file</h2>
+
+<p>You have to uncomment 3 lines from <code>C:/wamp64/bin/apache/apache2.4.41/conf/httpd.conf</code>:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nb">LoadModule</span><span class="w"> </span>ssl_module<span class="w"> </span>modules/mod_ssl.so
+<span class="nb">Include</span><span class="w"> </span>conf/extra/httpd-ssl.conf
+<span class="nb">LoadModule</span><span class="w"> </span>socache_shmcb_module<span class="w"> </span>modules/mod_socache_shmcb.so
+</code></pre>
+</div>
+
+<h2>Modify your httpd-ssl.conf file</h2>
+
+<p>Go to <code>C:/wamp64/bin/apache/apache2.4.41/conf/extra/httpd-ssl.conf</code> and modify the following parameters:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nb">DocumentRoot</span><span class="w"> </span><span class="s2">&quot;c:/wamp64/www&quot;</span>
+<span class="nb">ServerName</span><span class="w"> </span>localhost:443
+<span class="nb">ServerAdmin</span><span class="w"> </span>admin@youremail.com
+<span class="nb">ErrorLog</span><span class="w"> </span><span class="s2">&quot;${SRVROOT}/logs/error.log&quot;</span>
+<span class="nb">TransferLog</span><span class="w"> </span><span class="s2">&quot;${SRVROOT}/logs/access.log&quot;</span>
+<span class="nb">SSLSessionCache</span><span class="w"> </span><span class="s2">&quot;shmcb:${SRVROOT}/logs/ssl_scache(512000)&quot;</span>
+<span class="nb">SSLCertificateFile</span><span class="w"> </span><span class="s2">&quot;${SRVROOT}/conf/keys/certificate.crt&quot;</span>
+<span class="nb">SSLCertificateKeyFile</span><span class="w"> </span><span class="s2">&quot;${SRVROOT}/conf/keys/private.key&quot;</span>
+<span class="nb">CustomLog</span><span class="w"> </span><span class="s2">&quot;${SRVROOT}/logs/ssl_request.log&quot;</span>
+</code></pre>
+</div>
+
+<p><code>DocumentRoot</code> is the location of where your website files are located. <code>ServerName</code> can be anything but preferable to use <code>localhost</code>.</p>
+
+<h2>Restart your WAMP Server</h2>
+
+<p>Just restart your WAMP Server for the changes to take effect. If the WAMP icon turns green, you're good else, an typo or syntax error must have occurred.</p>
+
+<p>Hope you found this tutorial useful! &#x1F600;</p>
+
+	</div>
+	<div class="article-footer">
+		<time>September 13th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/apache/">
+					Apache
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/wamp/">
+					WAMP
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/accessing-wamp-server-from-other-computers-on-lan">Accessing WAMP Server from other computers on LAN</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Whenever you develop a website using the <strong>LAMP</strong> or <strong>WAMP</strong> stack, you'll want to access the website, locally, via different systems and devices solely for testing purposes.</p>
+
+<h2>Modify your VirtualHosts configuration</h2>
+
+<p>Setting up your WAMP Server for LAN access only requires you to tweak your <strong>VirtualHosts</strong> configuration file found in <code>C:\wamp64\bin\apache\apache2.4.41\conf\extra\httpd-vhost.conf</code></p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nt">&lt;VirtualHost</span><span class="w"> </span><span class="s">*:80</span><span class="nt">&gt;</span>
+<span class="w">  </span><span class="nb">ServerName</span><span class="w"> </span>example.test
+<span class="w">  </span><span class="nb">ServerAlias</span><span class="w"> </span>example.test
+<span class="w">  </span><span class="nb">DocumentRoot</span><span class="w"> </span><span class="s2">&quot;c:/wamp64/www/yourprojectname&quot;</span>
+<span class="w">  </span><span class="nt">&lt;Directory</span><span class="w"> </span><span class="s">&quot;c:/wamp64/www/yourprojectname/&quot;</span><span class="nt">&gt;</span>
+<span class="w">    </span><span class="nb">Options</span><span class="w"> </span>+Indexes<span class="w"> </span>+Includes<span class="w"> </span>+FollowSymLinks<span class="w"> </span>+MultiViews
+<span class="w">    </span><span class="nb">AllowOverride</span><span class="w"> </span><span class="k">All</span>
+<span class="w">    </span><span class="nb">Require</span><span class="w"> </span><span class="k">all</span><span class="w"> </span>granted
+<span class="w">  </span><span class="nt">&lt;/Directory&gt;</span>
+<span class="nt">&lt;/VirtualHost&gt;</span>
+</code></pre>
+</div>
+
+<p>Oh, if you're using Linux, you'll find the file <code>000-default.conf</code> in <code>/etc/apache2/sites-available</code> directory.</p>
+
+<h2>Update your hosts file</h2>
+
+<p>If you type the URL of the website that you want to visit, the computer will first refer to the <code>hosts</code> file and then it'll go out to fetch DNS information. So, if you want <code>http:\\example.test</code> url to point to your local system, you just have add it in your <code>hosts</code> file:</p>
+
+<p>Open the hosts file(<code>C:\Windows\System32\drivers\etc\hosts</code>) using a text editor and add this line to your <code>hosts</code> file:</p>
+
+<div class="codehilite">
+<pre><span></span><code>127.0.0.1   example.test
+</code></pre>
+</div>
+
+<p>Once done, save the file and restart your WAMP Server and you're all set to go!</p>
+
+<p>Hope you found this tip useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>September 13th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/apache/">
+					Apache
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/wamp/">
+					WAMP
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/prevent-loading-webpage-from-backforward-cache">Prevent loading a webpage from Back-Forward cache</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>I'm working on an eCommerce project and I encountered a really weird problem, whenever I saved items into my cart and proceed to the checkout page and then go back to previous page, my cart isn't updated until I refresh the page.</p>
+
+<p>Honestly, I thought this was a bug until I came around to learn about <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Firefox/Releases/1.5/Using_Firefox_1.5_caching">Back-Forward Caching</a> a.k.a <strong>bfcache</strong>, which allows the user to navigate between pages faster. That's a good thing, though!</p>
+
+<p>But that didn't help resolve my issue, so I thought of going around with a tiny hack:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nb">window</span><span class="p">.</span><span class="nx">onpageshow</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">event</span><span class="p">.</span><span class="nx">persisted</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="p">.</span><span class="nx">reload</span><span class="p">()</span><span class="w"> </span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">};</span>
+</code></pre>
+</div>
+
+<p>The code above will look any persistence of the <code>onpageshow</code> event. Initially, it's set to <code>false</code> and if the page is loaded from <strong>bfcache</strong>, it'll set to <code>true</code>.</p>
+
+<p>I wouldn't really consider this as a solution as it only worked on Safari instead of Chrome or Firefox.</p>
+
+<p>But hey, it gets the job done! &#x1F602;</p>
+
+	</div>
+	<div class="article-footer">
+		<time>August 30th, 2020</time>
 		<ul class="tags">
 			
 			<li>
@@ -183,370 +473,38 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-duplicate-tables-in-mysql">How to duplicate tables in MySQL?</a></h1>
+		<h1 class="heading"><a href="/til/posts/refresh-browser-window-without-query-parameters">Refresh browser window without query parameters</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>This trick comes in handy whenever you wanted to reuse a table, perform data migrations or maybe even take a backup of the table before any of your experiments mess up your data.</p>
-
-<p>Executing the following query will help you create a new table with the structure of the old table:</p>
+		<p>If you want to reload the current page in your browser without any query string or parameters, here's how you can do it:</p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="k">schema</span><span class="p">.</span><span class="n">new_table</span><span class="w"> </span><span class="k">LIKE</span><span class="w"> </span><span class="k">schema</span><span class="p">.</span><span class="n">old_table</span><span class="p">;</span>
+<pre><span></span><code><span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="p">.</span><span class="nx">pathname</span><span class="p">;</span>
 </code></pre>
 </div>
 
-<p>If you want the data as well, try this:</p>
+<p>By doing so, it'll preserve the HTTP/HTTPS protocols of the URL and also remove the fragments that start with a <code>#</code>.</p>
+
+<p>If you want to preserve the fragments, you can try this:</p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="k">schema</span><span class="p">.</span><span class="n">new_table</span><span class="w"> </span><span class="k">LIKE</span><span class="w"> </span><span class="k">schema</span><span class="p">.</span><span class="n">old_table</span><span class="p">;</span>
-<span class="k">INSERT</span><span class="w"> </span><span class="k">schema</span><span class="p">.</span><span class="n">new_table</span><span class="w"> </span><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="k">schema</span><span class="p">.</span><span class="n">old_table</span><span class="p">;</span>
+<pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">reloadURL</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="p">.</span><span class="nx">pathname</span><span class="p">;</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">fragments</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="p">.</span><span class="nx">part</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="kc">undefined</span><span class="p">)</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;#&quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="p">.</span><span class="nx">part</span><span class="p">;</span>
+<span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">reloadURL</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">fragments</span><span class="p">;</span>
 </code></pre>
 </div>
-
-<p>You can use this query to copy tables from one schema to another schema too. Hope this helps you out! &#x1F604;</p>
-
-	</div>
-	<div class="article-footer">
-		<time>July 18th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/mysql/">
-					MySQL
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/find-the-number-of-uppercase-and-lowercase-letters-in-a-string">Find the number of uppercase and lowercase letters in a string</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>The usual approach of counting the number of uppercase and lower letters in a string is done by using a counter and a loop:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">upperCount</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0</span><span class="p">;</span>
-<span class="kd">var</span><span class="w"> </span><span class="nx">lowerCount</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0</span><span class="p">;</span>
-<span class="kd">var</span><span class="w"> </span><span class="nx">str</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;AbCdEfGhiJkL&quot;</span><span class="p">;</span>
-<span class="k">for</span><span class="p">(</span><span class="kd">var</span><span class="w"> </span><span class="nx">i</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">&lt;</span><span class="nx">str</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">++</span><span class="p">){</span>
-<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="nx">str</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nx">str</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">toUpperCase</span><span class="p">()){</span>
-<span class="w">        </span><span class="nx">upperCount</span><span class="o">++</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="k">else</span><span class="p">{</span>
-<span class="w">        </span><span class="nx">lowerCount</span><span class="o">++</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="p">}</span>
-</code></pre>
-</div>
-
-<p>That's nice but here's shorter and faster implementation:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">str</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;AbCdEfGhiJkL&quot;</span><span class="p">;</span>
-<span class="kd">var</span><span class="w"> </span><span class="nx">lowerCount</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">str</span><span class="p">.</span><span class="nx">length</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">str</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/[A-Z]/g</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">).</span><span class="nx">length</span><span class="p">;</span>
-<span class="kd">var</span><span class="w"> </span><span class="nx">upperCount</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">str</span><span class="p">.</span><span class="nx">length</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">str</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/[a-z]/g</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">).</span><span class="nx">length</span><span class="p">;</span>
-</code></pre>
-</div>
-
-<p>The <code>lowerCount</code> variable is taking the difference of the lengths between the original string and the string with lowercase letters only because the <code>.replace()</code> method replaced the pattern of uppercase letters <code>[A-Z]</code> with empty spaces. The <code>upperCount</code> variable does the opposite of what the <code>lowerCount</code> variable does.</p>
-
-<p>Hope you found this trick useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>July 18th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/regular-expressions/">
-					Regular Expressions
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/replace-all-occurrences-found-on-a-string-using-regular-expressions">Replace all occurrences found on a string using Regular Expressions</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Let's say you have the following string and you must replace all occurrences of <strong>"Hello"</strong> with <strong>"Bye"</strong>:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">str</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Hello Hello Hello World&quot;</span><span class="p">;</span>
-</code></pre>
-</div>
-
-<p>You may think of using the <code>.replace()</code> method to solve this problem:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">newStr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">str</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="s2">&quot;Hello&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Bye&quot;</span><span class="p">)</span>
-</code></pre>
-</div>
-
-<p>But unfortunately, it only replaces the first occurrence in the string:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">newStr</span><span class="p">);</span><span class="w"> </span><span class="c1">// returns &quot;Bye Hello Hello World&quot; as the output.</span>
-</code></pre>
-</div>
-
-<p>Using the power of Regular Expressions, you can replace all occurrences in one go:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="kd">function</span><span class="w"> </span><span class="nx">replaceAll</span><span class="p">(</span><span class="nx">str</span><span class="p">,</span><span class="w"> </span><span class="nx">search</span><span class="p">,</span><span class="w"> </span><span class="nx">replace</span><span class="p">){</span>
-<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">re</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nb">RegExp</span><span class="p">(</span><span class="nx">search</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;g&quot;</span><span class="p">);</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">str</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="nx">re</span><span class="p">,</span><span class="w"> </span><span class="nx">replace</span><span class="p">);</span>
-<span class="p">}</span><span class="w">    </span>
-</code></pre>
-</div>
-
-<p>Now, when you execute the following, you'll get a string that replaced all occurrences:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">newStr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">replaceAll</span><span class="p">(</span><span class="nx">str</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Hello&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Bye&quot;</span><span class="p">);</span>
-<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">newStr</span><span class="p">);</span><span class="w"> </span><span class="c1">// returns &quot;Bye Bye Bye World&quot; as the output.</span>
-</code></pre>
-</div>
-
-<p>Until next time, then!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>July 18th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/regular-expressions/">
-					Regular Expressions
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/create-a-unique-multidimensional-array-using-a-key-index">Create a unique multidimensional array using a key index</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Let's say, you have a multidimensional array like this:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="nv">$cars</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="p">[</span>
-        <span class="s2">&quot;id&quot;</span> <span class="o">=&gt;</span> <span class="mi">1</span><span class="p">,</span>
-        <span class="s2">&quot;name&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;Mercedes Benz&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;color&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;Black&quot;</span>
-    <span class="p">],</span>
-    <span class="p">[</span>
-        <span class="s2">&quot;id&quot;</span> <span class="o">=&gt;</span> <span class="mi">2</span><span class="p">,</span>
-        <span class="s2">&quot;name&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;Toyota&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;color&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;Red&quot;</span>
-    <span class="p">],</span>
-    <span class="p">[</span>
-        <span class="s2">&quot;id&quot;</span> <span class="o">=&gt;</span> <span class="mi">3</span><span class="p">,</span>
-        <span class="s2">&quot;name&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;Toyota&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;color&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;White&quot;</span>
-    <span class="p">],</span>
-    <span class="p">[</span>
-        <span class="s2">&quot;id&quot;</span> <span class="o">=&gt;</span> <span class="mi">4</span><span class="p">,</span>
-        <span class="s2">&quot;name&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;Nissan&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;color&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;Grey&quot;</span>
-    <span class="p">],</span>
-<span class="p">];</span>
-<span class="cp">?&gt;</span>
-</code></pre>
-</div>
-
-<p>And say, you want to be able to return unique cars by <code>name</code> or <code>color</code>, use this method:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="k">function</span> <span class="nf">multi_array_unique</span><span class="p">(</span><span class="nv">$array</span><span class="p">,</span> <span class="nv">$key</span><span class="p">)</span> <span class="p">{</span>
-    <span class="nv">$i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-    <span class="nv">$temp_array</span> <span class="o">=</span> <span class="p">[];</span>
-    <span class="nv">$key_array</span> <span class="o">=</span> <span class="p">[];</span>
-
-    <span class="k">foreach</span><span class="p">(</span><span class="nv">$array</span> <span class="k">as</span> <span class="nv">$val</span><span class="p">)</span> <span class="p">{</span>
-        <span class="c1">// insert only unique keys</span>
-        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nb">in_array</span><span class="p">(</span><span class="nv">$val</span><span class="p">[</span><span class="nv">$key</span><span class="p">],</span> <span class="nv">$key_array</span><span class="p">))</span> <span class="p">{</span>
-            <span class="nv">$key_array</span><span class="p">[</span><span class="nv">$i</span><span class="p">]</span> <span class="o">=</span> <span class="nv">$val</span><span class="p">[</span><span class="nv">$key</span><span class="p">];</span>
-            <span class="nv">$temp_array</span><span class="p">[</span><span class="nv">$i</span><span class="p">]</span> <span class="o">=</span> <span class="nv">$val</span><span class="p">;</span>
-        <span class="p">}</span>
-        <span class="nv">$i</span><span class="o">++</span><span class="p">;</span>
-    <span class="p">}</span>
-    <span class="k">return</span> <span class="nv">$temp_array</span><span class="p">;</span>
-<span class="p">}</span>
-<span class="cp">?&gt;</span>
-</code></pre>
-</div>
-
-<p>Call this method from anywhere in your code like this:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="nv">$unique_cars</span> <span class="o">=</span> <span class="nx">multi_array_unique</span><span class="p">(</span><span class="nv">$cars</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">);</span>
-<span class="nx">dd</span><span class="p">(</span><span class="nv">$unique_cars</span><span class="p">);</span>
-<span class="cp">?&gt;</span>
-</code></pre>
-</div>
-
-<p>And now, you'll get something like this:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="p">[</span>
-    <span class="p">[</span>
-        <span class="s2">&quot;id&quot;</span> <span class="o">=&gt;</span> <span class="mi">1</span><span class="p">,</span>
-        <span class="s2">&quot;name&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;Mercedes Benz&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;color&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;Black&quot;</span>
-    <span class="p">],</span>
-    <span class="p">[</span>
-        <span class="s2">&quot;id&quot;</span> <span class="o">=&gt;</span> <span class="mi">2</span><span class="p">,</span>
-        <span class="s2">&quot;name&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;Toyota&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;color&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;Red&quot;</span>
-    <span class="p">],</span>
-    <span class="p">[</span>
-        <span class="s2">&quot;id&quot;</span> <span class="o">=&gt;</span> <span class="mi">4</span><span class="p">,</span>
-        <span class="s2">&quot;name&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;Nissan&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;color&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;Grey&quot;</span>
-    <span class="p">],</span>
-<span class="p">];</span>
-<span class="cp">?&gt;</span>
-</code></pre>
-</div>
-
-<p>You might wonder why I tried this instead of PHP's <code>array_unique()</code> method and the reason I didn't use it is because it doesn't support multidimensional arrays.</p>
 
 <p>Hope you found this useful!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>July 18th, 2020</time>
+		<time>August 29th, 2020</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/php/">
-					PHP
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/extract-youtube-channel-id-from-url">Extract YouTube Channel ID from URL</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Using PHP's in-built function, <code>parse_url</code>, you can write a helper method to pull the channel ID off a YouTube URL especially if you're pulling videos using YouTube's Data API. Here's the code:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="k">public</span> <span class="k">function</span> <span class="nf">extractChannelID</span><span class="p">(</span><span class="nv">$url</span><span class="p">){</span>
-    <span class="c1">// Parse the link and trim any whitespaces</span>
-    <span class="nv">$parsed_link</span> <span class="o">=</span> <span class="nb">parse_url</span><span class="p">(</span><span class="nb">rtrim</span><span class="p">(</span><span class="nv">$url</span><span class="p">,</span> <span class="s1">&#39;/&#39;</span><span class="p">));</span>
-
-    <span class="c1">// Return the channel ID if it matches the pattern</span>
-    <span class="k">if</span> <span class="p">(</span><span class="nb">isset</span><span class="p">(</span><span class="nv">$parsed_link</span><span class="p">[</span><span class="s1">&#39;path&#39;</span><span class="p">])</span> <span class="o">&amp;&amp;</span> <span class="nb">preg_match</span><span class="p">(</span><span class="s1">&#39;/^\/channel\/(([^\/])+?)$/&#39;</span><span class="p">,</span> <span class="nv">$parsed_link</span><span class="p">[</span><span class="s1">&#39;path&#39;</span><span class="p">],</span> <span class="nv">$matches</span><span class="p">))</span> <span class="p">{</span>
-        <span class="k">return</span> <span class="nv">$matches</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
-    <span class="p">}</span>
-
-    <span class="k">throw</span> <span class="k">new</span> <span class="nx">Exception</span><span class="p">(</span><span class="s2">&quot;This </span><span class="si">{</span><span class="nv">$url</span><span class="si">}</span><span class="s2"> is not a valid YouTube channel URL&quot;</span><span class="p">);</span>
-    <span class="k">return</span> <span class="k">null</span><span class="p">;</span>
-<span class="p">}</span>
-<span class="cp">?&gt;</span>
-</code></pre>
-</div>
-
-<p>Writing tiny methods like these can help save time and be reusable in more than one context. </p>
-
-<p>Hope you find this tip useful! &#x1F601;</p>
-
-	</div>
-	<div class="article-footer">
-		<time>July 13th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/php/">
-					PHP
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/using-zipcloak-to-encrypt-files-within-an-archive">Using zipcloak to encrypt files within an archive</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Whenever you're sending a bunch of files or an archive that contains sensitive or confidential information, it's wise to encrypt before you send it to the person that you intend to.</p>
-
-<p>Using <code>zipcloak</code>, you'll be able to encrypt files within your existing archive.</p>
-
-<p>Do the following after you've <a href="til/posts/zip-a-file">created a zip archive</a>:</p>
-
-<div class="codehilite">
-<pre><span></span><code>zipcloak<span class="w"> </span>files.zip<span class="w">    </span>
-</code></pre>
-</div>
-
-<p>Now, you'll be prompted twice to enter a new password and verify your entered password. If they match, your archive will get encrypted. So whenever, you try to unzip or open using an Archive Manager, you'll be prompted to enter the password or else, you won't be able to access it.</p>
-
-<p>You also have the choice of not encrypting the original archive and creating a new one instead, just like this:</p>
-
-<div class="codehilite">
-<pre><span></span><code>zipcloak<span class="w"> </span>files.zip<span class="w"> </span>-O<span class="w"> </span>encrypted.zip<span class="w">    </span>
-</code></pre>
-</div>
-
-<p>On the other hand, if you do wish to remove the encryption from your archive, just type the following:</p>
-
-<div class="codehilite">
-<pre><span></span><code>zipcloak<span class="w"> </span>-d<span class="w"> </span>files.zip
-</code></pre>
-</div>
-
-<p>And you'll be prompted again to enter your password before it removes it's encryption.</p>
-
-<p>Hope this helps you out! &#x1F601;</p>
-
-	</div>
-	<div class="article-footer">
-		<time>July 7th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/linux/">
-					Linux
+				<a href="/category/javascript/">
+					JavaScript
 				</a>
 			</li>
 			
@@ -594,11 +552,11 @@
 		
 	
 		
-			<a class="" href="/pages/10">...</a>
+			<a class="" href="/pages/12">...</a>
 		
 	
 		
-			<a class="" href="/pages/28">28</a>
+			<a class="" href="/pages/30">30</a>
 		
 	
 
@@ -635,28 +593,35 @@
 		<li>
 			<a href="/category/linux/">
 				Linux
-				<span class="count">22</span>
+				<span class="count">24</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/laravel/">
 				Laravel
-				<span class="count">18</span>
+				<span class="count">20</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/devops/">
 				DevOps
-				<span class="count">15</span>
+				<span class="count">20</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/php/">
 				PHP
-				<span class="count">13</span>
+				<span class="count">14</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/git/">
+				Git
+				<span class="count">12</span>
 			</a>
 		</li>
 		
@@ -703,9 +668,9 @@
 		</li>
 		
 		<li>
-			<a href="/category/git/">
-				Git
-				<span class="count">10</span>
+			<a href="/category/mysql/">
+				MySQL
+				<span class="count">9</span>
 			</a>
 		</li>
 		
@@ -720,13 +685,6 @@
 			<a href="/category/unix/">
 				UNIX
 				<span class="count">8</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/mysql/">
-				MySQL
-				<span class="count">7</span>
 			</a>
 		</li>
 		
@@ -748,6 +706,13 @@
 			<a href="/category/essay/">
 				Essay
 				<span class="count">6</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/c/">
+				C#
+				<span class="count">5</span>
 			</a>
 		</li>
 		
@@ -780,16 +745,16 @@
 		</li>
 		
 		<li>
-			<a href="/category/c/">
-				C#
+			<a href="/category/arcade-challenge/">
+				Arcade Challenge
 				<span class="count">4</span>
 			</a>
 		</li>
 		
 		<li>
-			<a href="/category/arcade-challenge/">
-				Arcade Challenge
-				<span class="count">4</span>
+			<a href="/category/databases/">
+				Databases
+				<span class="count">3</span>
 			</a>
 		</li>
 		
@@ -832,6 +797,48 @@
 			<a href="/category/general/">
 				General
 				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/vcs/">
+				VCS
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/ubuntu/">
+				Ubuntu
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/powershell/">
+				PowerShell
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/smtp/">
+				SMTP
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/sql/">
+				SQL
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/net/">
+				.NET
+				<span class="count">2</span>
 			</a>
 		</li>
 		
@@ -941,6 +948,55 @@
 		</li>
 		
 		<li>
+			<a href="/category/phpstorm/">
+				PHPStorm
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/elastic-search/">
+				Elastic Search
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/kibana/">
+				Kibana
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/data-manipulation/">
+				Data Manipulation
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/telnet/">
+				Telnet
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/iis/">
+				IIS
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/centos/">
+				CentOS
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/net-core/">
 				.NET Core
 				<span class="count">1</span>
@@ -1032,22 +1088,8 @@
 		</li>
 		
 		<li>
-			<a href="/category/ubuntu/">
-				Ubuntu
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/ssh/">
 				SSH
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/databases/">
-				Databases
 				<span class="count">1</span>
 			</a>
 		</li>

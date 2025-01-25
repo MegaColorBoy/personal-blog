@@ -78,56 +78,203 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-fetch-a-json-object-from-an-array-of-json-objects-by-property-value">How to fetch a JSON object from an array of JSON objects by property value?</a></h1>
+		<h1 class="heading"><a href="/til/posts/install-nginx-and-php-on-windows">Install NGINX and PHP on Windows</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>Say, for example, you have an array of JSON objects that contains the following data:</p>
+		<p>Thought of writing a small tutorial on how to install NGINX and PHP on Windows. You can also use this as a reference if you wanted to install them on Windows Server too.</p>
+
+<div class="post-notification warning">
+    <h3><i class="ph-warning-light"></i> Note</h3>
+    <p>This tutorial won't teach you how to configure both PHP and NGINX configurations as there are a lot of tutorials focusing on that topic.</p>
+</div>
+
+<h2>Setting up NGINX</h2>
+
+<ol>
+<li>Download <a href="http://nginx.org/en/docs/windows.html">NGINX for Windows</a></li>
+<li>Go to <code>C:/</code> directory and create a folder named <code>C:/nginx</code>.</li>
+<li>Unzip the downloaded <code>.zip</code> file in <code>C:/nginx</code> directory.</li>
+<li>Go to <code>C:/nginx</code> and create two new folders named <code>sites-available</code> and <code>sites-enabled</code>.</li>
+<li>To test, if it's working, double-click on <code>C:/nginx/nginx.exe</code> and type <code>localhost</code> in the browser. You should be able to see a Welcome page.</li>
+<li>Kill the NGINX process from Task Manager.</li>
+</ol>
+
+<h2>Setting up PHP</h2>
+
+<ol>
+<li>Download <a href="https://windows.php.net/downloads/releases/php-8.1.1-nts-Win32-vs16-x64.zip">PHP 8.1 for Windows</a>.</li>
+<li>Go to <code>C:/</code> directory and create a folder named <code>C:/php</code> or if you wanted to have multiple versions, <code>C:/php8.1</code>.</li>
+<li>Unzip the downloaded <code>.zip</code> file in <code>C:/php</code> directory.</li>
+<li>Add PHP to your system environment variables by adding the path <code>C:/php</code></li>
+<li>Open Command Prompt and type <code>php -v</code>. You see should be able to see the version if it's installed correctly.</li>
+</ol>
+
+<h2>Run NGINX and PHP as separate services</h2>
+
+<p>Generally, it's good practice to run both PHP and NGINX as background services or else, you might have to start the processes manually every time the server goes down.</p>
+
+<p>As I was looking for a way to do that, I stumbled upon this post on <a href="https://stackoverflow.com/questions/40846356/run-nginx-as-windows-service">StackOverflow</a> and it was quite helpful.</p>
+
+<h3>Install NSSM Service Manager</h3>
+
+<p>NSSM Service Manager is a free open-source alternative that helps you create a service with the help of GUI. Below are the steps that I followed:</p>
+
+<ol>
+<li>Download <a href="https://nssm.cc/download">NSSM Service Manager</a></li>
+<li>Go to <code>C:/</code> directory and create a folder named <code>C:/nssm</code>.</li>
+<li>Unzip the downloaded <code>.zip</code> file in <code>C:/nssm</code> directory.</li>
+</ol>
+
+<h3>Install NGINX as a service</h3>
+
+<ol>
+<li>Open Command Prompt as an Administrator.</li>
+<li>Go to <code>C:/nssm/win64/</code> directory.</li>
+<li>Type <code>nssm install nginx</code></li>
+<li>Define the path of the <code>nginx.exe</code> file.</li>
+<li>Click on <code>Install Service</code>.</li>
+<li>Press <code>Win+R</code> and type <code>services.msc</code>.</li>
+<li>Look for <code>nginx</code> and start the service.</li>
+<li>Open your browser and type <code>localhost</code> to see if it's working correctly.</li>
+</ol>
+
+<h3>Install PHP as a service</h3>
+
+<ol>
+<li>Open Command Prompt as an Administrator.</li>
+<li>Go to <code>C:/nssm/win64/</code> directory.</li>
+<li>Type <code>nssm install php</code></li>
+<li>Define the path of the <code>php-cgi.exe</code> file.</li>
+<li>Add the arguments: <code>-b 127.0.0.1:9000</code></li>
+<li>Click on <code>Install Service</code>.</li>
+<li>Press <code>Win+R</code> and type <code>services.msc</code>.</li>
+<li>Look for <code>php</code> and start the service.</li>
+</ol>
+
+<h3>Test to see if it works!</h3>
+
+<p>Before you proceed with the following steps, ensure that you include the <code>*.conf</code> files from the <code>sites-enabled</code> folder in your <code>nginx.conf</code> file.</p>
+
+<p>Add the line <code>include "C:/nginx/sites-enabled/*.conf";</code> in your <code>nginx.conf</code> file and follow the steps below:</p>
+
+<ol>
+<li>Go to <code>C:/nginx/sites-available</code> directory and create <code>example.com.conf</code>.</li>
+<li>Go to <code>C:/nginx/html</code> and create directory.</li>
+<li>Refer to the <a href="#nginx-config">sample configuration</a> provided and make the necessary changes.</li>
+<li>To enable the site, you have to create a symlink: <code>mklink "C:\nginx\sites-enabled\example.com.conf" "C:\nginx\sites-available\example.com.conf"</code>.</li>
+<li>Ensure the configuration doesn't have any errors by typing <code>nginx -t</code> in <code>C:/nginx</code> directory.</li>
+<li>Restart the NSSM service.</li>
+<li>Add an entry in your hosts file: <code>127.0.0.1 example.com</code>.</li>
+<li>And you're done!</li>
+</ol>
+
+<div class="post-notification warning">
+    <h3><i class="ph-warning-light"></i> Tip</h3>
+    <p>If you get a "Connection Refused" or error that is similar to that, it's most probably due to firewall or maybe the PHP service isn't running.</p>
+</div>
+
+<h3>Useful commands while using NSSM</h3>
 
 <div class="codehilite">
-<pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">arrOfObjects</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;John Doe&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nx">age</span><span class="o">:</span><span class="w"> </span><span class="mf">20</span><span class="p">,</span>
-<span class="w">        </span><span class="nx">email</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;john.doe@email.com&quot;</span>
-<span class="w">    </span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Bob Smith&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nx">age</span><span class="o">:</span><span class="w"> </span><span class="mf">56</span><span class="p">,</span>
-<span class="w">        </span><span class="nx">email</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;bob.smith@email.com&quot;</span>
-<span class="w">    </span><span class="p">},</span>
-<span class="p">];</span>
+<pre><span></span><code><span class="c1"># Start a service</span>
+nssm<span class="w"> </span>start<span class="w"> </span><span class="s2">&quot;servicename&quot;</span><span class="w"> </span>
+
+<span class="c1"># Restart a service</span>
+nssm<span class="w"> </span>restart<span class="w"> </span><span class="s2">&quot;servicename&quot;</span><span class="w"> </span>
+
+<span class="c1"># Stop a service</span>
+nssm<span class="w"> </span>stop<span class="w"> </span><span class="s2">&quot;servicename&quot;</span><span class="w"> </span>
+
+<span class="c1"># Install a service</span>
+nssm<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;servicename&quot;</span><span class="w"> </span>
+
+<span class="c1"># Remove/Uninstall a service</span>
+nssm<span class="w"> </span>remove<span class="w"> </span><span class="s2">&quot;servicename&quot;</span><span class="w"> </span>
 </code></pre>
 </div>
 
-<p>Hmm, that's pretty basic but how will get the information of "Bob Smith" using his email? Well, that's where the <code>Array.find()</code> method comes into the picture.</p>
-
-<p>Try reading the <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/find">Mozilla Documentation</a> on <code>Array.prototype.find()</code> and implement the following:</p>
+<h3>Sample NGINX Virtual Host Configuration</h3>
 
 <div class="codehilite">
-<pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;email&quot;</span><span class="p">;</span>
-<span class="kd">var</span><span class="w"> </span><span class="nx">valueToFind</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;bob.smith@email.com&quot;</span><span class="p">;</span>
-<span class="kd">var</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">arrOfObjects</span><span class="p">.</span><span class="nx">find</span><span class="p">(</span><span class="nx">obj</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">obj</span><span class="p">[</span><span class="nx">key</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nx">value</span><span class="p">;</span>
-<span class="p">});</span>
+<pre><span></span><code>server<span class="w"> </span><span class="o">{</span>
 
-<span class="c1">//This should give you the record of Bob Smith.</span>
-<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">result</span><span class="p">)</span><span class="w"> </span>
+<span class="w">    </span><span class="c1"># Your Domain Name</span>
+<span class="w">    </span>listen<span class="w"> </span><span class="m">80</span><span class="p">;</span>
+<span class="w">    </span>server_name<span class="w"> </span>example.com<span class="p">;</span>
+
+<span class="w">    </span>autoindex<span class="w"> </span>off<span class="p">;</span>
+<span class="w">    </span>add_header<span class="w"> </span>X-Frame-Options<span class="w"> </span><span class="s2">&quot;SAMEORIGIN&quot;</span><span class="p">;</span>
+<span class="w">    </span>add_header<span class="w"> </span>Strict-Transport-Security<span class="w"> </span><span class="s2">&quot;max-age=31536000; includeSubDomains&quot;</span><span class="w"> </span>always<span class="p">;</span>
+<span class="w">    </span>add_header<span class="w"> </span>X-Content-Type-Options<span class="w"> </span><span class="s2">&quot;nosniff&quot;</span><span class="p">;</span>
+<span class="w">    </span>add_header<span class="w"> </span>X-XSS-Protection<span class="w"> </span><span class="s2">&quot;1; mode=block&quot;</span><span class="p">;</span>
+<span class="w">    </span>add_header<span class="w"> </span>Access-Control-Allow-Origin<span class="w"> </span>*<span class="p">;</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="o">(</span>!-e<span class="w"> </span><span class="nv">$request_filename</span><span class="o">)</span><span class="w"> </span><span class="o">{</span>
+<span class="w">        </span>rewrite<span class="w">  </span>^/<span class="o">[</span>_0-9a-zA-Z-<span class="o">]</span>+<span class="o">(</span>/wp-<span class="o">(</span>content<span class="p">|</span>admin<span class="p">|</span>includes<span class="o">)</span>.*<span class="o">)</span><span class="w"> </span><span class="nv">$1</span><span class="w"> </span><span class="k">break</span><span class="p">;</span>
+<span class="w">        </span>rewrite<span class="w">  </span>^/<span class="o">[</span>_0-9a-zA-Z-<span class="o">]</span>+<span class="o">(</span>/.*<span class="se">\.</span>php<span class="o">)</span>$<span class="w"> </span><span class="nv">$1</span><span class="w"> </span><span class="k">break</span><span class="p">;</span>
+<span class="w">    </span><span class="o">}</span>
+
+<span class="w">    </span><span class="c1"># Uncomment these lines if SSL is provided</span>
+<span class="w">    </span><span class="c1">#==========================</span>
+<span class="w">    </span><span class="c1">#listen 443 ssl;</span>
+<span class="w">    </span><span class="c1">#ssl_certificate your-ssl.pem;</span>
+<span class="w">    </span><span class="c1">#ssl_certificate_key your-ssl.key;</span>
+<span class="w">    </span><span class="c1">#ssl_protocols TLSv1 TLSv1.1 TLSv1.2; </span>
+<span class="w">    </span><span class="c1">#ssl_prefer_server_ciphers on;</span>
+<span class="w">    </span><span class="c1">#ssl_ciphers &#39;EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH&#39;;</span>
+<span class="w">    </span><span class="c1">#==========================</span>
+
+<span class="w">    </span><span class="c1"># Log files for Debugging</span>
+<span class="w">    </span>access_log<span class="w"> </span>logs/example-access.log<span class="p">;</span>
+<span class="w">    </span>error_log<span class="w"> </span>logs/example-error.log<span class="p">;</span>
+
+<span class="w">    </span><span class="c1"># Directory</span>
+<span class="w">    </span>root<span class="w"> </span><span class="s2">&quot;C:/nginx/html/example.com&quot;</span><span class="p">;</span>
+<span class="w">    </span>index<span class="w"> </span>index.php<span class="w"> </span>index.html<span class="w"> </span>index.htm<span class="p">;</span>
+
+<span class="w">    </span>location<span class="w"> </span>/<span class="w"> </span><span class="o">{</span>
+<span class="w">        </span>try_files<span class="w"> </span><span class="nv">$uri</span><span class="w"> </span><span class="nv">$uri</span>/<span class="w"> </span>/index.php?<span class="nv">$query_string</span><span class="p">;</span>
+<span class="w">    </span><span class="o">}</span>
+
+<span class="w">    </span>location<span class="w"> </span>~<span class="w"> </span>/<span class="se">\.</span><span class="o">(</span>?!well-known<span class="o">)</span>.*<span class="w"> </span><span class="o">{</span>
+<span class="w">        </span>deny<span class="w"> </span>all<span class="p">;</span>
+<span class="w">        </span>access_log<span class="w"> </span>off<span class="p">;</span>
+<span class="w">        </span>log_not_found<span class="w"> </span>off<span class="p">;</span>
+<span class="w">    </span><span class="o">}</span>
+
+<span class="w">    </span><span class="c1"># Deny yaml, twig, markdown, ini file access</span>
+<span class="w">    </span>location<span class="w"> </span>~*<span class="w"> </span>/.+<span class="se">\.</span><span class="o">(</span>markdown<span class="p">|</span>md<span class="p">|</span>twig<span class="p">|</span>yaml<span class="p">|</span>yml<span class="p">|</span>ini<span class="o">)</span>$<span class="w"> </span><span class="o">{</span>
+<span class="w">        </span>deny<span class="w"> </span>all<span class="p">;</span>
+<span class="w">        </span>access_log<span class="w"> </span>off<span class="p">;</span>
+<span class="w">        </span>log_not_found<span class="w"> </span>off<span class="p">;</span>
+<span class="w">    </span><span class="o">}</span>
+
+<span class="w">    </span><span class="c1"># PHP-FPM Configuration Nginx</span>
+<span class="w">    </span>location<span class="w"> </span>~<span class="w"> </span><span class="se">\.</span>php$<span class="w"> </span><span class="o">{</span>
+<span class="w">        </span>fastcgi_pass<span class="w">   </span><span class="m">127</span>.0.0.1:9000<span class="p">;</span>
+<span class="w">        </span>fastcgi_index<span class="w">  </span>index.php<span class="p">;</span>
+<span class="w">        </span>fastcgi_param<span class="w">  </span>SCRIPT_FILENAME<span class="w">  </span><span class="nv">$document_root$fastcgi_script_name</span><span class="p">;</span>
+<span class="w">        </span>include<span class="w">        </span>fastcgi_params<span class="p">;</span>
+<span class="w">    </span><span class="o">}</span>
+<span class="o">}</span>
 </code></pre>
 </div>
 
-<p>This works fine on all browsers except <strong>Internet Explorer</strong> (I mean, it sucks anyways!), which is okay!</p>
+<h2>Conclusion</h2>
 
-<p>Hope you found this useful!</p>
+<p>If you've gotten this far, give yourself a pat in the back.</p>
+
+<p>Hope you've found this tutorial useful and please share it with your friends and colleagues if they really need it!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>August 13th, 2021</time>
+		<time>February 27th, 2022</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/javascript/">
-					JavaScript
+				<a href="/category/tutorial/">
+					Tutorial
 				</a>
 			</li>
 			
@@ -139,27 +286,59 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-update-values-of-a-column-from-one-table-to-another">How to update values of a column from one table to another?</a></h1>
-		<p class="description"></p>
+		<h1 class="heading"><a href="/writings/posts/i-switched-to-fedora-35">I switched to Fedora 35</a></h1>
+		<p class="description">Switched from Void Linux to Fedora 35</p>
 	</div>
 	<div class="article-body">
-		<p>Sometimes, I come across situations where I would need to update a newly added in a pivot table and this query does come in handy:</p>
+		<p>Yes, I distro-hopped again but I guess it's a meaningful decision.</p>
 
-<div class="codehilite">
-<pre><span></span><code><span class="k">UPDATE</span><span class="w"> </span><span class="n">table_a</span><span class="w"> </span><span class="k">INNER</span><span class="w"> </span><span class="k">JOIN</span><span class="w"> </span><span class="n">table_b</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">table_b</span><span class="p">.</span><span class="n">col_x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">table_a</span><span class="p">.</span><span class="n">col_x</span><span class="w"> </span><span class="k">SET</span><span class="w"> </span><span class="n">table_a</span><span class="p">.</span><span class="n">col_y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">table_b</span><span class="p">.</span><span class="n">col_y</span><span class="p">;</span>
-</code></pre>
-</div>
+<p>I was using Void Linux with an <code>i3wm</code> tiling manager setup to see if it would improve my programming productivity.</p>
 
-<p>Hope you found this useful too!</p>
+<p>I've got to say that <code>i3wm</code> is an amazing tiling manager and if you are into tiling windows, this should be something worth of your time.</p>
+
+<p>On the other hand, I thought of trying out Void Linux because I was tired of Ubuntu and it's bloat, whereas Void Linux is quite minimal and lightweight.</p>
+
+<h2>Then, why leave it?</h2>
+
+<p>It has a good package manager that is similar to Arch's AUR repository but the lack of documentation and updates made me feel that there's barely contributions for it.</p>
+
+<p>I had issues using docker and virtualbox in it, often giving me compatibility issues at times, which left me frustrated.</p>
+
+<h2>Hello, Fedora!</h2>
+
+<p>When I decided to distro-hop, I had to give myself some time and research as to which distro would really suit me as a programmer and that would just work out of the box.</p>
+
+<p>I wanted something that:</p>
+
+<ul>
+<li>is developer-oriented.</li>
+<li>stable but bleeding-edge.</li>
+<li>just works out-of-the-box.</li>
+<li>has a minimal and clean looking interface.</li>
+</ul>
+
+<p>That's when Fedora came into the picture and according to what I have researched especially on forums like Reddit, it's directed towards programmers and sysadmins.</p>
+
+<p>Another sellout point for me was RedHat because I use CentOS at my workplace to configure and deploy web applications.</p>
+
+<p>RedHat developers are really dedicated and ensure that they push the stable yet bleeding-edge releases.</p>
+
+<p>The installation process was smooth and the new Gnome 41 is a bliss.</p>
+
+<p>I didn't want to use <code>i3wm</code> this time because I felt that I always tiled multiple terminal windows, so I thought I would replace that with <code>tmux</code> instead. And besides, I don't really want to spend a lot of time tinkering each and every part of my UI, I'd rather spend that time writing code that solves problems instead.</p>
+
+<p>Let's see how long Fedora would last!</p>
+
+<p>Until next time, then!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>August 13th, 2021</time>
+		<time>February 20th, 2022</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/mysql/">
-					MySQL
+				<a href="/category/productivity/">
+					Productivity
 				</a>
 			</li>
 			
@@ -171,220 +350,29 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-switch-between-integrated-terminal-and-editor-in-visual-studio-code">How to switch between integrated terminal and editor in Visual Studio Code?</a></h1>
+		<h1 class="heading"><a href="/til/posts/count-the-number-of-matches-of-a-pattern-in-vim">Count the number of matches of a pattern in VIM</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>While, I'm trying to adjust myself to using Visual Studio Code, I found it quite annoying that there isn't a shortcut to switch focus between the editor and the integrated terminal. For a guy, like me, who makes use of the keyboard all the time, that's pretty important.</p>
-
-<p>I did some research and found a way on how to do it. Just type <code>Ctrl+Shift+P</code> and type <code>Open Keyboard Shortcuts</code> and add these lines:</p>
+		<p>You can the count the number of matches of a pattern by using the <code>n</code> flag while using the substitute command. Try the following command:</p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="p">[</span>
-<span class="w">    </span><span class="p">{</span><span class="nt">&quot;key&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ctrl+`&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;command&quot;</span><span class="p">:</span><span class="s2">&quot;workbench.action.terminal.focus&quot;</span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span><span class="nt">&quot;key&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ctrl+`&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;command&quot;</span><span class="p">:</span><span class="s2">&quot;workbench.action.focusActiveEditorGroup&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;when&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;terminalFocus&quot;</span><span class="p">},</span>
-<span class="p">]</span>
+<pre><span></span><code>:%s/something//gn
 </code></pre>
 </div>
 
-<p>Save the file and now, you'll be able to switch between the two by pressing <code>Ctrl+`</code> keys.</p>
+<p>If you want to know on how many lines it matches, just omit the <code>g</code> flag:</p>
 
-<p>Hope you found this tip useful!</p>
+<div class="codehilite">
+<pre><span></span><code>:%s/something//n
+</code></pre>
+</div>
+
+<p>Hope this tip helped you out!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>July 21st, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/vscode/">
-					VSCode
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/redirect-from-http-to-https-in-apache-virtualhosts">Redirect from HTTP to HTTPS in Apache VirtualHosts</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Here's a simple technique on how I learned to redirect a site from HTTP to HTTPS automatically using Apache's VirtualHost configuration.</p>
-
-<p>Go to your configuration file or <code>000-default.conf</code> and modify your configuration to something like this:</p>
-
-<div class="codehilite">
-<pre><span></span><code>&lt;VirtualHost<span class="w"> </span>*:80&gt;
-<span class="w">    </span>ServerName<span class="w"> </span>your.domain.com
-<span class="w">    </span>Redirect<span class="w"> </span>permanent<span class="w"> </span>/<span class="w"> </span>https://your.domain.com/
-&lt;/VirtualHost&gt;
-
-&lt;VirtualHost<span class="w"> </span>*:443&gt;
-<span class="w">    </span>ServerName<span class="w"> </span>your.domain.com
-<span class="w">    </span>SSLEngine<span class="w"> </span>On
-<span class="w">    </span><span class="c1"># insert code here...</span>
-&lt;/VirtualHost&gt;
-</code></pre>
-</div>
-
-<p>Save the file and check if the configuration is correct before your restart the server:</p>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>apachectl<span class="w"> </span>configtest
-</code></pre>
-</div>
-
-<p>If you get the message, <code>Syntax OK</code>, then go ahead and restart the server:</p>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class="w"> </span>apache2
-</code></pre>
-</div>
-
-<p>Now, your visitors will be redirected from HTTP to HTTPS automatically!</p>
-
-<p>Hope you found this tip useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>July 9th, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/devops/">
-					DevOps
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/quick-search-for-file-in-your-workspace-in-visual-studio-code">Quick Search for file in your workspace in Visual Studio Code</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Recently, started using Visual Studio Code as I'm yet figure out a way to install Sublime Text on Void Linux (using it as my current daily driver).</p>
-
-<p>I'm always used to looking for my files using keyboard shortcuts in Sublime Text and I was kind of surprised this feature isn't enabled by default in Visual Studio Code.</p>
-
-<p>Anyway, after a little digging, I found out that adding this line to your <code>settings.json</code> file would allow you to look for files in your workspace:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="nt">&quot;search.useIgnoreFiles&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
-</code></pre>
-</div>
-
-<p>And, now try <code>Ctrl+P</code> and you'll be able to search for your file(s) easily.</p>
-
-<p>Hope you found this tip useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>July 9th, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/vscode/">
-					VSCode
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-install-composer-manually">How to install Composer manually?</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>You may wonder <strong>"why not install Composer via apt or yum package manager?"</strong> and yes, it can be installed that way too.</p>
-
-<p>But what if you are using old composer packages or you wanted to skip the checks done during the interactive installation routine, this could be the way for you.</p>
-
-<p>I wouldn't really call it an advanced technique or something but if you know what you're doing, then you should be in the right direction.</p>
-
-<p>The below snippet will show you how to install it manually:</p>
-
-<div class="codehilite">
-<pre><span></span><code>wget<span class="w"> </span><span class="s2">&quot;https://getcomposer.org/download/VERSION_X.X.X/composer.phar&quot;</span>
-sudo<span class="w"> </span>mv<span class="w"> </span>composer.phar<span class="w"> </span>/usr/local/bin/composer
-sudo<span class="w"> </span>chmod<span class="w"> </span>a+x<span class="w"> </span>/usr/local/bin/composer
-</code></pre>
-</div>
-
-<h2>Yes, that's it!</h2>
-
-<p>By placing Composer in the <code>/usr/local/bin</code> directory, it will be accessible from any directory within the system and you can run it globally.</p>
-
-<p>To check if you've installed it correctly, just do the following:</p>
-
-<div class="codehilite">
-<pre><span></span><code>composer<span class="w"> </span>-V
-</code></pre>
-</div>
-
-<p>Hope you found this tip useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>July 3rd, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/tooling/">
-					Tooling
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/prevent-vim-from-creating-swapfiles">Prevent VIM from creating swapfiles</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>I like VIM and use it regularly to write and edit code on a daily basis but I always find the creation of <code>.swp</code> files really annoying.</p>
-
-<p>If you find them annoying too, you disable them temporarily in the editor, like this:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="p">:</span><span class="k">set</span> <span class="nb">noswapfile</span>
-</code></pre>
-</div>
-
-<p>Or if you want to disable it permanently, just add this line in your <code>.vimrc</code> file:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">set</span> <span class="nb">noswapfile</span>
-</code></pre>
-</div>
-
-<p>Don't get me wrong, I'm not saying that you should dislike <code>.swp</code> files because if the editor crashes or your computer/server crashes in midway, those files can save your progress.</p>
-
-<p>Hope you found this tip useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>July 3rd, 2021</time>
+		<time>January 16th, 2022</time>
 		<ul class="tags">
 			
 			<li>
@@ -401,71 +389,365 @@ sudo<span class="w"> </span>chmod<span class="w"> </span>a+x<span class="w"> </s
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-setup-rsync-with-passwordless-ssh-on-unixlinux">How to setup rsync with passwordless SSH on UNIX/Linux?</a></h1>
+		<h1 class="heading"><a href="/til/posts/count-the-number-of-word-occurences-in-a-text-file-using-grep">Count the number of word occurences in a text file using grep</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>Tired of ensuring if whether each file in every server is synced? Planning on doing automated backups? If so, then this technique should come in handy for you.</p>
+		<p>If you are using a GUI based application like Microsoft Word of Google Docs, it would be easier for you to know the number of word occurences in a file. But what if you are in a terminal? That's where both <code>grep</code> and <code>wc</code> comes handy tools.</p>
 
-<p>Interested? Then follow the steps below:</p>
-
-<h2>Check if rsync over SSH works</h2>
-
-<p>Before you start, please ensure that you can <code>rsync</code> to your intended server over <code>ssh</code> using a password.
-With the following example, you can just send a simple file over to the intended server and see if it works or not:</p>
+<p>Let's say you have the following text:</p>
 
 <div class="codehilite">
-<pre><span></span><code>rsync<span class="w"> </span>-avz<span class="w"> </span>-e<span class="w"> </span>ssh<span class="w"> </span>test.txt<span class="w"> </span>username@REMOTE_SERVER_IP_OR_DOMAIN:/path/to/folder/
+<pre><span></span><code>The European languages are members of the same family. Their separate existence is a myth. For science, music, sport, etc, Europe uses the same vocabulary.
 </code></pre>
 </div>
 
-<p>Once you execute this command on the terminal, it'll prompt you for a password on the remote server, if it does, then it works.</p>
-
-<h2>Generate SSH Keys</h2>
-
-<p>If you want to do a passwordless SSH, you need to generate public and private SSH keys on the local server by typing the following command on the terminal:</p>
+<p>Now, you can use the <code>grep</code> and <code>wc</code> tool to count the number of times <code>"the"</code> appears in the file:</p>
 
 <div class="codehilite">
-<pre><span></span><code>ssh-keygen
-Enter<span class="w"> </span>passphrase<span class="w"> </span><span class="o">(</span>empty<span class="w"> </span><span class="k">for</span><span class="w"> </span>no<span class="w"> </span>passphrase<span class="o">)</span>:
-Enter<span class="w"> </span>same<span class="w"> </span>passphrase<span class="w"> </span>again:
+<pre><span></span><code>grep<span class="w"> </span>-o<span class="w"> </span>-i<span class="w"> </span><span class="s2">&quot;the&quot;</span><span class="w"> </span>file.txt<span class="w"> </span><span class="p">|</span><span class="w"> </span>wc<span class="w"> </span>-l
 </code></pre>
 </div>
 
-<p>If you're prompted to enter a passphrase, just hit <code>Enter</code> and proceed until the key is generated. Once the keys are generated, they'll be in the <code>~/.ssh</code> directory on your local server.</p>
-
-<h2>Copy public key to remote server</h2>
-
-<p>Using <code>ssh-copy-id</code>, you can copy the public key to the remote server:</p>
-
-<div class="codehilite">
-<pre><span></span><code>ssh-copy-id<span class="w"> </span>-i<span class="w"> </span>~/.ssh/id_rsa.pub<span class="w"> </span>REMOTE_SERVER_IP_OR_DOMAIN
-</code></pre>
-</div>
-
-<p>Once executed, you'll be prompted to enter the password of the account on the remote server and if successful, the public key will be copied to the remote server and will be stored in it's appropriate location.</p>
-
-<h2>Perform Rsync over passwordless SSH</h2>
-
-<p>If you've come this far, then you should be able to SSH to the remote server without entering the password:</p>
-
-<div class="codehilite">
-<pre><span></span><code>ssh<span class="w"> </span>REMOTE_SERVER_IP_OR_DOMAIN
-</code></pre>
-</div>
-
-<p>If it works, then perform the <code>rsync</code> operation again <a href="#rsync-operation">(above)</a> and this time, it shouldn't prompt you to enter any password.</p>
-
-<p>Hope you liked reading this short article!</p>
+<p>Hope this helps you out!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>July 3rd, 2021</time>
+		<time>January 16th, 2022</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/terminal/">
+					Terminal
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/install-mariadb-103-on-void-linux">Install MariaDB 10.3 on Void Linux</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>I tried to find a proper guide on how to install MySQL 8.0 on Void Linux but I couldn't really find any. So, I thought of installing MariaDB 10.3 on my laptop instead.</p>
+
+<p>Don't worry about using MariaDB as it meets the same standard enterprised requirements as MySQL. The only difference is that MySQL belongs to Oracle and MariaDB is for people who wanted to get out of Oracle's hands.</p>
+
+<p>Anyway, let's get started.</p>
+
+<h2>Prerequisites</h2>
+
+<ul>
+<li>Need to have root privileges in order to install packages.</li>
+<li>Basic know-how of Void Linux and it's <code>xbps</code> package manager.</li>
+</ul>
+
+<p>Alright, go ahead and follow these steps one-by-one:</p>
+
+<h3>1. Install MariaDB</h3>
+
+<p>Type the following command to install the package:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>xbps-install<span class="w"> </span>-S<span class="w"> </span>mariadb
+</code></pre>
+</div>
+
+<h3>2. Initialize MySQL data directory</h3>
+
+<p>The following command will initialize a MariaDB data directory and create system tables in the MySQL database, if they are not present.</p>
+
+<div class="codehilite">
+<pre><span></span><code>mysql_install_db<span class="w"> </span>--user<span class="o">=</span>mysql<span class="w"> </span>--basedir<span class="o">=</span>/usr<span class="w"> </span>--datadir<span class="o">=</span>/var/lib/mysql
+</code></pre>
+</div>
+
+<p>The options used:</p>
+
+<ul>
+<li><code>--user</code>: The login user name to use for running the <code>mysqld</code> process.</li>
+<li><code>--basedir</code> The path to the MariaDB installation directory.</li>
+<li><code>--datadir</code>: The path to the MariaDB directory.</li>
+</ul>
+
+<p>To know more about it, you can refer to <a href="https://mariadb.com/kb/en/mysql_install_db/">MariaDB's documentation</a>.</p>
+
+<h3>3. Enable MySQL service</h3>
+
+<p>If you are used to Ubuntu or CentOS, enabling services in Void Linux is a bit different but quite simple. Once a process is symlinked, it will start on boot and restarts if it stops unless you stop the service deliberately.</p>
+
+<p>Type the following command to enable the <code>mysqld</code> service:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>ln<span class="w"> </span>-s<span class="w"> </span>/etc/sv/mysqld<span class="w"> </span>/var/service/mysqld
+</code></pre>
+</div>
+
+<h3>4. Start MySQL service</h3>
+
+<p>Type the following command to start the <code>mysqld</code> service:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>sv<span class="w"> </span>start<span class="w"> </span>mysqld
+</code></pre>
+</div>
+
+<p>To confirm, if the service is running, type the following:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>sv<span class="w"> </span>status<span class="w"> </span>mysqld
+</code></pre>
+</div>
+
+<p>And you'll see something like this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>run:<span class="w"> </span>mysqld:<span class="w"> </span><span class="o">(</span>pid<span class="w"> </span><span class="m">15136</span><span class="o">)</span><span class="w"> </span>1116s<span class="p">;</span><span class="w"> </span>run:<span class="w"> </span>log:<span class="w"> </span><span class="o">(</span>pid<span class="w"> </span><span class="m">15025</span><span class="o">)</span><span class="w"> </span>1172s
+</code></pre>
+</div>
+
+<h3><a id="secure-mysql-installation"></a> 5. Secure MySQL installation</h3>
+
+<p>It's recommended to secure your installation, so type the following command:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>mysql_secure_installation
+</code></pre>
+</div>
+
+<p>Once the command is executed, you'll be prompted with a few questions, respond according to your needs and you're done!</p>
+
+<h3>6. Test MariaDB connection</h3>
+
+<p>Now, all you have to do is, try to log in to your database by typing the following:</p>
+
+<div class="codehilite">
+<pre><span></span><code>mysql<span class="w"> </span>-u<span class="w"> </span>root<span class="w"> </span>-p
+</code></pre>
+</div>
+
+<p>Once executed, it would prompt you for your password (which you must have set in the <a href="#secure-mysql-installation">previous step</a> and if you are able to log in, you are good to go!</p>
+
+<p>Hope this guide helps you out!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>January 16th, 2022</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/databases/">
+					Databases
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/writings/posts/is-selinux-complicated">Is SELinux complicated?</a></h1>
+		<p class="description">If you turn off SELinux for a living, try this.</p>
+	</div>
+	<div class="article-body">
+		<p>This might look a rant post but hear me out, okay?</p>
+
+<p>Ever deployed an application on CentOS and tried to figure out why it isn't working when it's caused due to some permission issue by SELinux enabled?</p>
+
+<p>Yeah, I know how annoying that is. So, whenever I go on StackOverflow, many people suggest to completely turn it off.</p>
+
+<p>Well, it might be tempting to type <code>sudo setenforce 0</code> (which sets SELinux to Permissive mode), I wouldn't really recommend you to edit the SELinux config and disable it completely.</p>
+
+<p>I recently read a blog post on CentOS's official blog and I'd like to quote them for asking this:</p>
+
+<blockquote>
+  <p>But why do articles feel the need to outright deactivate SELinux rather than help readers work through any problems they might have? Is SELinux that hard?</p>
+</blockquote>
+
+<p>Good question. Is it really that hard or is it because we don't really understand it? I think it's the latter.</p>
+
+<h2>But why so?</h2>
+
+<p>I guess, as users, we really need some sort of user interface to receive feedback because not everyone is really good at the terminal and most importantly, not good at memorizing options and flag combinations.</p>
+
+<p>Here's a sample error that I would face sometimes while deploying a Laravel web application on CentOS 7:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="o">[</span>Mon<span class="w"> </span>May<span class="w"> </span><span class="m">16</span><span class="w"> </span><span class="m">11</span>:39:32.996441<span class="w"> </span><span class="m">2016</span><span class="o">]</span><span class="w"> </span><span class="o">[</span>:error<span class="o">]</span><span class="w"> </span><span class="o">[</span>pid<span class="w"> </span><span class="m">2434</span><span class="o">]</span><span class="w"> </span><span class="o">[</span>client<span class="w"> </span>XXX.XXX.XXX.XXX:8080<span class="o">]</span><span class="w"> </span>PHP<span class="w"> </span>Fatal<span class="w"> </span>error:<span class="w">  </span>Uncaught<span class="w"> </span>UnexpectedValueException:<span class="w"> </span>The<span class="w"> </span>stream<span class="w"> </span>or<span class="w"> </span>file<span class="w"> </span><span class="s2">&quot;/var/www/html/MYSITE/storage/logs/laravel.log&quot;</span><span class="w"> </span>could<span class="w"> </span>not<span class="w"> </span>be<span class="w"> </span>opened:<span class="w"> </span>failed<span class="w"> </span>to<span class="w"> </span>open<span class="w"> </span>stream:<span class="w"> </span>Permission<span class="w"> </span>denied<span class="w"> </span><span class="k">in</span><span class="w"> </span>/var/www/html/MYSITE/bootstrap/cache/compiled.php:13701
+Stack<span class="w"> </span>trace:
+<span class="c1">#0 /var/www/html/MYSITE/bootstrap/cache/compiled.php(13635): Monolog\\Handler\\StreamHandler-&gt;write(Array)</span>
+<span class="c1">#1 /var/www/html/MYSITE/bootstrap/cache/compiled.php(13396): Monolog\\Handler\\AbstractProcessingHandler-&gt;handle(Array)</span>
+<span class="c1">#2 /var/www/html/MYSITE/bootstrap/cache/compiled.php(13494): Monolog\\Logger-&gt;addRecord(400, Object(Symfony\\Component\\Debug\\Exception\\FatalErrorException), Array)</span>
+<span class="c1">#3 /var/www/html/MYSITE/bootstrap/cache/compiled.php(13189): Monolog\\Logger-&gt;error(Object(Symfony\\Component\\Debug\\Exception\\FatalErrorException), Array)</span>
+<span class="c1">#4 /var/www/html/MYSITE/bootstrap/cache/compiled.php(13160): Illuminate\\Log\\Writer-&gt;writeLog(&#39;error&#39;, Object(Symfony\\Component\\Debug\\Exception\\FatalErrorException), Array)</span>
+<span class="c1"># in /var/www/html/MYSITE/bootstrap/cache/compiled.php on line 13701</span>
+</code></pre>
+</div>
+
+<p>By looking at this error, you do understand it's permission-related but it doesn't really indicate that it's an SELinux problem because there could be thousands of reasons why there could be such an error. And of course, when I look it up on Google, I do find many people facing the same issue due to SELinux being enabled.</p>
+
+<p>Instead of disabling it completely, I would try doing this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>chcon<span class="w"> </span>-R<span class="w"> </span>-t<span class="w"> </span>httpd_sys_rw_content_t<span class="w"> </span>storage
+</code></pre>
+</div>
+
+<p>And off goes the error and the application didn't give any permission-related issues again.</p>
+
+<p>Is it worth disabling SELinux? No. </p>
+
+<p>But does SELinux have an issue of being user friendly? I guess, yes.</p>
+
+<p>I'm just like you, sometimes, I do switch off SELinux at times when it's critical to deploy the application so that I can leave home early but that's not really a good practice.</p>
+
+<h2>Conclusion</h2>
+
+<p>I do wish that the open source developers of SELinux could do something to make much more friendlier to use? Or maybe, some way that let's the user know what to do instead of letting the user <code>chmod</code>-ing and <code>chown</code>-ing files and directories endlessly. Or worse, completely disabling SELinux!</p>
+
+<p>Hope you found this article interesting!</p>
+
+<p>Stay tuned for more.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>December 25th, 2021</time>
 		<ul class="tags">
 			
 			<li>
 				<a href="/category/devops/">
 					DevOps
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/writings/posts/on-learning-new-technologies">On learning new technologies</a></h1>
+		<p class="description">Sharing my tips on how I learn new technologies at work and home nowadays.</p>
+	</div>
+	<div class="article-body">
+		<p>If you're a programmer, you already know that it's quite a daunting task to keep up with the latest stream of technologies:</p>
+
+<ul>
+<li>Frameworks</li>
+<li>Libraries</li>
+<li>Programming Languages</li>
+<li>Programming Paradigms</li>
+</ul>
+
+<p>And there's never an end to it, it's just an ever-growing thing.</p>
+
+<p>So, whenever I'm walking or commuting, sometimes, these questions pop up in my head:</p>
+
+<ol>
+<li>How can I learn something new without wasting my free-time?</li>
+<li>How can I learn all of the existing technologies out there? Is it possible?</li>
+</ol>
+
+<p>Well, it's technically impossible for me to know about everything &mdash; in and out. Computer Science is such a broad field and has a lot of branches and sub-branches.</p>
+
+<p>However, you can learn a piece of technology just enough to know that it exists and know when to learn more about it when the time arises.</p>
+
+<h2>Don't try to learn everything out there</h2>
+
+<p>In my years of developing web applications, I have seen two types of programmers:</p>
+
+<ol>
+<li>One who has deep knowledge of a particular technology</li>
+<li>An all-rounder but also not-so-deep knowledge about multiple technologies</li>
+</ol>
+
+<p>Where do I fall ? Personally, I feel that I belong to the latter kind because I believe that spending a lot of time trying to specialize or being an expert in one technology is just too time-consuming and given the fact that everyday there's a new framework or programming language released out there, it's better to put yourself in the middle ground.</p>
+
+<p>Why you ask? Here's why:</p>
+
+<ol>
+<li>Technology dies fast. For example, there was a time when jQuery used to be really popular amongst the Front End Developers but today, most of them move towards libraries like ReactJS, VueJS and NextJS to build their projects and sooner or later, another framework will come out to replace ReactJS and become the next thing.</li>
+<li>I don't think most of the technologies out there are relevant to the problem that you are trying to solve. Like why do I need to look into an API about geospatial analytics unless I'm trying to build an application that needs such a requirement, you get it right?</li>
+</ol>
+
+<p>Basically, trying to learn every single piece of technology out there, it's just basically wasting time.</p>
+
+<h2>Ways and source of learning new stuff</h2>
+
+<p>Whenever I wanted to learn a new programming language, I would often go to <a href="https://projecteuler.net">Project Euler</a> to flex my skills and that would help me learn more about it's features. Recently, I started <a href="https://leetcode.org">LeetCode</a> and <a href="#">Advent of Code - 2021</a>. It's quite interesting solving these challenges as it helps you to learn more about the technology and feels good after solving a problem.</p>
+
+<p>The next thing I would recommend is following a tech news feed like <a href="https://news.ycombinator.com">Hacker News</a> but it can get quite addicting and distracting at times. Another good source of information are weekly newsletters. If you don't really know which one to follow, here's a <a href="https://github.com/zudochkin/awesome-newsletters">repository</a> filled with <strong>Awesome Newsletters</strong> that spans various areas like DevOps, Front end, Back end and Data Science. Try signing up on one of them and see how it goes.</p>
+
+<h2>Time is costly, use it wisely</h2>
+
+<p>The brain can only do so much in about 9 to 10 hours a day and in order for you to be efficient and productive in learning new stuff, try the following:</p>
+
+<ol>
+<li>Spend an hour learning, reading or practicing a new tool.</li>
+<li>Interesting stuff but not needed yet? Try bookmarking or make a note of it, so that you can revisit it again.</li>
+<li>If it fits your needs and project requirements, then go ahead and learn it!</li>
+</ol>
+
+<p>If you found this article useful, please share it with your friends and colleagues.</p>
+
+<p>Stay tuned for more!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>December 24th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/productivity/">
+					Productivity
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-create-an-iso-image-from-cdsdvds">How to create an ISO image from CDs/DVDs?</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>I used to create ISO images using DAEMON Tools but I wanted to try something different and see if there's a way to create it using the Linux CLI.</p>
+
+<p>Turns out, you can do in just a single line using the <code>dd</code> utility like so:</p>
+
+<div class="codehilite">
+<pre><span></span><code>dd<span class="w"> </span><span class="k">if</span><span class="o">=</span>/dev/cdrom<span class="w"> </span><span class="nv">of</span><span class="o">=</span>/path/to/your/directory/image.iso
+</code></pre>
+</div>
+
+<p>The <code>if</code> stands for input file and <code>of</code> stands for output file.</p>
+
+<p>Looks like, I don't have to use DAEMON Tools for stuff like this, I guess.</p>
+
+<p>Hope you found this tip useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>October 23rd, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
 				</a>
 			</li>
 			
@@ -513,11 +795,11 @@ Enter<span class="w"> </span>same<span class="w"> </span>passphrase<span class="
 		
 	
 		
-			<a class="" href="/pages/18">...</a>
+			<a class="" href="/pages/20">...</a>
 		
 	
 		
-			<a class="" href="/pages/28">28</a>
+			<a class="" href="/pages/30">30</a>
 		
 	
 
@@ -554,28 +836,35 @@ Enter<span class="w"> </span>same<span class="w"> </span>passphrase<span class="
 		<li>
 			<a href="/category/linux/">
 				Linux
-				<span class="count">22</span>
+				<span class="count">24</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/laravel/">
 				Laravel
-				<span class="count">18</span>
+				<span class="count">20</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/devops/">
 				DevOps
-				<span class="count">15</span>
+				<span class="count">20</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/php/">
 				PHP
-				<span class="count">13</span>
+				<span class="count">14</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/git/">
+				Git
+				<span class="count">12</span>
 			</a>
 		</li>
 		
@@ -622,9 +911,9 @@ Enter<span class="w"> </span>same<span class="w"> </span>passphrase<span class="
 		</li>
 		
 		<li>
-			<a href="/category/git/">
-				Git
-				<span class="count">10</span>
+			<a href="/category/mysql/">
+				MySQL
+				<span class="count">9</span>
 			</a>
 		</li>
 		
@@ -639,13 +928,6 @@ Enter<span class="w"> </span>same<span class="w"> </span>passphrase<span class="
 			<a href="/category/unix/">
 				UNIX
 				<span class="count">8</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/mysql/">
-				MySQL
-				<span class="count">7</span>
 			</a>
 		</li>
 		
@@ -667,6 +949,13 @@ Enter<span class="w"> </span>same<span class="w"> </span>passphrase<span class="
 			<a href="/category/essay/">
 				Essay
 				<span class="count">6</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/c/">
+				C#
+				<span class="count">5</span>
 			</a>
 		</li>
 		
@@ -699,16 +988,16 @@ Enter<span class="w"> </span>same<span class="w"> </span>passphrase<span class="
 		</li>
 		
 		<li>
-			<a href="/category/c/">
-				C#
+			<a href="/category/arcade-challenge/">
+				Arcade Challenge
 				<span class="count">4</span>
 			</a>
 		</li>
 		
 		<li>
-			<a href="/category/arcade-challenge/">
-				Arcade Challenge
-				<span class="count">4</span>
+			<a href="/category/databases/">
+				Databases
+				<span class="count">3</span>
 			</a>
 		</li>
 		
@@ -751,6 +1040,48 @@ Enter<span class="w"> </span>same<span class="w"> </span>passphrase<span class="
 			<a href="/category/general/">
 				General
 				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/vcs/">
+				VCS
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/ubuntu/">
+				Ubuntu
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/powershell/">
+				PowerShell
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/smtp/">
+				SMTP
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/sql/">
+				SQL
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/net/">
+				.NET
+				<span class="count">2</span>
 			</a>
 		</li>
 		
@@ -860,6 +1191,55 @@ Enter<span class="w"> </span>same<span class="w"> </span>passphrase<span class="
 		</li>
 		
 		<li>
+			<a href="/category/phpstorm/">
+				PHPStorm
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/elastic-search/">
+				Elastic Search
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/kibana/">
+				Kibana
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/data-manipulation/">
+				Data Manipulation
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/telnet/">
+				Telnet
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/iis/">
+				IIS
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/centos/">
+				CentOS
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/net-core/">
 				.NET Core
 				<span class="count">1</span>
@@ -951,22 +1331,8 @@ Enter<span class="w"> </span>same<span class="w"> </span>passphrase<span class="
 		</li>
 		
 		<li>
-			<a href="/category/ubuntu/">
-				Ubuntu
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/ssh/">
 				SSH
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/databases/">
-				Databases
 				<span class="count">1</span>
 			</a>
 		</li>

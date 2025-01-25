@@ -77,46 +77,137 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/download-a-webpage-along-with-its-assets-using-wget">Download a webpage along with it's assets using wget</a></h1>
+		<h1 class="heading"><a href="/til/posts/install-cisco-anyconnect-client-on-fedora-linux">Install Cisco Anyconnect Client on Fedora Linux</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>I wanted to download a webpage along with it's assets and scripts, I tried using Chrome's <strong>Save as...</strong> option but it wasn't working as expected.</p>
+		<p>Cisco Anyconnect Client is a SSL VPN Client with VPN functionalites that enables an organization to secure its endpoints. Although, I use it a lot at office, I have only used it on Windows 10 so far.</p>
 
-<p>I did a little googling and thought of using <code>wget</code> to do the job and it worked. Here's the command I used:</p>
+<p>One day, when I was on my vacation, I had to connect to a server remotely but this time, I tried doing it via Linux and it worked well!</p>
+
+<h2>Download Cisco AnyConnect Client for Linux</h2>
+
+<p>Fortunately, the client is available for Windows, macOS and Linux.  You can go to the <a href="https://software.cisco.com/download/home/286281283/type/282364313/release/4.10.06079">Downloads</a> page and download the tarball archive for Linux.</p>
+
+<p>After downloading, you can extract the tarball file:</p>
 
 <div class="codehilite">
-<pre><span></span><code>wget<span class="w"> </span>-p<span class="w"> </span>-k<span class="w"> </span>-H<span class="w"> </span>--nd<span class="w"> </span>https://www.example.com
+<pre><span></span><code>tar<span class="w"> </span>-xvf<span class="w"> </span>anyconnect-linux64-4.10.00093-predeploy-k9.tar.gz
 </code></pre>
 </div>
 
-<p>Let's see what do those flags mean:</p>
+<h2>Install Cisco AnyConnect Client for Linux</h2>
 
-<ul>
-<li><code>-p</code>: Downloads all the necessary files to properly display the downloaded HTML page.</li>
-<li><code>-k</code>: After the download is complete, it converts the links in the document to make them suitable for local viewing.</li>
-<li><code>-H</code>: This would download files that spans different hosts.</li>
-<li><code>--nd</code>: While retrieving files recursively, it will not create a hierarchy of directories and downloads the files into a single directory instead.</li>
-</ul>
+<p>Now that the file has been extracted, you can navigate to the <code>vpn</code> directory in <code>anyconnect-linux64-*</code> directory:</p>
 
-<p>If you open <code>index.html</code> directly on the browser, the assets might be broken as the <code>-k</code> flag doesn't seem to make the assets relative to the root directory. In order to view it, you can view it on a localhost server like WAMP, XAMPP or if you are using Python, you can type <code>python -m http.server</code> and view your downloaded file.</p>
+<div class="codehilite">
+<pre><span></span><code><span class="nb">cd</span><span class="w"> </span>anyconnect-linux64-*/vpn/
+</code></pre>
+</div>
 
-<p>Might be a bit messy but gets the job done.</p>
+<p>Execute the <code>vpn_install.sh</code> script:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>./vpn_install.sh
+</code></pre>
+</div>
+
+<p>Follow the instruction steps and you're ready to use it.</p>
+
+<h2>Connect to VPN via Terminal</h2>
+
+<p>The GUI version was crashing on both KDE and GNOME desktop environments. Whereas, it was a smooth experience when connecting via the Terminal.</p>
+
+<p>For easy access, you can create an alias in your <code>.bashrc</code> file:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nb">alias</span><span class="w"> </span><span class="nv">anyconnectvpn</span><span class="o">=</span><span class="s2">&quot;/opt/cisco/anyconnect/bin/vpn&quot;</span>
+</code></pre>
+</div>
+
+<p>Save and restart your terminal for the changes to take effect.</p>
+
+<p>After that, you can connect to VPN like this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>anyconnectvpn<span class="w"> </span>-s<span class="w"> </span>connect<span class="w"> </span>&lt;IP_ADDRESS&gt;
+</code></pre>
+</div>
+
+<p>Once executed, you'll be prompted to enter your credentials and if all goes fine, you should be connected.</p>
+
+<h2>Disconnect VPN via the Terminal</h2>
+
+<p>You can execute the following command to disconnect:</p>
+
+<div class="codehilite">
+<pre><span></span><code>anyconnectvpn<span class="w"> </span>-s<span class="w"> </span>disconnect<span class="w"> </span>&lt;IP_ADDRESS&gt;
+</code></pre>
+</div>
+
+<h2>Configuring your VPN connection</h2>
+
+<p>Sometimes, it can be tedious to write these commands all the time especially when you're in a rush, this can really get in your way.</p>
+
+<p>To solve that, you can easily store your credentials in a file like <code>.my_vpn_creds</code> in your home directory:</p>
+
+<div class="codehilite">
+<pre><span></span><code>y
+&lt;username&gt;
+&lt;password&gt;
+</code></pre>
+</div>
+
+<p>Save the file and create another file named <code>my_vpn_connect.sh</code>:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="ch">#!/bin/bash</span>
+
+<span class="nv">VPN_SERVER</span><span class="o">=</span><span class="s2">&quot;&lt;IP_ADDRESS&gt;&quot;</span>
+
+<span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Connecting to VPN..&quot;</span>
+/opt/cisco/anyconnect/bin/vpn<span class="w"> </span>-s<span class="w">  </span>&lt;<span class="w"> </span>~/.my_vpn_creds<span class="w"> </span>connect<span class="w"> </span><span class="si">${</span><span class="nv">VPN_SERVER</span><span class="si">}</span>
+</code></pre>
+</div>
+
+<p>Save the file and make the file executable:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>chmod<span class="w"> </span>+x<span class="w"> </span>my_vpn_connect.sh
+</code></pre>
+</div>
+
+<p>Now, you'll be connected to the VPN automatically by just executing this script:</p>
+
+<div class="codehilite">
+<pre><span></span><code>./my_vpn_connect.sh
+</code></pre>
+</div>
+
+<p>This saved me a lot of time and I hope it does the same for you as well! 🤗</p>
+
+<p>Hope you found this article useful!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>July 17th, 2022</time>
+		<time>January 15th, 2023</time>
 		<ul class="tags">
-			
-			<li>
-				<a href="/category/wget/">
-					wget
-				</a>
-			</li>
 			
 			<li>
 				<a href="/category/linux/">
 					Linux
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/productivity/">
+					Productivity
 				</a>
 			</li>
 			
@@ -128,28 +219,318 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/extract-private-key-and-certificate-from-pfx-file">Extract private key and certificate from .pfx file</a></h1>
+		<h1 class="heading"><a href="/til/posts/setup-a-virtual-environment-for-python-development">Setup a virtual environment for Python development</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>Ever wondered what's a <code>.pfx</code> file? It's just a combination of both private key and the certificate and this file is usually used in Microsoft IIS Servers.</p>
+		<p><code>virtualenv</code> is a tool used that allows you to install and isolate Python packages that are specific to your project rather than installing them globally on your system, which might, at some point, break other tools or services in your system.</p>
 
-<p>However, you can't use this file in Linux servers as both private key and the certificate are supposed to be individual files.</p>
+<p>In this simple guide, I'll show you how to install and create your own Python virtual environment for development.</p>
 
-<p>Here's how you can extract both private key and certificate files:</p>
+<p>Before you begin, please make sure that you have installed Python 3 or greater on your system.</p>
+
+<h2>Install virtualenv</h2>
+
+<p>Using the <code>pip</code> tool, you can execute the following command:</p>
 
 <div class="codehilite">
-<pre><span></span><code>openssl<span class="w"> </span>pkcs12<span class="w"> </span>-in<span class="w"> </span>file.pfx<span class="w"> </span>-nocerts<span class="w"> </span>-out<span class="w"> </span>privatekey.pem<span class="w"> </span>-nodes
-openssl<span class="w"> </span>pkcs12<span class="w"> </span>-in<span class="w"> </span>file.pfx<span class="w"> </span>-nokeys<span class="w"> </span>-out<span class="w"> </span>certificate.crt
+<pre><span></span><code>sudo<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>virtualenvwrapper
 </code></pre>
 </div>
 
-<p>Hope this tip helps you out!</p>
+<p>Then you need to add the following lines to your <code>.bashrc</code> startup file (found in the home directory).</p>
+
+<p>These lines determine where your virtual environments should live, the location of the script installed and the location of the development project directories:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">WORKON_HOME</span><span class="o">=</span><span class="nv">$HOME</span>/.virtualenvs
+<span class="nb">export</span><span class="w"> </span><span class="nv">VIRTUALENVWRAPPER_PYTHON</span><span class="o">=</span>/usr/bin/python3
+<span class="nb">export</span><span class="w"> </span><span class="nv">VIRTUALENVWRAPPER_VIRTUALENV_ARGS</span><span class="o">=</span><span class="s1">&#39; -p /usr/bin/python3 &#39;</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">PROJECT_HOME</span><span class="o">=</span><span class="nv">$HOME</span>/Devel
+<span class="nb">source</span><span class="w"> </span>/usr/local/bin/virtualenvwrapper.sh
+</code></pre>
+</div>
+
+<p>Next, restart the startup file:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nb">source</span><span class="w"> </span>.bashrc
+</code></pre>
+</div>
+
+<p>Once done, it'l execute a bunch of scripts for a few minutes and once the installation is successful, you can start using the <code>mkvirtualenv</code> command to create your virtual environment.</p>
+
+<h2>Creating a virtual environment</h2>
+
+<p>Really, it's quite trivial to create a virtual environment like this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>mkvirtualenv<span class="w"> </span>my_virtual_environment
+</code></pre>
+</div>
+
+<p>Once done, you'll notice that your terminal looks something like this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>(my_virtual_environment) user@desktop:~$
+</code></pre>
+</div>
+
+<p>This indicates that you are inside the virtual environment and can begin installing your Python packages and begin developing your application.</p>
+
+<h2>Using the virtual environment</h2>
+
+<p>There are a few commands that I'd like to share (and you should also know) while working with a virtual environment:</p>
+
+<ul>
+<li><code>deactivate</code> &mdash; get out of the current virtual environment</li>
+<li><code>workon</code> &mdash; list available virtual environments on the system</li>
+<li><code>workon name_of_environment</code> &mdash; activate the specified virtual environment</li>
+<li><code>rmvirtualenv name_of_environment</code> &mdash; remove the specified virtual environment</li>
+</ul>
+
+<h2>Conclusion</h2>
+
+<p>If you are a Python developer or write code in Python, then virtual environments are super handy and disposable especially while testing and working on different projects.</p>
+
+<p>Unless, your project is package-dependant, you don't really need to isolate your development environment.</p>
+
+<p>Hope you found this article useful!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>March 12th, 2022</time>
+		<time>January 3rd, 2023</time>
 		<ul class="tags">
+			
+			<li>
+				<a href="/category/python/">
+					Python
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/install-teamviewer-on-fedora-linux-3637">Install TeamViewer on Fedora Linux 36/37</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>If you are using Fedora Linux or any other Linux distribution and want a short guide on how to install TeamViewer on your workstation, then this article is for you.</p>
+
+<p>Usually, I use it access remote servers or my computer at work but I myself never did it on a Linux workstation. It worked out for me, so it should work for you too!</p>
+
+<h2>1. Download TeamViewer RPM Package</h2>
+
+<p>You can find the <a href="https://www.teamviewer.com/en/download/linux/">latest release</a> on TeamViewer's official site.</p>
+
+<p>Make sure that you have install <code>wget</code> on your system to easily download it via the Terminal:</p>
+
+<div class="codehilite">
+<pre><span></span><code>wget<span class="w"> </span>https://download.teamviewer.com/download/linux/teamviewer.x86_64.rpm
+</code></pre>
+</div>
+
+<h2>2. Download minizip module</h2>
+
+<p>During installation, it failed for me as I was missing a certain <code>libminizip.so</code> module. So, I looked up online and found the module and downloaded it on my workstation:</p>
+
+<div class="codehilite">
+<pre><span></span><code>wget<span class="w"> </span>https://rpmfind.net/linux/fedora/linux/updates/36/Everything/x86_64/Packages/m/minizip-compat-1.2.11-33.fc36.x86_64.rpm
+</code></pre>
+</div>
+
+<p>Once the download is complete, you can install it:</p>
+
+<div class="codehilite">
+<pre><span></span><code>rpm<span class="w"> </span>-i<span class="w"> </span>minizip-compat-1.2.11-33.fc36.x86_64.rpm
+</code></pre>
+</div>
+
+<h2>3. Install TeamViewer</h2>
+
+<p>Now, the final step is to install the RPM package for TeamViewer:</p>
+
+<div class="codehilite">
+<pre><span></span><code>rpm<span class="w"> </span>-i<span class="w"> </span>teamviewer_15.37.3.x86_64.rpm
+</code></pre>
+</div>
+
+<p>Hope you found this short guide useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>January 1st, 2023</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/productivity/">
+					Productivity
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/connect-to-a-remote-windows-machine-from-a-linux-machine">Connect to a Remote Windows machine from a Linux machine</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Last week, my Windows machine was down and I was struggling to connect to a remote server as I'm using Fedora Linux at home.</p>
+
+<p>I tried installing and using GNOME Connections but it crashed and didn't work well for me. I found another tool named <code>rdesktop</code> which was stable and worked well for my case.</p>
+
+<p>Installing it is as easy as typing the following command using the <code>dnf</code> package manager:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>dnf<span class="w"> </span>install<span class="w"> </span>rdesktop
+</code></pre>
+</div>
+
+<p>Now, you can connect to your remote desktop machine using the following command:</p>
+
+<div class="codehilite">
+<pre><span></span><code>rdesktop<span class="w"> </span>-d<span class="w"> </span>&lt;domain&gt;<span class="w"> </span>-u<span class="w"> </span>&lt;username&gt;<span class="w"> </span>-p<span class="w"> </span>-<span class="w"> </span>&lt;ipaddress&gt;
+</code></pre>
+</div>
+
+<p>Upon execution of this command, you'll be prompted to enter the password and after that, you're all good to go!</p>
+
+<p>Hope you found this tip useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>January 1st, 2023</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/productivity/">
+					Productivity
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/temporarily-disable-ipv6-protocol-on-ubuntu">Temporarily disable IPV6 protocol on Ubuntu</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Few days ago, I resolved an issue that I faced on an Ubuntu server that was related to SMTP not working, as a result, the server was always throwing a <code>504 Gateway Timeout</code> error.</p>
+
+<p>During troubleshooting, I found out that <code>telnet smtp.office365.com 587</code> was not giving any response and thought that the port was blocked on the client's network but no, it wasn't.</p>
+
+<p>I did a little digging and learnt that it could be due to the fact that SMTP traffic over IPV6 might be blocked on the client's network.</p>
+
+<p>So, I tried executing the following commands to disable IPV6 temporarily:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>sysctl<span class="w"> </span>-w<span class="w"> </span>net.ipv6.conf.all.disable_ipv6<span class="o">=</span><span class="m">1</span>
+sudo<span class="w"> </span>sysctl<span class="w"> </span>-w<span class="w"> </span>net.ipv6.conf.default.disable_ipv6<span class="o">=</span><span class="m">1</span>
+</code></pre>
+</div>
+
+<p>And voila, the mails were going and SMTP traffic was working over IPV4.</p>
+
+<p>If you want to enable it again, try the following:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>sysctl<span class="w"> </span>-w<span class="w"> </span>net.ipv6.conf.all.disable_ipv6<span class="o">=</span><span class="m">0</span>
+sudo<span class="w"> </span>sysctl<span class="w"> </span>-w<span class="w"> </span>net.ipv6.conf.default.disable_ipv6<span class="o">=</span><span class="m">0</span>
+</code></pre>
+</div>
+
+<p>Hope you found this tip useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>November 27th, 2022</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/ubuntu/">
+					Ubuntu
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/view-list-of-services-in-linux">View list of services in Linux</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>If you wanted to see a list of services available on your Linux server/desktop, try the following command:</p>
+
+<div class="codehilite">
+<pre><span></span><code>systemctl<span class="w"> </span>list-unit-files<span class="w"> </span>--type<span class="o">=</span>service
+</code></pre>
+</div>
+
+<p>Upon executing this command, you'll be able to see a list of services along with their statuses i.e whether the service is enabled or disabled.</p>
+
+<p>This can come in handy if you want to know the status of a specific service like <code>nginx</code>:</p>
+
+<div class="codehilite">
+<pre><span></span><code>systemctl<span class="w"> </span>list-unit-files<span class="w"> </span>--type<span class="o">=</span>service<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s2">&quot;nginx&quot;</span>
+</code></pre>
+</div>
+
+<p>Hope you found this tip useful.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>November 27th, 2022</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
 			
 			<li>
 				<a href="/category/devops/">
@@ -165,203 +546,72 @@ openssl<span class="w"> </span>pkcs12<span class="w"> </span>-in<span class="w">
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/install-nginx-and-php-on-windows">Install NGINX and PHP on Windows</a></h1>
+		<h1 class="heading"><a href="/til/posts/install-docker-on-fedora-3536">Install Docker on Fedora 35/36</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>Thought of writing a small tutorial on how to install NGINX and PHP on Windows. You can also use this as a reference if you wanted to install them on Windows Server too.</p>
+		<p>Recently, I started to play around with Docker and I thought of installing on my personal laptop which runs Fedora 36 workstation.</p>
 
-<div class="post-notification warning">
-    <h3><i class="ph-warning-light"></i> Note</h3>
-    <p>This tutorial won't teach you how to configure both PHP and NGINX configurations as there are a lot of tutorials focusing on that topic.</p>
-</div>
+<p>If you have Fedora and want to know how to install it, here it is:</p>
 
-<h2>Setting up NGINX</h2>
+<h2>Install Docker Engine</h2>
 
-<ol>
-<li>Download <a href="http://nginx.org/en/docs/windows.html">NGINX for Windows</a></li>
-<li>Go to <code>C:/</code> directory and create a folder named <code>C:/nginx</code>.</li>
-<li>Unzip the downloaded <code>.zip</code> file in <code>C:/nginx</code> directory.</li>
-<li>Go to <code>C:/nginx</code> and create two new folders named <code>sites-available</code> and <code>sites-enabled</code>.</li>
-<li>To test, if it's working, double-click on <code>C:/nginx/nginx.exe</code> and type <code>localhost</code> in the browser. You should be able to see a Welcome page.</li>
-<li>Kill the NGINX process from Task Manager.</li>
-</ol>
-
-<h2>Setting up PHP</h2>
-
-<ol>
-<li>Download <a href="https://windows.php.net/downloads/releases/php-8.1.1-nts-Win32-vs16-x64.zip">PHP 8.1 for Windows</a>.</li>
-<li>Go to <code>C:/</code> directory and create a folder named <code>C:/php</code> or if you wanted to have multiple versions, <code>C:/php8.1</code>.</li>
-<li>Unzip the downloaded <code>.zip</code> file in <code>C:/php</code> directory.</li>
-<li>Add PHP to your system environment variables by adding the path <code>C:/php</code></li>
-<li>Open Command Prompt and type <code>php -v</code>. You see should be able to see the version if it's installed correctly.</li>
-</ol>
-
-<h2>Run NGINX and PHP as separate services</h2>
-
-<p>Generally, it's good practice to run both PHP and NGINX as background services or else, you might have to start the processes manually every time the server goes down.</p>
-
-<p>As I was looking for a way to do that, I stumbled upon this post on <a href="https://stackoverflow.com/questions/40846356/run-nginx-as-windows-service">StackOverflow</a> and it was quite helpful.</p>
-
-<h3>Install NSSM Service Manager</h3>
-
-<p>NSSM Service Manager is a free open-source alternative that helps you create a service with the help of GUI. Below are the steps that I followed:</p>
-
-<ol>
-<li>Download <a href="https://nssm.cc/download">NSSM Service Manager</a></li>
-<li>Go to <code>C:/</code> directory and create a folder named <code>C:/nssm</code>.</li>
-<li>Unzip the downloaded <code>.zip</code> file in <code>C:/nssm</code> directory.</li>
-</ol>
-
-<h3>Install NGINX as a service</h3>
-
-<ol>
-<li>Open Command Prompt as an Administrator.</li>
-<li>Go to <code>C:/nssm/win64/</code> directory.</li>
-<li>Type <code>nssm install nginx</code></li>
-<li>Define the path of the <code>nginx.exe</code> file.</li>
-<li>Click on <code>Install Service</code>.</li>
-<li>Press <code>Win+R</code> and type <code>services.msc</code>.</li>
-<li>Look for <code>nginx</code> and start the service.</li>
-<li>Open your browser and type <code>localhost</code> to see if it's working correctly.</li>
-</ol>
-
-<h3>Install PHP as a service</h3>
-
-<ol>
-<li>Open Command Prompt as an Administrator.</li>
-<li>Go to <code>C:/nssm/win64/</code> directory.</li>
-<li>Type <code>nssm install php</code></li>
-<li>Define the path of the <code>php-cgi.exe</code> file.</li>
-<li>Add the arguments: <code>-b 127.0.0.1:9000</code></li>
-<li>Click on <code>Install Service</code>.</li>
-<li>Press <code>Win+R</code> and type <code>services.msc</code>.</li>
-<li>Look for <code>php</code> and start the service.</li>
-</ol>
-
-<h3>Test to see if it works!</h3>
-
-<p>Before you proceed with the following steps, ensure that you include the <code>*.conf</code> files from the <code>sites-enabled</code> folder in your <code>nginx.conf</code> file.</p>
-
-<p>Add the line <code>include "C:/nginx/sites-enabled/*.conf";</code> in your <code>nginx.conf</code> file and follow the steps below:</p>
-
-<ol>
-<li>Go to <code>C:/nginx/sites-available</code> directory and create <code>example.com.conf</code>.</li>
-<li>Go to <code>C:/nginx/html</code> and create directory.</li>
-<li>Refer to the <a href="#nginx-config">sample configuration</a> provided and make the necessary changes.</li>
-<li>To enable the site, you have to create a symlink: <code>mklink "C:\nginx\sites-enabled\example.com.conf" "C:\nginx\sites-available\example.com.conf"</code>.</li>
-<li>Ensure the configuration doesn't have any errors by typing <code>nginx -t</code> in <code>C:/nginx</code> directory.</li>
-<li>Restart the NSSM service.</li>
-<li>Add an entry in your hosts file: <code>127.0.0.1 example.com</code>.</li>
-<li>And you're done!</li>
-</ol>
-
-<div class="post-notification warning">
-    <h3><i class="ph-warning-light"></i> Tip</h3>
-    <p>If you get a "Connection Refused" or error that is similar to that, it's most probably due to firewall or maybe the PHP service isn't running.</p>
-</div>
-
-<h3>Useful commands while using NSSM</h3>
+<p>First, add the official Docker repositories to your Fedora OS:</p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="c1"># Start a service</span>
-nssm<span class="w"> </span>start<span class="w"> </span><span class="s2">&quot;servicename&quot;</span><span class="w"> </span>
-
-<span class="c1"># Restart a service</span>
-nssm<span class="w"> </span>restart<span class="w"> </span><span class="s2">&quot;servicename&quot;</span><span class="w"> </span>
-
-<span class="c1"># Stop a service</span>
-nssm<span class="w"> </span>stop<span class="w"> </span><span class="s2">&quot;servicename&quot;</span><span class="w"> </span>
-
-<span class="c1"># Install a service</span>
-nssm<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;servicename&quot;</span><span class="w"> </span>
-
-<span class="c1"># Remove/Uninstall a service</span>
-nssm<span class="w"> </span>remove<span class="w"> </span><span class="s2">&quot;servicename&quot;</span><span class="w"> </span>
+<pre><span></span><code>sudo<span class="w"> </span>dnf<span class="w"> </span>install<span class="w"> </span>dnf-plugins-core<span class="w"> </span>-y
+sudo<span class="w"> </span>dnf<span class="w"> </span>config-manager<span class="w"> </span>--add-repo<span class="w"> </span>https://download.docker.com/linux/fedora/docker-ce.repo
 </code></pre>
 </div>
 
-<h3>Sample NGINX Virtual Host Configuration</h3>
+<p>Then, you can run the following command to install Docker and it's dependencies:</p>
 
 <div class="codehilite">
-<pre><span></span><code>server<span class="w"> </span><span class="o">{</span>
-
-<span class="w">    </span><span class="c1"># Your Domain Name</span>
-<span class="w">    </span>listen<span class="w"> </span><span class="m">80</span><span class="p">;</span>
-<span class="w">    </span>server_name<span class="w"> </span>example.com<span class="p">;</span>
-
-<span class="w">    </span>autoindex<span class="w"> </span>off<span class="p">;</span>
-<span class="w">    </span>add_header<span class="w"> </span>X-Frame-Options<span class="w"> </span><span class="s2">&quot;SAMEORIGIN&quot;</span><span class="p">;</span>
-<span class="w">    </span>add_header<span class="w"> </span>Strict-Transport-Security<span class="w"> </span><span class="s2">&quot;max-age=31536000; includeSubDomains&quot;</span><span class="w"> </span>always<span class="p">;</span>
-<span class="w">    </span>add_header<span class="w"> </span>X-Content-Type-Options<span class="w"> </span><span class="s2">&quot;nosniff&quot;</span><span class="p">;</span>
-<span class="w">    </span>add_header<span class="w"> </span>X-XSS-Protection<span class="w"> </span><span class="s2">&quot;1; mode=block&quot;</span><span class="p">;</span>
-<span class="w">    </span>add_header<span class="w"> </span>Access-Control-Allow-Origin<span class="w"> </span>*<span class="p">;</span>
-
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="o">(</span>!-e<span class="w"> </span><span class="nv">$request_filename</span><span class="o">)</span><span class="w"> </span><span class="o">{</span>
-<span class="w">        </span>rewrite<span class="w">  </span>^/<span class="o">[</span>_0-9a-zA-Z-<span class="o">]</span>+<span class="o">(</span>/wp-<span class="o">(</span>content<span class="p">|</span>admin<span class="p">|</span>includes<span class="o">)</span>.*<span class="o">)</span><span class="w"> </span><span class="nv">$1</span><span class="w"> </span><span class="k">break</span><span class="p">;</span>
-<span class="w">        </span>rewrite<span class="w">  </span>^/<span class="o">[</span>_0-9a-zA-Z-<span class="o">]</span>+<span class="o">(</span>/.*<span class="se">\.</span>php<span class="o">)</span>$<span class="w"> </span><span class="nv">$1</span><span class="w"> </span><span class="k">break</span><span class="p">;</span>
-<span class="w">    </span><span class="o">}</span>
-
-<span class="w">    </span><span class="c1"># Uncomment these lines if SSL is provided</span>
-<span class="w">    </span><span class="c1">#==========================</span>
-<span class="w">    </span><span class="c1">#listen 443 ssl;</span>
-<span class="w">    </span><span class="c1">#ssl_certificate your-ssl.pem;</span>
-<span class="w">    </span><span class="c1">#ssl_certificate_key your-ssl.key;</span>
-<span class="w">    </span><span class="c1">#ssl_protocols TLSv1 TLSv1.1 TLSv1.2; </span>
-<span class="w">    </span><span class="c1">#ssl_prefer_server_ciphers on;</span>
-<span class="w">    </span><span class="c1">#ssl_ciphers &#39;EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH&#39;;</span>
-<span class="w">    </span><span class="c1">#==========================</span>
-
-<span class="w">    </span><span class="c1"># Log files for Debugging</span>
-<span class="w">    </span>access_log<span class="w"> </span>logs/example-access.log<span class="p">;</span>
-<span class="w">    </span>error_log<span class="w"> </span>logs/example-error.log<span class="p">;</span>
-
-<span class="w">    </span><span class="c1"># Directory</span>
-<span class="w">    </span>root<span class="w"> </span><span class="s2">&quot;C:/nginx/html/example.com&quot;</span><span class="p">;</span>
-<span class="w">    </span>index<span class="w"> </span>index.php<span class="w"> </span>index.html<span class="w"> </span>index.htm<span class="p">;</span>
-
-<span class="w">    </span>location<span class="w"> </span>/<span class="w"> </span><span class="o">{</span>
-<span class="w">        </span>try_files<span class="w"> </span><span class="nv">$uri</span><span class="w"> </span><span class="nv">$uri</span>/<span class="w"> </span>/index.php?<span class="nv">$query_string</span><span class="p">;</span>
-<span class="w">    </span><span class="o">}</span>
-
-<span class="w">    </span>location<span class="w"> </span>~<span class="w"> </span>/<span class="se">\.</span><span class="o">(</span>?!well-known<span class="o">)</span>.*<span class="w"> </span><span class="o">{</span>
-<span class="w">        </span>deny<span class="w"> </span>all<span class="p">;</span>
-<span class="w">        </span>access_log<span class="w"> </span>off<span class="p">;</span>
-<span class="w">        </span>log_not_found<span class="w"> </span>off<span class="p">;</span>
-<span class="w">    </span><span class="o">}</span>
-
-<span class="w">    </span><span class="c1"># Deny yaml, twig, markdown, ini file access</span>
-<span class="w">    </span>location<span class="w"> </span>~*<span class="w"> </span>/.+<span class="se">\.</span><span class="o">(</span>markdown<span class="p">|</span>md<span class="p">|</span>twig<span class="p">|</span>yaml<span class="p">|</span>yml<span class="p">|</span>ini<span class="o">)</span>$<span class="w"> </span><span class="o">{</span>
-<span class="w">        </span>deny<span class="w"> </span>all<span class="p">;</span>
-<span class="w">        </span>access_log<span class="w"> </span>off<span class="p">;</span>
-<span class="w">        </span>log_not_found<span class="w"> </span>off<span class="p">;</span>
-<span class="w">    </span><span class="o">}</span>
-
-<span class="w">    </span><span class="c1"># PHP-FPM Configuration Nginx</span>
-<span class="w">    </span>location<span class="w"> </span>~<span class="w"> </span><span class="se">\.</span>php$<span class="w"> </span><span class="o">{</span>
-<span class="w">        </span>fastcgi_pass<span class="w">   </span><span class="m">127</span>.0.0.1:9000<span class="p">;</span>
-<span class="w">        </span>fastcgi_index<span class="w">  </span>index.php<span class="p">;</span>
-<span class="w">        </span>fastcgi_param<span class="w">  </span>SCRIPT_FILENAME<span class="w">  </span><span class="nv">$document_root$fastcgi_script_name</span><span class="p">;</span>
-<span class="w">        </span>include<span class="w">        </span>fastcgi_params<span class="p">;</span>
-<span class="w">    </span><span class="o">}</span>
-<span class="o">}</span>
+<pre><span></span><code>sudo<span class="w"> </span>dnf<span class="w"> </span>install<span class="w"> </span>docker-ce<span class="w"> </span>docker-ce-cli<span class="w"> </span>containerd.io
 </code></pre>
 </div>
 
-<h2>Conclusion</h2>
+<p>During installation, you'll be prompted to import the GPG key in order to install Docker on your system. So, press <kbd>Y</kbd> to proceed with the installation.</p>
 
-<p>If you've gotten this far, give yourself a pat in the back.</p>
+<p>Next, enable and start the docker service:</p>
 
-<p>Hope you've found this tutorial useful and please share it with your friends and colleagues if they really need it!</p>
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>systemctl<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>docker
+sudo<span class="w"> </span>systemctl<span class="w"> </span>start<span class="w"> </span>docker
+</code></pre>
+</div>
+
+<p>That's it you are done. You can try running the following command to see if it's installed properly on your system:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>docker<span class="w"> </span>run<span class="w"> </span>hello-world
+</code></pre>
+</div>
+
+<p>If it works fine, you should be seeing a "Hello from Docker!" message which means that the installation appears to be working fine.</p>
+
+<p>Hope you found this tutorial useful!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>February 27th, 2022</time>
+		<time>October 1st, 2022</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/tutorial/">
-					Tutorial
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/docker/">
+					Docker
 				</a>
 			</li>
 			
@@ -373,288 +623,63 @@ nssm<span class="w"> </span>remove<span class="w"> </span><span class="s2">&quot
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/count-the-number-of-matches-of-a-pattern-in-vim">Count the number of matches of a pattern in VIM</a></h1>
+		<h1 class="heading"><a href="/til/posts/resolve-permission-error-while-sshing-to-aws-ec2-instance-from-a-linux-machine">Resolve permission error while SSH-ing to AWS EC2 instance from a Linux machine</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>You can the count the number of matches of a pattern by using the <code>n</code> flag while using the substitute command. Try the following command:</p>
+		<p>If you are someone who's trying to access a AWS EC2 instance via SSH using a private key from a linux machine, you might have or will come across this error:</p>
 
 <div class="codehilite">
-<pre><span></span><code>:%s/something//gn
+<pre><span></span><code>@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@         WARNING: UNPROTECTED PRIVATE KEY FILE!          @
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+Permissions 0644 for &#39;your-aws-private-key.pem&#39; are too open.
+It is recommended that your private key files are NOT accessible by others.
+This private key will be ignored.
+bad permissions: ignore key: your-aws-private-key.pem
+Permission denied (publickey).
 </code></pre>
 </div>
 
-<p>If you want to know on how many lines it matches, just omit the <code>g</code> flag:</p>
+<h2>Why am I getting this?</h2>
+
+<p>From what I have read, EC2 instances will simply not accept a private key that are publicly visible to others especially if it's somewhere stored in your Desktop or Downloads folder.</p>
+
+<p>So basically, your private key should be accessible to others.</p>
+
+<h2>Oh, how can I fix it?</h2>
+
+<p>It's pretty straightforward, you just have to make sure that the private key is <strong>read-only</strong> like this:</p>
 
 <div class="codehilite">
-<pre><span></span><code>:%s/something//n
+<pre><span></span><code>chmod<span class="w"> </span><span class="m">400</span><span class="w"> </span>your-aws-private-key.pem
 </code></pre>
 </div>
 
-<p>Hope this tip helped you out!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>January 16th, 2022</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/vim/">
-					VIM
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/count-the-number-of-word-occurences-in-a-text-file-using-grep">Count the number of word occurences in a text file using grep</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>If you are using a GUI based application like Microsoft Word of Google Docs, it would be easier for you to know the number of word occurences in a file. But what if you are in a terminal? That's where both <code>grep</code> and <code>wc</code> comes handy tools.</p>
-
-<p>Let's say you have the following text:</p>
-
-<div class="codehilite">
-<pre><span></span><code>The European languages are members of the same family. Their separate existence is a myth. For science, music, sport, etc, Europe uses the same vocabulary.
-</code></pre>
-</div>
-
-<p>Now, you can use the <code>grep</code> and <code>wc</code> tool to count the number of times <code>"the"</code> appears in the file:</p>
-
-<div class="codehilite">
-<pre><span></span><code>grep<span class="w"> </span>-o<span class="w"> </span>-i<span class="w"> </span><span class="s2">&quot;the&quot;</span><span class="w"> </span>file.txt<span class="w"> </span><span class="p">|</span><span class="w"> </span>wc<span class="w"> </span>-l
-</code></pre>
-</div>
-
-<p>Hope this helps you out!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>January 16th, 2022</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/terminal/">
-					Terminal
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/install-mariadb-103-on-void-linux">Install MariaDB 10.3 on Void Linux</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>I tried to find a proper guide on how to install MySQL 8.0 on Void Linux but I couldn't really find any. So, I thought of installing MariaDB 10.3 on my laptop instead.</p>
-
-<p>Don't worry about using MariaDB as it meets the same standard enterprised requirements as MySQL. The only difference is that MySQL belongs to Oracle and MariaDB is for people who wanted to get out of Oracle's hands.</p>
-
-<p>Anyway, let's get started.</p>
-
-<h2>Prerequisites</h2>
-
-<ul>
-<li>Need to have root privileges in order to install packages.</li>
-<li>Basic know-how of Void Linux and it's <code>xbps</code> package manager.</li>
-</ul>
-
-<p>Alright, go ahead and follow these steps one-by-one:</p>
-
-<h3>1. Install MariaDB</h3>
-
-<p>Type the following command to install the package:</p>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>xbps-install<span class="w"> </span>-S<span class="w"> </span>mariadb
-</code></pre>
-</div>
-
-<h3>2. Initialize MySQL data directory</h3>
-
-<p>The following command will initialize a MariaDB data directory and create system tables in the MySQL database, if they are not present.</p>
-
-<div class="codehilite">
-<pre><span></span><code>mysql_install_db<span class="w"> </span>--user<span class="o">=</span>mysql<span class="w"> </span>--basedir<span class="o">=</span>/usr<span class="w"> </span>--datadir<span class="o">=</span>/var/lib/mysql
-</code></pre>
-</div>
-
-<p>The options used:</p>
-
-<ul>
-<li><code>--user</code>: The login user name to use for running the <code>mysqld</code> process.</li>
-<li><code>--basedir</code> The path to the MariaDB installation directory.</li>
-<li><code>--datadir</code>: The path to the MariaDB directory.</li>
-</ul>
-
-<p>To know more about it, you can refer to <a href="https://mariadb.com/kb/en/mysql_install_db/">MariaDB's documentation</a>.</p>
-
-<h3>3. Enable MySQL service</h3>
-
-<p>If you are used to Ubuntu or CentOS, enabling services in Void Linux is a bit different but quite simple. Once a process is symlinked, it will start on boot and restarts if it stops unless you stop the service deliberately.</p>
-
-<p>Type the following command to enable the <code>mysqld</code> service:</p>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>ln<span class="w"> </span>-s<span class="w"> </span>/etc/sv/mysqld<span class="w"> </span>/var/service/mysqld
-</code></pre>
-</div>
-
-<h3>4. Start MySQL service</h3>
-
-<p>Type the following command to start the <code>mysqld</code> service:</p>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>sv<span class="w"> </span>start<span class="w"> </span>mysqld
-</code></pre>
-</div>
-
-<p>To confirm, if the service is running, type the following:</p>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>sv<span class="w"> </span>status<span class="w"> </span>mysqld
-</code></pre>
-</div>
-
-<p>And you'll see something like this:</p>
-
-<div class="codehilite">
-<pre><span></span><code>run:<span class="w"> </span>mysqld:<span class="w"> </span><span class="o">(</span>pid<span class="w"> </span><span class="m">15136</span><span class="o">)</span><span class="w"> </span>1116s<span class="p">;</span><span class="w"> </span>run:<span class="w"> </span>log:<span class="w"> </span><span class="o">(</span>pid<span class="w"> </span><span class="m">15025</span><span class="o">)</span><span class="w"> </span>1172s
-</code></pre>
-</div>
-
-<h3><a id="secure-mysql-installation"></a> 5. Secure MySQL installation</h3>
-
-<p>It's recommended to secure your installation, so type the following command:</p>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>mysql_secure_installation
-</code></pre>
-</div>
-
-<p>Once the command is executed, you'll be prompted with a few questions, respond according to your needs and you're done!</p>
-
-<h3>6. Test MariaDB connection</h3>
-
-<p>Now, all you have to do is, try to log in to your database by typing the following:</p>
-
-<div class="codehilite">
-<pre><span></span><code>mysql<span class="w"> </span>-u<span class="w"> </span>root<span class="w"> </span>-p
-</code></pre>
-</div>
-
-<p>Once executed, it would prompt you for your password (which you must have set in the <a href="#secure-mysql-installation">previous step</a> and if you are able to log in, you are good to go!</p>
-
-<p>Hope this guide helps you out!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>January 16th, 2022</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/databases/">
-					Databases
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-create-an-iso-image-from-cdsdvds">How to create an ISO image from CDs/DVDs?</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>I used to create ISO images using DAEMON Tools but I wanted to try something different and see if there's a way to create it using the Linux CLI.</p>
-
-<p>Turns out, you can do in just a single line using the <code>dd</code> utility like so:</p>
-
-<div class="codehilite">
-<pre><span></span><code>dd<span class="w"> </span><span class="k">if</span><span class="o">=</span>/dev/cdrom<span class="w"> </span><span class="nv">of</span><span class="o">=</span>/path/to/your/directory/image.iso
-</code></pre>
-</div>
-
-<p>The <code>if</code> stands for input file and <code>of</code> stands for output file.</p>
-
-<p>Looks like, I don't have to use DAEMON Tools for stuff like this, I guess.</p>
+<p>After that, try connecting again and it should work fine!</p>
 
 <p>Hope you found this tip useful!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>October 23rd, 2021</time>
+		<time>September 24th, 2022</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/linux/">
-					Linux
+				<a href="/category/aws/">
+					AWS
 				</a>
 			</li>
 			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/truncate-a-file-using-redirection-in-linux">Truncate a file using redirection in Linux</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Simply put, sometimes, there are situations in where you just want to clear the contents of a file without deleting it.</p>
-
-<p>This could be for many reasons like to avoid permission related issues, or maybe the file could be having useless logs that amasses to a size that measures in GBs.</p>
-
-<p>So, the easiest solution is to clear it away from a terminal is by shell redirection like so:</p>
-
-<div class="codehilite">
-<pre><span></span><code>:&gt;<span class="w"> </span>filename
-</code></pre>
-</div>
-
-<p>Let me break down the command here:</p>
-
-<ul>
-<li>The <code>:</code> symbol means <code>true</code> and doesn't produce any output.</li>
-<li>The '>' symbol is used for redirecting the output of the preceding command (in this case, it's empty!)</li>
-<li><code>filename</code> is the file that you want to truncate. If it doesn't exist, the file will be created.</li>
-</ul>
-
-<p>Alternatively, you can do the same by using the <code>cat</code> command to output the contents of the <code>/dev/null</code> device (which only contains a EOL character) to empty a file:</p>
-
-<div class="codehilite">
-<pre><span></span><code>cat<span class="w"> </span>/dev/null<span class="w"> </span>&gt;<span class="w"> </span>filename
-</code></pre>
-</div>
-
-<p>Hope this comes in handy!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>October 2nd, 2021</time>
-		<ul class="tags">
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
 			
 			<li>
-				<a href="/category/linux/">
-					Linux
+				<a href="/category/ssh/">
+					SSH
 				</a>
 			</li>
 			
@@ -698,11 +723,11 @@ nssm<span class="w"> </span>remove<span class="w"> </span><span class="s2">&quot
 		
 	
 		
-			<a class="" href="/til/pages/12">...</a>
+			<a class="" href="/til/pages/13">...</a>
 		
 	
 		
-			<a class="" href="/til/pages/18">18</a>
+			<a class="" href="/til/pages/19">19</a>
 		
 	
 
@@ -729,28 +754,35 @@ nssm<span class="w"> </span>remove<span class="w"> </span><span class="s2">&quot
 		<li>
 			<a href="/category/linux/">
 				Linux
-				<span class="count">22</span>
+				<span class="count">24</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/laravel/">
 				Laravel
-				<span class="count">18</span>
+				<span class="count">20</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/devops/">
 				DevOps
-				<span class="count">15</span>
+				<span class="count">20</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/php/">
 				PHP
-				<span class="count">13</span>
+				<span class="count">14</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/git/">
+				Git
+				<span class="count">12</span>
 			</a>
 		</li>
 		
@@ -797,9 +829,9 @@ nssm<span class="w"> </span>remove<span class="w"> </span><span class="s2">&quot
 		</li>
 		
 		<li>
-			<a href="/category/git/">
-				Git
-				<span class="count">10</span>
+			<a href="/category/mysql/">
+				MySQL
+				<span class="count">9</span>
 			</a>
 		</li>
 		
@@ -814,13 +846,6 @@ nssm<span class="w"> </span>remove<span class="w"> </span><span class="s2">&quot
 			<a href="/category/unix/">
 				UNIX
 				<span class="count">8</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/mysql/">
-				MySQL
-				<span class="count">7</span>
 			</a>
 		</li>
 		
@@ -842,6 +867,13 @@ nssm<span class="w"> </span>remove<span class="w"> </span><span class="s2">&quot
 			<a href="/category/essay/">
 				Essay
 				<span class="count">6</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/c/">
+				C#
+				<span class="count">5</span>
 			</a>
 		</li>
 		
@@ -874,16 +906,16 @@ nssm<span class="w"> </span>remove<span class="w"> </span><span class="s2">&quot
 		</li>
 		
 		<li>
-			<a href="/category/c/">
-				C#
+			<a href="/category/arcade-challenge/">
+				Arcade Challenge
 				<span class="count">4</span>
 			</a>
 		</li>
 		
 		<li>
-			<a href="/category/arcade-challenge/">
-				Arcade Challenge
-				<span class="count">4</span>
+			<a href="/category/databases/">
+				Databases
+				<span class="count">3</span>
 			</a>
 		</li>
 		
@@ -926,6 +958,48 @@ nssm<span class="w"> </span>remove<span class="w"> </span><span class="s2">&quot
 			<a href="/category/general/">
 				General
 				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/vcs/">
+				VCS
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/ubuntu/">
+				Ubuntu
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/powershell/">
+				PowerShell
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/smtp/">
+				SMTP
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/sql/">
+				SQL
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/net/">
+				.NET
+				<span class="count">2</span>
 			</a>
 		</li>
 		
@@ -1035,6 +1109,55 @@ nssm<span class="w"> </span>remove<span class="w"> </span><span class="s2">&quot
 		</li>
 		
 		<li>
+			<a href="/category/phpstorm/">
+				PHPStorm
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/elastic-search/">
+				Elastic Search
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/kibana/">
+				Kibana
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/data-manipulation/">
+				Data Manipulation
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/telnet/">
+				Telnet
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/iis/">
+				IIS
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/centos/">
+				CentOS
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/net-core/">
 				.NET Core
 				<span class="count">1</span>
@@ -1126,22 +1249,8 @@ nssm<span class="w"> </span>remove<span class="w"> </span><span class="s2">&quot
 		</li>
 		
 		<li>
-			<a href="/category/ubuntu/">
-				Ubuntu
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/ssh/">
 				SSH
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/databases/">
-				Databases
 				<span class="count">1</span>
 			</a>
 		</li>

@@ -78,59 +78,77 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/playing-around-with-imagemagick">Playing around with ImageMagick</a></h1>
+		<h1 class="heading"><a href="/til/posts/remove-control-flags">Remove Control Flags</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>ImageMagick is not a new tool for me but I haven't really talked about how it comes in handy whenever I wanted to resize and/or compress images efficiently using the terminal instead of using some image conversion service found for free online.</p>
-
-<p>To get started, make sure you install ImageMagick on your machine. This is the command I use for Fedora Linux:</p>
+		<p>There are times when we write flags to control the flow of the program. I mean, it's good to use control flags (sometimes) but it's not necessary to be used in most cases. Like the one shown below:</p>
 
 <div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>dnf<span class="w"> </span>install<span class="w"> </span>ImageMagick
+<pre><span></span><code><span class="k">public</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="nf">HandlePaymentRecords</span><span class="p">(</span><span class="n">List</span><span class="o">&lt;</span><span class="n">PaymentRecord</span><span class="o">&gt;</span><span class="w"> </span><span class="n">paymentRecords</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">isSuccessful</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">true</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">foreach</span><span class="p">(</span><span class="kt">var</span><span class="w"> </span><span class="n">paymentRecord</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="n">paymentRecords</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">ProcessPaymentRecord</span><span class="p">(</span><span class="n">paymentRecord</span><span class="p">))</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">isSuccessful</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">false</span><span class="p">;</span>
+<span class="w">            </span><span class="k">break</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">isSuccessful</span><span class="p">;</span>
+<span class="p">}</span>
 </code></pre>
 </div>
 
-<p>For example, if you wanted to compress an image's quality to 80%, here's you can do it:</p>
+<p>The name of method states it's purpose but it seems a tad bit complicated and might confuse some developers who get on-board with it. </p>
+
+<p>Instead, you can make of use of a refactoring technique called <strong>Remove Control Flags</strong> and modify the method to look like this:</p>
 
 <div class="codehilite">
-<pre><span></span><code>convert<span class="w"> </span>-quality<span class="w"> </span><span class="m">80</span>%<span class="w"> </span>src.png<span class="w"> </span>dest.png
+<pre><span></span><code><span class="k">public</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="nf">HandlePaymentProcess</span><span class="p">(</span><span class="n">List</span><span class="o">&lt;</span><span class="n">PaymentRecord</span><span class="o">&gt;</span><span class="w"> </span><span class="n">paymentRecords</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">foreach</span><span class="p">(</span><span class="kt">var</span><span class="w"> </span><span class="n">paymentRecord</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="n">paymentRecords</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">ProcessPaymentRecord</span><span class="p">(</span><span class="n">paymentRecord</span><span class="p">))</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="k">false</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="k">true</span><span class="p">;</span>
+<span class="p">}</span>
 </code></pre>
 </div>
 
-<p>Great! What if you want to do it for hundreds of images in a directory, then you can easily do something like this:</p>
+<p>The logic is the same but now the code is now simplified, less complex to read and much more maintainable.</p>
 
-<div class="codehilite">
-<pre><span></span><code>find<span class="w"> </span>.<span class="w"> </span>-type<span class="w"> </span>f<span class="w"> </span>-name<span class="w"> </span><span class="s1">&#39;*.png&#39;</span><span class="w"> </span>-exec<span class="w"> </span>bash<span class="w"> </span>-c<span class="w"> </span><span class="s1">&#39;convert -quality 80% &quot;$1&quot; &quot;${1%}_compressed.png&quot; &#39;</span><span class="w"> </span>bash<span class="w">  </span><span class="o">{}</span><span class="w"> </span><span class="se">\;</span>
-</code></pre>
-</div>
+<p>Less code is good code.</p>
 
-<p>You can do the same to resize the images while keeping original aspect ratio intact:</p>
-
-<div class="codehilite">
-<pre><span></span><code>convert<span class="w"> </span>-resize<span class="w"> </span>450x450<span class="w"> </span>src.png<span class="w"> </span>dest.png
-</code></pre>
-</div>
-
-<p>And similar to the one above, you can do the same for multiple images like so:</p>
-
-<div class="codehilite">
-<pre><span></span><code>find<span class="w"> </span>.<span class="w"> </span>-type<span class="w"> </span>f<span class="w"> </span>-name<span class="w"> </span><span class="s1">&#39;*.png&#39;</span><span class="w"> </span>-exec<span class="w"> </span>bash<span class="w"> </span>-c<span class="w"> </span><span class="s1">&#39;convert -resize 450x450 &quot;$1&quot; &quot;${1%}_resized.png&quot; &#39;</span><span class="w"> </span>bash<span class="w">  </span><span class="o">{}</span><span class="w"> </span><span class="se">\;</span>
-</code></pre>
-</div>
-
-<p>I have just scraped the surface of this image manipulation tool and if you are interested to know more, read the official <a href="https://linux.die.net/man/1/imagemagick">manpage</a> on how to use it.</p>
-
-<p>Hope you found this tip useful!</p>
+<p>Hope this helps you out!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>January 15th, 2023</time>
+		<time>June 16th, 2024</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/image-manipulation/">
-					Image Manipulation
+				<a href="/category/c/">
+					C#
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/clean-code/">
+					Clean Code
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/refactoring/">
+					Refactoring
 				</a>
 			</li>
 			
@@ -142,137 +160,45 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/install-cisco-anyconnect-client-on-fedora-linux">Install Cisco Anyconnect Client on Fedora Linux</a></h1>
+		<h1 class="heading"><a href="/til/posts/error-loading-v8-startup-snapshot-file-in-visual-studio-code">Error loading V8 startup snapshot file in Visual Studio Code</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>Cisco Anyconnect Client is a SSL VPN Client with VPN functionalites that enables an organization to secure its endpoints. Although, I use it a lot at office, I have only used it on Windows 10 so far.</p>
-
-<p>One day, when I was on my vacation, I had to connect to a server remotely but this time, I tried doing it via Linux and it worked well!</p>
-
-<h2>Download Cisco AnyConnect Client for Linux</h2>
-
-<p>Fortunately, the client is available for Windows, macOS and Linux.  You can go to the <a href="https://software.cisco.com/download/home/286281283/type/282364313/release/4.10.06079">Downloads</a> page and download the tarball archive for Linux.</p>
-
-<p>After downloading, you can extract the tarball file:</p>
+		<p>Unusually, one fine afternoon, I was facing issues with opening my VSCode editor and I faced the followinge error when I tried <code>code .</code> on my project directory:</p>
 
 <div class="codehilite">
-<pre><span></span><code>tar<span class="w"> </span>-xvf<span class="w"> </span>anyconnect-linux64-4.10.00093-predeploy-k9.tar.gz
+<pre><span></span><code><span class="o">[</span><span class="m">0830</span>/101630.031:FATAL:v8_initializer.cc<span class="o">(</span><span class="m">527</span><span class="o">)]</span><span class="w"> </span>Error<span class="w"> </span>loading<span class="w"> </span>V8<span class="w"> </span>startup<span class="w"> </span>snapshot<span class="w"> </span>file
 </code></pre>
 </div>
 
-<h2>Install Cisco AnyConnect Client for Linux</h2>
+<p>I didn't really understand what might have caused it but after reading this <a href="https://github.com/microsoft/vscode/issues/183314">issue raised on GitHub</a>, I realized that occurred due to a corrupted update while I was shutting down my PC (Good job, Windows! :facepalm:)</p>
 
-<p>Now that the file has been extracted, you can navigate to the <code>vpn</code> directory in <code>anyconnect-linux64-*</code> directory:</p>
+<p>If you're are lucky enough, here's how you can get it back to work:</p>
 
-<div class="codehilite">
-<pre><span></span><code><span class="nb">cd</span><span class="w"> </span>anyconnect-linux64-*/vpn/
-</code></pre>
-</div>
+<ol>
+<li>Go <code>C:\Users\XXX\AppData\Local\Programs\Microsoft VS Code</code> directory</li>
+<li>If you spot a folder titled <code>_</code>, copy the contents and paste it in the VS Code directly</li>
+<li>Try starting your editor again</li>
+</ol>
 
-<p>Execute the <code>vpn_install.sh</code> script:</p>
+<p>The following steps worked out for me and if it worked out for you, that's great! Else, you'll have to re-install your editor all over again, which means you might have to re-install your extensions and re-configure it again (if you haven't taken a backup of it).</p>
 
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>./vpn_install.sh
-</code></pre>
-</div>
-
-<p>Follow the instruction steps and you're ready to use it.</p>
-
-<h2>Connect to VPN via Terminal</h2>
-
-<p>The GUI version was crashing on both KDE and GNOME desktop environments. Whereas, it was a smooth experience when connecting via the Terminal.</p>
-
-<p>For easy access, you can create an alias in your <code>.bashrc</code> file:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="nb">alias</span><span class="w"> </span><span class="nv">anyconnectvpn</span><span class="o">=</span><span class="s2">&quot;/opt/cisco/anyconnect/bin/vpn&quot;</span>
-</code></pre>
-</div>
-
-<p>Save and restart your terminal for the changes to take effect.</p>
-
-<p>After that, you can connect to VPN like this:</p>
-
-<div class="codehilite">
-<pre><span></span><code>anyconnectvpn<span class="w"> </span>-s<span class="w"> </span>connect<span class="w"> </span>&lt;IP_ADDRESS&gt;
-</code></pre>
-</div>
-
-<p>Once executed, you'll be prompted to enter your credentials and if all goes fine, you should be connected.</p>
-
-<h2>Disconnect VPN via the Terminal</h2>
-
-<p>You can execute the following command to disconnect:</p>
-
-<div class="codehilite">
-<pre><span></span><code>anyconnectvpn<span class="w"> </span>-s<span class="w"> </span>disconnect<span class="w"> </span>&lt;IP_ADDRESS&gt;
-</code></pre>
-</div>
-
-<h2>Configuring your VPN connection</h2>
-
-<p>Sometimes, it can be tedious to write these commands all the time especially when you're in a rush, this can really get in your way.</p>
-
-<p>To solve that, you can easily store your credentials in a file like <code>.my_vpn_creds</code> in your home directory:</p>
-
-<div class="codehilite">
-<pre><span></span><code>y
-&lt;username&gt;
-&lt;password&gt;
-</code></pre>
-</div>
-
-<p>Save the file and create another file named <code>my_vpn_connect.sh</code>:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="ch">#!/bin/bash</span>
-
-<span class="nv">VPN_SERVER</span><span class="o">=</span><span class="s2">&quot;&lt;IP_ADDRESS&gt;&quot;</span>
-
-<span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Connecting to VPN..&quot;</span>
-/opt/cisco/anyconnect/bin/vpn<span class="w"> </span>-s<span class="w">  </span>&lt;<span class="w"> </span>~/.my_vpn_creds<span class="w"> </span>connect<span class="w"> </span><span class="si">${</span><span class="nv">VPN_SERVER</span><span class="si">}</span>
-</code></pre>
-</div>
-
-<p>Save the file and make the file executable:</p>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>chmod<span class="w"> </span>+x<span class="w"> </span>my_vpn_connect.sh
-</code></pre>
-</div>
-
-<p>Now, you'll be connected to the VPN automatically by just executing this script:</p>
-
-<div class="codehilite">
-<pre><span></span><code>./my_vpn_connect.sh
-</code></pre>
-</div>
-
-<p>This saved me a lot of time and I hope it does the same for you as well! 🤗</p>
-
-<p>Hope you found this article useful!</p>
+<p>Hope this helps you out!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>January 15th, 2023</time>
+		<time>May 29th, 2024</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/linux/">
-					Linux
+				<a href="/category/vscode/">
+					VSCode
 				</a>
 			</li>
 			
 			<li>
-				<a href="/category/devops/">
-					DevOps
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/productivity/">
-					Productivity
+				<a href="/category/troubleshooting/">
+					Troubleshooting
 				</a>
 			</li>
 			
@@ -284,92 +210,47 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/setup-a-virtual-environment-for-python-development">Setup a virtual environment for Python development</a></h1>
-		<p class="description"></p>
+		<h1 class="heading"><a href="/writings/posts/cicada-3301">Cicada 3301</a></h1>
+		<p class="description">A short docu-series about one of the most mysterious puzzles on the internet.</p>
 	</div>
 	<div class="article-body">
-		<p><code>virtualenv</code> is a tool used that allows you to install and isolate Python packages that are specific to your project rather than installing them globally on your system, which might, at some point, break other tools or services in your system.</p>
+		<p>Ever heard of Cicada 3301? It's one of those mysterious puzzles that made every crypto enthusiast around the globe turn into super sleuths hunting for clues and chasing the next puzzle. I was quite interested in it after watching this series of documentaries titled <strong>Cracking the Code of Cicada 3301</strong> that shot by <strong>Great Big Story</strong>, which made my interest towards my cryptography grow larger.</p>
 
-<p>In this simple guide, I'll show you how to install and create your own Python virtual environment for development.</p>
+<p>Although, I never tried this series of puzzles myself, the actual host of this puzzle is unknown as some claimed that it could be a recruitment programme by the FBI/CIA/NSA/GCHQ to hire super smart individuals or maybe some crypto/security group that cares about data privacy and security.</p>
 
-<p>Before you begin, please make sure that you have installed Python 3 or greater on your system.</p>
-
-<h2>Install virtualenv</h2>
-
-<p>Using the <code>pip</code> tool, you can execute the following command:</p>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>virtualenvwrapper
-</code></pre>
-</div>
-
-<p>Then you need to add the following lines to your <code>.bashrc</code> startup file (found in the home directory).</p>
-
-<p>These lines determine where your virtual environments should live, the location of the script installed and the location of the development project directories:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">WORKON_HOME</span><span class="o">=</span><span class="nv">$HOME</span>/.virtualenvs
-<span class="nb">export</span><span class="w"> </span><span class="nv">VIRTUALENVWRAPPER_PYTHON</span><span class="o">=</span>/usr/bin/python3
-<span class="nb">export</span><span class="w"> </span><span class="nv">VIRTUALENVWRAPPER_VIRTUALENV_ARGS</span><span class="o">=</span><span class="s1">&#39; -p /usr/bin/python3 &#39;</span>
-<span class="nb">export</span><span class="w"> </span><span class="nv">PROJECT_HOME</span><span class="o">=</span><span class="nv">$HOME</span>/Devel
-<span class="nb">source</span><span class="w"> </span>/usr/local/bin/virtualenvwrapper.sh
-</code></pre>
-</div>
-
-<p>Next, restart the startup file:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="nb">source</span><span class="w"> </span>.bashrc
-</code></pre>
-</div>
-
-<p>Once done, it'l execute a bunch of scripts for a few minutes and once the installation is successful, you can start using the <code>mkvirtualenv</code> command to create your virtual environment.</p>
-
-<h2>Creating a virtual environment</h2>
-
-<p>Really, it's quite trivial to create a virtual environment like this:</p>
-
-<div class="codehilite">
-<pre><span></span><code>mkvirtualenv<span class="w"> </span>my_virtual_environment
-</code></pre>
-</div>
-
-<p>Once done, you'll notice that your terminal looks something like this:</p>
-
-<div class="codehilite">
-<pre><span></span><code>(my_virtual_environment) user@desktop:~$
-</code></pre>
-</div>
-
-<p>This indicates that you are inside the virtual environment and can begin installing your Python packages and begin developing your application.</p>
-
-<h2>Using the virtual environment</h2>
-
-<p>There are a few commands that I'd like to share (and you should also know) while working with a virtual environment:</p>
+<p>I remember watching this series back in 2020 and it was quite hard for me to find these videos and hence, I'm sharing it here for you and my reference as well (in case, I wanted to re-watch the documentary again):</p>
 
 <ul>
-<li><code>deactivate</code> &mdash; get out of the current virtual environment</li>
-<li><code>workon</code> &mdash; list available virtual environments on the system</li>
-<li><code>workon name_of_environment</code> &mdash; activate the specified virtual environment</li>
-<li><code>rmvirtualenv name_of_environment</code> &mdash; remove the specified virtual environment</li>
+<li><a href="https://www.youtube.com/watch?v=RatbYqc0-jE">Cracking the Code of Cicada 3301 by Great Big Story | Part 1</a></li>
+<li><a href="https://www.youtube.com/watch?v=Rx8pfheh6aI">Cracking the Code of Cicada 3301 by Great Big Story | Part 2</a></li>
+<li><a href="https://www.youtube.com/watch?v=HRYyhdTHraU">Cracking the Code of Cicada 3301 by Great Big Story | Part 3</a></li>
+<li><a href="https://www.youtube.com/watch?v=GanHp3XCYgg">Cracking the Code of Cicada 3301 by Great Big Story | Part 4</a></li>
 </ul>
 
-<h2>Conclusion</h2>
+<p>What I liked about this documentary series is how it connects people of various disciplines such as Mathematics, Programming, Linguistics and Steganography to deduce and decipher a really complex puzzle. I just find that inspiring because knowledge is power and when aligned with people of similar interests and ambitions, you build new bridges of friendship that spans around the globe.</p>
 
-<p>If you are a Python developer or write code in Python, then virtual environments are super handy and disposable especially while testing and working on different projects.</p>
-
-<p>Unless, your project is package-dependant, you don't really need to isolate your development environment.</p>
-
-<p>Hope you found this article useful!</p>
+<p>Hope you liked reading this article.</p>
 
 	</div>
 	<div class="article-footer">
-		<time>January 3rd, 2023</time>
+		<time>May 26th, 2024</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/python/">
-					Python
+				<a href="/category/documentary/">
+					Documentary
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/cryptography/">
+					Cryptography
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/security/">
+					Security
 				</a>
 			</li>
 			
@@ -381,60 +262,90 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/install-teamviewer-on-fedora-linux-3637">Install TeamViewer on Fedora Linux 36/37</a></h1>
+		<h1 class="heading"><a href="/til/posts/generating-custom-snippets-using-visual-studio-code">Generating custom snippets using Visual Studio Code</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>If you are using Fedora Linux or any other Linux distribution and want a short guide on how to install TeamViewer on your workstation, then this article is for you.</p>
+		<p>I've always wanted to write about this feature and I believe this is one of the most productivity hacks you can do to speed your work and worry-less about writing boilerplate code.</p>
 
-<p>Usually, I use it access remote servers or my computer at work but I myself never did it on a Linux workstation. It worked out for me, so it should work for you too!</p>
+<p>For example, if I wanted to write a piece of code that fetches a list of books asynchronously using JavaScript, I would have to type it or maybe copy-paste that stub from another file or project and edit it accordingly.
+That's fine but when working on a large project or tight deadlines, it can be quite time-consuming if all you want is just a boilerplate code that's ready to begin with.</p>
 
-<h2>1. Download TeamViewer RPM Package</h2>
+<p>Here's how you can create your own snippet:</p>
 
-<p>You can find the <a href="https://www.teamviewer.com/en/download/linux/">latest release</a> on TeamViewer's official site.</p>
+<ol>
+<li>Press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd></li>
+<li>Type <strong>Configure User Snippets</strong> and hit <kbd>Enter</kbd></li>
+<li>Select the language for which it should appear and hit <kbd>Enter</kbd></li>
+</ol>
 
-<p>Make sure that you have install <code>wget</code> on your system to easily download it via the Terminal:</p>
+<p>Once done, a new tab will open up with simple instructions for you to get started with. The instructions are quite straight-forward and you can write something like this right below the note:</p>
 
 <div class="codehilite">
-<pre><span></span><code>wget<span class="w"> </span>https://download.teamviewer.com/download/linux/teamviewer.x86_64.rpm
+<pre><span></span><code><span class="p">{</span>
+<span class="w">    </span><span class="c1">// Place your snippets for javascript here. Each snippet is defined under a snippet name and has a prefix, body and </span>
+<span class="w">    </span><span class="c1">// description. The prefix is what is used to trigger the snippet and the body will be expanded and inserted. Possible variables are:</span>
+<span class="w">    </span><span class="c1">// $1, $2 for tab stops, $0 for the final cursor position, and ${1:label}, ${2:another} for placeholders. Placeholders with the </span>
+<span class="w">    </span><span class="c1">// same ids are connected.</span>
+<span class="w">    </span><span class="c1">// Example:</span>
+<span class="w">    </span><span class="c1">// &quot;Print to console&quot;: {</span>
+<span class="w">    </span><span class="c1">//  &quot;prefix&quot;: &quot;log&quot;,</span>
+<span class="w">    </span><span class="c1">//  &quot;body&quot;: [</span>
+<span class="w">    </span><span class="c1">//      &quot;console.log(&#39;$1&#39;);&quot;,</span>
+<span class="w">    </span><span class="c1">//      &quot;$2&quot;</span>
+<span class="w">    </span><span class="c1">//  ],</span>
+<span class="w">    </span><span class="c1">//  &quot;description&quot;: &quot;Log output to console&quot;</span>
+<span class="w">    </span><span class="c1">// }</span>
+<span class="w">    </span><span class="nt">&quot;AJAX Get Method&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;prefix&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ajax-get&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;body&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">            </span><span class="s2">&quot;$.ajax({&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="s2">&quot;\turl: &#39;/&#39;,&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="s2">&quot;\tmethod: &#39;GET&#39;,&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="s2">&quot;\tdatatype: &#39;json&#39;,&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="s2">&quot;\tsuccess: (data) =&gt; {&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="s2">&quot;\t\tconsole.log(data);&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="s2">&quot;\t},&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="s2">&quot;\terror: (err) =&gt; {&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="s2">&quot;\t\tconsole.error(err);&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="s2">&quot;\t}&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="s2">&quot;});&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="p">],</span>
+<span class="w">        </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;A simple AJAX GET Method&quot;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
 </code></pre>
 </div>
 
-<h2>2. Download minizip module</h2>
-
-<p>During installation, it failed for me as I was missing a certain <code>libminizip.so</code> module. So, I looked up online and found the module and downloaded it on my workstation:</p>
+<p>Save the file and test if the snippet works fine by opening any file, in this case, open an empty <code>.js</code> file and type <code>ajax-get</code> and hit <kbd>Tab</kbd> at the end of the prefix. The generated snippet would look like this:</p>
 
 <div class="codehilite">
-<pre><span></span><code>wget<span class="w"> </span>https://rpmfind.net/linux/fedora/linux/updates/36/Everything/x86_64/Packages/m/minizip-compat-1.2.11-33.fc36.x86_64.rpm
+<pre><span></span><code><span class="nx">$</span><span class="p">.</span><span class="nx">ajax</span><span class="p">({</span>
+<span class="w">    </span><span class="nx">url</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;/&#39;</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">method</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;GET&#39;</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">datatype</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;json&#39;</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">success</span><span class="o">:</span><span class="w"> </span><span class="p">(</span><span class="nx">data</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="nx">error</span><span class="o">:</span><span class="w"> </span><span class="p">(</span><span class="nx">err</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">});</span>
 </code></pre>
 </div>
 
-<p>Once the download is complete, you can install it:</p>
+<p>Learn more about generating snippets by reading the <a href="https://code.visualstudio.com/docs/editor/userdefinedsnippets">documentation</a> about it.</p>
 
-<div class="codehilite">
-<pre><span></span><code>rpm<span class="w"> </span>-i<span class="w"> </span>minizip-compat-1.2.11-33.fc36.x86_64.rpm
-</code></pre>
-</div>
-
-<h2>3. Install TeamViewer</h2>
-
-<p>Now, the final step is to install the RPM package for TeamViewer:</p>
-
-<div class="codehilite">
-<pre><span></span><code>rpm<span class="w"> </span>-i<span class="w"> </span>teamviewer_15.37.3.x86_64.rpm
-</code></pre>
-</div>
-
-<p>Hope you found this short guide useful!</p>
+<p>Hope this tip helps you out!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>January 1st, 2023</time>
+		<time>May 26th, 2024</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/linux/">
-					Linux
+				<a href="/category/vscode/">
+					VSCode
 				</a>
 			</li>
 			
@@ -452,164 +363,204 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/connect-to-a-remote-windows-machine-from-a-linux-machine">Connect to a Remote Windows machine from a Linux machine</a></h1>
+		<h1 class="heading"><a href="/til/posts/using-the-nullcoaleascing-operator-in-c">Using the null-coaleascing operator in C#</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>Last week, my Windows machine was down and I was struggling to connect to a remote server as I'm using Fedora Linux at home.</p>
+		<p>Null checks are the most underrated thing and despite years of experience, we still forget to write a null check in our code.</p>
 
-<p>I tried installing and using GNOME Connections but it crashed and didn't work well for me. I found another tool named <code>rdesktop</code> which was stable and worked well for my case.</p>
-
-<p>Installing it is as easy as typing the following command using the <code>dnf</code> package manager:</p>
+<p>When it comes to writing null checks, this is what one would most write:</p>
 
 <div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>dnf<span class="w"> </span>install<span class="w"> </span>rdesktop
+<pre><span></span><code><span class="kt">string</span><span class="w"> </span><span class="n">foo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">null</span><span class="p">;</span>
+<span class="kt">string</span><span class="w"> </span><span class="n">bar</span><span class="p">;</span>
+<span class="k">if</span><span class="p">(</span><span class="n">foo</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="k">null</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">bar</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">foo</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="k">else</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">bar</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;Hello, friend!&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="n">bar</span><span class="p">)</span><span class="w"> </span><span class="c1">// Output: Hello, friend!</span>
 </code></pre>
 </div>
 
-<p>Now, you can connect to your remote desktop machine using the following command:</p>
+<p>Yes, it does the job but it's a bit lengthy and not so readable. Let's see how the <code>??</code> operator i.e. the null-coalescing operator can help simplify your logic:</p>
 
 <div class="codehilite">
-<pre><span></span><code>rdesktop<span class="w"> </span>-d<span class="w"> </span>&lt;domain&gt;<span class="w"> </span>-u<span class="w"> </span>&lt;username&gt;<span class="w"> </span>-p<span class="w"> </span>-<span class="w"> </span>&lt;ipaddress&gt;
+<pre><span></span><code><span class="kt">string</span><span class="w"> </span><span class="n">foo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">null</span><span class="p">;</span>
+<span class="kt">string</span><span class="w"> </span><span class="n">bar</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">foo</span><span class="w"> </span><span class="o">??</span><span class="w"> </span><span class="s">&quot;Hello, friend!&quot;</span><span class="p">;</span>
+<span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="n">bar</span><span class="p">)</span><span class="w"> </span><span class="c1">// Output: Hello, friend!</span>
 </code></pre>
 </div>
 
-<p>Upon execution of this command, you'll be prompted to enter the password and after that, you're all good to go!</p>
+<p>Now, you can bid goodbyes to writing verbose null checks and make your code more cleaner and readable.</p>
 
-<p>Hope you found this tip useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>January 1st, 2023</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/linux/">
-					Linux
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/productivity/">
-					Productivity
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="travel article lazy" data-src="https://res.cloudinary.com/dajwxxago/image/upload/v1672488741/europetrip/day1/IMG_4414.JPG">
-    <div class="container">
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/travel/">
-					Travel
-				</a>
-			</li>
-			
-		</ul>
-    	<h1 class="heading"><a href="/travel/posts/exploring-europe">Exploring Europe</a></h1>
-        <p class="description">Sharing about my experiences and the places that I explored in my short three-day trip to Europe.</p>
-        <time>December 31st, 2022</time>
-    </div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/trying-out-the-redragon-k552-kumara-rgb-mechanical-keyboard">Trying out the Redragon K552 Kumara RGB Mechanical Keyboard</a></h1>
-		<p class="description">My experiences using a mechanical keyboard for the first time.</p>
-	</div>
-	<div class="article-body">
-		<figure>
-    <img src="/static/images/redragon-k552-kumara.jpeg" />
-    <figcaption>Redragon K552 Kumara RGB Keyboard</figcaption>
-</figure>
-
-<p>Yes, I finally did it and bought myself a mechanical keyboard after tirelessly scrolling through Amazon and YouTube for a good keyboard that doesn't hurt my pocket in the long run.</p>
-
-<h2>What does it feel like?</h2>
-
-<p>Got it delivered yesterday and as I unboxed it, I noticed that the build quality is strong and it's quite a heavy keyboard that has around 18 RGB modes to spice things up a bit.</p>
-
-<p>I got the one with the Outemu Red Switches (More like a Cherry MX Red clones) and since it's a linear switch, the typing experience is buttery smooth and not at all noisy. This should be good for typing in office environments or gamers who like to be fast while playing their favorite games.</p>
-
-<p>Currently, I have one issue with it i.e. that keyboard is a bit high and it kind of tires my wrists after typing for longer sessions but I guess, it can be fixed with a wrist rest (Maybe, a nice wooden one 👀).</p>
-
-<p>On my first try, the keys seemed a bit fast for me as I'm not really used to typing on linear switches, let alone, on a mechanical keyboard. But as of writing this article, I got my speed back up and I have been able to achieve around 75-80WPM.</p>
-
-<h2>Conclusion</h2>
-
-<p>Apart from that, I'm quite happy about this purchase and would definitely hope that it lasts longer until I get another mechanical keyboard.</p>
-
-<p>If you are looking to buy this keyboard, I'd recommend you to give a shot and see it for yourself because I feel that every programmer deserves to type on a good keyboard.</p>
-
-<p>Stay tuned for more content.</p>
+<p>Hope this tip helps you out!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>November 27th, 2022</time>
+		<time>May 25th, 2024</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/productivity/">
-					Productivity
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/tech/">
-					Tech
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/learning-c-10-and-net-core-6">Learning C# 10 and .NET Core 6</a></h1>
-		<p class="description">Getting back into the old roots again.</p>
-	</div>
-	<div class="article-body">
-		<p>To those who haven't been following me a lot, I used to build games on Unity 3D and build desktop applications on .NET and C# during my university days.</p>
-
-<p>Ever since I discovered PHP and Laravel, I never went back to .NET and now after taking a look at the <a href="https://www.techempower.com/benchmarks/#section=data-r21">Fortune benchmarks</a> for .NET Core 6 vs Laravel, I decided to take some time out to learn it again.</p>
-
-<p>I started two weeks ago and the learning curve seemed quite familiar due to previous development experiences. I don't know if it's me but I felt like Laravel might have borrowed a few concepts from .NET Core Framework but hey, everyone needs some sort of inspiration, right?</p>
-
-<p>Unlike .NET, Laravel is usually and still is a "batteries included" type of framework and that helps you get the job done. However, from what I have researched, applications built on .NET seems to be more performant than applications built on Laravel.</p>
-
-<h2>So, what's the current progress?</h2>
-
-<p>Well, I haven't touched the ASP.MVC part yet as I'm geting myself familiar with the coding conventions, static typing (yes, it does take sometime to get used to) by writing some test console-based applications and solving Project Euler problems.</p>
-
-<p>Hopefully, I'll be able to share about what I have learnt using the framework on this blog by either building new applications or rewriting some of my Laravel projects.</p>
-
-<p>Stay tuned for more!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>November 27th, 2022</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/learning/">
-					Learning
+				<a href="/category/c/">
+					C#
 				</a>
 			</li>
 			
 			<li>
 				<a href="/category/programming/">
 					Programming
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/check-if-a-string-is-a-uniqueidentifier-in-sql-server">Check if a string is a UNIQUEIDENTIFIER in SQL Server</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Recently, when I was performing a data migration that contained previous payment history, I came across a table that had a column named <code>PaymentId</code> which is supposed to have a UUID styled format but funnily enough, it was kind of confusing because some of them had numbers in it.</p>
+
+<p>Luckily, the ones that weren't in UUID format are not supposed to be migrated, so I decided to write a <code>SELECT</code> query and filter the records using the <code>TRY_CONVERT</code> function:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">SELECT</span><span class="w"> </span>
+<span class="w">    </span><span class="o">*</span><span class="w"> </span>
+<span class="k">FROM</span><span class="w"> </span>
+<span class="w">    </span><span class="n">dbo</span><span class="p">.</span><span class="n">YourTable</span><span class="w"> </span>
+<span class="k">WHERE</span><span class="w"> </span>
+<span class="w">    </span><span class="n">TRY_CONVERT</span><span class="p">(</span><span class="n">UNIQUEIDENTIFIER</span><span class="p">,</span><span class="w"> </span><span class="n">YourColumn</span><span class="p">)</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">;</span>
+</code></pre>
+</div>
+
+<p>Yes, it's that simple. You don't need to write any complex regular expressions for such operations.</p>
+
+<p>Hope you found this tip useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>February 18th, 2024</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/sql-server/">
+					SQL Server
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/filtering-results-by-weekdays-in-sql-server">Filtering results by weekdays in SQL Server</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Ever wanted to know how many people are actively posting something on a Monday? Or maybe during the weekends?</p>
+
+<p>You can do that by using the <code>DATEPART</code> and <code>DATENAME</code> functions. Let me show you how they work.</p>
+
+<h2>Using DATEPART</h2>
+
+<p>The <code>DATEPART</code> function represents weekdays as integers from 1 (Sunday) to 7 (Saturday).</p>
+
+<p>Let's say that you wanted to filter between Monday and Friday, you can achieve something like this:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">dbo</span><span class="p">.</span><span class="n">YourTable</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">DATEPART</span><span class="p">(</span><span class="n">WEEKDAY</span><span class="p">,</span><span class="w"> </span><span class="n">YourDateColumn</span><span class="p">)</span><span class="w"> </span><span class="k">BETWEEN</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="mi">6</span><span class="p">;</span>
+</code></pre>
+</div>
+
+<p>One thing to note, in SQL Server, Sunday is the first day of the week. So, if you wanted to set the first day of the week, you can write the following statement before executing your query:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">SET</span><span class="w"> </span><span class="n">DATEFIRST</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w">  </span><span class="c1">-- Set Monday as the first day of the week</span>
+<span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">dbo</span><span class="p">.</span><span class="n">YourTable</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">DATEPART</span><span class="p">(</span><span class="n">WEEKDAY</span><span class="p">,</span><span class="w"> </span><span class="n">YourDateColumn</span><span class="p">)</span><span class="w"> </span><span class="k">BETWEEN</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="mi">5</span><span class="p">;</span>
+</code></pre>
+</div>
+
+<p>In the example above, you'll achieve the same results as the previous one.</p>
+
+<h2>Using DATENAME</h2>
+
+<p>The <code>DATENAME</code> function represents weekdays as a string from Monday to Sunday.</p>
+
+<p>Let's replicate the previous example using this function:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">dbo</span><span class="p">.</span><span class="n">YourTable</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">DATENAME</span><span class="p">(</span><span class="n">WEEKDAY</span><span class="p">,</span><span class="w"> </span><span class="n">YourDateColumn</span><span class="p">)</span><span class="w"> </span><span class="k">IN</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;Monday&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Tuesday&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Wednesday&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Thursday&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Friday&#39;</span><span class="p">);</span>
+</code></pre>
+</div>
+
+<p>If you want to know more about filtering your records effectively using these methods, you can the read the documentation:</p>
+
+<ul>
+<li><a href="https://learn.microsoft.com/en-us/sql/t-sql/functions/datename-transact-sql?view=sql-server-ver16">DATENAME (Transact-SQL)</a></li>
+<li><a href="https://learn.microsoft.com/en-us/sql/t-sql/functions/datepart-transact-sql?view=sql-server-ver16">DATEPART (Transact-SQL)</a></li>
+</ul>
+
+<p>Hope you found this tip useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>February 18th, 2024</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/sql-server/">
+					SQL Server
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/writings/posts/dont-forget-what-sparked-your-passion">Don't forget what sparked your passion</a></h1>
+		<p class="description">A short letter to myself and other fellow programmers.</p>
+	</div>
+	<div class="article-body">
+		<p>Do you ever remember falling in love with programming when learning to code during school days or while working on a client's project? Probably not.</p>
+
+<p>When I started learning to code, I never wrote code because I wanted to but because I desired to. No one to poke me around with tight deadlines, no need to race against time. Just the feeling of power and creativity in your hands to build something out of nothing but just pure code. It could have been anything as simple as building a small widget for my blog post, writing a game, solving a problem in LeetCode or Project Euler or maybe writing a bash script to automate my tasks.</p>
+
+<p>You could probably relate to some but for me, these are some of the examples that resonate with me.</p>
+
+<p>I'm writing this as a reminder to myself and other fellow programmers: <strong>don't ever forget that moment when your passion for programming had sparked</strong>. You might be older now and you're probably filled with a lot of responsibilities (especially if you're parenting).</p>
+
+<p>Perhaps, you might never even experience that same amount of adrenaline and rush that you had when you were behind the computer in your room while your siblings and friends were trying to distract you.</p>
+
+<p>There's never an end to learning. You can still find some passion projects that'll help you keep that spark. Have an open mind and be open to newer ideas. Solve a puzzle, read a book, write a game or maybe a blog post.</p>
+
+<p>Don't do this because you need to impress someone or for the sake of it rather because you can and it brings you joy.</p>
+
+<p>Oh and wishing you a Happy New Year! 😀🎄</p>
+
+	</div>
+	<div class="article-footer">
+		<time>January 1st, 2024</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/selfreflection/">
+					Self-reflection
 				</a>
 			</li>
 			
@@ -649,11 +600,11 @@
 		
 	
 		
-			<a class="" href="/pages/23">...</a>
+			<a class="" href="/pages/25">...</a>
 		
 	
 		
-			<a class="" href="/pages/28">28</a>
+			<a class="" href="/pages/30">30</a>
 		
 	
 
@@ -690,28 +641,35 @@
 		<li>
 			<a href="/category/linux/">
 				Linux
-				<span class="count">22</span>
+				<span class="count">24</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/laravel/">
 				Laravel
-				<span class="count">18</span>
+				<span class="count">20</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/devops/">
 				DevOps
-				<span class="count">15</span>
+				<span class="count">20</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/php/">
 				PHP
-				<span class="count">13</span>
+				<span class="count">14</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/git/">
+				Git
+				<span class="count">12</span>
 			</a>
 		</li>
 		
@@ -758,9 +716,9 @@
 		</li>
 		
 		<li>
-			<a href="/category/git/">
-				Git
-				<span class="count">10</span>
+			<a href="/category/mysql/">
+				MySQL
+				<span class="count">9</span>
 			</a>
 		</li>
 		
@@ -775,13 +733,6 @@
 			<a href="/category/unix/">
 				UNIX
 				<span class="count">8</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/mysql/">
-				MySQL
-				<span class="count">7</span>
 			</a>
 		</li>
 		
@@ -803,6 +754,13 @@
 			<a href="/category/essay/">
 				Essay
 				<span class="count">6</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/c/">
+				C#
+				<span class="count">5</span>
 			</a>
 		</li>
 		
@@ -835,16 +793,16 @@
 		</li>
 		
 		<li>
-			<a href="/category/c/">
-				C#
+			<a href="/category/arcade-challenge/">
+				Arcade Challenge
 				<span class="count">4</span>
 			</a>
 		</li>
 		
 		<li>
-			<a href="/category/arcade-challenge/">
-				Arcade Challenge
-				<span class="count">4</span>
+			<a href="/category/databases/">
+				Databases
+				<span class="count">3</span>
 			</a>
 		</li>
 		
@@ -887,6 +845,48 @@
 			<a href="/category/general/">
 				General
 				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/vcs/">
+				VCS
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/ubuntu/">
+				Ubuntu
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/powershell/">
+				PowerShell
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/smtp/">
+				SMTP
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/sql/">
+				SQL
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/net/">
+				.NET
+				<span class="count">2</span>
 			</a>
 		</li>
 		
@@ -996,6 +996,55 @@
 		</li>
 		
 		<li>
+			<a href="/category/phpstorm/">
+				PHPStorm
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/elastic-search/">
+				Elastic Search
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/kibana/">
+				Kibana
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/data-manipulation/">
+				Data Manipulation
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/telnet/">
+				Telnet
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/iis/">
+				IIS
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/centos/">
+				CentOS
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/net-core/">
 				.NET Core
 				<span class="count">1</span>
@@ -1087,22 +1136,8 @@
 		</li>
 		
 		<li>
-			<a href="/category/ubuntu/">
-				Ubuntu
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/ssh/">
 				SSH
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/databases/">
-				Databases
 				<span class="count">1</span>
 			</a>
 		</li>

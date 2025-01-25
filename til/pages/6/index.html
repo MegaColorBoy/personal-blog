@@ -77,33 +77,36 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/quick-search-for-file-in-your-workspace-in-visual-studio-code">Quick Search for file in your workspace in Visual Studio Code</a></h1>
+		<h1 class="heading"><a href="/til/posts/count-the-number-of-word-occurences-in-a-text-file-using-grep">Count the number of word occurences in a text file using grep</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>Recently, started using Visual Studio Code as I'm yet figure out a way to install Sublime Text on Void Linux (using it as my current daily driver).</p>
+		<p>If you are using a GUI based application like Microsoft Word of Google Docs, it would be easier for you to know the number of word occurences in a file. But what if you are in a terminal? That's where both <code>grep</code> and <code>wc</code> comes handy tools.</p>
 
-<p>I'm always used to looking for my files using keyboard shortcuts in Sublime Text and I was kind of surprised this feature isn't enabled by default in Visual Studio Code.</p>
-
-<p>Anyway, after a little digging, I found out that adding this line to your <code>settings.json</code> file would allow you to look for files in your workspace:</p>
+<p>Let's say you have the following text:</p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="nt">&quot;search.useIgnoreFiles&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<pre><span></span><code>The European languages are members of the same family. Their separate existence is a myth. For science, music, sport, etc, Europe uses the same vocabulary.
 </code></pre>
 </div>
 
-<p>And, now try <code>Ctrl+P</code> and you'll be able to search for your file(s) easily.</p>
+<p>Now, you can use the <code>grep</code> and <code>wc</code> tool to count the number of times <code>"the"</code> appears in the file:</p>
 
-<p>Hope you found this tip useful!</p>
+<div class="codehilite">
+<pre><span></span><code>grep<span class="w"> </span>-o<span class="w"> </span>-i<span class="w"> </span><span class="s2">&quot;the&quot;</span><span class="w"> </span>file.txt<span class="w"> </span><span class="p">|</span><span class="w"> </span>wc<span class="w"> </span>-l
+</code></pre>
+</div>
+
+<p>Hope this helps you out!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>July 9th, 2021</time>
+		<time>January 16th, 2022</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/vscode/">
-					VSCode
+				<a href="/category/terminal/">
+					Terminal
 				</a>
 			</li>
 			
@@ -115,46 +118,119 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-install-composer-manually">How to install Composer manually?</a></h1>
+		<h1 class="heading"><a href="/til/posts/install-mariadb-103-on-void-linux">Install MariaDB 10.3 on Void Linux</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>You may wonder <strong>"why not install Composer via apt or yum package manager?"</strong> and yes, it can be installed that way too.</p>
+		<p>I tried to find a proper guide on how to install MySQL 8.0 on Void Linux but I couldn't really find any. So, I thought of installing MariaDB 10.3 on my laptop instead.</p>
 
-<p>But what if you are using old composer packages or you wanted to skip the checks done during the interactive installation routine, this could be the way for you.</p>
+<p>Don't worry about using MariaDB as it meets the same standard enterprised requirements as MySQL. The only difference is that MySQL belongs to Oracle and MariaDB is for people who wanted to get out of Oracle's hands.</p>
 
-<p>I wouldn't really call it an advanced technique or something but if you know what you're doing, then you should be in the right direction.</p>
+<p>Anyway, let's get started.</p>
 
-<p>The below snippet will show you how to install it manually:</p>
+<h2>Prerequisites</h2>
+
+<ul>
+<li>Need to have root privileges in order to install packages.</li>
+<li>Basic know-how of Void Linux and it's <code>xbps</code> package manager.</li>
+</ul>
+
+<p>Alright, go ahead and follow these steps one-by-one:</p>
+
+<h3>1. Install MariaDB</h3>
+
+<p>Type the following command to install the package:</p>
 
 <div class="codehilite">
-<pre><span></span><code>wget<span class="w"> </span><span class="s2">&quot;https://getcomposer.org/download/VERSION_X.X.X/composer.phar&quot;</span>
-sudo<span class="w"> </span>mv<span class="w"> </span>composer.phar<span class="w"> </span>/usr/local/bin/composer
-sudo<span class="w"> </span>chmod<span class="w"> </span>a+x<span class="w"> </span>/usr/local/bin/composer
+<pre><span></span><code>sudo<span class="w"> </span>xbps-install<span class="w"> </span>-S<span class="w"> </span>mariadb
 </code></pre>
 </div>
 
-<h2>Yes, that's it!</h2>
+<h3>2. Initialize MySQL data directory</h3>
 
-<p>By placing Composer in the <code>/usr/local/bin</code> directory, it will be accessible from any directory within the system and you can run it globally.</p>
-
-<p>To check if you've installed it correctly, just do the following:</p>
+<p>The following command will initialize a MariaDB data directory and create system tables in the MySQL database, if they are not present.</p>
 
 <div class="codehilite">
-<pre><span></span><code>composer<span class="w"> </span>-V
+<pre><span></span><code>mysql_install_db<span class="w"> </span>--user<span class="o">=</span>mysql<span class="w"> </span>--basedir<span class="o">=</span>/usr<span class="w"> </span>--datadir<span class="o">=</span>/var/lib/mysql
 </code></pre>
 </div>
 
-<p>Hope you found this tip useful!</p>
+<p>The options used:</p>
+
+<ul>
+<li><code>--user</code>: The login user name to use for running the <code>mysqld</code> process.</li>
+<li><code>--basedir</code> The path to the MariaDB installation directory.</li>
+<li><code>--datadir</code>: The path to the MariaDB directory.</li>
+</ul>
+
+<p>To know more about it, you can refer to <a href="https://mariadb.com/kb/en/mysql_install_db/">MariaDB's documentation</a>.</p>
+
+<h3>3. Enable MySQL service</h3>
+
+<p>If you are used to Ubuntu or CentOS, enabling services in Void Linux is a bit different but quite simple. Once a process is symlinked, it will start on boot and restarts if it stops unless you stop the service deliberately.</p>
+
+<p>Type the following command to enable the <code>mysqld</code> service:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>ln<span class="w"> </span>-s<span class="w"> </span>/etc/sv/mysqld<span class="w"> </span>/var/service/mysqld
+</code></pre>
+</div>
+
+<h3>4. Start MySQL service</h3>
+
+<p>Type the following command to start the <code>mysqld</code> service:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>sv<span class="w"> </span>start<span class="w"> </span>mysqld
+</code></pre>
+</div>
+
+<p>To confirm, if the service is running, type the following:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>sv<span class="w"> </span>status<span class="w"> </span>mysqld
+</code></pre>
+</div>
+
+<p>And you'll see something like this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>run:<span class="w"> </span>mysqld:<span class="w"> </span><span class="o">(</span>pid<span class="w"> </span><span class="m">15136</span><span class="o">)</span><span class="w"> </span>1116s<span class="p">;</span><span class="w"> </span>run:<span class="w"> </span>log:<span class="w"> </span><span class="o">(</span>pid<span class="w"> </span><span class="m">15025</span><span class="o">)</span><span class="w"> </span>1172s
+</code></pre>
+</div>
+
+<h3><a id="secure-mysql-installation"></a> 5. Secure MySQL installation</h3>
+
+<p>It's recommended to secure your installation, so type the following command:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>mysql_secure_installation
+</code></pre>
+</div>
+
+<p>Once the command is executed, you'll be prompted with a few questions, respond according to your needs and you're done!</p>
+
+<h3>6. Test MariaDB connection</h3>
+
+<p>Now, all you have to do is, try to log in to your database by typing the following:</p>
+
+<div class="codehilite">
+<pre><span></span><code>mysql<span class="w"> </span>-u<span class="w"> </span>root<span class="w"> </span>-p
+</code></pre>
+</div>
+
+<p>Once executed, it would prompt you for your password (which you must have set in the <a href="#secure-mysql-installation">previous step</a> and if you are able to log in, you are good to go!</p>
+
+<p>Hope this guide helps you out!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>July 3rd, 2021</time>
+		<time>January 16th, 2022</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/tooling/">
-					Tooling
+				<a href="/category/databases/">
+					Databases
 				</a>
 			</li>
 			
@@ -166,38 +242,33 @@ sudo<span class="w"> </span>chmod<span class="w"> </span>a+x<span class="w"> </s
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/prevent-vim-from-creating-swapfiles">Prevent VIM from creating swapfiles</a></h1>
+		<h1 class="heading"><a href="/til/posts/how-to-create-an-iso-image-from-cdsdvds">How to create an ISO image from CDs/DVDs?</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>I like VIM and use it regularly to write and edit code on a daily basis but I always find the creation of <code>.swp</code> files really annoying.</p>
+		<p>I used to create ISO images using DAEMON Tools but I wanted to try something different and see if there's a way to create it using the Linux CLI.</p>
 
-<p>If you find them annoying too, you disable them temporarily in the editor, like this:</p>
+<p>Turns out, you can do in just a single line using the <code>dd</code> utility like so:</p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="p">:</span><span class="k">set</span> <span class="nb">noswapfile</span>
+<pre><span></span><code>dd<span class="w"> </span><span class="k">if</span><span class="o">=</span>/dev/cdrom<span class="w"> </span><span class="nv">of</span><span class="o">=</span>/path/to/your/directory/image.iso
 </code></pre>
 </div>
 
-<p>Or if you want to disable it permanently, just add this line in your <code>.vimrc</code> file:</p>
+<p>The <code>if</code> stands for input file and <code>of</code> stands for output file.</p>
 
-<div class="codehilite">
-<pre><span></span><code><span class="k">set</span> <span class="nb">noswapfile</span>
-</code></pre>
-</div>
-
-<p>Don't get me wrong, I'm not saying that you should dislike <code>.swp</code> files because if the editor crashes or your computer/server crashes in midway, those files can save your progress.</p>
+<p>Looks like, I don't have to use DAEMON Tools for stuff like this, I guess.</p>
 
 <p>Hope you found this tip useful!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>July 3rd, 2021</time>
+		<time>October 23rd, 2021</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/vim/">
-					VIM
+				<a href="/category/linux/">
+					Linux
 				</a>
 			</li>
 			
@@ -209,66 +280,164 @@ sudo<span class="w"> </span>chmod<span class="w"> </span>a+x<span class="w"> </s
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-setup-rsync-with-passwordless-ssh-on-unixlinux">How to setup rsync with passwordless SSH on UNIX/Linux?</a></h1>
+		<h1 class="heading"><a href="/til/posts/truncate-a-file-using-redirection-in-linux">Truncate a file using redirection in Linux</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>Tired of ensuring if whether each file in every server is synced? Planning on doing automated backups? If so, then this technique should come in handy for you.</p>
+		<p>Simply put, sometimes, there are situations in where you just want to clear the contents of a file without deleting it.</p>
 
-<p>Interested? Then follow the steps below:</p>
+<p>This could be for many reasons like to avoid permission related issues, or maybe the file could be having useless logs that amasses to a size that measures in GBs.</p>
 
-<h2>Check if rsync over SSH works</h2>
-
-<p>Before you start, please ensure that you can <code>rsync</code> to your intended server over <code>ssh</code> using a password.
-With the following example, you can just send a simple file over to the intended server and see if it works or not:</p>
+<p>So, the easiest solution is to clear it away from a terminal is by shell redirection like so:</p>
 
 <div class="codehilite">
-<pre><span></span><code>rsync<span class="w"> </span>-avz<span class="w"> </span>-e<span class="w"> </span>ssh<span class="w"> </span>test.txt<span class="w"> </span>username@REMOTE_SERVER_IP_OR_DOMAIN:/path/to/folder/
+<pre><span></span><code>:&gt;<span class="w"> </span>filename
 </code></pre>
 </div>
 
-<p>Once you execute this command on the terminal, it'll prompt you for a password on the remote server, if it does, then it works.</p>
+<p>Let me break down the command here:</p>
 
-<h2>Generate SSH Keys</h2>
+<ul>
+<li>The <code>:</code> symbol means <code>true</code> and doesn't produce any output.</li>
+<li>The '>' symbol is used for redirecting the output of the preceding command (in this case, it's empty!)</li>
+<li><code>filename</code> is the file that you want to truncate. If it doesn't exist, the file will be created.</li>
+</ul>
 
-<p>If you want to do a passwordless SSH, you need to generate public and private SSH keys on the local server by typing the following command on the terminal:</p>
+<p>Alternatively, you can do the same by using the <code>cat</code> command to output the contents of the <code>/dev/null</code> device (which only contains a EOL character) to empty a file:</p>
 
 <div class="codehilite">
-<pre><span></span><code>ssh-keygen
-Enter<span class="w"> </span>passphrase<span class="w"> </span><span class="o">(</span>empty<span class="w"> </span><span class="k">for</span><span class="w"> </span>no<span class="w"> </span>passphrase<span class="o">)</span>:
-Enter<span class="w"> </span>same<span class="w"> </span>passphrase<span class="w"> </span>again:
+<pre><span></span><code>cat<span class="w"> </span>/dev/null<span class="w"> </span>&gt;<span class="w"> </span>filename
 </code></pre>
 </div>
 
-<p>If you're prompted to enter a passphrase, just hit <code>Enter</code> and proceed until the key is generated. Once the keys are generated, they'll be in the <code>~/.ssh</code> directory on your local server.</p>
-
-<h2>Copy public key to remote server</h2>
-
-<p>Using <code>ssh-copy-id</code>, you can copy the public key to the remote server:</p>
-
-<div class="codehilite">
-<pre><span></span><code>ssh-copy-id<span class="w"> </span>-i<span class="w"> </span>~/.ssh/id_rsa.pub<span class="w"> </span>REMOTE_SERVER_IP_OR_DOMAIN
-</code></pre>
-</div>
-
-<p>Once executed, you'll be prompted to enter the password of the account on the remote server and if successful, the public key will be copied to the remote server and will be stored in it's appropriate location.</p>
-
-<h2>Perform Rsync over passwordless SSH</h2>
-
-<p>If you've come this far, then you should be able to SSH to the remote server without entering the password:</p>
-
-<div class="codehilite">
-<pre><span></span><code>ssh<span class="w"> </span>REMOTE_SERVER_IP_OR_DOMAIN
-</code></pre>
-</div>
-
-<p>If it works, then perform the <code>rsync</code> operation again <a href="#rsync-operation">(above)</a> and this time, it shouldn't prompt you to enter any password.</p>
-
-<p>Hope you liked reading this short article!</p>
+<p>Hope this comes in handy!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>July 3rd, 2021</time>
+		<time>October 2nd, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-identify-which-linux-distribution-is-running-in-your-system">How to identify which Linux distribution is running in your system?</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>If you've read my <a href="/til/posts/check-ubuntu-version/">earlier post</a>, I was using Ubuntu, at that time, and I thought that was how you identify which distro is running in your system but using <code>lsb_release -a</code> is not always going to work as some distributions may not have it installed.</p>
+
+<p>Try the following command to identify the distribution you are running in your system:</p>
+
+<div class="codehilite">
+<pre><span></span><code>cat<span class="w"> </span>/etc/os-release
+</code></pre>
+</div>
+
+<p>And you'll get the following output:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nv">NAME</span><span class="o">=</span><span class="s2">&quot;XXXX&quot;</span>
+<span class="nv">ID</span><span class="o">=</span><span class="s2">&quot;XXXX&quot;</span>
+<span class="nv">DISTRIB_ID</span><span class="o">=</span><span class="s2">&quot;XXXX&quot;</span>
+<span class="nv">PRETTY_NAME</span><span class="o">=</span><span class="s2">&quot;XXXX&quot;</span>
+</code></pre>
+</div>
+
+<p>Hope this helps you out!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>October 2nd, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/display-list-of-files-with-their-extension-and-file-sizes">Display list of files with their extension and file sizes</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Last month, I was trying to free up some space in my company servers and I realized that there were a lot of <code>.zip</code> files taking up a lot of space.</p>
+
+<p>So, I wrote the following command to list files by their extension:</p>
+
+<div class="codehilite">
+<pre><span></span><code>find<span class="w"> </span>.<span class="w"> </span>-iname<span class="w"> </span><span class="se">\*</span>.extension<span class="w"> </span>-exec<span class="w"> </span>du<span class="w"> </span>-sh<span class="w"> </span><span class="o">{}</span><span class="w"> </span><span class="se">\;</span><span class="w"> </span>&gt;<span class="w"> </span>file-list.txt
+</code></pre>
+</div>
+
+<p>And later to determine which files are the largest, I executed this command to sort the list by file size:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sort<span class="w"> </span>-rh<span class="w"> </span>file-list.txt<span class="w"> </span>&gt;<span class="w"> </span>newfile.txt
+</code></pre>
+</div>
+
+<p>Hope this tip helps you too! &#x1F604;</p>
+
+	</div>
+	<div class="article-footer">
+		<time>September 20th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/view-your-wget-progress-even-after-closing-your-ssh-session">View your wget progress even after closing your SSH session</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Few days back, I ran a <code>wget</code> command to download a file and accidentally closed the SSH client.</p>
+
+<p>I logged in again and checked the list of active processes and thankfully, the <code>wget</code> process was still running except that I wasn't able to know the current progress of it.</p>
+
+<p>So, I did a little research and found a way to view the progress, so I tried the following command:</p>
+
+<div class="codehilite">
+<pre><span></span><code>tail<span class="w"> </span>-f<span class="w"> </span>wget_log
+</code></pre>
+</div>
+
+<p>And, I was able to view it's current download progress again.</p>
+
+<p>Hope this helps you out!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>August 13th, 2021</time>
 		<ul class="tags">
 			
 			<li>
@@ -277,81 +446,9 @@ Enter<span class="w"> </span>same<span class="w"> </span>passphrase<span class="
 				</a>
 			</li>
 			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/render-a-simple-rgb-colored-image-in-c">Render a simple RGB colored image in C++</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p><img src="../../../static/til_images/rgb-colored-spectrum.png" style="width: 500px; height: 300px;" /></p>
-
-<p>Recently, I started reading a book called <a href="https://graphicscodex.courses.nvidia.com/app.html">The Graphics Codex</a>, it's an amazing book about Computer Graphics covering a lot of content and I find it quite resourceful. I wanted to build my own toy raytracer for the sake of exploring, so that's why I started to refresh my graphics coding knowledge a bit.</p>
-
-<p>Just like any graphics renderer, in order to view your image. you must be able to write your image to a file, right?</p>
-
-<p>Below, I wrote a really simple code to generate the entire RGB colored spectrum from top to bottom:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
-<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
-
-<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">800</span><span class="p">;</span>
-<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">height</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">800</span><span class="p">;</span>
-
-<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;P3</span><span class="se">\n</span><span class="s">&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">width</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">height</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">255</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="n">height</span><span class="mi">-1</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&gt;=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">--</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">width</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="k">auto</span><span class="w"> </span><span class="n">r</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kt">double</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="n">width</span><span class="mi">-1</span><span class="p">);</span>
-<span class="w">            </span><span class="k">auto</span><span class="w"> </span><span class="n">g</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kt">double</span><span class="p">(</span><span class="n">j</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="n">height</span><span class="mi">-1</span><span class="p">);</span>
-<span class="w">            </span><span class="k">auto</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.25</span><span class="p">;</span>
-
-<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">ir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="mf">255.999</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">r</span><span class="p">);</span>
-<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">ig</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="mf">255.999</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">g</span><span class="p">);</span>
-<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">ib</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="mf">255.999</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">b</span><span class="p">);</span>
-
-<span class="w">            </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">ir</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">ig</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">ib</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="p">}</span>
-</code></pre>
-</div>
-
-<p>You can generate it by simply creating an executable like this:</p>
-
-<div class="codehilite">
-<pre><span></span><code>g++<span class="w"> </span>-o<span class="w"> </span>pixels<span class="w"> </span>pixels.cpp
-</code></pre>
-</div>
-
-<p>Now, when you execute it by typing <code>./pixels</code>, you'll get a list of numbers that's pretty much a combination and permutation of RGB color values.</p>
-
-<p>Lastly, to generate a colored image, like the one above, just redirect the output to an image format, in this example, I used PPM image format:</p>
-
-<div class="codehilite">
-<pre><span></span><code>./pixels<span class="w"> </span>&gt;<span class="w"> </span>image.ppm<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>xdg-open<span class="w"> </span>image.ppm
-</code></pre>
-</div>
-
-<p>And that's it, you have generated your own colored image! &#x1F601;</p>
-
-<p>Hope you found this useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>June 11th, 2021</time>
-		<ul class="tags">
-			
 			<li>
-				<a href="/category/graphics/">
-					Graphics
+				<a href="/category/wget/">
+					wget
 				</a>
 			</li>
 			
@@ -363,80 +460,43 @@ Enter<span class="w"> </span>same<span class="w"> </span>passphrase<span class="
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/find-directories-created-within-a-date-range">Find directories created within a date range</a></h1>
+		<h1 class="heading"><a href="/til/posts/how-to-use-github-personal-access-token-to-authenticate-your-git-commits">How to use GitHub Personal Access Token to authenticate your git commits?</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>Executing these commands helps me create a sorted list of files/directories created within a specific date range:</p>
+		<p>On November 2020, GitHub had announced that they would no longer accept basic username/password to authenticate git commits and it would be deprecated by Mid 2021.</p>
+
+<p>Instead, they recommend you to authenticate your git commits using a Personal Access Token from your GitHub account.</p>
+
+<h2>Generate a personal access token</h2>
+
+<ol>
+<li>Unset your credentials from your remote repository: <code>git config --local --unset credential.helper</code></li>
+<li>Login to your GitHub account and go to <em>Settings</em> </li>
+<li>Then navigate to <em>Developer Settings -> Personal Access Tokens</em></li>
+<li>Click on <em>Generate new token</em></li>
+<li>Give a name to your Personal Access Token and the necessary permissions required.</li>
+<li>Once done, hit on <em>Generate token</em></li>
+<li>The token will be shown once, so make sure to copy it and store it somewhere that you can remember.</li>
+</ol>
+
+<h2>Update your remote repository</h2>
+
+<p>Once you've generated a token, you just have to update your remote repository by following the below steps:</p>
+
+<h3>1. Update remote repository URL</h3>
 
 <div class="codehilite">
-<pre><span></span><code>touch<span class="w"> </span>-t<span class="w"> </span><span class="m">202104100000</span><span class="w"> </span>start
-touch<span class="w"> </span>-t<span class="w"> </span><span class="m">202104150000</span><span class="w"> </span>stop
-find<span class="w"> </span>.<span class="w"> </span>-type<span class="w"> </span>d<span class="w"> </span>-maxdepth<span class="w"> </span><span class="m">1</span><span class="w"> </span>-newer<span class="w"> </span>start<span class="w"> </span><span class="se">\!</span><span class="w"> </span>-newer<span class="w"> </span>stop<span class="w"> </span><span class="p">|</span><span class="w"> </span>sort<span class="w"> </span>&gt;&gt;<span class="w"> </span>directories.txt
+<pre><span></span><code>git<span class="w"> </span>remote<span class="w"> </span>set-url<span class="w"> </span>origin<span class="w"> </span>https://&lt;your_access_token&gt;@github.com/&lt;your_git_repo_url&gt;
 </code></pre>
 </div>
 
-<p>Someday, these commands shall come in handy, bud! &#x1F60E;</p>
+<h3>2. Just git pull once</h3>
 
-	</div>
-	<div class="article-footer">
-		<time>April 10th, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/unix/">
-					UNIX
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/perform-git-operations-using-path-directory">Perform Git operations using path directory</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>The <code>-C</code> flag means the path of the directory and using this flag, you can perform any Git operations outside the project's directory without having to enter the directory all the time:</p>
+<p>Now, just perform <code>git pull</code> operation once and you should be good:</p>
 
 <div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>-C<span class="w"> </span>/path/to/directory<span class="w"> </span>&lt;command&gt;
-</code></pre>
-</div>
-
-<p>Hope this tip helps you out!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>April 10th, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/git/">
-					Git
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/exclude-directories-while-searching-for-a-pattern-in-files">Exclude directories while searching for a pattern in files</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Looking for a specific text pattern in a directory but wanted to avoid some paths? Here's a quick command that you can try:</p>
-
-<div class="codehilite">
-<pre><span></span><code>grep<span class="w"> </span>-R<span class="w"> </span>--exclude-dir<span class="o">=</span>path/to/directory<span class="w"> </span><span class="s1">&#39;some pattern&#39;</span><span class="w"> </span>/path/to/search
+<pre><span></span><code>git<span class="w"> </span>pull<span class="w"> </span>https://&lt;your_access_token&gt;@github.com/&lt;your_git_repo_url&gt;
 </code></pre>
 </div>
 
@@ -444,12 +504,12 @@ find<span class="w"> </span>.<span class="w"> </span>-type<span class="w"> </spa
 
 	</div>
 	<div class="article-footer">
-		<time>April 10th, 2021</time>
+		<time>August 13th, 2021</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/unix/">
-					UNIX
+				<a href="/category/git/">
+					Git
 				</a>
 			</li>
 			
@@ -497,11 +557,11 @@ find<span class="w"> </span>.<span class="w"> </span>-type<span class="w"> </spa
 		
 	
 		
-			<a class="" href="/til/pages/10">...</a>
+			<a class="" href="/til/pages/11">...</a>
 		
 	
 		
-			<a class="" href="/til/pages/18">18</a>
+			<a class="" href="/til/pages/19">19</a>
 		
 	
 
@@ -528,28 +588,35 @@ find<span class="w"> </span>.<span class="w"> </span>-type<span class="w"> </spa
 		<li>
 			<a href="/category/linux/">
 				Linux
-				<span class="count">22</span>
+				<span class="count">24</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/laravel/">
 				Laravel
-				<span class="count">18</span>
+				<span class="count">20</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/devops/">
 				DevOps
-				<span class="count">15</span>
+				<span class="count">20</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/php/">
 				PHP
-				<span class="count">13</span>
+				<span class="count">14</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/git/">
+				Git
+				<span class="count">12</span>
 			</a>
 		</li>
 		
@@ -596,9 +663,9 @@ find<span class="w"> </span>.<span class="w"> </span>-type<span class="w"> </spa
 		</li>
 		
 		<li>
-			<a href="/category/git/">
-				Git
-				<span class="count">10</span>
+			<a href="/category/mysql/">
+				MySQL
+				<span class="count">9</span>
 			</a>
 		</li>
 		
@@ -613,13 +680,6 @@ find<span class="w"> </span>.<span class="w"> </span>-type<span class="w"> </spa
 			<a href="/category/unix/">
 				UNIX
 				<span class="count">8</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/mysql/">
-				MySQL
-				<span class="count">7</span>
 			</a>
 		</li>
 		
@@ -641,6 +701,13 @@ find<span class="w"> </span>.<span class="w"> </span>-type<span class="w"> </spa
 			<a href="/category/essay/">
 				Essay
 				<span class="count">6</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/c/">
+				C#
+				<span class="count">5</span>
 			</a>
 		</li>
 		
@@ -673,16 +740,16 @@ find<span class="w"> </span>.<span class="w"> </span>-type<span class="w"> </spa
 		</li>
 		
 		<li>
-			<a href="/category/c/">
-				C#
+			<a href="/category/arcade-challenge/">
+				Arcade Challenge
 				<span class="count">4</span>
 			</a>
 		</li>
 		
 		<li>
-			<a href="/category/arcade-challenge/">
-				Arcade Challenge
-				<span class="count">4</span>
+			<a href="/category/databases/">
+				Databases
+				<span class="count">3</span>
 			</a>
 		</li>
 		
@@ -725,6 +792,48 @@ find<span class="w"> </span>.<span class="w"> </span>-type<span class="w"> </spa
 			<a href="/category/general/">
 				General
 				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/vcs/">
+				VCS
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/ubuntu/">
+				Ubuntu
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/powershell/">
+				PowerShell
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/smtp/">
+				SMTP
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/sql/">
+				SQL
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/net/">
+				.NET
+				<span class="count">2</span>
 			</a>
 		</li>
 		
@@ -834,6 +943,55 @@ find<span class="w"> </span>.<span class="w"> </span>-type<span class="w"> </spa
 		</li>
 		
 		<li>
+			<a href="/category/phpstorm/">
+				PHPStorm
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/elastic-search/">
+				Elastic Search
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/kibana/">
+				Kibana
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/data-manipulation/">
+				Data Manipulation
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/telnet/">
+				Telnet
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/iis/">
+				IIS
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/centos/">
+				CentOS
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/net-core/">
 				.NET Core
 				<span class="count">1</span>
@@ -925,22 +1083,8 @@ find<span class="w"> </span>.<span class="w"> </span>-type<span class="w"> </spa
 		</li>
 		
 		<li>
-			<a href="/category/ubuntu/">
-				Ubuntu
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/ssh/">
 				SSH
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/databases/">
-				Databases
 				<span class="count">1</span>
 			</a>
 		</li>

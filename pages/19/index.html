@@ -78,140 +78,29 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/queues-and-stacks">Queues & Stacks</a></h1>
+		<h1 class="heading"><a href="/til/posts/enable-http-strict-transport-security-hsts">Enable HTTP Strict Transport Security (HSTS)</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>Let's look at the differences between the two data structures:</p>
+		<p>As part of a project that I was working on, I learnt about <a href="https://en.wikipedia.org/wiki/HTTP_Strict_Transport_Security">HTTP Strict Transport Security</a> protocol which tells the browser about making future web requests over HTTPS only. So, even if you attempt to use <code>http://</code>, the browser will force you to use <code>https://</code> URLs in the future.</p>
 
-<ol>
-<li><strong>Queues</strong>: First-In First-Out</li>
-<li><strong>Stacks</strong>: Last-In Last-Out</li>
-</ol>
-
-<h2>Queues</h2>
-
-<p>This follows a <strong>First-In First-Out</strong> processing order i.e. the first element added to a queue will be processed first. A queue should support two operations:</p>
-
-<ul>
-<li>Enqueue</li>
-<li>Dequeue</li>
-</ul>
-
-<h3>Enqueue</h3>
-
-<p>Adds the element to the tail of a queue. The tail position gets incremented.</p>
-
-<h3>Dequeue</h3>
-
-<p>Removes the first element of a queue i.e. the head element. Once, it's removed, the subsequent element becomes the new head element of the queue. The position of the new head element gets incremented and the previous one is assigned a negative integer like -1 or some garbage value. </p>
-
-<p><strong>Implementation of a standard queue using C++:</strong></p>
+<p>You can enable it by writing this header in your <code>.htaccess</code> file in your <code>public</code> directory:</p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">Queue</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="k">private</span><span class="o">:</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">pos</span><span class="p">;</span>
-<span class="w">        </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">data</span><span class="p">;</span>
-
-<span class="w">    </span><span class="k">public</span><span class="o">:</span>
-<span class="w">        </span><span class="n">Queue</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="n">pos</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span>
-
-<span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="n">enqueue</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="n">data</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">value</span><span class="p">);</span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span>
-
-<span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="n">dequeue</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">isEmpty</span><span class="p">()){</span>
-<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
-<span class="w">            </span><span class="p">}</span>
-<span class="w">            </span><span class="n">pos</span><span class="o">++</span><span class="p">;</span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span>
-
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">front</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="n">pos</span><span class="p">];</span>
-<span class="w">        </span><span class="p">}</span>
-
-<span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="n">isEmpty</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">pos</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="p">}</span>
+<pre><span></span><code>Header<span class="w"> </span>always<span class="w"> </span><span class="nb">set</span><span class="w"> </span>Strict-Transport-Security<span class="w"> </span><span class="s2">&quot;max-age=31536000&quot;</span><span class="w"> </span><span class="nv">env</span><span class="o">=</span>HTTPS
 </code></pre>
 </div>
 
-<p>In terms of memory management, a standard Queue is quite inefficient and incapable of handling dynamic memory.</p>
-
-<h2>Stacks</h2>
-
-<p>This follows a <strong>Last-In First-Out</strong> processing order i.e. the last element added to a queue will be the first to be removed. Just like queues, it has two simple operations:</p>
-
-<ul>
-<li>Push</li>
-<li>Pop</li>
-</ul>
-
-<h3>Push</h3>
-
-<p>Each element is pushed towards the end of the stack. Think of it as a card deck where you stack a card on top of another card.</p>
-
-<h3>Pop</h3>
-
-<p>It removes the most recent element i.e. the newly added element from the stack.</p>
-
-<p><strong>Implementation of a stack using C++:</strong></p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">Stack</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="k">private</span><span class="o">:</span>
-<span class="w">        </span><span class="n">vector</span><span class="o">&amp;</span><span class="n">ltint</span><span class="o">&gt;</span><span class="w"> </span><span class="n">data</span><span class="p">;</span>
-<span class="w">    </span><span class="k">public</span><span class="o">:</span>
-<span class="w">        </span><span class="kt">void</span><span class="w"> </span><span class="n">push</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="n">data</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">value</span><span class="p">);</span>
-<span class="w">        </span><span class="p">}</span>
-
-<span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="n">isEmpty</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">empty</span><span class="p">();</span>
-<span class="w">        </span><span class="p">}</span>
-
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">top</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">back</span><span class="p">();</span>
-<span class="w">        </span><span class="p">}</span>
-
-<span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="n">pop</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">isEmpty</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
-<span class="w">                </span><span class="n">data</span><span class="p">.</span><span class="n">pop_back</span><span class="p">();</span>
-<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
-<span class="w">            </span><span class="p">}</span>
-<span class="w">            </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
-<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
-<span class="w">            </span><span class="p">}</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="p">}</span>
-</code></pre>
-</div>
-
-<p>Unlike queues, stacks are easier to implement and pretty efficient at managing dynamic memory.</p>
-
-<p>Oh, if you ever get to use these, don't worry about implementing them, nearly all programming languages have their own implementations of <code>stack</code> and <code>queue</code> that comes with it's own standard library.</p>
+<p>Please note that once you enable this protocol, your web application is committed to using SSL i.e. you won't be able to use insecure HTTP for your web application.</p>
 
 	</div>
 	<div class="article-footer">
-		<time>May 30th, 2020</time>
+		<time>June 22nd, 2020</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/algorithms/">
-					Algorithms
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/data-structures/">
-					Data Structures
+				<a href="/category/apache/">
+					Apache
 				</a>
 			</li>
 			
@@ -223,40 +112,28 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/launched-a-microblog-site">Launched a microblog site</a></h1>
-		<p class="description">A tiny experiment to see how it could improve my writing productivity.</p>
+		<h1 class="heading"><a href="/til/posts/forcing-http-to-https-redirect-after-enabling-ssl">Forcing HTTP to HTTPS redirect after enabling SSL</a></h1>
+		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>Ever since I've been working from home (due to COVID19 pandemic), I hardly find time to write any posts on my blog and I felt that it was counter-productive whenever I wanted to start a new one after a long time.</p>
+		<p>You can manually force HTTP to HTTPS after enabling your SSL certificate by adding the following condition at the beginning of your <code>.htaccess</code> file in your <code>public</code> directory:</p>
 
-<p>And then, I came across this trend of <strong>TIL</strong> a.k.a <strong>Today I Learned</strong> on GitHub and one of my favorite ones is written by <a href="https://github.com/jbranchaud/til/blob/master/README.md">Josh Branchaud</a>.</p>
+<div class="codehilite">
+<pre><span></span><code>RewriteCond<span class="w"> </span>%<span class="o">{</span>HTTP:X-Forward-Proto<span class="o">}</span><span class="w"> </span>!<span class="o">=</span>https
+RewriteRule<span class="w"> </span>.*<span class="w"> </span>https://%<span class="o">{</span>HTTP_HOST<span class="o">}</span>%<span class="o">{</span>REQUEST_URI<span class="o">}</span><span class="w"> </span><span class="o">[</span><span class="nv">R</span><span class="o">=</span><span class="m">301</span>,L<span class="o">]</span>
+</code></pre>
+</div>
 
-<h2>What is this about?</h2>
-
-<p>Unlike writing long articles, which takes a lot of time, I believe that by having a microblog and writing short articles could help improve my productivity in writing.</p>
-
-<p>So, I thought of sharing whatever I have learned on a day-to-day basis and accumulate this knowledge in a "repository" where anyone could learn from, thus is why I started this microblog. Besides, as of writing this article, I wrote 25 short articles in a month.</p>
-
-<h2>What kind of articles can we expect?</h2>
-
-<p>It'd be wonderful to say that I can talk about anything over here but currently, I'm restricting it to Computer Science, Mathematics, Software Engineering and Digital Design.</p>
-
-<h2>So what about your main blog?</h2>
-
-<p>Oh, I'm not ignoring it! The main blog will be there but now that I have segregated it, it'll allow me to take some time to plan and write content-heavy articles. There'll be more articles coming in a few months time.</p>
-
-<p><a href="../../til">Click here</a> to view my microblog and let me know what you think about it! &#x1F604;</p>
-
-<p>Stay tuned for more!</p>
+<p>Save your file and restart your Apache server and now, your web application will redirect all your users to <code>https://</code> instead of <code>http://</code> URLs in the future.</p>
 
 	</div>
 	<div class="article-footer">
-		<time>May 29th, 2020</time>
+		<time>June 22nd, 2020</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/update/">
-					Update
+				<a href="/category/apache/">
+					Apache
 				</a>
 			</li>
 			
@@ -268,236 +145,486 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/select-all-elements-except-the-current-element">Select all elements except the current element</a></h1>
+		<h1 class="heading"><a href="/til/posts/enable-copy-paste-clipboard-in-urxvt-terminal-emulator">Enable copy-paste clipboard in URxvt Terminal Emulator</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>If you don't want the current element to be selected in an array of elements that belongs to same class or type, just use the <code>.not()</code> method like the example below:</p>
+		<p>In my current Arch Linux installation, I decided to use a window manager called i3. It's really awesome and it comes with a really lightweight terminal emulator called <strong>urxvt</strong>. It's very minimal and I lked it but when I tried to copy-paste text from one terminal to another, I wasn't able to.</p>
+
+<p>However, thanks to the internet, I did some research and figured a way out.</p>
+
+<h2>1. Install xClip</h2>
+
+<p>First, you need to ensure that you have installed the <code>xclip</code> package, which will be used to copy-paste text in the emulator.</p>
+
+<p>Type the following command to install the package:</p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="nx">$</span><span class="p">(</span><span class="s2">&quot;.btn&quot;</span><span class="p">).</span><span class="nx">click</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
-<span class="w">    </span><span class="nx">$</span><span class="p">(</span><span class="s2">&quot;.btn&quot;</span><span class="p">).</span><span class="nx">not</span><span class="p">(</span><span class="k">this</span><span class="p">).</span><span class="nx">text</span><span class="p">(</span><span class="s1">&#39;selected&#39;</span><span class="p">);</span>
+<pre><span></span><code>pacman<span class="w"> </span>-S<span class="w"> </span>xclip
+</code></pre>
+</div>
+
+<h2>2. Activate Clipboard using Perl</h2>
+
+<p>Now, you have to paste these custom commands into your <code>clipboard</code> file, which is found in <code>/usr/lib/urxvt/perl</code> directory:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="c1"># paste selection from clipboard</span>
+<span class="k">sub</span><span class="w"> </span><span class="nf">paste</span><span class="w"> </span><span class="p">{</span>
+<span class="w">     </span><span class="k">my</span><span class="w"> </span><span class="p">(</span><span class="nv">$self</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">@_</span><span class="p">;</span>
+<span class="w">     </span><span class="k">my</span><span class="w"> </span><span class="nv">$content</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`/usr/bin/xclip -loop 1 -out -selection clipboard`</span><span class="w"> </span><span class="p">;</span>
+<span class="w">     </span><span class="nv">$self</span><span class="o">-&gt;</span><span class="n">tt_write</span><span class="w"> </span><span class="p">(</span><span class="nv">$content</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="c1"># copy text to clipbard on selection</span>
+<span class="k">sub</span><span class="w"> </span><span class="nf">on_sel_grab</span><span class="w"> </span><span class="p">{</span>
+<span class="w">     </span><span class="k">my</span><span class="w"> </span><span class="nv">$query</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">$_</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">selection</span><span class="p">;</span>
+<span class="w">     </span><span class="nb">open</span><span class="w"> </span><span class="p">(</span><span class="k">my</span><span class="w"> </span><span class="nv">$pipe</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;| /usr/bin/xclip -in -selection clipboard&#39;</span><span class="p">)</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="nb">die</span><span class="p">;</span>
+<span class="w">     </span><span class="k">print</span><span class="w"> </span><span class="nv">$pipe</span><span class="w"> </span><span class="nv">$query</span><span class="p">;</span>
+<span class="w">     </span><span class="nb">close</span><span class="w"> </span><span class="nv">$pipe</span><span class="p">;</span>
+<span class="w"> </span><span class="p">}</span>
+</code></pre>
+</div>
+
+<h2>3. Modify your .Xresources</h2>
+
+<p>Add these keybindings to your <code>.Xresources</code> file:</p>
+
+<div class="codehilite">
+<pre><span></span><code>URxvt.keysym.Shift-Control-V:<span class="w"> </span>perl:clipboard:paste
+URxvt.iso14755:<span class="w"> </span>False
+URxvt.perl-ext-common:<span class="w"> </span>default,clipboard
+</code></pre>
+</div>
+
+<p>After adding it, refresh your <code>.Xresources</code> settings:</p>
+
+<div class="codehilite">
+<pre><span></span><code>xrdb<span class="w"> </span>-merge<span class="w"> </span>.Xresources
+</code></pre>
+</div>
+
+<p>Reboot your terminal and try selecting some text from your terminal using your mouse and paste it using <code>Ctrl</code>+<code>Shift</code>+<code>V</code> and it should work! </p>
+
+<p>That's it! Enjoy &#x1F603;</p>
+
+	</div>
+	<div class="article-footer">
+		<time>June 20th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/configuring-audio-drivers-in-arch-Linux">Configuring audio drivers in Arch Linux</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Yesterday, I thought of testing my Arch Linux system's audio and turns out, I didn't even install it yet! &#x1F612;</p>
+
+<p>Well, thanks to <a href="https://wiki.archlinux.org">ArchWiki</a>, it was simple enough to install to make the audio work on my old laptop. Just install the following packages:</p>
+
+<div class="codehilite">
+<pre><span></span><code>pacman<span class="w"> </span>-S<span class="w"> </span>alsa-firmware<span class="w"> </span>alsa-lib<span class="w"> </span>alsa-utils
+</code></pre>
+</div>
+
+<p>Reboot the system once you're done installing the packages. Depending on your window manager, you should be able to see your sound icon being active.</p>
+
+<h2>Bonus: Bash script to control your volume from the terminal</h2>
+
+<p>In my current laptop, I still haven't mapped out the keys to control the audio volume, so I thought of writing a small method in my <code>.bashrc</code> file, so that I can control it from my terminal.</p>
+
+<p>Open your favorite text editor and Add this method in your <code>.bashrc</code> file:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="c1"># simple volume control</span>
+volume<span class="o">(){</span>
+<span class="w">    </span><span class="nv">x</span><span class="o">=</span><span class="m">5</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="nv">$1</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s1">&#39;up&#39;</span><span class="w"> </span><span class="o">]</span>
+<span class="w">    </span><span class="k">then</span>
+<span class="w">        </span>amixer<span class="w"> </span><span class="nb">set</span><span class="w"> </span>Master<span class="w"> </span><span class="nv">$x</span>%+<span class="w"> </span><span class="p">&amp;</span>&gt;<span class="w"> </span>/dev/null
+<span class="w">    </span><span class="k">elif</span><span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="nv">$1</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s1">&#39;down&#39;</span><span class="w"> </span><span class="o">]</span>
+<span class="w">    </span><span class="k">then</span>
+<span class="w">        </span>amixer<span class="w"> </span><span class="nb">set</span><span class="w"> </span>Master<span class="w"> </span><span class="nv">$x</span>%-<span class="w"> </span><span class="p">&amp;</span>&gt;<span class="w"> </span>/dev/null
+<span class="w">    </span><span class="k">elif</span><span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="nv">$1</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s1">&#39;toggle&#39;</span><span class="w"> </span><span class="o">]</span>
+<span class="w">    </span><span class="k">then</span>
+<span class="w">        </span>amixer<span class="w"> </span><span class="nb">set</span><span class="w"> </span>Master<span class="w"> </span>toggle<span class="w"> </span><span class="p">&amp;</span>&gt;<span class="w"> </span>/dev/null
+<span class="w">    </span><span class="k">fi</span>
+<span class="o">}</span>
+</code></pre>
+</div>
+
+<p>Save the file, close your edit and refresh your file by typing:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nb">source</span><span class="w"> </span>.bashrc
+</code></pre>
+</div>
+
+<p>Now, it should work when you type any of these commands:</p>
+
+<div class="codehilite">
+<pre><span></span><code>volume<span class="w"> </span>up
+volume<span class="w"> </span>down
+volume<span class="w"> </span>toggle
+</code></pre>
+</div>
+
+<p>Hope this tiny script helps you out! </p>
+
+	</div>
+	<div class="article-footer">
+		<time>June 20th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/troubleshoot-time-related-ssl-errors-on-secure-websites">Troubleshoot time-related SSL errors on secure websites</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>As I was configuring Arch Linux setup on my old HP 8460p laptop, I noticed that I wasn't able to access any site using Chrome or Firefox as I was faced with a weird error:</p>
+
+<p><!--- <img src="../../../static/til_images/ssl-time-error.png" alt="SSL Certificate Error" />-->
+<img src="../../../static/til_images/ssl-time-error.png" style="width: 500px;" /></p>
+
+<p>I was quite confused and thought it might be an issue with my WiFi card or probably some server issue but turns out it was neither of them.</p>
+
+<p>On the side of my screen, I noticed my system time was displaying 4 hours ahead of the current local time, which is wrong. So, I did a little research and turns out my suspicions were correct, it's a time-related issue.</p>
+
+<h2>How is time related to secure websites?</h2>
+
+<p>Well, each website that uses SSL or that begins with <code>https://</code> are only valid for a period of time before getting expired. If the website that you're trying to visit presents a certificate with a time and date that doesn't match with your system's clock, Firefox will prevent you from accessing the page.</p>
+
+<h2>How to fix it?</h2>
+
+<p>Actually, the fix is quite simple. All you have to is just set the correct date and time on your system and you're good to go!</p>
+
+<p>If you're using Linux, just do the following:</p>
+
+<h3>1. Set up your timezone</h3>
+
+<p>You can look up for your timezones by executing the following:</p>
+
+<div class="codehilite">
+<pre><span></span><code>timedatectl<span class="w"> </span>list-timezones<span class="w"> </span><span class="p">|</span><span class="w"> </span>less
+</code></pre>
+</div>
+
+<p>Once, you've found your timezone, execute the following by replacing <code>Continent/Country</code> with your timezone:</p>
+
+<div class="codehilite">
+<pre><span></span><code>timedatectl<span class="w"> </span>set-timezone<span class="w"> </span>Continent/Country
+</code></pre>
+</div>
+
+<h3>2. Manually set your local time</h3>
+
+<p>Execute the following to set up your time, locally on your system:</p>
+
+<div class="codehilite">
+<pre><span></span><code>timedatectl<span class="w"> </span>set-time<span class="w"> </span><span class="s2">&quot;yyyy-MM-dd hh:mm:ss&quot;</span>
+</code></pre>
+</div>
+
+<h3>3. Set the hardware clock from the system clock</h3>
+
+<p>The following command sets the hardware clock from the system clock:</p>
+
+<div class="codehilite">
+<pre><span></span><code>hwclock<span class="w"> </span>--systohc
+</code></pre>
+</div>
+
+<p>Now, that you've executed them, you should be able to view the correct time on your system by executing <code>timedatectl status</code> and you should see something like this:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="w">               </span>Local<span class="w"> </span>time:<span class="w"> </span>Sun<span class="w"> </span><span class="m">2020</span>-06-14<span class="w"> </span><span class="m">21</span>:04:04<span class="w"> </span>+04
+<span class="w">           </span>Universal<span class="w"> </span>time:<span class="w"> </span>Sun<span class="w"> </span><span class="m">2020</span>-06-14<span class="w"> </span><span class="m">17</span>:04:04<span class="w"> </span>UTC
+<span class="w">                 </span>RTC<span class="w"> </span>time:<span class="w"> </span>Sun<span class="w"> </span><span class="m">2020</span>-06-14<span class="w"> </span><span class="m">17</span>:04:05<span class="w">    </span>
+<span class="w">                </span>Time<span class="w"> </span>zone:<span class="w"> </span>Asia/Dubai<span class="w"> </span><span class="o">(</span>+04,<span class="w"> </span>+0400<span class="o">)</span><span class="w">    </span>
+System<span class="w"> </span>clock<span class="w"> </span>synchronized:<span class="w"> </span>no<span class="w">                         </span>
+<span class="w">              </span>NTP<span class="w"> </span>service:<span class="w"> </span>inactive<span class="w"> </span>
+</code></pre>
+</div>
+
+<p>Although, this issue was time-related, you may face the same kind of error for various other reasons. Try reading more on how to <a href="https://support.mozilla.org/en-US/kb/troubleshoot-time-errors-secure-websites">troubleshoot</a> errors like these from Mozilla's official documentation.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>June 14th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/ssl/">
+					SSL
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/transfer-files-remotely-using-scp">Transfer files remotely using SCP</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Do you want to transfer files remotely from one UNIX-based system to another? Try using the <code>scp</code> tool, which is a shorthand for <strong>Secure Copy Protocol</strong>. It's based off the SSH protocol using it as a means to securely transfer files from a local machine to one or more remote machines.</p>
+
+<p>Here's a code snippet that can help you out to transfer from computer A to computer B:</p>
+
+<div class="codehilite">
+<pre><span></span><code>scp<span class="w"> </span>your_local_file<span class="w"> </span>user@ipaddress:/directory_to_store
+</code></pre>
+</div>
+
+<p>And transfer from computer B to computer A:</p>
+
+<div class="codehilite">
+<pre><span></span><code>scp<span class="w"> </span>user@ipaddress:/directory/file_name<span class="w"> </span>your_local_directory
+</code></pre>
+</div>
+
+<p>Oh, before you transfer files to another computer, make sure that you have permissions to access it first. If you don't have one, then create a new account using <code>useradd</code> on your remote system.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>June 13th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-manually-configure-your-wifi-on-arch-linux">How to manually configure your WiFi on Arch Linux?</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Recently, I thought of playing around with Arch Linux to learn more about Linux under-the-hood and to see if it can become my new daily driver.</p>
+
+<p>As I booted from live USB, I tried connecting to my WiFi using <code>wifi-menu</code> but it never worked after selecting my network name and entering the credentials.</p>
+
+<p>So, I did a little bit of research in <a href="https://wiki.archlinux.org">ArchWiki</a> and forums and I figured a way to set it up manually using <code>netctl</code> by myself.</p>
+
+<p><code>netctl</code> is a network profile manager and it's apparently an Arch Linux project.</p>
+
+<h2>1. Select your interface</h2>
+
+<p>Before you begin to set up your WiFi connection from your computer, check if your network interface is being detected:</p>
+
+<div class="codehilite">
+<pre><span></span><code>iwconfig
+</code></pre>
+</div>
+
+<p>Since it's a WiFi connection, your interface most probably must be <code>wlan0</code>. If you see it, then set the interface up:</p>
+
+<div class="codehilite">
+<pre><span></span><code>ip<span class="w"> </span>link<span class="w"> </span><span class="nb">set</span><span class="w"> </span>wlan0<span class="w"> </span>up
+</code></pre>
+</div>
+
+<h2>2. Scan for networks</h2>
+
+<p>Now, that your interface, use it to scan for your WiFi network:</p>
+
+<div class="codehilite">
+<pre><span></span><code>iwlist<span class="w"> </span>wlan0<span class="w"> </span>scan<span class="w"> </span><span class="p">|</span><span class="w"> </span>less
+</code></pre>
+</div>
+
+<p>Once, you execute this command, you must be able to see your WiFi's SSID (or network name).</p>
+
+<p>Now, put your interface down for a while:</p>
+
+<div class="codehilite">
+<pre><span></span><code>ip<span class="w"> </span>link<span class="w"> </span><span class="nb">set</span><span class="w"> </span>wlan0<span class="w"> </span>down
+</code></pre>
+</div>
+
+<h2>3. Create a network profile</h2>
+
+<p>Alright, go to <code>/etc/netctl/examples/</code> directory and make a copy of the <code>wireless-wpa</code> file to the <code>/etc/netctl</code> directory:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nb">cd</span><span class="w"> </span>/etc/netctl/examples
+cp<span class="w"> </span>/etc/netctl/examples/wireless-wpa<span class="w"> </span>/etc/netctl/your-wifi-name
+</code></pre>
+</div>
+
+<p>Now, go back to <code>/etc/netctl/</code> directory and open the <code>your-wifi-name</code> file with your preferred text editor and edit the following only:</p>
+
+<div class="codehilite">
+<pre><span></span><code>ESSID:<span class="w"> </span>your-wifi-name
+key:<span class="w"> </span>your-wifi-password
+</code></pre>
+</div>
+
+<p>After you're done editing, save the file.</p>
+
+<h2>4. Test network profile</h2>
+
+<p>To test if your profile is working, do the following:</p>
+
+<div class="codehilite">
+<pre><span></span><code>netctl<span class="w"> </span>start<span class="w"> </span>your-wifi-name
+ping<span class="w"> </span>-c<span class="w"> </span><span class="m">3</span><span class="w"> </span>www.google.com
+</code></pre>
+</div>
+
+<p>In case, you get an error, try doing this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>ip<span class="w"> </span>link<span class="w"> </span><span class="nb">set</span><span class="w"> </span>dev<span class="w"> </span>wlan0<span class="w"> </span>down
+netctl<span class="w"> </span>start<span class="w"> </span>your-wifi-name
+ping<span class="w"> </span>-c<span class="w"> </span><span class="m">3</span><span class="w"> </span>www.google.com
+</code></pre>
+</div>
+
+<p>If you're able to ping, then it works. Else, edit your network profile and try connecting to it again.</p>
+
+<h2>5. Enable network profile</h2>
+
+<p>If you've reached this stage that means your network profile must be working fine. Just do the following to enable the network profile to run the internet throughout the setup:</p>
+
+<div class="codehilite">
+<pre><span></span><code>netctl<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>your-wifi-name
+</code></pre>
+</div>
+
+<p>Try reading more about using <a href="https://wiki.archlinux.org/index.php/Netctl">netctl</a> in Arch Linux's official wikipage.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>June 9th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/add-search-functionality-to-your-static-site">Add search functionality to your static site</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>If you have a static site or a blog generated using a static-site generator but want to add a simple search functionality? This could be of your interest.</p>
+
+<p>I'll take you through an example on how to build a simple search engine using a JSON file and AJAX requests.</p>
+
+<h2>1. Generate a JSON dump of your site</h2>
+
+<p>Although, it's not a database but it can act as an alternative to having one. Your JSON dump can contain any metadata that you wanted your users to search in your site. In my case, I thought of allowing the user to search <code>title</code> and <code>category</code>. </p>
+
+<p>Is your site generated using Python and want to create a JSON dump? <a href="til/posts/read-and-write-json-to-a-file-in-python">Read this article</a> for more information.</p>
+
+<h2>2. Build search functionality</h2>
+
+<p>I won't go through the aspects of UI design in this article as I feel that it's subjective and depends on one's preferences but let's keep it simple enough for this tutorial.</p>
+
+<p>Before you begin writing the function, place this component in your HTML template:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="p">&lt;</span><span class="nt">div</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;searchbox&quot;</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">input</span> <span class="na">id</span><span class="o">=</span><span class="s">&quot;searchinput&quot;</span> <span class="na">type</span><span class="o">=</span><span class="s">&quot;text&quot;</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">div</span> <span class="na">id</span><span class="o">=</span><span class="s">&quot;searchresults&quot;</span><span class="p">&gt;</span>
+        <span class="p">&lt;</span><span class="nt">ul</span><span class="p">&gt;&lt;/</span><span class="nt">ul</span><span class="p">&gt;</span>
+    <span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+</code></pre>
+</div>
+
+<p>Anyway, here's the function and you can place it directly on your template or in a separate <code>.js</code> file:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">_url</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;path-of-your-file.json&quot;</span><span class="p">;</span>
+
+<span class="nx">$</span><span class="p">(</span><span class="nb">document</span><span class="p">).</span><span class="nx">ready</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
+<span class="w">    </span><span class="nx">$</span><span class="p">(</span><span class="s1">&#39;#searchinput&#39;</span><span class="p">).</span><span class="nx">keyup</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">){</span>
+<span class="w">        </span><span class="kd">var</span><span class="w"> </span><span class="nx">keyword</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">$</span><span class="p">(</span><span class="k">this</span><span class="p">).</span><span class="nx">val</span><span class="p">();</span>
+<span class="w">        </span><span class="kd">var</span><span class="w"> </span><span class="nx">code</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">e</span><span class="p">.</span><span class="nx">keyCode</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="nx">e</span><span class="p">.</span><span class="nx">keyCode</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="nx">e</span><span class="p">.</span><span class="nx">which</span><span class="p">;</span>
+
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="nx">code</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mf">13</span><span class="p">){</span>
+<span class="w">            </span><span class="nx">$</span><span class="p">.</span><span class="nx">ajax</span><span class="p">({</span>
+<span class="w">                </span><span class="nx">url</span><span class="o">:</span><span class="w"> </span><span class="nx">_url</span><span class="p">,</span>
+<span class="w">                </span><span class="nx">type</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;GET&quot;</span><span class="p">,</span>
+<span class="w">                </span><span class="k">async</span><span class="o">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">            </span><span class="p">}).</span><span class="nx">done</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">){</span>
+<span class="w">                </span><span class="kd">var</span><span class="w"> </span><span class="nx">results</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="p">;</span>
+<span class="w">                </span><span class="k">if</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">articles</span><span class="p">.</span><span class="nx">length</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">0</span><span class="p">){</span>
+<span class="w">                    </span><span class="nx">$</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">articles</span><span class="p">,</span><span class="w"> </span><span class="kd">function</span><span class="p">(</span><span class="nx">key</span><span class="p">,</span><span class="w"> </span><span class="nx">value</span><span class="p">){</span>
+<span class="w">                        </span><span class="k">if</span><span class="p">(</span><span class="nx">v</span><span class="p">.</span><span class="nx">title</span><span class="p">.</span><span class="nx">search</span><span class="p">(</span><span class="nx">pattern</span><span class="p">)</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="o">-</span><span class="mf">1</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nx">v</span><span class="p">.</span><span class="nx">category</span><span class="p">.</span><span class="nx">search</span><span class="p">(</span><span class="nx">pattern</span><span class="p">)</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="o">-</span><span class="mf">1</span><span class="p">){</span>
+<span class="w">                            </span><span class="nx">results</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="sb">`&lt;li&gt;&lt;a href=&quot;</span><span class="si">${</span><span class="nx">v</span><span class="p">.</span><span class="nx">slug</span><span class="si">}</span><span class="sb">&quot;&gt;</span><span class="si">${</span><span class="nx">v</span><span class="p">.</span><span class="nx">title</span><span class="si">}</span><span class="sb">&lt;/a&gt;&lt;/li&gt;`</span><span class="p">;</span>
+<span class="w">                        </span><span class="p">}</span>
+<span class="w">                    </span><span class="p">});</span>
+<span class="w">                    </span><span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#searchresults ul&quot;</span><span class="p">).</span><span class="nx">html</span><span class="p">(</span><span class="nx">results</span><span class="p">);</span>
+<span class="w">                </span><span class="p">}</span>
+<span class="w">            </span><span class="p">});</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">});</span>
 <span class="p">});</span>
 </code></pre>
 </div>
 
-<p>The above code will change the text for all buttons except the current element.</p>
+<p>That's it! Now, when you execute your script, you should be able to view your search results just like as if it were using a database.</p>
+
+<p>If you want to make it similar to mine, please feel free to inspect the code on the browser or go to my <a href="https://github.com/megacolorboy/personal-blog/blob/master/static/js/search.js">repository</a> to see how it works.</p>
 
 	</div>
 	<div class="article-footer">
-		<time>May 28th, 2020</time>
+		<time>June 6th, 2020</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/jquery/">
-					jQuery
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/extract-a-specific-folder-from-a-zipped-archive">Extract a specific folder from a zipped archive</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>First, you need to view what's inside of the <code>.zip</code> archive:</p>
-
-<div class="codehilite">
-<pre><span></span><code>unzip<span class="w"> </span>-v<span class="w"> </span>archive.zip
-</code></pre>
-</div>
-
-<p>Once, you've found the folder you wanted to extract, just type this:</p>
-
-<div class="codehilite">
-<pre><span></span><code>unzip<span class="w"> </span>archive.zip<span class="w"> </span><span class="s2">&quot;folder_to_extract/*&quot;</span><span class="w"> </span>-d<span class="w"> </span>.
-</code></pre>
-</div>
-
-	</div>
-	<div class="article-footer">
-		<time>May 28th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/terminal/">
-					Terminal
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/remove-patterns-from-multiple-files">Remove patterns from multiple files</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>If you wanted to remove a specific pattern in a list of files, like the ones below:</p>
-
-<div class="codehilite">
-<pre><span></span><code>23_2020_03_01_article-three.md
-22_2020_02_01_article-two.md
-21_2020_01_01_article-one.md
-</code></pre>
-</div>
-
-<p>You can simply do that using Regular Expressions and the <code>rename</code> tool:</p>
-
-<div class="codehilite">
-<pre><span></span><code>rename<span class="w"> </span><span class="s1">&#39;s/[0-9]+_[0-9]+_[0-9]+_[0-9]+_//&#39;</span><span class="w"> </span>*.md
-</code></pre>
-</div>
-
-<p>Now, the desired output should look like this:</p>
-
-<div class="codehilite">
-<pre><span></span><code>article-three.md
-article-two.md
-article-one.md
-</code></pre>
-</div>
-
-<p>This should come in handy if you're lazy to rename each file manually! :)</p>
-
-	</div>
-	<div class="article-footer">
-		<time>May 27th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/terminal/">
-					Terminal
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/rename-extensions-of-multiple-files">Rename extensions of multiple files</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>In this example, we're going to change a list of <code>.txt</code> files to <code>.md</code> files:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="ch">#!/bin/bash</span>
-
-<span class="nb">shopt</span><span class="w"> </span>-s<span class="w"> </span>nullglob
-<span class="nv">files</span><span class="o">=(</span><span class="k">$(</span>ls<span class="w"> </span>-v<span class="w"> </span>*.txt<span class="k">)</span><span class="o">)</span>
-
-<span class="k">for</span><span class="w"> </span>file<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">files</span><span class="p">[@]</span><span class="si">}</span><span class="s2">&quot;</span>
-<span class="k">do</span>
-<span class="w">    </span>mv<span class="w"> </span><span class="si">${</span><span class="nv">file</span><span class="si">}</span><span class="w"> </span><span class="si">${</span><span class="nv">file</span><span class="si">}</span>.md
-<span class="k">done</span>
-</code></pre>
-</div>
-
-<p>s
-You can use modify this script to rename any extension you want.</p>
-
-	</div>
-	<div class="article-footer">
-		<time>May 27th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/bash/">
-					Bash
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/symbolic-storage-link">Create a symbolic storage link</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>When using Laravel, the <code>public</code> directory is used for files that are publicly accessible. By default, it's stored in <code>local</code> and often stored in this <code>storage/app/public</code> directory. You can make it easily accessible by using the following command:</p>
-
-<div class="codehilite">
-<pre><span></span><code>php<span class="w"> </span>artisan<span class="w"> </span>storage:link
-</code></pre>
-</div>
-
-<p>Once, it has been created, you can use access those files using the <code>public_path</code> or <code>asset</code> methods.</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="k">echo</span> <span class="nx">public_path</span><span class="p">(</span><span class="s1">&#39;images/sample_1.jpg&#39;</span><span class="p">);</span>
-<span class="k">echo</span> <span class="nx">asset</span><span class="p">(</span><span class="s1">&#39;images/sample_2.jpg&#39;</span><span class="p">);</span>
-<span class="cp">?&gt;</span>
-</code></pre>
-</div>
-
-	</div>
-	<div class="article-footer">
-		<time>May 25th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/laravel/">
-					Laravel
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/include-exclude-files.zip">Including and excluding files in zip</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>When zipping a directory or a bunch of files, there'll be a lot of stuff that you want to include and exclude.</p>
-
-<p>To exclude a file:</p>
-
-<div class="codehilite">
-<pre><span></span><code>zip<span class="w"> </span>-r<span class="w"> </span>files.zip<span class="w"> </span>.<span class="w"> </span>-x<span class="w"> </span>file_1<span class="w"> </span>file_2
-</code></pre>
-</div>
-
-<p>Alternatively, you can choose to include files:</p>
-
-<div class="codehilite">
-<pre><span></span><code>zip<span class="w"> </span>-r<span class="w"> </span>files.zip<span class="w"> </span>.<span class="w"> </span>-i<span class="w"> </span>file_1<span class="w"> </span>file_2
-</code></pre>
-</div>
-
-	</div>
-	<div class="article-footer">
-		<time>May 25th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/terminal/">
-					Terminal
+				<a href="/category/javascript/">
+					JavaScript
 				</a>
 			</li>
 			
@@ -545,11 +672,11 @@ You can use modify this script to rename any extension you want.</p>
 		
 	
 		
-			<a class="" href="/pages/7">...</a>
+			<a class="" href="/pages/9">...</a>
 		
 	
 		
-			<a class="" href="/pages/28">28</a>
+			<a class="" href="/pages/30">30</a>
 		
 	
 
@@ -586,28 +713,35 @@ You can use modify this script to rename any extension you want.</p>
 		<li>
 			<a href="/category/linux/">
 				Linux
-				<span class="count">22</span>
+				<span class="count">24</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/laravel/">
 				Laravel
-				<span class="count">18</span>
+				<span class="count">20</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/devops/">
 				DevOps
-				<span class="count">15</span>
+				<span class="count">20</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/php/">
 				PHP
-				<span class="count">13</span>
+				<span class="count">14</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/git/">
+				Git
+				<span class="count">12</span>
 			</a>
 		</li>
 		
@@ -654,9 +788,9 @@ You can use modify this script to rename any extension you want.</p>
 		</li>
 		
 		<li>
-			<a href="/category/git/">
-				Git
-				<span class="count">10</span>
+			<a href="/category/mysql/">
+				MySQL
+				<span class="count">9</span>
 			</a>
 		</li>
 		
@@ -671,13 +805,6 @@ You can use modify this script to rename any extension you want.</p>
 			<a href="/category/unix/">
 				UNIX
 				<span class="count">8</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/mysql/">
-				MySQL
-				<span class="count">7</span>
 			</a>
 		</li>
 		
@@ -699,6 +826,13 @@ You can use modify this script to rename any extension you want.</p>
 			<a href="/category/essay/">
 				Essay
 				<span class="count">6</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/c/">
+				C#
+				<span class="count">5</span>
 			</a>
 		</li>
 		
@@ -731,16 +865,16 @@ You can use modify this script to rename any extension you want.</p>
 		</li>
 		
 		<li>
-			<a href="/category/c/">
-				C#
+			<a href="/category/arcade-challenge/">
+				Arcade Challenge
 				<span class="count">4</span>
 			</a>
 		</li>
 		
 		<li>
-			<a href="/category/arcade-challenge/">
-				Arcade Challenge
-				<span class="count">4</span>
+			<a href="/category/databases/">
+				Databases
+				<span class="count">3</span>
 			</a>
 		</li>
 		
@@ -783,6 +917,48 @@ You can use modify this script to rename any extension you want.</p>
 			<a href="/category/general/">
 				General
 				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/vcs/">
+				VCS
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/ubuntu/">
+				Ubuntu
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/powershell/">
+				PowerShell
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/smtp/">
+				SMTP
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/sql/">
+				SQL
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/net/">
+				.NET
+				<span class="count">2</span>
 			</a>
 		</li>
 		
@@ -892,6 +1068,55 @@ You can use modify this script to rename any extension you want.</p>
 		</li>
 		
 		<li>
+			<a href="/category/phpstorm/">
+				PHPStorm
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/elastic-search/">
+				Elastic Search
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/kibana/">
+				Kibana
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/data-manipulation/">
+				Data Manipulation
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/telnet/">
+				Telnet
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/iis/">
+				IIS
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/centos/">
+				CentOS
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/net-core/">
 				.NET Core
 				<span class="count">1</span>
@@ -983,22 +1208,8 @@ You can use modify this script to rename any extension you want.</p>
 		</li>
 		
 		<li>
-			<a href="/category/ubuntu/">
-				Ubuntu
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/ssh/">
 				SSH
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/databases/">
-				Databases
 				<span class="count">1</span>
 			</a>
 		</li>

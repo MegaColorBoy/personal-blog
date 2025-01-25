@@ -78,67 +78,882 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/using-records-for-dtos">Using records for DTOs</a></h1>
+		<h1 class="heading"><a href="/writings/posts/laravel-scopes-vs-builder-queries-which-should-you-use">Laravel Scopes vs. Builder Queries: Which Should You Use?</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>If you're building an application or API using .NET Core in where you might have to integrate with any external services or third-party APIs, this is for you.</p>
+		<p>If you're building a Laravel application, you're probably spending a lot of time writing queries. And as your project grows, you'll inevitably face this question: <em>Should I use scopes or builder queries?</em> While both have their place, choosing the right tool for the job can make a world of difference. Here's my opinionated take on the matter.</p>
 
-<h2>What are records?</h2>
+<h2>The Case for Scopes</h2>
 
-<p>It's a feature introduced since <strong>C# 9.0</strong> that allows you to create simple and immutable data types. When representing DTOs (Data Transfer Objects), it comes in handy because the syntax in concise and it's primarily used to transfer data between layers of an application such as the Core and Presentation Layer. </p>
+<p><strong>Scopes</strong> are, quite simply, one of Laravel's hidden gems. They let you encapsulate common query logic within your models, making your code clean, reusable, and easy to read. Think of them as tiny, purposeful functions designed to save you time and sanity.</p>
 
-<p>Here's an example of a car using a regular <code>class</code> type:</p>
+<p>Take this example:</p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="k">public</span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">Car</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="k">public</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="n">Manufacturer</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">get</span><span class="p">;</span><span class="w"> </span><span class="n">init</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
-<span class="w">    </span><span class="k">public</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">Price</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">get</span><span class="p">;</span><span class="w"> </span><span class="n">init</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
-<span class="w">    </span><span class="k">public</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="n">Color</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">get</span><span class="p">;</span><span class="w"> </span><span class="n">init</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+<pre><span></span><code><span class="cp">&lt;?php</span>
+    <span class="c1">// In your model</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">scopeActive</span><span class="p">(</span><span class="nv">$query</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">return</span> <span class="nv">$query</span><span class="o">-&gt;</span><span class="na">where</span><span class="p">(</span><span class="s1">&#39;status&#39;</span><span class="p">,</span> <span class="s1">&#39;active&#39;</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="c1">// Usage</span>
+    <span class="nv">$activeUsers</span> <span class="o">=</span> <span class="nx">User</span><span class="o">::</span><span class="na">active</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">get</span><span class="p">();</span>
+<span class="cp">?&gt;</span>
+</code></pre>
+</div>
+
+<p>Suddenly, instead of littering your controllers with <code>where('status', 'active')</code> everywhere, you have a single, reusable method that reads like English. Scopes shine when you need commonly used filters like <code>active</code>, <code>published</code>, or <code>recent</code>. They’re easy to use, they’re consistent, and they make your code feel more intuitive.</p>
+
+<h3>Why I Prefer Scopes for Reusability</h3>
+
+<p>Here’s the thing: in any sizable Laravel app, you’ll inevitably find patterns in your queries. Rewriting the same query logic over and over? That’s a code smell. By using scopes, you centralize your query logic, reducing redundancy and improving maintainability.</p>
+
+<p>For example:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+    <span class="nv">$pubishedPosts</span> <span class="o">=</span> <span class="nx">Post</span><span class="o">::</span><span class="na">published</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">recent</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">get</span><span class="p">();</span>
+<span class="cp">?&gt;</span>
+</code></pre>
+</div>
+
+<p>This reads beautifully and keeps your codebase DRY (Don’t Repeat Yourself). If the definition of "published" or "recent" changes, you only need to update it in one place. Scopes turn repetitive query logic into single lines of magic.</p>
+
+<h2>The Case for Builder Queries</h2>
+
+<p>That said, not everything belongs in a scope. Some queries are just too specific, too complex, or too dynamic. This is where <strong>builder queries</strong> come in.</p>
+
+<p>Imagine you’re building a report that requires multiple joins, conditional logic, or dynamic filters. Scopes could become unwieldy here. Instead, a well-crafted builder query in your controller, service, or repository might make more sense:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+    <span class="nv">$users</span> <span class="o">=</span> <span class="nx">User</span><span class="o">::</span><span class="na">where</span><span class="p">(</span><span class="s1">&#39;status&#39;</span><span class="p">,</span> <span class="s1">&#39;active&#39;</span><span class="p">)</span>
+        <span class="o">-&gt;</span><span class="na">whereDate</span><span class="p">(</span><span class="s1">&#39;created_at&#39;</span><span class="p">,</span> <span class="s1">&#39;&gt;&#39;</span><span class="p">,</span> <span class="nx">now</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">subDays</span><span class="p">(</span><span class="mi">30</span><span class="p">))</span>
+        <span class="o">-&gt;</span><span class="na">orderBy</span><span class="p">(</span><span class="s1">&#39;created_at&#39;</span><span class="p">,</span> <span class="s1">&#39;desc&#39;</span><span class="p">)</span>
+        <span class="o">-&gt;</span><span class="na">get</span><span class="p">();</span>
+<span class="cp">?&gt;</span>
+</code></pre>
+</div>
+
+<p>Builder queries are perfect for:</p>
+
+<ul>
+<li>One-off operations.</li>
+<li>Highly dynamic queries.</li>
+<li>Scenarios where scopes would make your models bloated or overly complex.</li>
+</ul>
+
+<p>The flexibility of builder queries is unmatched. You can construct them on the fly, adapt them to user inputs, and handle edge cases without worrying about making your models an unreadable mess.</p>
+
+<h2>My Opinionated Take: Use Scopes as a Default, Builder Queries for the Edge Cases</h2>
+
+<p>If I had to pick a side, I’d say: lean on scopes as your default tool, and reserve builder queries for those rare cases when scopes just don’t cut it. Why?</p>
+
+<ol>
+<li><strong>Scopes enhance readability.</strong> Your queries read like sentences, and your intentions are crystal clear.</li>
+<li><strong>Scopes promote DRY principles.</strong> They’re reusable and encapsulate logic, which makes future maintenance a breeze.</li>
+<li><strong>Builder queries are powerful but can become messy.</strong> Unless you’re careful, a complex query in your controller can grow into a sprawling monstrosity. Keep your controllers lean and delegate to scopes or dedicated query classes where possible.</li>
+</ol>
+
+<h2>When Not to Use Scopes</h2>
+
+<p>There are times when using a scope might do more harm than good:</p>
+
+<ul>
+<li><strong>Too much complexity:</strong> If a scope needs multiple parameters or involves complex joins, it’s better suited as a custom query builder or a dedicated repository method.</li>
+<li><strong>Rarely used logic:</strong> Don’t clutter your models with scopes for queries that are only needed once or twice.</li>
+<li><strong>Dynamic, user-driven queries:</strong> When filters are highly variable, builder queries give you the flexibility you need.</li>
+</ul>
+
+<h2>Conclusion: Balance Is Key</h2>
+
+<p>Laravel gives you powerful tools to write queries, and both scopes and builder queries have their roles. Use scopes to simplify and centralize reusable logic, and reach for builder queries when flexibility and complexity demand it. By balancing both, you’ll keep your codebase clean, maintainable, and a joy to work with.</p>
+
+<p>So, what’s your take? Are you a scope enthusiast or a builder query champion? Either way, Laravel’s got you covered.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>January 25th, 2025</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/laravel/">
+					Laravel
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/php/">
+					PHP
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/writings/posts/a-starter-guide-to-software-version-control">A Starter Guide to Software Version Control</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Version Control Systems (VCS) are indispensable tools for modern software development. When I first started working with version control, I was overwhelmed by the terminology and the various workflows. Over time, I realized that mastering VCS isn't just about understanding commands—it's about adopting practices that make development smoother and more collaborative. In this post, I’ll share my journey, the lessons I’ve learned, and a practical approach to version control that works for teams of any size.</p>
+
+<h2>What is Version Control?</h2>
+
+<p>I remember my first experience losing hours of work because I accidentally overwrote a file. That’s when I discovered the magic of version control. It’s like having a time machine for your code! At its core, version control tracks and manages changes to your software code. Here’s why it’s essential:</p>
+
+<ul>
+<li><strong>Collaborate with ease</strong>: Gone are the days of emailing files back and forth. Multiple developers can work on the same codebase without stepping on each other’s toes.</li>
+<li><strong>Track every change</strong>: With a detailed history of changes, debugging becomes less of a nightmare.</li>
+<li><strong>Rollback anytime</strong>: If something breaks, you can revert to a stable version in seconds.</li>
+</ul>
+
+<p>Today, tools like Git, Subversion (SVN), and Mercurial are popular choices, with Git leading the pack. If you haven’t tried Git yet, you’re missing out on a developer’s best friend.</p>
+
+<h2>Key Concepts</h2>
+
+<p>Here’s a quick glossary that helped me when I was starting out:</p>
+
+<ol>
+<li><strong>Repository</strong>: Think of this as your project’s home. It stores your code and its entire version history.</li>
+<li><strong>Commit</strong>: A snapshot of your code changes. A good commit is like leaving breadcrumbs for your future self or teammates.</li>
+<li><strong>Branch</strong>: This was a game-changer for me. Branches let you work on new features or fixes without touching the main codebase.</li>
+<li><strong>Merge</strong>: When you’re ready to bring your work back into the main project, merging combines it with the existing code.</li>
+<li><strong>Tag</strong>: These are like bookmarks, marking specific points in your project’s history—perfect for releases.</li>
+</ol>
+
+<h2>Types of Branches</h2>
+
+<p>When I joined my first team project, I was introduced to a branching strategy that revolutionized the way I worked. Here’s how it breaks down:</p>
+
+<h3>1. Main Branches</h3>
+
+<ul>
+<li><strong>Main (<code>main</code> or <code>master</code>)</strong>: This is the crown jewel—the stable, production-ready branch. It’s sacred territory where only thoroughly tested code belongs.</li>
+<li><strong>Development (<code>dev</code>)</strong>: This is where the magic happens. New features and fixes are integrated and tested here before they’re ready for production.</li>
+</ul>
+
+<h3>2. Feature Branches</h3>
+
+<p>When you’re working on something new, create a feature branch. Here’s how it works:</p>
+
+<ul>
+<li><strong>Purpose</strong>: To develop a specific feature.</li>
+<li><strong>Workflow</strong>: Start from <code>dev</code>, and when you’re done, merge back into <code>dev</code>.</li>
+<li><strong>Naming Convention</strong>: <code>feature/new-login-system</code></li>
+</ul>
+
+<h3>3. Release Branches</h3>
+
+<p>Preparing for a new release? Here’s what you do:</p>
+
+<ul>
+<li><strong>Purpose</strong>: To finalize a version for production.</li>
+<li><strong>Workflow</strong>: Start from <code>dev</code>, do final testing and fixes, then merge into <code>main</code>.</li>
+<li><strong>Naming Convention</strong>: <code>release/v1.0</code></li>
+</ul>
+
+<h3>4. Hotfix Branches</h3>
+
+<p>Production bugs can’t wait. That’s where hotfix branches save the day:</p>
+
+<ul>
+<li><strong>Purpose</strong>: To fix critical issues in production.</li>
+<li><strong>Workflow</strong>: Start from <code>main</code>, fix the issue, then merge into both <code>main</code> and <code>dev</code>.</li>
+<li><strong>Naming Convention</strong>: <code>hotfix/login-bugfix</code></li>
+</ul>
+
+<h2>A Practical Workflow Example</h2>
+
+<p>Here’s a typical workflow I follow:</p>
+
+<ol>
+<li><strong>Feature Development</strong>: Let’s say I’m building a new login system. I’d create a branch called <code>feature/new-login-system</code> off <code>dev</code>. Once the feature is complete and tested, I merge it back into <code>dev</code>.</li>
+<li><strong>Preparing for Release</strong>: When it’s time to launch, I’d create a branch called <code>release/v1.0</code> from <code>dev</code>. After some final tweaks, I merge it into <code>main</code> and tag it as <code>v1.0</code>.</li>
+<li><strong>Production Hotfix</strong>: If a bug pops up in <code>v1.0</code>, I’d create a branch called <code>hotfix/login-bugfix</code> from <code>main</code>. Once fixed, I’d merge it into both <code>main</code> and <code>dev</code> and tag it as <code>v1.0.1</code>.</li>
+</ol>
+
+<h2>Best Practices</h2>
+
+<p>Here are some lessons I learned the hard way:</p>
+
+<ol>
+<li><strong>Write Clear Commit Messages</strong>: Your future self will thank you. A good message explains what changed and why.</li>
+<li><strong>Keep Commits Small</strong>: Each commit should represent a single, logical change. This makes debugging a breeze.</li>
+<li><strong>Review Before Merging</strong>: Always use pull requests or merge requests. Two heads are better than one.</li>
+<li><strong>Use Tags for Releases</strong>: Tags are lifesavers when you need to rollback or track changes.</li>
+<li><strong>Backup Your Repository</strong>: This might sound obvious, but don’t take it for granted.</li>
+</ol>
+
+<h2>Why Version Control is a Game-Changer?</h2>
+
+<p>For me, version control transformed how I approach coding. It made collaboration smoother, debugging faster, and deployments safer. Whether you’re working solo or with a team, adopting a thoughtful version control strategy is a must.</p>
+
+<h2>Final Thoughts</h2>
+
+<p>Version control is more than just a tool—it’s a mindset. By following the practices and strategies outlined here, you’ll be well on your way to mastering it. Trust me, your future self—and your teammates—will thank you.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>January 24th, 2025</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/git/">
+					Git
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/vcs/">
+					VCS
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/mastering-php-storm-essential-shortcuts-and-tips-for-faster-coding">Mastering PHPStorm: Essential Shortcuts and Tips for Faster Coding</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>As a developer, you know that every second counts. PHPStorm, the powerful IDE from JetBrains, is packed with features designed to make coding faster and more efficient—but only if you know how to use them! Here are some essential keybindings and tips that can supercharge your PHPStorm experience and help you code at lightning speed. </p>
+
+<h2>Quick Access to Any Action</h2>
+
+<p>Ever found yourself lost in PHPStorm’s vast functionality, looking for a specific tool or action? Press <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>A</kbd> to bring up the <strong>Toggle Actions</strong> dialog. This is your command center for quickly finding and triggering any action, even if you don’t know the shortcut for it.</p>
+
+<h2>Locate Symbols</h2>
+
+<p>Working on a large project? <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>N</kbd> is your friend. This key combination lets you search for any symbol in your project. Whether it's a function, method, or variable, finding it with this shortcut is a breeze. </p>
+
+<h2>File Search Made Easy</h2>
+
+<p>When you need to open a file but don’t want to dig through directories, use <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>N</kbd>. This brings up the file search dialog, allowing you to open any file in your project by typing its name.</p>
+
+<h2>Searching for Classes</h2>
+
+<p>Quickly locate classes by pressing <kbd>Ctrl</kbd> + <kbd>N</kbd>. This shortcut is a must for object-oriented projects where multiple classes interact. Simply type the class name, and PHPStorm will locate it for you.</p>
+
+<h2>Rename Symbols</h2>
+
+<p>Refactoring code often involves renaming variables, functions, or classes. Press <kbd>Shift</kbd> + <kbd>F6</kbd> to <strong>Refactor/Rename</strong> any symbol. This shortcut ensures that PHPStorm updates all references to the renamed symbol, saving you from manually updating each instance.</p>
+
+<h2>Replace Text in the Current File</h2>
+
+<p>Working on a specific file and need to make some quick replacements? <kbd>Ctrl</kbd> + <kbd>R</kbd> opens the <strong>Find and Replace</strong> dialog within the current file, making edits quick and painless.</p>
+
+<h2>Project-Wide Search</h2>
+
+<p>Need to search or replace text across the entire project? Use <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>F</kbd> for a project-wide search. For project-wide find-and-replace, press <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>R</kbd>. These shortcuts are invaluable for large-scale code adjustments.</p>
+
+<h2>Select the Next Occurrence</h2>
+
+<p>Find yourself needing to select multiple occurrences of a word or phrase? <kbd>Alt</kbd> + <kbd>J</kbd> selects the next occurrence of your current selection (case-sensitive). This feature is ideal for making consistent changes across multiple lines without using traditional search-and-replace.</p>
+
+<h2>Move Lines Up or Down</h2>
+
+<p>Reordering lines of code is common in refactoring. <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>&uarr;</kbd>/<kbd>&darr;</kbd> lets you move the current line (or selection) up or down. A simple, powerful way to reorganize your code with ease.</p>
+
+<h2>Get Quick Fixes</h2>
+
+<p>If PHPStorm detects an issue or sees a possible improvement, pressing <kbd>Alt</kbd> + <kbd>Enter</kbd> provides a <strong>Quick Fix</strong> or <strong>Suggestion</strong>. It’s a fantastic way to implement suggestions quickly and clean up your code without manually combing through error messages.</p>
+
+<h2>Extract Method Shortcut</h2>
+
+<p>Refactoring code into methods is essential for clean, reusable code. Highlight the code block and press <kbd>Ctrl</kbd> + <kbd>M</kbd> + <kbd>G</kbd> to <strong>Extract Method</strong>, instantly creating a new method from the selected code. This is a must for breaking down long, complex functions into manageable pieces.</p>
+
+<h2>Bonus: Multi-Cursor Mode</h2>
+
+<p>If you’re not using PHPStorm’s multi-cursor mode, you’re missing out on some serious productivity gains! Here’s how to use it:</p>
+
+<ol>
+<li>Select a piece of code.</li>
+<li>Press <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>Insert</kbd> to activate multi-cursor mode. Now, you can place multiple cursors wherever needed, allowing you to type or edit in multiple locations simultaneously.</li>
+</ol>
+
+<h2>Final Thoughts</h2>
+
+<p>Mastering these PHPStorm shortcuts can drastically reduce your time spent on repetitive tasks, allowing you to focus on what really matters: building great software. Give these keybindings a try, and see how they can boost your productivity and help you achieve a smoother, more efficient coding workflow.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>January 23rd, 2025</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/phpstorm/">
+					PHPStorm
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/installing-and-configuring-elasticsearch-and-kibana-on-ubuntu">Installing and Configuring Elasticsearch and Kibana on Ubuntu</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>I've always wanted to write this article but never got the chance to do so, I had written some notes on how to set up Elasticsearch and Kibana on an Ubuntu server (20.04 or later). Whether you're building a search engine, analyzing logs, or just exploring the Elastic Stack, this guide will help you get everything up and running smoothly. </p>
+
+<p>Here's how I did it:</p>
+
+<h2>Setting up Elasticsearch</h2>
+
+<h3>Add the Elasticsearch GPG key and repository</h3>
+
+<div class="codehilite">
+<pre><span></span><code>curl<span class="w"> </span>-fsSL<span class="w"> </span>https://artifacts.elastic.co/GPG-KEY-elasticsearch<span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>gpg<span class="w"> </span>--dearmor<span class="w"> </span>-o<span class="w"> </span>/usr/share/keyrings/elastic.gpg
+<span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;deb [signed-by=/usr/share/keyrings/elastic.gpg] https://artifacts.elastic.co/packages/7.x/apt stable main&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>tee<span class="w"> </span>-a<span class="w"> </span>/etc/apt/sources.list.d/elastic-7.x.list
+</code></pre>
+</div>
+
+<h3>Install Elasticsearch</h3>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>update
+sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>elasticsearch
+</code></pre>
+</div>
+
+<h3>Configure Elasticsearch by editing /etc/elasticsearch/elasticsearch.yml</h3>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nt">network.host</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">localhost</span>
+<span class="nt">http.port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">9200</span>
+<span class="nt">http.host</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0.0.0</span>
+</code></pre>
+</div>
+
+<h3>Start and enable Elasticsearch</h3>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>systemctl<span class="w"> </span>start<span class="w"> </span>elasticsearch
+sudo<span class="w"> </span>systemctl<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>elasticsearch
+</code></pre>
+</div>
+
+<h3>Set up an NGINX reverse proxy for Elasticsearch</h3>
+
+<p>Add this server block to your NGINX config (e.g., <code>/etc/nginx/sites-available/your_domain</code>):</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">server</span><span class="w"> </span><span class="p">{</span>
+<span class="w">   </span><span class="kn">listen</span><span class="w"> </span><span class="mi">8834</span><span class="p">;</span>
+
+<span class="w">   </span><span class="c1"># Uncomment for SSL</span>
+<span class="w">   </span><span class="c1"># listen 8834 ssl;</span>
+<span class="w">   </span><span class="c1"># ssl_certificate /path/to/certificate/crt.pem;</span>
+<span class="w">   </span><span class="c1"># ssl_certificate_key /path/to/key/key.pem;</span>
+<span class="w">   </span><span class="c1"># ssl_protocols TLSv1 TLSv1.1 TLSv1.2;</span>
+<span class="w">   </span><span class="c1"># ssl_prefer_server_ciphers on;</span>
+<span class="w">   </span><span class="c1"># ssl_ciphers &#39;EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH&#39;;</span>
+
+<span class="w">   </span><span class="kn">server_name</span><span class="w"> </span><span class="s">your_domain</span><span class="p">;</span>
+
+<span class="w">   </span><span class="kn">location</span><span class="w"> </span><span class="s">/</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="kn">proxy_pass</span><span class="w"> </span><span class="s">http://localhost:9200</span><span class="p">;</span>
+<span class="w">      </span><span class="kn">proxy_http_version</span><span class="w"> </span><span class="mi">1</span><span class="s">.1</span><span class="p">;</span>
+<span class="w">      </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">Upgrade</span><span class="w"> </span><span class="nv">$http_upgrade</span><span class="p">;</span>
+<span class="w">      </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">Connection</span><span class="w"> </span><span class="s">&#39;upgrade&#39;</span><span class="p">;</span>
+<span class="w">      </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">Host</span><span class="w"> </span><span class="nv">$host</span><span class="p">;</span>
+<span class="w">      </span><span class="kn">proxy_cache_bypass</span><span class="w"> </span><span class="nv">$http_upgrade</span><span class="p">;</span>
+<span class="w">   </span><span class="p">}</span>
 <span class="p">}</span>
 </code></pre>
 </div>
 
-<p>And here's a simplified version of that using <code>record</code> type:</p>
+<p>and then test and restart NGINX service:</p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="k">public</span><span class="w"> </span><span class="n">record</span><span class="w"> </span><span class="nf">Car</span><span class="p">(</span>
-<span class="w">    </span><span class="kt">string</span><span class="w"> </span><span class="n">Manufacturer</span><span class="p">,</span>
-<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">Price</span><span class="p">,</span>
-<span class="w">    </span><span class="kt">string</span><span class="w"> </span><span class="n">Color</span>
-<span class="p">);</span>
+<pre><span></span><code>sudo<span class="w"> </span>nginx<span class="w"> </span>-t
+sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class="w"> </span>nginx
 </code></pre>
 </div>
 
-<p>Making use of the <code>record</code> type to manage Data Transfer Objects makes use of clean coding practicies by writing concise yet maintainable code.</p>
+<p>Once done, you can verify if Elasticsearch is running by visiting <code>http://yourdomain.com:8834</code> in your browser. You should see a JSON response with Elasticsearch details.</p>
 
-<h2>So, no need of using classes?</h2>
+<h2>Setting up Kibana</h2>
 
-<p>Well, it depends because records aren't meant to replace classes for all scenarios. It's still recommended to use regular classes for complex types with complex behavior and whereas, records can be used for simple data structures.</p>
+<h3>Install Kibana</h3>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>kibana
+</code></pre>
+</div>
+
+<h3>Configure Kibana by editing /etc/kibana/kibana.yml</h3>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nt">server.port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5601</span>
+<span class="nt">server.host</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0.0.0</span>
+<span class="nt">elasticsearch.hosts</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;http://localhost:9200&quot;</span><span class="p p-Indicator">]</span>
+</code></pre>
+</div>
+
+<h3>Start and enable Kibana</h3>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>systemctl<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>kibana
+sudo<span class="w"> </span>systemctl<span class="w"> </span>start<span class="w"> </span>kibana
+</code></pre>
+</div>
+
+<h3>Create an admin user for Kibana</h3>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;your_admin_username:`openssl passwd -apr1`&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>tee<span class="w"> </span>-a<span class="w"> </span>/etc/nginx/htpasswd.users
+</code></pre>
+</div>
+
+<p>Make sure that you enter a strong password when prompted.</p>
+
+<h3>Set up an NGINX reverse proxy for Kibana</h3>
+
+<p>Add this server block to your NGINX config:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">server</span><span class="w"> </span><span class="p">{</span>
+<span class="w">   </span><span class="kn">listen</span><span class="w"> </span><span class="mi">8833</span><span class="p">;</span>
+
+<span class="w">   </span><span class="c1"># Uncomment for SSL</span>
+<span class="w">   </span><span class="c1"># listen 8833 ssl;</span>
+<span class="w">   </span><span class="c1"># ssl_certificate /path/to/certificate/crt.pem;</span>
+<span class="w">   </span><span class="c1"># ssl_certificate_key /path/to/key/key.pem;</span>
+<span class="w">   </span><span class="c1"># ssl_protocols TLSv1 TLSv1.1 TLSv1.2;</span>
+<span class="w">   </span><span class="c1"># ssl_prefer_server_ciphers on;</span>
+<span class="w">   </span><span class="c1"># ssl_ciphers &#39;EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH&#39;;</span>
+
+<span class="w">   </span><span class="kn">server_name</span><span class="w"> </span><span class="s">your_domain</span><span class="p">;</span>
+
+<span class="w">   </span><span class="kn">auth_basic</span><span class="w"> </span><span class="s">&quot;Restricted</span><span class="w"> </span><span class="s">Access&quot;</span><span class="p">;</span>
+<span class="w">   </span><span class="kn">auth_basic_user_file</span><span class="w"> </span><span class="s">/etc/nginx/htpasswd.users</span><span class="p">;</span>
+
+<span class="w">   </span><span class="kn">location</span><span class="w"> </span><span class="s">/</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="kn">proxy_pass</span><span class="w"> </span><span class="s">http://localhost:5601</span><span class="p">;</span>
+<span class="w">      </span><span class="kn">proxy_http_version</span><span class="w"> </span><span class="mi">1</span><span class="s">.1</span><span class="p">;</span>
+<span class="w">      </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">Upgrade</span><span class="w"> </span><span class="nv">$http_upgrade</span><span class="p">;</span>
+<span class="w">      </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">Connection</span><span class="w"> </span><span class="s">&#39;upgrade&#39;</span><span class="p">;</span>
+<span class="w">      </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">Host</span><span class="w"> </span><span class="nv">$host</span><span class="p">;</span>
+<span class="w">      </span><span class="kn">proxy_cache_bypass</span><span class="w"> </span><span class="nv">$http_upgrade</span><span class="p">;</span>
+<span class="w">   </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<p>and then test and restart NGINX service:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>nginx<span class="w"> </span>-t
+sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class="w"> </span>nginx
+</code></pre>
+</div>
+
+<p>Once done, you can try to access Kibana by visiting <code>http://yourdomain.com:8833</code>. You'll be prompted for the admin credentials you created earlier.</p>
+
+<h2>Wrapping Up</h2>
+
+<p>And there you go! Elasticsearch and Kibana are now up and running on your Ubuntu server, ready to help you search, analyze, and visualize your data. Whether you're diving into logs, building a search feature, or just experimenting with the Elastic Stack, this setup should give you a solid foundation.</p>
+
+<h2>References</h2>
+
+<ul>
+<li><a href="https://burnhamforensics.com/2019/02/06/how-to-install-and-configure-nginx-for-kibana/">Burnham Forensics: NGINX for Kibana</a></li>
+<li><a href="https://itnixpro.com/configure-nginx-reverse-proxy-for-kibana/">ITNixPro: NGINX Reverse Proxy for Kibana</a></li>
+<li><a href="https://www.digitalocean.com/community/tutorials/how-to-install-elasticsearch-logstash-and-kibana-elastic-stack-on-ubuntu-22-04">DigitalOcean: Elastic Stack on Ubuntu</a></li>
+</ul>
+
+<p>Hope you found this useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>January 22nd, 2025</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/elastic-search/">
+					Elastic Search
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/kibana/">
+					Kibana
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/ubuntu/">
+					Ubuntu
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-send-test-emails-via-power-shell">How to Send Test Emails via PowerShell?</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<h2>How to Send Test Emails via PowerShell</h2>
+
+<p>Whenever I wanted to send a test mail from a Windows Server, I make use of PowerShell. This makes it easier and is a quick yet efficient way to test email functionality, troubleshoot SMTP servers, or verify email delivery. </p>
+
+<p>Here’s what I usually do, including examples with and without user authentication.</p>
+
+<h2>1. Basic Command to Send a Test Email</h2>
+
+<p>The <code>Send-MailMessage</code> cmdlet in PowerShell makes it easy to send emails via an SMTP server. Here’s the basic command I used:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nb">Send-MailMessage</span> <span class="n">-SmtpServer</span> <span class="s2">&quot;0.0.0.0&quot;</span> <span class="n">-Port</span> <span class="n">25</span> <span class="n">-From</span> <span class="s2">&quot;sample@example.com&quot;</span> <span class="n">-To</span> <span class="s2">&quot;john.doe@example.com&quot;</span> <span class="n">-Subject</span> <span class="s2">&quot;A subject&quot;</span> <span class="n">-Body</span> <span class="s2">&quot;A body&quot;</span>
+</code></pre>
+</div>
+
+<ul>
+<li><code>-SmtpServer</code>: The IP address or hostname of the SMTP server.</li>
+<li><code>-Port</code>: The SMTP port (default is 25).</li>
+<li><code>-From</code>: The sender’s email address.</li>
+<li><code>-To</code>: The recipient’s email address.</li>
+<li><code>-Subject</code>: The subject of the email.</li>
+<li><code>-Body</code>: The content of the email.</li>
+</ul>
+
+<p>This command works for SMTP servers that don’t require authentication (e.g., internal SMTP relays).</p>
+
+<h2>2. Sending Emails with User Authentication</h2>
+
+<p>If the SMTP server requires authentication, you can add the <code>-Credential</code> parameter to provide a username and password. Here’s how:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nv">$credential</span> <span class="p">=</span> <span class="nb">Get-Credential</span>
+<span class="nb">Send-MailMessage</span> <span class="n">-SmtpServer</span> <span class="s2">&quot;smtp.example.com&quot;</span> <span class="n">-Port</span> <span class="n">587</span> <span class="n">-From</span> <span class="s2">&quot;sample@example.com&quot;</span> <span class="n">-To</span> <span class="s2">&quot;john.doe@example.com&quot;</span> <span class="n">-Subject</span> <span class="s2">&quot;A subject&quot;</span> <span class="n">-Body</span> <span class="s2">&quot;A body&quot;</span> <span class="n">-Credential</span> <span class="nv">$credential</span> <span class="n">-UseSsl</span>
+</code></pre>
+</div>
+
+<ul>
+<li><code>-Credential</code>: Prompts for a username and password. You can also create a <code>PSCredential</code> object programmatically.</li>
+<li><code>-UseSsl</code>: Enables SSL/TLS encryption, which is often required for authenticated SMTP servers (e.g., port 587).</li>
+</ul>
+
+<h3>Example with Hardcoded Credentials:</h3>
+
+<p>If you don’t want to be prompted for credentials, you can create a <code>PSCredential</code> object like this on PowerShell ISE:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nv">$username</span> <span class="p">=</span> <span class="s2">&quot;sample@example.com&quot;</span>
+<span class="nv">$password</span> <span class="p">=</span> <span class="nb">ConvertTo-SecureString</span> <span class="s2">&quot;YourPassword&quot;</span> <span class="n">-AsPlainText</span> <span class="n">-Force</span>
+<span class="nv">$credential</span> <span class="p">=</span> <span class="nb">New-Object</span> <span class="n">System</span><span class="p">.</span><span class="n">Management</span><span class="p">.</span><span class="n">Automation</span><span class="p">.</span><span class="n">PSCredential</span> <span class="p">(</span><span class="nv">$username</span><span class="p">,</span> <span class="nv">$password</span><span class="p">)</span>
+
+<span class="nb">Send-MailMessage</span> <span class="n">-SmtpServer</span> <span class="s2">&quot;smtp.example.com&quot;</span> <span class="n">-Port</span> <span class="n">587</span> <span class="n">-From</span> <span class="s2">&quot;sample@example.com&quot;</span> <span class="n">-To</span> <span class="s2">&quot;john.doe@example.com&quot;</span> <span class="n">-Subject</span> <span class="s2">&quot;A subject&quot;</span> <span class="n">-Body</span> <span class="s2">&quot;A body&quot;</span> <span class="n">-Credential</span> <span class="nv">$credential</span> <span class="n">-UseSsl</span>
+</code></pre>
+</div>
+
+<h2>3. Adding Attachments</h2>
+
+<p>You can also attach files to your email using the <code>-Attachments</code> parameter:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nb">Send-MailMessage</span> <span class="n">-SmtpServer</span> <span class="s2">&quot;smtp.example.com&quot;</span> <span class="n">-Port</span> <span class="n">587</span> <span class="n">-From</span> <span class="s2">&quot;sample@example.com&quot;</span> <span class="n">-To</span> <span class="s2">&quot;john.doe@example.com&quot;</span> <span class="n">-Subject</span> <span class="s2">&quot;A subject&quot;</span> <span class="n">-Body</span> <span class="s2">&quot;A body&quot;</span> <span class="n">-Attachments</span> <span class="s2">&quot;C:\path\to\file.txt&quot;</span> <span class="n">-Credential</span> <span class="nv">$credential</span> <span class="n">-UseSsl</span>
+</code></pre>
+</div>
+
+<h2>4. Troubleshooting Tips</h2>
+
+<h3>Connection Issues:</h3>
+
+<p>If the email fails to send, ensure the SMTP server is reachable and the port is open. Use <code>Test-NetConnection</code> to verify connectivity:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nb">Test-NetConnection</span> <span class="n">-ComputerName</span> <span class="n">smtp</span><span class="p">.</span><span class="n">example</span><span class="p">.</span><span class="n">com</span> <span class="n">-Port</span> <span class="n">587</span>
+</code></pre>
+</div>
+
+<h3>Authentication Errors:</h3>
+
+<p>Double-check the username and password. If the SMTP server requires a specific authentication method (e.g., OAuth), you may need additional configuration.</p>
+
+<h3>SSL/TLS Errors:</h3>
+
+<p>Ensure the <code>-UseSsl</code> parameter is used if the SMTP server requires encryption.</p>
+
+<h2>Example Workflow:</h2>
+
+<p>Here’s a complete example with authentication and attachments:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="c"># Create credentials</span>
+<span class="nv">$username</span> <span class="p">=</span> <span class="s2">&quot;sample@example.com&quot;</span>
+<span class="nv">$password</span> <span class="p">=</span> <span class="nb">ConvertTo-SecureString</span> <span class="s2">&quot;YourPassword&quot;</span> <span class="n">-AsPlainText</span> <span class="n">-Force</span>
+<span class="nv">$credential</span> <span class="p">=</span> <span class="nb">New-Object</span> <span class="n">System</span><span class="p">.</span><span class="n">Management</span><span class="p">.</span><span class="n">Automation</span><span class="p">.</span><span class="n">PSCredential</span> <span class="p">(</span><span class="nv">$username</span><span class="p">,</span> <span class="nv">$password</span><span class="p">)</span>
+
+<span class="c"># Send email with attachment</span>
+<span class="nb">Send-MailMessage</span> <span class="n">-SmtpServer</span> <span class="s2">&quot;smtp.example.com&quot;</span> <span class="n">-Port</span> <span class="n">587</span> <span class="n">-From</span> <span class="s2">&quot;sample@example.com&quot;</span> <span class="n">-To</span> <span class="s2">&quot;john.doe@example.com&quot;</span> <span class="n">-Subject</span> <span class="s2">&quot;Test Email with Attachment&quot;</span> <span class="n">-Body</span> <span class="s2">&quot;Please find the attached file.&quot;</span> <span class="n">-Attachments</span> <span class="s2">&quot;C:\path\to\file.txt&quot;</span> <span class="n">-Credential</span> <span class="nv">$credential</span> <span class="n">-UseSsl</span>
+</code></pre>
+</div>
+
+<h2>Why do this way?</h2>
+
+<p>Using PowerShell to send test emails is a powerful way to:</p>
+
+<ul>
+<li>Test SMTP server configurations.</li>
+<li>Verify email delivery and troubleshoot issues.</li>
+<li>Automate email notifications in scripts.</li>
+</ul>
+
+<p>Whether you’re working with an internal SMTP relay or an external server requiring authentication, PowerShell’s <code>Send-MailMessage</code> cmdlet makes it easy to get the job done.</p>
+
+<p>Hope you found this useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>January 21st, 2025</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/powershell/">
+					PowerShell
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/smtp/">
+					SMTP
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-find-users-with-duplicate-email-addresses-in-sql">How to Find Users with Duplicate Email Addresses in SQL?</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>When managing a database with user information, ensuring data integrity is crucial. One common issue that can arise is duplicate email addresses in the <code>users</code> table. </p>
+
+<p>Let me show you how to write a simple yet powerful SQL query to identify such duplicates!</p>
+
+<h2>The Problem</h2>
+
+<p>In many applications, email addresses should be unique identifiers for users. However, duplicates can sneak into the database due to bugs, manual data imports, or other anomalies. Detecting and resolving these duplicates is essential to maintain data integrity and ensure proper functionality of user-related features, such as authentication.</p>
+
+<h2>The Solution</h2>
+
+<p>Using SQL, you can quickly find all duplicate email addresses in your <code>users</code> table by leveraging the <code>GROUP BY</code> and <code>HAVING</code> clauses.</p>
+
+<p>Here’s the query:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">email</span><span class="p">,</span><span class="w"> </span><span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">email_count</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">users</span>
+<span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">email</span>
+<span class="k">HAVING</span><span class="w"> </span><span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+</code></pre>
+</div>
+
+<h2>How It Works:</h2>
+
+<ol>
+<li><code>GROUP BY email</code>: Groups the rows in the <code>users</code> table by the email column, so each group represents a unique email.</li>
+<li><code>COUNT(*)</code>: Counts the number of rows in each group.</li>
+<li><code>HAVING COUNT(*) &gt; 1</code>: Filters the groups to only include those where the count is greater than 1, i.e., duplicate email addresses.</li>
+</ol>
+
+<h2>Enhanced Query for User Details</h2>
+
+<p>If you want to see more details about the users who share the same email address (e.g., user IDs, names), you can use a subquery:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">u</span><span class="p">.</span><span class="o">*</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="n">u</span>
+<span class="k">JOIN</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="k">SELECT</span><span class="w"> </span><span class="n">email</span>
+<span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">users</span>
+<span class="w">    </span><span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">email</span>
+<span class="w">    </span><span class="k">HAVING</span><span class="w"> </span><span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1</span>
+<span class="p">)</span><span class="w"> </span><span class="n">dup_emails</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">u</span><span class="p">.</span><span class="n">email</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dup_emails</span><span class="p">.</span><span class="n">email</span><span class="p">;</span>
+</code></pre>
+</div>
+
+<h2>Explanation</h2>
+
+<ul>
+<li>The subquery identifies all duplicate email addresses.</li>
+<li>The main query joins this result with the <code>users</code> table to retrieve detailed information about each user associated with the duplicate emails.</li>
+</ul>
+
+<h2>Final Thoughts</h2>
+
+<p>This simple query can save you a lot of time when auditing your database for duplicate entries. Whether you’re cleaning up data or debugging an issue, identifying duplicates is an important step toward ensuring a robust and reliable application.</p>
+
+<p>Hope you found this tip useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>January 20th, 2025</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/databases/">
+					Databases
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/sql/">
+					SQL
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/mysql/">
+					MySQL
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-filter-records-based-on-a_string-column-containing-numbers-with-commas-and-dots">How to Filter Records Based on a String Column Containing Numbers with Commas and Dots?</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Last month, I encountered a scenario where I needed to filter records in a database based on a "revenue" column. The challenge? The <code>revenue</code> column was stored as a string data type, and some of the values contained commas (<code>,</code>) and dots (<code>.</code>). Here’s how I tackled the problem and wrote an SQL query to filter records based on the numeric value of the <code>revenue</code> column.</p>
+
+<h2>What I faced?</h2>
+
+<p>The <code>revenue</code> column was stored as a string, and the values looked like this:</p>
+
+<ul>
+<li>"50,000,000"</li>
+<li>"75.000.000"</li>
+<li>"10000000"</li>
+</ul>
+
+<p>I needed to filter records where the revenue was greater than <strong>"50,000,000"</strong>. However, since the column was a string, I couldn’t directly compare it to a numeric value.</p>
+
+<h2>What I did?</h2>
+
+<p>To handle this, I used a combination of SQL functions:</p>
+
+<ol>
+<li><code>REPLACE</code>: To remove commas (<code>,</code>) and dots (<code>.</code>) from the string.</li>
+<li><code>CAST</code>: To convert the cleaned string into a numeric data type (<code>DECIMAL</code> in this case).</li>
+</ol>
+
+<p>Here’s the SQL query I wrote:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">your_table</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="k">CAST</span><span class="p">(</span><span class="k">REPLACE</span><span class="p">(</span><span class="n">revenue</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;,&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="nb">DECIMAL</span><span class="p">(</span><span class="mi">18</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">))</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">50000000</span><span class="p">;</span>
+</code></pre>
+</div>
+
+<p>Need a breakdown? Here you go:</p>
+
+<ol>
+<li><code>REPLACE(revenue, ',', '')</code>:
+This removes commas from the <code>revenue</code> string. For example, <strong>"50,000,000"</strong> becomes <strong>"50000000"</strong>.</li>
+<li><code>CAST(... AS DECIMAL(18, 2))</code>:
+This converts the cleaned string into a <code>DECIMAL</code> value with 18 total digits and 2 decimal places. For example, <strong>"50000000"</strong> becomes <strong>50000000.00</strong>.</li>
+<li><code>&gt; 50000000</code>:
+Finally, the query filters records where the numeric value of <code>revenue</code> is greater than <strong>50,000,000</strong>.</li>
+</ol>
+
+<h2>Handling Dots as Thousand Separators</h2>
+
+<p>If the <code>revenue</code> column uses dots (<code>.</code>) as thousand separators (e.g., <strong>"75.000.000"</strong>), you can extend the <code>REPLACE</code> function to remove dots as well:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">your_table</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="k">CAST</span><span class="p">(</span><span class="k">REPLACE</span><span class="p">(</span><span class="k">REPLACE</span><span class="p">(</span><span class="n">revenue</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;,&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">),</span><span class="w"> </span><span class="s1">&#39;.&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="nb">DECIMAL</span><span class="p">(</span><span class="mi">18</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">))</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">50000000</span><span class="p">;</span>
+</code></pre>
+</div>
+
+<p>This ensures that both commas and dots are removed before converting the string to a numeric value.</p>
+
+<h2>Why did I do this?</h2>
+
+<p>This approach is helpful when:</p>
+
+<ul>
+<li>You’re working with data stored as strings but need to perform numeric comparisons.</li>
+<li>The data contains formatting characters like commas or dots.</li>
+<li>You want to avoid manual data cleaning or preprocessing.</li>
+</ul>
+
+<p>By using SQL functions like <code>REPLACE</code> and <code>CAST</code>, you can handle these scenarios directly in your queries.</p>
+
+<p>Oh, this works for SQL and MySQL as well!</p>
 
 <p>Hope you found this article useful!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>June 18th, 2024</time>
+		<time>January 19th, 2025</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/net-core/">
-					.NET Core
+				<a href="/category/sql/">
+					SQL
 				</a>
 			</li>
 			
 			<li>
-				<a href="/category/c/">
-					C#
+				<a href="/category/mysql/">
+					MySQL
 				</a>
 			</li>
 			
 			<li>
-				<a href="/category/oop/">
-					OOP
+				<a href="/category/databases/">
+					Databases
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/data-manipulation/">
+					Data Manipulation
 				</a>
 			</li>
 			
@@ -150,441 +965,166 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/using-property-pattern-matching-in-c">Using Property Pattern Matching in C#</a></h1>
+		<h1 class="heading"><a href="/til/posts/how-to-cherry-pick-commits-from-one-git-branch-to-another">How to Cherry-Pick Commits from One Git Branch to Another?</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>Alright, we've all been there especially when it comes to writing IF conditions with multiple checks in a single line like the example below:</p>
+		<p>Although I had heard of Git's <code>cherry-pick</code> command, I never used it until a few months ago when I encountered a situation that demanded it. A client required us to work on multiple incidents and change requests (CRs), but they only wanted specific, approved updates pushed to the repository.</p>
 
-<div class="codehilite">
-<pre><span></span><code><span class="k">if</span><span class="p">(</span><span class="n">employee</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="k">null</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">employee</span><span class="p">.</span><span class="n">Age</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="m">20</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">employee</span><span class="p">.</span><span class="n">Address</span><span class="p">.</span><span class="n">City</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s">&quot;Dubai&quot;</span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="c1">// Do something here...</span>
-<span class="p">}</span>
-</code></pre>
-</div>
+<p>This created a challenge, especially when I was simultaneously working on CRs and incidents. I needed a way to isolate and push only the approved changes while keeping the rest intact. That’s when I decided to try out Git’s <code>cherry-pick</code> command—and it worked like a charm! It made managing my codebase much easier.</p>
 
-<p>As you can see, this condition is straight-forward but can sometimes hinder readability and doesn't really ensure type safety.</p>
+<p>Here’s a simple walkthrough of how you can use it too:</p>
 
-<p>Here's where you can make use <strong>Property Pattern Matching</strong>.</p>
+<h2>The Scenario</h2>
 
-<h2>What's Property Pattern Matching?</h2>
-
-<p>This type of pattern matching is used to match the defined expression if the conditions/nested conditions successfully matches the corresponding property or the field of the result and output of the result is not null. Here's an example of how it might be like:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">if</span><span class="p">(</span><span class="n">employee</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">Age</span><span class="p">:</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="m">20</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">Address</span><span class="p">.</span><span class="n">City</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s">&quot;Dubai&quot;</span><span class="w"> </span><span class="p">})</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="c1">// Do something here...</span>
-<span class="p">}</span>
-</code></pre>
-</div>
-
-<p>This pattern elevates your code's readability, ensures type safety and enable flexibility in terms of data manipulation.</p>
-
-<p>Hope you found this tip useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>June 17th, 2024</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/c/">
-					C#
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/programming/">
-					Programming
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/remove-control-flags">Remove Control Flags</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>There are times when we write flags to control the flow of the program. I mean, it's good to use control flags (sometimes) but it's not necessary to be used in most cases. Like the one shown below:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">public</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="nf">HandlePaymentRecords</span><span class="p">(</span><span class="n">List</span><span class="o">&lt;</span><span class="n">PaymentRecord</span><span class="o">&gt;</span><span class="w"> </span><span class="n">paymentRecords</span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">isSuccessful</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">true</span><span class="p">;</span>
-
-<span class="w">    </span><span class="k">foreach</span><span class="p">(</span><span class="kt">var</span><span class="w"> </span><span class="n">paymentRecord</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="n">paymentRecords</span><span class="p">)</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">ProcessPaymentRecord</span><span class="p">(</span><span class="n">paymentRecord</span><span class="p">))</span>
-<span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="n">isSuccessful</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">false</span><span class="p">;</span>
-<span class="w">            </span><span class="k">break</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">isSuccessful</span><span class="p">;</span>
-<span class="p">}</span>
-</code></pre>
-</div>
-
-<p>The name of method states it's purpose but it seems a tad bit complicated and might confuse some developers who get on-board with it. </p>
-
-<p>Instead, you can make of use of a refactoring technique called <strong>Remove Control Flags</strong> and modify the method to look like this:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">public</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="nf">HandlePaymentProcess</span><span class="p">(</span><span class="n">List</span><span class="o">&lt;</span><span class="n">PaymentRecord</span><span class="o">&gt;</span><span class="w"> </span><span class="n">paymentRecords</span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="k">foreach</span><span class="p">(</span><span class="kt">var</span><span class="w"> </span><span class="n">paymentRecord</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="n">paymentRecords</span><span class="p">)</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">ProcessPaymentRecord</span><span class="p">(</span><span class="n">paymentRecord</span><span class="p">))</span>
-<span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="k">false</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="k">true</span><span class="p">;</span>
-<span class="p">}</span>
-</code></pre>
-</div>
-
-<p>The logic is the same but now the code is now simplified, less complex to read and much more maintainable.</p>
-
-<p>Less code is good code.</p>
-
-<p>Hope this helps you out!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>June 16th, 2024</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/c/">
-					C#
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/clean-code/">
-					Clean Code
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/refactoring/">
-					Refactoring
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/error-loading-v8-startup-snapshot-file-in-visual-studio-code">Error loading V8 startup snapshot file in Visual Studio Code</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Unusually, one fine afternoon, I was facing issues with opening my VSCode editor and I faced the followinge error when I tried <code>code .</code> on my project directory:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="o">[</span><span class="m">0830</span>/101630.031:FATAL:v8_initializer.cc<span class="o">(</span><span class="m">527</span><span class="o">)]</span><span class="w"> </span>Error<span class="w"> </span>loading<span class="w"> </span>V8<span class="w"> </span>startup<span class="w"> </span>snapshot<span class="w"> </span>file
-</code></pre>
-</div>
-
-<p>I didn't really understand what might have caused it but after reading this <a href="https://github.com/microsoft/vscode/issues/183314">issue raised on GitHub</a>, I realized that occurred due to a corrupted update while I was shutting down my PC (Good job, Windows! :facepalm:)</p>
-
-<p>If you're are lucky enough, here's how you can get it back to work:</p>
-
-<ol>
-<li>Go <code>C:\Users\XXX\AppData\Local\Programs\Microsoft VS Code</code> directory</li>
-<li>If you spot a folder titled <code>_</code>, copy the contents and paste it in the VS Code directly</li>
-<li>Try starting your editor again</li>
-</ol>
-
-<p>The following steps worked out for me and if it worked out for you, that's great! Else, you'll have to re-install your editor all over again, which means you might have to re-install your extensions and re-configure it again (if you haven't taken a backup of it).</p>
-
-<p>Hope this helps you out!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>May 29th, 2024</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/vscode/">
-					VSCode
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/troubleshooting/">
-					Troubleshooting
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/cicada-3301">Cicada 3301</a></h1>
-		<p class="description">A short docu-series about one of the most mysterious puzzles on the internet.</p>
-	</div>
-	<div class="article-body">
-		<p>Ever heard of Cicada 3301? It's one of those mysterious puzzles that made every crypto enthusiast around the globe turn into super sleuths hunting for clues and chasing the next puzzle. I was quite interested in it after watching this series of documentaries titled <strong>Cracking the Code of Cicada 3301</strong> that shot by <strong>Great Big Story</strong>, which made my interest towards my cryptography grow larger.</p>
-
-<p>Although, I never tried this series of puzzles myself, the actual host of this puzzle is unknown as some claimed that it could be a recruitment programme by the FBI/CIA/NSA/GCHQ to hire super smart individuals or maybe some crypto/security group that cares about data privacy and security.</p>
-
-<p>I remember watching this series back in 2020 and it was quite hard for me to find these videos and hence, I'm sharing it here for you and my reference as well (in case, I wanted to re-watch the documentary again):</p>
+<p>I had two branches in my Git repository:</p>
 
 <ul>
-<li><a href="https://www.youtube.com/watch?v=RatbYqc0-jE">Cracking the Code of Cicada 3301 by Great Big Story | Part 1</a></li>
-<li><a href="https://www.youtube.com/watch?v=Rx8pfheh6aI">Cracking the Code of Cicada 3301 by Great Big Story | Part 2</a></li>
-<li><a href="https://www.youtube.com/watch?v=HRYyhdTHraU">Cracking the Code of Cicada 3301 by Great Big Story | Part 3</a></li>
-<li><a href="https://www.youtube.com/watch?v=GanHp3XCYgg">Cracking the Code of Cicada 3301 by Great Big Story | Part 4</a></li>
+<li><strong>Branch A</strong>: The primary branch where ongoing development happens.</li>
+<li><strong>Branch B</strong>: A feature branch where I accidentally pushed updates that should partially go into <strong>Branch A</strong>.</li>
 </ul>
 
-<p>What I liked about this documentary series is how it connects people of various disciplines such as Mathematics, Programming, Linguistics and Steganography to deduce and decipher a really complex puzzle. I just find that inspiring because knowledge is power and when aligned with people of similar interests and ambitions, you build new bridges of friendship that spans around the globe.</p>
+<p>While it’s straightforward to merge changes from one branch into another, I only needed a subset of the commits from <strong>Branch B</strong> to be applied to <strong>Branch A</strong>. This is where Git’s <code>cherry-pick</code> command shines.</p>
 
-<p>Hope you liked reading this article.</p>
+<p>Go along with me and follow it step-by-step:</p>
 
-	</div>
-	<div class="article-footer">
-		<time>May 26th, 2024</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/documentary/">
-					Documentary
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/cryptography/">
-					Cryptography
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/security/">
-					Security
-				</a>
-			</li>
-			
-		</ul>
-	</div>
+<h2>1. Switch to the Target Branch</h2>
+
+<p>First, check out the branch where you want to apply the commits (in my case, <strong>Branch A</strong>):</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>checkout<span class="w"> </span>A
+</code></pre>
 </div>
 
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/generating-custom-snippets-using-visual-studio-code">Generating custom snippets using Visual Studio Code</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>I've always wanted to write about this feature and I believe this is one of the most productivity hacks you can do to speed your work and worry-less about writing boilerplate code.</p>
+<h2>2. Find the Commits to Cherry-Pick</h2>
 
-<p>For example, if I wanted to write a piece of code that fetches a list of books asynchronously using JavaScript, I would have to type it or maybe copy-paste that stub from another file or project and edit it accordingly.
-That's fine but when working on a large project or tight deadlines, it can be quite time-consuming if all you want is just a boilerplate code that's ready to begin with.</p>
+<p>Use the <code>git log</code> command to list the commits in <strong>Branch B</strong> and identify the specific commit hashes you want to cherry-pick:</p>
 
-<p>Here's how you can create your own snippet:</p>
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>log<span class="w"> </span>B
+</code></pre>
+</div>
 
-<ol>
-<li>Press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd></li>
-<li>Type <strong>Configure User Snippets</strong> and hit <kbd>Enter</kbd></li>
-<li>Select the language for which it should appear and hit <kbd>Enter</kbd></li>
+<p>You should see output similar to this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>commit<span class="w"> </span>abc1234<span class="w"> </span><span class="o">(</span>HEAD<span class="w"> </span>-&gt;<span class="w"> </span>B<span class="o">)</span>
+Author:<span class="w"> </span>Your<span class="w"> </span>Name<span class="w"> </span>&lt;you@example.com&gt;
+Date:<span class="w">   </span>Mon<span class="w"> </span>Jan<span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="m">12</span>:00:00<span class="w"> </span><span class="m">2025</span><span class="w"> </span>+0000
+
+<span class="w">    </span>Add<span class="w"> </span>feature<span class="w"> </span>X
+
+commit<span class="w"> </span>def5678
+Author:<span class="w"> </span>Your<span class="w"> </span>Name<span class="w"> </span>&lt;you@example.com&gt;
+Date:<span class="w">   </span>Sun<span class="w"> </span>Dec<span class="w"> </span><span class="m">31</span><span class="w"> </span><span class="m">12</span>:00:00<span class="w"> </span><span class="m">2024</span><span class="w"> </span>+0000
+
+<span class="w">    </span>Fix<span class="w"> </span>bug<span class="w"> </span>Y
+</code></pre>
+</div>
+
+<p>Take note of the commit hash(es) you need. For example, let’s say you want to cherry-pick <code>abc1234</code> and <code>def5678</code>.</p>
+
+<h2>3. Cherry-Pick the Commit(s)</h2>
+
+<h3>Single Commit</h3>
+
+<p>To apply a single commit from <strong>Branch B</strong> onto <strong>Branch A</strong>, use:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>cherry-pick<span class="w"> </span>abc1234
+</code></pre>
+</div>
+
+<h3>Multiple Commits</h3>
+
+<p>To apply multiple non-contiguous commits, list their hashes:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>cherry-pick<span class="w"> </span>abc1234<span class="w"> </span>def5678
+</code></pre>
+</div>
+
+<h3>Range of Commits</h3>
+
+<p>To cherry-pick a range of contiguous commits, use the <code>^..&lt;</code> notation:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>cherry-pick<span class="w"> </span>def5678^..abc1234
+</code></pre>
+</div>
+
+<p>This includes all commits from <code>def5678</code> to <code>abc1234</code>, inclusive.</p>
+
+<h2>4. Resolve Any Conflicts</h2>
+
+<p>If there are conflicts during the cherry-picking process, Git will pause and notify you. Resolve the conflicts in your files, then mark them as resolved:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>add<span class="w"> </span>&lt;file&gt;
+</code></pre>
+</div>
+
+<p>Continue the cherry-pick process:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>cherry-pick<span class="w"> </span>--continue
+</code></pre>
+</div>
+
+<p>To abort the cherry-pick if things go wrong:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>cherry-pick<span class="w"> </span>--abort
+</code></pre>
+</div>
+
+<ol start="5">
+<li>Verify the Result</li>
 </ol>
 
-<p>Once done, a new tab will open up with simple instructions for you to get started with. The instructions are quite straight-forward and you can write something like this right below the note:</p>
+<p>Once the cherry-picking is complete, you can inspect your branch to ensure the changes were applied:</p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="p">{</span>
-<span class="w">    </span><span class="c1">// Place your snippets for javascript here. Each snippet is defined under a snippet name and has a prefix, body and </span>
-<span class="w">    </span><span class="c1">// description. The prefix is what is used to trigger the snippet and the body will be expanded and inserted. Possible variables are:</span>
-<span class="w">    </span><span class="c1">// $1, $2 for tab stops, $0 for the final cursor position, and ${1:label}, ${2:another} for placeholders. Placeholders with the </span>
-<span class="w">    </span><span class="c1">// same ids are connected.</span>
-<span class="w">    </span><span class="c1">// Example:</span>
-<span class="w">    </span><span class="c1">// &quot;Print to console&quot;: {</span>
-<span class="w">    </span><span class="c1">//  &quot;prefix&quot;: &quot;log&quot;,</span>
-<span class="w">    </span><span class="c1">//  &quot;body&quot;: [</span>
-<span class="w">    </span><span class="c1">//      &quot;console.log(&#39;$1&#39;);&quot;,</span>
-<span class="w">    </span><span class="c1">//      &quot;$2&quot;</span>
-<span class="w">    </span><span class="c1">//  ],</span>
-<span class="w">    </span><span class="c1">//  &quot;description&quot;: &quot;Log output to console&quot;</span>
-<span class="w">    </span><span class="c1">// }</span>
-<span class="w">    </span><span class="nt">&quot;AJAX Get Method&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="nt">&quot;prefix&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ajax-get&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;body&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">            </span><span class="s2">&quot;$.ajax({&quot;</span><span class="p">,</span>
-<span class="w">            </span><span class="s2">&quot;\turl: &#39;/&#39;,&quot;</span><span class="p">,</span>
-<span class="w">            </span><span class="s2">&quot;\tmethod: &#39;GET&#39;,&quot;</span><span class="p">,</span>
-<span class="w">            </span><span class="s2">&quot;\tdatatype: &#39;json&#39;,&quot;</span><span class="p">,</span>
-<span class="w">            </span><span class="s2">&quot;\tsuccess: (data) =&gt; {&quot;</span><span class="p">,</span>
-<span class="w">            </span><span class="s2">&quot;\t\tconsole.log(data);&quot;</span><span class="p">,</span>
-<span class="w">            </span><span class="s2">&quot;\t},&quot;</span><span class="p">,</span>
-<span class="w">            </span><span class="s2">&quot;\terror: (err) =&gt; {&quot;</span><span class="p">,</span>
-<span class="w">            </span><span class="s2">&quot;\t\tconsole.error(err);&quot;</span><span class="p">,</span>
-<span class="w">            </span><span class="s2">&quot;\t}&quot;</span><span class="p">,</span>
-<span class="w">            </span><span class="s2">&quot;});&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="p">],</span>
-<span class="w">        </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;A simple AJAX GET Method&quot;</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="p">}</span>
+<pre><span></span><code>git<span class="w"> </span>log
 </code></pre>
 </div>
 
-<p>Save the file and test if the snippet works fine by opening any file, in this case, open an empty <code>.js</code> file and type <code>ajax-get</code> and hit <kbd>Tab</kbd> at the end of the prefix. The generated snippet would look like this:</p>
+<p>You should see the cherry-picked commits in <strong>Branch A</strong>.</p>
 
-<div class="codehilite">
-<pre><span></span><code><span class="nx">$</span><span class="p">.</span><span class="nx">ajax</span><span class="p">({</span>
-<span class="w">    </span><span class="nx">url</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;/&#39;</span><span class="p">,</span>
-<span class="w">    </span><span class="nx">method</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;GET&#39;</span><span class="p">,</span>
-<span class="w">    </span><span class="nx">datatype</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;json&#39;</span><span class="p">,</span>
-<span class="w">    </span><span class="nx">success</span><span class="o">:</span><span class="w"> </span><span class="p">(</span><span class="nx">data</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
-<span class="w">    </span><span class="p">},</span>
-<span class="w">    </span><span class="nx">error</span><span class="o">:</span><span class="w"> </span><span class="p">(</span><span class="nx">err</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="p">});</span>
-</code></pre>
-</div>
+<h2>When is cherry-picking useful?</h2>
 
-<p>Learn more about generating snippets by reading the <a href="https://code.visualstudio.com/docs/editor/userdefinedsnippets">documentation</a> about it.</p>
+<p>Cherry-picking is perfect when you need specific commits from another branch without merging all its changes. This is especially helpful in scenarios like:</p>
 
-<p>Hope this tip helps you out!</p>
+<ul>
+<li>Applying a bug fix from a feature branch to the main branch.</li>
+<li>Pulling specific updates without merging unrelated work.</li>
+</ul>
+
+<h2>Bonus Tips</h2>
+
+<ul>
+<li>Always double-check commit hashes before cherry-picking to avoid unexpected results.</li>
+<li>Use descriptive commit messages to make it easier to identify what each commit does</li>
+<li>If you find yourself cherry-picking often, consider rethinking your branch workflows to reduce the need for it.</li>
+</ul>
+
+<p>That’s it! Now you know how to cherry-pick commits in Git. It’s a small but incredibly powerful tool to keep in your Git arsenal.</p>
 
 	</div>
 	<div class="article-footer">
-		<time>May 26th, 2024</time>
+		<time>January 18th, 2025</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/vscode/">
-					VSCode
+				<a href="/category/git/">
+					Git
 				</a>
 			</li>
 			
 			<li>
-				<a href="/category/productivity/">
-					Productivity
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/using-the-nullcoaleascing-operator-in-c">Using the null-coaleascing operator in C#</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Null checks are the most underrated thing and despite years of experience, we still forget to write a null check in our code.</p>
-
-<p>When it comes to writing null checks, this is what one would most write:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="kt">string</span><span class="w"> </span><span class="n">foo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">null</span><span class="p">;</span>
-<span class="kt">string</span><span class="w"> </span><span class="n">bar</span><span class="p">;</span>
-<span class="k">if</span><span class="p">(</span><span class="n">foo</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="k">null</span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="n">bar</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">foo</span><span class="p">;</span>
-<span class="p">}</span>
-<span class="k">else</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="n">bar</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;Hello, friend!&quot;</span><span class="p">;</span>
-<span class="p">}</span>
-<span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="n">bar</span><span class="p">)</span><span class="w"> </span><span class="c1">// Output: Hello, friend!</span>
-</code></pre>
-</div>
-
-<p>Yes, it does the job but it's a bit lengthy and not so readable. Let's see how the <code>??</code> operator i.e. the null-coalescing operator can help simplify your logic:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="kt">string</span><span class="w"> </span><span class="n">foo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">null</span><span class="p">;</span>
-<span class="kt">string</span><span class="w"> </span><span class="n">bar</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">foo</span><span class="w"> </span><span class="o">??</span><span class="w"> </span><span class="s">&quot;Hello, friend!&quot;</span><span class="p">;</span>
-<span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="n">bar</span><span class="p">)</span><span class="w"> </span><span class="c1">// Output: Hello, friend!</span>
-</code></pre>
-</div>
-
-<p>Now, you can bid goodbyes to writing verbose null checks and make your code more cleaner and readable.</p>
-
-<p>Hope this tip helps you out!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>May 25th, 2024</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/c/">
-					C#
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/programming/">
-					Programming
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/check-if-a-string-is-a-uniqueidentifier-in-sql-server">Check if a string is a UNIQUEIDENTIFIER in SQL Server</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Recently, when I was performing a data migration that contained previous payment history, I came across a table that had a column named <code>PaymentId</code> which is supposed to have a UUID styled format but funnily enough, it was kind of confusing because some of them had numbers in it.</p>
-
-<p>Luckily, the ones that weren't in UUID format are not supposed to be migrated, so I decided to write a <code>SELECT</code> query and filter the records using the <code>TRY_CONVERT</code> function:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">SELECT</span><span class="w"> </span>
-<span class="w">    </span><span class="o">*</span><span class="w"> </span>
-<span class="k">FROM</span><span class="w"> </span>
-<span class="w">    </span><span class="n">dbo</span><span class="p">.</span><span class="n">YourTable</span><span class="w"> </span>
-<span class="k">WHERE</span><span class="w"> </span>
-<span class="w">    </span><span class="n">TRY_CONVERT</span><span class="p">(</span><span class="n">UNIQUEIDENTIFIER</span><span class="p">,</span><span class="w"> </span><span class="n">YourColumn</span><span class="p">)</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">;</span>
-</code></pre>
-</div>
-
-<p>Yes, it's that simple. You don't need to write any complex regular expressions for such operations.</p>
-
-<p>Hope you found this tip useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>February 18th, 2024</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/sql-server/">
-					SQL Server
+				<a href="/category/vcs/">
+					VCS
 				</a>
 			</li>
 			
@@ -612,11 +1152,11 @@ That's fine but when working on a large project or tight deadlines, it can be qu
 		
 	
 		
-			<a class="" href="/pages/25">...</a>
+			<a class="" href="/pages/27">...</a>
 		
 	
 		
-			<a class="" href="/pages/28">28</a>
+			<a class="" href="/pages/30">30</a>
 		
 	
 
@@ -653,28 +1193,35 @@ That's fine but when working on a large project or tight deadlines, it can be qu
 		<li>
 			<a href="/category/linux/">
 				Linux
-				<span class="count">22</span>
+				<span class="count">24</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/laravel/">
 				Laravel
-				<span class="count">18</span>
+				<span class="count">20</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/devops/">
 				DevOps
-				<span class="count">15</span>
+				<span class="count">20</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/php/">
 				PHP
-				<span class="count">13</span>
+				<span class="count">14</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/git/">
+				Git
+				<span class="count">12</span>
 			</a>
 		</li>
 		
@@ -721,9 +1268,9 @@ That's fine but when working on a large project or tight deadlines, it can be qu
 		</li>
 		
 		<li>
-			<a href="/category/git/">
-				Git
-				<span class="count">10</span>
+			<a href="/category/mysql/">
+				MySQL
+				<span class="count">9</span>
 			</a>
 		</li>
 		
@@ -738,13 +1285,6 @@ That's fine but when working on a large project or tight deadlines, it can be qu
 			<a href="/category/unix/">
 				UNIX
 				<span class="count">8</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/mysql/">
-				MySQL
-				<span class="count">7</span>
 			</a>
 		</li>
 		
@@ -766,6 +1306,13 @@ That's fine but when working on a large project or tight deadlines, it can be qu
 			<a href="/category/essay/">
 				Essay
 				<span class="count">6</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/c/">
+				C#
+				<span class="count">5</span>
 			</a>
 		</li>
 		
@@ -798,16 +1345,16 @@ That's fine but when working on a large project or tight deadlines, it can be qu
 		</li>
 		
 		<li>
-			<a href="/category/c/">
-				C#
+			<a href="/category/arcade-challenge/">
+				Arcade Challenge
 				<span class="count">4</span>
 			</a>
 		</li>
 		
 		<li>
-			<a href="/category/arcade-challenge/">
-				Arcade Challenge
-				<span class="count">4</span>
+			<a href="/category/databases/">
+				Databases
+				<span class="count">3</span>
 			</a>
 		</li>
 		
@@ -850,6 +1397,48 @@ That's fine but when working on a large project or tight deadlines, it can be qu
 			<a href="/category/general/">
 				General
 				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/vcs/">
+				VCS
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/ubuntu/">
+				Ubuntu
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/powershell/">
+				PowerShell
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/smtp/">
+				SMTP
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/sql/">
+				SQL
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/net/">
+				.NET
+				<span class="count">2</span>
 			</a>
 		</li>
 		
@@ -959,6 +1548,55 @@ That's fine but when working on a large project or tight deadlines, it can be qu
 		</li>
 		
 		<li>
+			<a href="/category/phpstorm/">
+				PHPStorm
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/elastic-search/">
+				Elastic Search
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/kibana/">
+				Kibana
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/data-manipulation/">
+				Data Manipulation
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/telnet/">
+				Telnet
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/iis/">
+				IIS
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/centos/">
+				CentOS
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/net-core/">
 				.NET Core
 				<span class="count">1</span>
@@ -1050,22 +1688,8 @@ That's fine but when working on a large project or tight deadlines, it can be qu
 		</li>
 		
 		<li>
-			<a href="/category/ubuntu/">
-				Ubuntu
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/ssh/">
 				SSH
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/databases/">
-				Databases
 				<span class="count">1</span>
 			</a>
 		</li>

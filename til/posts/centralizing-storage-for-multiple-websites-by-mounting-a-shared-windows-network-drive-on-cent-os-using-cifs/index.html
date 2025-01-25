@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html data-theme="" lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="author" content="Abdush Shakoor">
+	
+	<meta name="description" content=".">
+	<meta name="og:title" content="Centralizing Storage for Multiple Websites by Mounting a Shared Windows Network Drive on CentOS Using CIFS | Abdush Shakoor's Weblog" />
+	<meta name="og:type" content="article" />
+	<meta name="og:url" content="til/posts/centralizing-storage-for-multiple-websites-by-mounting-a-shared-windows-network-drive-on-cent-os-using-cifs" />
+	<meta name="og:description" content="" />
+	<meta name="og:site_name" content="Abdush Shakoor's Weblog | Abdush Shakoor's Weblog" />
+	
+	<meta name="robots" content="follow">
+	<title>Centralizing Storage for Multiple Websites by Mounting a Shared Windows Network Drive on CentOS Using CIFS | Abdush Shakoor's Weblog </title>
+	<link rel="stylesheet" href="/static/css/main.css" type="text/css">
+	<link rel="stylesheet" href="/static/css/pygments.css" type="text/css">
+
+	<link rel="apple-touch-icon" sizes="57x57" href="/static/favicon/apple-icon-57x57.png">
+<link rel="apple-touch-icon" sizes="60x60" href="/static/favicon/apple-icon-60x60.png">
+<link rel="apple-touch-icon" sizes="72x72" href="/static/favicon/apple-icon-72x72.png">
+<link rel="apple-touch-icon" sizes="76x76" href="/static/favicon/apple-icon-76x76.png">
+<link rel="apple-touch-icon" sizes="114x114" href="/static/favicon/apple-icon-114x114.png">
+<link rel="apple-touch-icon" sizes="120x120" href="/static/favicon/apple-icon-120x120.png">
+<link rel="apple-touch-icon" sizes="144x144" href="/static/favicon/apple-icon-144x144.png">
+<link rel="apple-touch-icon" sizes="152x152" href="/static/favicon/apple-icon-152x152.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/static/favicon/apple-icon-180x180.png">
+<link rel="icon" type="image/static/favicon/png" sizes="192x192"  href="/static/favicon/android-icon-192x192.png">
+<link rel="icon" type="image/static/favicon/png" sizes="32x32" href="/static/favicon/favicon-32x32.png">
+<link rel="icon" type="image/static/favicon/png" sizes="96x96" href="/static/favicon/favicon-96x96.png">
+<link rel="icon" type="image/static/favicon/png" sizes="16x16" href="/static/favicon/favicon-16x16.png">
+<link rel="manifest" href="/static/favicon/manifest.json">
+<meta name="msapplication-TileColor" content="#ffffff">
+<meta name="msapplication-TileImage" content="/static/favicon/ms-icon-144x144.png">
+<meta name="theme-color" content="#ffffff">
+	
+	<!-- <script src="https://unpkg.com/phosphor-icons"></script> -->
+	<!-- <script>
+		if(localStorage.theme){
+			document.documentElement.setAttribute('data-theme', localStorage.getItem("theme"));
+		}
+	</script> -->
+</head>
+<body class="">
+	<!-- Navbar -->
+	<header class="header">
+	<!-- Logo with Author Name -->
+	<div class="author">
+		<a href="/">
+			<img src="/static/logo.png" alt="megacolorboy">
+			<div class="name">
+				<h1>Abdush Shakoor's Weblog</h1>
+				<p>Writings, experiments & ideas.</p>
+			</div>
+		</a>
+	</div>
+	<!-- Logo with Author Name -->
+	<nav>
+		<ul class="menu">
+			
+				<li><a href="/about">About</a></li>
+			
+				<li><a href="/archive">Archive</a></li>
+			
+				<li><a href="/resume">Resume</a></li>
+			
+		</ul>
+	</nav>	
+</header>
+
+<main>
+	<div class="two-col-grid">
+		<section id="primary">
+			<div class="articles">
+				
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/centralizing-storage-for-multiple-websites-by-mounting-a-shared-windows-network-drive-on-cent-os-using-cifs">Centralizing Storage for Multiple Websites by Mounting a Shared Windows Network Drive on CentOS Using CIFS</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Running more than 45 websites on a CentOS server can be a challenge, especially when it comes to managing storage. In my case, these websites are hosted across two different servers, and each site has its own storage folder for images and uploads.</p>
+
+<p>To streamline this, I came up with a solution: centralizing all storage uploads in one place by hosting a shared Windows network drive and mounting it on the CentOS servers. </p>
+
+<p>This way, all websites can access the same centralized storage, making management much easier.</p>
+
+<p>Here’s how I did it, step by step:</p>
+
+<h4>Step 1: Install cifs-utils</h4>
+
+<p>First, you need to install the <code>cifs-utils</code> package, which provides the necessary tools to mount CIFS shares.</p>
+
+<div class="codehilite">
+<pre><span></span><code>yum<span class="w"> </span>install<span class="w"> </span>cifs-utils
+</code></pre>
+</div>
+
+<h4>Step 2: Create a Service Account</h4>
+
+<p>Next, I created a service account on the CentOS server. This account will be used to access the shared drive. I named it <code>svc_library_core</code> and assigned it a UID of 5000. You can choose any name and UID that isn’t already in use.</p>
+
+<div class="codehilite">
+<pre><span></span><code>useradd<span class="w"> </span>-u<span class="w"> </span><span class="m">5000</span><span class="w"> </span>svc_library_core
+</code></pre>
+</div>
+
+<h4>Step 3: Create a Group for the Share</h4>
+
+<p>I also created a group on the CentOS server that will map to the shared drive. This group will contain all the Linux accounts that need access to the share. I named the group <code>share_library_core</code> and gave it a GID of 6000.</p>
+
+<div class="codehilite">
+<pre><span></span><code>groupadd<span class="w"> </span>-g<span class="w"> </span><span class="m">6000</span><span class="w"> </span>share_library_core
+</code></pre>
+</div>
+
+<h4>Step 4: Add Users to the Group</h4>
+
+<p>After creating the group, I added the necessary users to it. For example, if you want the <code>apache</code> user to have access to the share, you can add it like this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>usermod<span class="w"> </span>-G<span class="w"> </span>share_library_core<span class="w"> </span>-a<span class="w"> </span>apache
+</code></pre>
+</div>
+
+<h4>Step 5: Prepare Credentials</h4>
+
+<p>To mount the drive, you’ll need to provide the credentials for the Windows share. You can either pass them directly using the <code>-o</code> option or save them in a file. I opted to save them in a file for security reasons.</p>
+
+<p>Switch to the root user and create a file to store the credentials:</p>
+
+<div class="codehilite">
+<pre><span></span><code>su<span class="w"> </span>-<span class="w"> </span>root
+touch<span class="w"> </span>/root/creds_smb_library_core
+chmod<span class="w"> </span><span class="m">0600</span><span class="w"> </span>/root/creds_smb_library_core
+vi<span class="w"> </span>/root/creds_smb_library_core
+</code></pre>
+</div>
+
+<p>Add the following lines to the file, replacing the placeholders with your actual Windows or Active Directory username and password:</p>
+
+<div class="codehilite">
+<pre><span></span><code>username=YourWindowsUsername
+password=YourWindowsPassword
+</code></pre>
+</div>
+
+<h4>Step 6: Mount the Drive</h4>
+
+<p>Now, you’re ready to mount the shared drive. Use the following command, replacing the placeholders with your actual values:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>mount<span class="w"> </span>-t<span class="w"> </span>cifs<span class="w"> </span>//&lt;destination_ip&gt;/path/to/directory<span class="w"> </span>/test-directory<span class="w"> </span>-o<span class="w"> </span><span class="nv">credentials</span><span class="o">=</span>/root/creds_smb_library_core,uid<span class="o">=</span><span class="m">5000</span>,gid<span class="o">=</span><span class="m">6000</span>,iocharset<span class="o">=</span>utf8,file_mode<span class="o">=</span><span class="m">0774</span>,dir_mode<span class="o">=</span><span class="m">0775</span>
+</code></pre>
+</div>
+
+<ul>
+<li><code>//&lt;destination_ip&gt;/path/to/directory</code> is the path to the shared drive on the Windows server.</li>
+<li><code>/test-directory</code> is the local directory where you want to mount the drive.</li>
+<li><code>credentials=/root/creds_smb_library_core</code> points to the file containing your credentials.</li>
+<li><code>uid=5000</code> and <code>gid=6000</code> map the mounted drive to the service account and group you created earlier.</li>
+<li><code>iocharset=utf8</code> ensures proper character encoding.</li>
+<li><code>file_mode=0774</code> and <code>dir_mode=0775</code> set the file and directory permissions.</li>
+</ul>
+
+<h4>Step 7: Unmounting the Drive</h4>
+
+<p>If you need to unmount the drive later, you can do so with the following command:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>umount<span class="w"> </span>/test-directory
+</code></pre>
+</div>
+
+<h3>Bonus: Automount Script for Server Reboots</h3>
+
+<p>One challenge I faced was ensuring that the shared drives were automatically remounted in case the servers went down or were rebooted. To handle this, I wrote a simple script that mounts the drives on startup.</p>
+
+<h4>Create the Script</h4>
+
+<p>Create a new script file, for example, <code>/usr/local/bin/mount_shares.sh</code>:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="ch">#!/bin/bash</span>
+mount<span class="w"> </span>-t<span class="w"> </span>cifs<span class="w"> </span>//&lt;destination_ip&gt;/path/to/directory<span class="w"> </span>/test-directory<span class="w"> </span>-o<span class="w"> </span><span class="nv">credentials</span><span class="o">=</span>/root/creds_smb_library_core,uid<span class="o">=</span><span class="m">5000</span>,gid<span class="o">=</span><span class="m">6000</span>,iocharset<span class="o">=</span>utf8,file_mode<span class="o">=</span><span class="m">0774</span>,dir_mode<span class="o">=</span><span class="m">0775</span>
+</code></pre>
+</div>
+
+<p>Make sure to replace the placeholders with your actual values.</p>
+
+<h4>Make the Script Executable</h4>
+
+<p>Set the executable permission on the script:</p>
+
+<div class="codehilite">
+<pre><span></span><code>chmod<span class="w"> </span>+x<span class="w"> </span>/usr/local/bin/mount_shares.sh
+</code></pre>
+</div>
+
+<h4>Add the Script to Startup</h4>
+
+<p>To ensure the script runs on startup, add it to the <code>/etc/rc.local</code> file:</p>
+
+<div class="codehilite">
+<pre><span></span><code>/usr/local/bin/mount_shares.sh
+</code></pre>
+</div>
+
+<p>Make sure <code>/etc/rc.local</code> is executable:</p>
+
+<div class="codehilite">
+<pre><span></span><code>chmod<span class="w"> </span>+x<span class="w"> </span>/etc/rc.local
+</code></pre>
+</div>
+
+<h4>Test the Script</h4>
+
+<p>Reboot your server and verify that the shared drives are automatically mounted.</p>
+
+<p>And that’s it! </p>
+
+<p>You’ve successfully mounted a shared Windows network drive on CentOS using CIFS and ensured it remounts automatically on server reboots. </p>
+
+<p>This setup has made managing storage for multiple websites much more efficient and centralized.</p>
+
+<p>Hope you found this article useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>January 14th, 2025</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/centos/">
+					CentOS
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+			</div>
+		</section>
+		<section id="secondary">
+			<div class="sidebar">
+				<div class="author-intro">
+	<h3>Hello, I'm Abdush Shakoor! &#x1F44B;</h3>
+	<p>I'm a programmer & designer based in Dubai, United Arab Emirates. I love tinkering with code and writing about what I learn.</p>
+	<p>Like this article? Please share it with your friends and colleagues or else, <a href="mailto:megacolorboy@gmail.com">send me</a> a private message about your feedback.</p>
+
+	<ul class="sitemap">
+		<li><a class="back" href="/"><span>👈</span> Check out more articles!</a></li>
+	</ul>
+</div>
+			</div>
+		</section>
+	</div>
+</main>
+
+<footer>
+    <span class="copyright">&copy; Abdush Shakoor</span>
+</footer>
+
+<script src="/static/vendor/jquery/jquery-3.5.1.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+
+<script src="/static/js/art.js"></script>
+
+<script defer src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script defer id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-98290003-2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-98290003-2');
+</script>
+<script src="/static/vendor/jquery-lazy/jquery.lazy.min.js"></script>
+<script>
+  $(function () {
+    $('.lazy').lazy();
+  });
+</script>
+<!-- <script>
+    const darkModeButton = document.createElement('button');
+    const syntaxHighlightSource = document.getElementById('syntaxHighlight');
+    const menuList = document.querySelector('.menu');
+    const themeSettings = {
+        "dark": {
+            "icon": '<i class="ph-moon-fill"></i>',
+            "hljs": "/static/vendor/hljs/css/github-dark.css",
+        },
+        "light": {
+            "icon": '<i class="ph-sun-fill"></i>',
+            "hljs": "/static/vendor/hljs/css/github.min.css",
+        },
+    }
+
+    function highlightMenuLink() {
+        var currentURI = window.location.href;
+        currentURI = currentURI.replace(window.location.protocol + "//", "");
+        var currentPage	 = currentURI.split('/')[1];
+
+        if(currentPage) {
+            $('a[href="/' + currentPage + '"').parent().addClass('active');
+        }
+    }
+    
+    function initThemeSwitcher() {
+        darkModeButton.innerHTML = themeSettings.light.icon;
+        darkModeButton.classList.add('darkModeButton');
+        
+        darkModeButton.addEventListener('click', function(){
+            switch(document.documentElement.getAttribute('data-theme')) {
+                case 'dark':
+                    lightMode();
+                    break;
+
+                case 'light':
+                default:
+                    darkMode();
+                    break;
+            }
+        });
+        
+        var newItem = document.createElement('li');
+        newItem.appendChild(darkModeButton);
+        menuList.insertBefore(newItem, menuList.childNodes[menuList.childNodes - 1]);
+    }
+    
+
+    // Settings for dark mode
+    function darkMode() {
+        darkModeButton.innerHTML = themeSettings.dark.icon;
+        document.documentElement.setAttribute('data-theme', 'dark');
+        syntaxHighlightSource.setAttribute('href', themeSettings.dark.hljs);
+        localStorage.setItem("theme", "dark");
+    }
+
+    // Settings for light mode
+    function lightMode() {
+        darkModeButton.innerHTML = themeSettings.light.icon;
+        document.documentElement.setAttribute('data-theme', '');
+        syntaxHighlightSource.setAttribute('href', themeSettings.light.hljs);
+        localStorage.setItem("theme", "");
+    }
+
+    function checkTheme() {
+        const localStorageTheme = localStorage.getItem("theme");
+        switch(localStorageTheme) {
+            case "dark":
+                darkMode();
+                break;
+            
+            default:
+                lightMode();
+                break;
+        }
+    }
+
+    // Check if the theme is stored in session
+    window.onload = function() {
+        initThemeSwitcher();
+        checkTheme();
+        highlightMenuLink();
+    }
+
+    //  open and close nav 
+    $('#navbar-toggle').click(function() {
+      $('nav ul').slideToggle();
+    });
+
+    // Hamburger toggle
+    $('#navbar-toggle').on('click', function() {
+      this.classList.toggle('active');
+    });
+
+    // Click outside the dropdown will remove the dropdown class
+    $('html').click(function() {
+      $('.navbar-dropdown').hide();
+    });
+</script> -->
+</body>
+</html>

@@ -77,25 +77,44 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/enable-spellcheck">Enable spellcheck</a></h1>
+		<h1 class="heading"><a href="/til/posts/how-to-identify-the-current-target-of-an-event">How to identify the current target of an event?</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>This can be useful when you're writing stuff, just do the following:</p>
+		<p>Using the <code>event.currentTarget</code> property which belongs to the <code>Event</code> interface can help you in many ways to identify target of the current event especially if you want to fetch attributes or modify the classname of an element that belongs to a group of elements sharing the same classname.</p>
+
+<p>There are many examples but I chose to write a small snippet of highlighting a tab:</p>
 
 <div class="codehilite">
-<pre><span></span><code>:set<span class="w"> </span><span class="nv">spellcheck</span><span class="o">=[</span>lang<span class="o">]</span>
+<pre><span></span><code><span class="kd">function</span><span class="w"> </span><span class="nx">highlightTab</span><span class="p">(</span><span class="nx">e</span><span class="p">){</span>
+<span class="w">    </span><span class="c1">// Find elements that has the classname &#39;active&#39; </span>
+<span class="w">    </span><span class="c1">// and remove them</span>
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="nb">document</span><span class="p">.</span><span class="nx">querySelector</span><span class="p">(</span><span class="s1">&#39;div.tab_item.active&#39;</span><span class="p">)</span><span class="w"> </span><span class="o">!==</span><span class="w"> </span><span class="kc">null</span><span class="p">){</span>
+<span class="w">        </span><span class="nb">document</span><span class="p">.</span><span class="nx">querySelector</span><span class="p">(</span><span class="s1">&#39;div.tab_item.active&#39;</span><span class="p">).</span><span class="nx">classList</span><span class="p">.</span><span class="nx">remove</span><span class="p">(</span><span class="s1">&#39;active&#39;</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1">// Add active class to target node</span>
+<span class="w">    </span><span class="nx">e</span><span class="p">.</span><span class="nx">currentTarget</span><span class="p">.</span><span class="nx">className</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="s2">&quot; active&quot;</span><span class="p">;</span>
+
+<span class="w">    </span><span class="c1">// Add active class to target&#39;s child node</span>
+<span class="w">    </span><span class="c1">// e.currentTarget.querySelector(&#39;a.child_anchor_link&#39;).className += &quot; active&quot;;</span>
+
+<span class="w">    </span><span class="c1">// Add active class to target&#39;s parent node</span>
+<span class="w">    </span><span class="c1">// e.currentTarget.parentNode.className += &quot; active&quot;;</span>
+<span class="p">}</span>
 </code></pre>
 </div>
 
+<p>Read <a href="https://developer.mozilla.org/en-US/docs/Web/API/Event/currentTarget">Mozilla's official documentation</a> to know more about getting the current target of an event and it's compatibility with different web browsers.</p>
+
 	</div>
 	<div class="article-footer">
-		<time>May 25th, 2020</time>
+		<time>June 1st, 2020</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/vim/">
-					VIM
+				<a href="/category/javascript/">
+					JavaScript
 				</a>
 			</li>
 			
@@ -107,32 +126,42 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/view-hardware-info">View hardware info</a></h1>
+		<h1 class="heading"><a href="/til/posts/allow-inline-elements-in-ckeditor">Allow inline elements in CKEditor</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>Want to check the specs of your system? Just type this:</p>
+		<p>Using CKEditor is awesome but I hate it when it removes inline elements like <code>&lt;span&gt;</code>, <code>&lt;i&gt;</code> or any DOM elements that contain attributes like classnames or ID, by default.</p>
+
+<p>Well, CKEditor's <a href="https://ckeditor.com/docs/ckeditor4/latest/guide/dev_allowed_content_rules.html">documentation</a> states that you can allow it by adding this line to your configuration:</p>
 
 <div class="codehilite">
-<pre><span></span><code>lshw
+<pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">editor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">CKEDITOR</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="s1">&#39;textarea_edit&#39;</span><span class="p">,{</span>
+<span class="w">    </span><span class="nx">allowedContent</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="p">});</span>
 </code></pre>
 </div>
 
-<p>Too long? Then type this for a shorter version:</p>
+<p>After adding this line, CKEditor will stop removing those elements from your HTML content but it's also open to all tags. </p>
+
+<p>You can set rules to allow only specific ones like this:</p>
 
 <div class="codehilite">
-<pre><span></span><code>lshw<span class="w"> </span>-short
+<pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">editor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">CKEDITOR</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="s1">&#39;textarea_edit&#39;</span><span class="p">,{</span>
+<span class="w">    </span><span class="nx">allowedContent</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;span; i; ul; li; a[!href]&#39;</span>
+<span class="p">});</span>
 </code></pre>
 </div>
+
+<p>Hope this helps you out! &#x1F60A;</p>
 
 	</div>
 	<div class="article-footer">
-		<time>May 25th, 2020</time>
+		<time>June 1st, 2020</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/linux/">
-					Linux
+				<a href="/category/javascript/">
+					JavaScript
 				</a>
 			</li>
 			
@@ -144,214 +173,45 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/quit-vim">Quit VIM</a></h1>
+		<h1 class="heading"><a href="/til/posts/check-if-the-current-route-exists-before-fetching-its-parameters">Check if the current route exists before fetching it's parameters</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>One of the most infamous issues that new users of VIM faces when using it for the first time. Press <code>:q</code> to quit VIM</p>
-
-<p>If you've worked on a file and want to save and quit? Just type <code>:wq!</code>.</p>
-
-<p>I hope that solved your quitting issue with VIM.</p>
-
-	</div>
-	<div class="article-footer">
-		<time>May 25th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/vim/">
-					VIM
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/check-ubuntu-version">Check Ubuntu version</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Want to know the current version of your Ubuntu distro? Type this:</p>
+		<p>If you've ever come across this type of error when you're trying to fetch parameters of the current route:</p>
 
 <div class="codehilite">
-<pre><span></span><code>lsb_release<span class="w"> </span>-r
+<pre><span></span><code>Symfony\Component\Debug\Exception\FatalThrowableError: Call to member function parameters() on null
 </code></pre>
 </div>
 
-	</div>
-	<div class="article-footer">
-		<time>May 25th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/linux/">
-					Linux
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/save-a-file">Save a file</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Want to save your work? Type <code>:w</code></p>
-
-<p>Type <code>:wq!</code> to save your file and quit VIM at the same time.</p>
-
-	</div>
-	<div class="article-footer">
-		<time>May 25th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/vim/">
-					VIM
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/ssh-with-private-key">Using SSH with a private key</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Got a <em>.pem</em> key but don't know how to SSH to your server, just do this:</p>
-
-<div class="codehilite">
-<pre><span></span><code>ssh<span class="w"> </span>-i<span class="w"> </span>name_of_key<span class="w"> </span>user@domain<span class="w"> </span>-p<span class="w"> </span><span class="m">22</span>
-</code></pre>
-</div>
-
-<h2>BONUS: Convert .ppk to .pem key</h2>
-
-<p>Recently, I started working from home and as a programmer, it's pretty common to access the company server for development purposes. </p>
-
-<p>Back in the office, I used to access it using <a href="https://www.putty.org">PuTTY</a> but now that I'm using a linux machine, I thought of accessing it via Terminal but there's a catch, I can't use <em>.ppk</em> key to access it.</p>
-
-<p>So, I did a little research and figured that I can easily convert it using <code>puttygen</code></p>
-
-<p>Open up your terminal and type:</p>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>putty-tools
-</code></pre>
-</div>
-
-<p>Now, convert your private key to PEM format:</p>
-
-<div class="codehilite">
-<pre><span></span><code>puttygen<span class="w"> </span>yourprivate.ppk<span class="w"> </span>-O<span class="w"> </span>private-openssh<span class="w"> </span>-o<span class="w"> </span>your_new_key.pem
-</code></pre>
-</div>
-
-<p>That's it and you're good to go!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>May 25th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/terminal/">
-					Terminal
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/set-up-recaptcha">Set up reCaptcha in Laravel</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>I mean, come on, you need to have a reCaptcha in your forms, no matter what.</p>
-
-<p>Here are the steps:</p>
-
-<h2>1. Install using Composer</h2>
-
-<div class="codehilite">
-<pre><span></span><code>composer<span class="w"> </span>require<span class="w"> </span>anhskohbo/no-captcha
-</code></pre>
-</div>
-
-<h2>2. Add provider and alias to configuration</h2>
-
-<p>Open your <code>config/app.php</code> file and add this to your providers array:</p>
+<p>It's probably because the route doesn't exist, which is why it failed to call the <code>parameters()</code> function. It can be easily resolved by checking if the route exists before calling the function:</p>
 
 <div class="codehilite">
 <pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="nx">Anhskohbo\NoCaptcha\NoCaptchaServiceProvider</span><span class="o">::</span><span class="na">class</span><span class="p">,</span>
+<span class="k">namespace</span> <span class="nx">App\Http\Controllers</span><span class="p">;</span>
+<span class="k">use</span> <span class="nx">Route</span><span class="p">;</span>
+
+<span class="k">class</span> <span class="nc">FooController</span> <span class="k">extends</span> <span class="nx">Controller</span> <span class="p">{</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="fm">__construct</span><span class="p">(</span><span class="nx">Request</span> <span class="nv">$request</span><span class="p">){</span>
+        <span class="c1">// insert code here...</span>
+    <span class="p">}</span>
+
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">foo</span><span class="p">(</span><span class="nx">Request</span> <span class="nv">$request</span><span class="p">){</span>
+        <span class="nv">$params</span> <span class="o">=</span> <span class="nv">$request</span><span class="o">-&gt;</span><span class="na">route</span><span class="p">()</span> <span class="o">?</span> <span class="nx">Route</span><span class="o">::</span><span class="na">current</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">parameters</span><span class="p">()</span> <span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">;</span>
+        <span class="k">return</span> <span class="nv">$params</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
 <span class="cp">?&gt;</span>
 </code></pre>
 </div>
 
-<p>And this to your aliases array:</p>
+<p>Although, the sample code above is to fetch parameters of the current route, you can apply this before calling any method from the <code>Route</code> class.</p>
 
-<div class="codehilite">
-<pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="s1">&#39;NoCaptcha&#39;</span> <span class="o">=&gt;</span> <span class="nx">Anhskohbo\NoCaptcha\Facades\NoCaptcha</span><span class="o">::</span><span class="na">class</span><span class="p">,</span>
-<span class="cp">?&gt;</span>
-</code></pre>
-</div>
-
-<h2>3. Publish configuration</h2>
-
-<div class="codehilite">
-<pre><span></span><code>php<span class="w"> </span>artisan<span class="w"> </span>vendor:publish<span class="w"> </span>--provider<span class="o">=</span><span class="s2">&quot;Anhskohbo\NoCaptcha\NoCaptchaServiceProvider&quot;</span>
-</code></pre>
-</div>
-
-<h2>4. Add sitekey and secret key to .env file</h2>
-
-<p>Open your <code>.env</code> file and add this:</p>
-
-<div class="codehilite">
-<pre><span></span><code>NOCAPTCHA_SITEKEY=yoursitekey
-NOCAPTCHA_SECRET=yoursecret
-</code></pre>
-</div>
-
-<h2>How to use it?</h2>
-
-<p>Now, you can use it in your validator using like this:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="nv">$validate</span> <span class="o">=</span> <span class="nx">Validator</span><span class="o">::</span><span class="na">make</span><span class="p">(</span><span class="nx">Input</span><span class="o">::</span><span class="na">all</span><span class="p">(),[</span>
-    <span class="s1">&#39;g-recaptcha-response&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;required|captcha&#39;</span>
-<span class="p">]);</span>
-<span class="cp">?&gt;</span>
-</code></pre>
-</div>
+<p>This works for version 5.2 and above.</p>
 
 	</div>
 	<div class="article-footer">
-		<time>May 25th, 2020</time>
+		<time>May 30th, 2020</time>
 		<ul class="tags">
 			
 			<li>
@@ -368,24 +228,302 @@ NOCAPTCHA_SECRET=yoursecret
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/clear-all-lines">Clear all lines</a></h1>
+		<h1 class="heading"><a href="/til/posts/queues-and-stacks">Queues & Stacks</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<ol>
-<li>Switch to normal mode by pressing <code>ESC</code> key</li>
-<li>Press <code>gg</code> and it will take you to first line of the file.</li>
-<li>Then type <code>dG</code> and it will clear all the lines from start to the end of the file.</li>
+		<p>Let's look at the differences between the two data structures:</p>
+
+<ol>
+<li><strong>Queues</strong>: First-In First-Out</li>
+<li><strong>Stacks</strong>: Last-In Last-Out</li>
 </ol>
+
+<h2>Queues</h2>
+
+<p>This follows a <strong>First-In First-Out</strong> processing order i.e. the first element added to a queue will be processed first. A queue should support two operations:</p>
+
+<ul>
+<li>Enqueue</li>
+<li>Dequeue</li>
+</ul>
+
+<h3>Enqueue</h3>
+
+<p>Adds the element to the tail of a queue. The tail position gets incremented.</p>
+
+<h3>Dequeue</h3>
+
+<p>Removes the first element of a queue i.e. the head element. Once, it's removed, the subsequent element becomes the new head element of the queue. The position of the new head element gets incremented and the previous one is assigned a negative integer like -1 or some garbage value. </p>
+
+<p><strong>Implementation of a standard queue using C++:</strong></p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">Queue</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">private</span><span class="o">:</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">pos</span><span class="p">;</span>
+<span class="w">        </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">data</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">public</span><span class="o">:</span>
+<span class="w">        </span><span class="n">Queue</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">pos</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="n">enqueue</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">data</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">value</span><span class="p">);</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="n">dequeue</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">isEmpty</span><span class="p">()){</span>
+<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">            </span><span class="n">pos</span><span class="o">++</span><span class="p">;</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">front</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="n">pos</span><span class="p">];</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="n">isEmpty</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">pos</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<p>In terms of memory management, a standard Queue is quite inefficient and incapable of handling dynamic memory.</p>
+
+<h2>Stacks</h2>
+
+<p>This follows a <strong>Last-In First-Out</strong> processing order i.e. the last element added to a queue will be the first to be removed. Just like queues, it has two simple operations:</p>
+
+<ul>
+<li>Push</li>
+<li>Pop</li>
+</ul>
+
+<h3>Push</h3>
+
+<p>Each element is pushed towards the end of the stack. Think of it as a card deck where you stack a card on top of another card.</p>
+
+<h3>Pop</h3>
+
+<p>It removes the most recent element i.e. the newly added element from the stack.</p>
+
+<p><strong>Implementation of a stack using C++:</strong></p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">Stack</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">private</span><span class="o">:</span>
+<span class="w">        </span><span class="n">vector</span><span class="o">&amp;</span><span class="n">ltint</span><span class="o">&gt;</span><span class="w"> </span><span class="n">data</span><span class="p">;</span>
+<span class="w">    </span><span class="k">public</span><span class="o">:</span>
+<span class="w">        </span><span class="kt">void</span><span class="w"> </span><span class="n">push</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">data</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">value</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="n">isEmpty</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">empty</span><span class="p">();</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">top</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">back</span><span class="p">();</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="n">pop</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">isEmpty</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="n">data</span><span class="p">.</span><span class="n">pop_back</span><span class="p">();</span>
+<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">            </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<p>Unlike queues, stacks are easier to implement and pretty efficient at managing dynamic memory.</p>
+
+<p>Oh, if you ever get to use these, don't worry about implementing them, nearly all programming languages have their own implementations of <code>stack</code> and <code>queue</code> that comes with it's own standard library.</p>
 
 	</div>
 	<div class="article-footer">
-		<time>May 25th, 2020</time>
+		<time>May 30th, 2020</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/vim/">
-					VIM
+				<a href="/category/algorithms/">
+					Algorithms
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/data-structures/">
+					Data Structures
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/select-all-elements-except-the-current-element">Select all elements except the current element</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>If you don't want the current element to be selected in an array of elements that belongs to same class or type, just use the <code>.not()</code> method like the example below:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nx">$</span><span class="p">(</span><span class="s2">&quot;.btn&quot;</span><span class="p">).</span><span class="nx">click</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
+<span class="w">    </span><span class="nx">$</span><span class="p">(</span><span class="s2">&quot;.btn&quot;</span><span class="p">).</span><span class="nx">not</span><span class="p">(</span><span class="k">this</span><span class="p">).</span><span class="nx">text</span><span class="p">(</span><span class="s1">&#39;selected&#39;</span><span class="p">);</span>
+<span class="p">});</span>
+</code></pre>
+</div>
+
+<p>The above code will change the text for all buttons except the current element.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>May 28th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/jquery/">
+					jQuery
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/extract-a-specific-folder-from-a-zipped-archive">Extract a specific folder from a zipped archive</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>First, you need to view what's inside of the <code>.zip</code> archive:</p>
+
+<div class="codehilite">
+<pre><span></span><code>unzip<span class="w"> </span>-v<span class="w"> </span>archive.zip
+</code></pre>
+</div>
+
+<p>Once, you've found the folder you wanted to extract, just type this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>unzip<span class="w"> </span>archive.zip<span class="w"> </span><span class="s2">&quot;folder_to_extract/*&quot;</span><span class="w"> </span>-d<span class="w"> </span>.
+</code></pre>
+</div>
+
+	</div>
+	<div class="article-footer">
+		<time>May 28th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/terminal/">
+					Terminal
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/remove-patterns-from-multiple-files">Remove patterns from multiple files</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>If you wanted to remove a specific pattern in a list of files, like the ones below:</p>
+
+<div class="codehilite">
+<pre><span></span><code>23_2020_03_01_article-three.md
+22_2020_02_01_article-two.md
+21_2020_01_01_article-one.md
+</code></pre>
+</div>
+
+<p>You can simply do that using Regular Expressions and the <code>rename</code> tool:</p>
+
+<div class="codehilite">
+<pre><span></span><code>rename<span class="w"> </span><span class="s1">&#39;s/[0-9]+_[0-9]+_[0-9]+_[0-9]+_//&#39;</span><span class="w"> </span>*.md
+</code></pre>
+</div>
+
+<p>Now, the desired output should look like this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>article-three.md
+article-two.md
+article-one.md
+</code></pre>
+</div>
+
+<p>This should come in handy if you're lazy to rename each file manually! :)</p>
+
+	</div>
+	<div class="article-footer">
+		<time>May 27th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/terminal/">
+					Terminal
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/rename-extensions-of-multiple-files">Rename extensions of multiple files</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>In this example, we're going to change a list of <code>.txt</code> files to <code>.md</code> files:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="ch">#!/bin/bash</span>
+
+<span class="nb">shopt</span><span class="w"> </span>-s<span class="w"> </span>nullglob
+<span class="nv">files</span><span class="o">=(</span><span class="k">$(</span>ls<span class="w"> </span>-v<span class="w"> </span>*.txt<span class="k">)</span><span class="o">)</span>
+
+<span class="k">for</span><span class="w"> </span>file<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">files</span><span class="p">[@]</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="k">do</span>
+<span class="w">    </span>mv<span class="w"> </span><span class="si">${</span><span class="nv">file</span><span class="si">}</span><span class="w"> </span><span class="si">${</span><span class="nv">file</span><span class="si">}</span>.md
+<span class="k">done</span>
+</code></pre>
+</div>
+
+<p>s
+You can use modify this script to rename any extension you want.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>May 27th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/bash/">
+					Bash
 				</a>
 			</li>
 			
@@ -428,6 +566,10 @@ NOCAPTCHA_SECRET=yoursecret
 			<a class="" href="/til/pages/18">18</a>
 		
 	
+		
+			<a class="" href="/til/pages/19">19</a>
+		
+	
 
 	
 		<a href="/til/pages/18">&raquo;</a>
@@ -452,28 +594,35 @@ NOCAPTCHA_SECRET=yoursecret
 		<li>
 			<a href="/category/linux/">
 				Linux
-				<span class="count">22</span>
+				<span class="count">24</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/laravel/">
 				Laravel
-				<span class="count">18</span>
+				<span class="count">20</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/devops/">
 				DevOps
-				<span class="count">15</span>
+				<span class="count">20</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/php/">
 				PHP
-				<span class="count">13</span>
+				<span class="count">14</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/git/">
+				Git
+				<span class="count">12</span>
 			</a>
 		</li>
 		
@@ -520,9 +669,9 @@ NOCAPTCHA_SECRET=yoursecret
 		</li>
 		
 		<li>
-			<a href="/category/git/">
-				Git
-				<span class="count">10</span>
+			<a href="/category/mysql/">
+				MySQL
+				<span class="count">9</span>
 			</a>
 		</li>
 		
@@ -537,13 +686,6 @@ NOCAPTCHA_SECRET=yoursecret
 			<a href="/category/unix/">
 				UNIX
 				<span class="count">8</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/mysql/">
-				MySQL
-				<span class="count">7</span>
 			</a>
 		</li>
 		
@@ -565,6 +707,13 @@ NOCAPTCHA_SECRET=yoursecret
 			<a href="/category/essay/">
 				Essay
 				<span class="count">6</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/c/">
+				C#
+				<span class="count">5</span>
 			</a>
 		</li>
 		
@@ -597,16 +746,16 @@ NOCAPTCHA_SECRET=yoursecret
 		</li>
 		
 		<li>
-			<a href="/category/c/">
-				C#
+			<a href="/category/arcade-challenge/">
+				Arcade Challenge
 				<span class="count">4</span>
 			</a>
 		</li>
 		
 		<li>
-			<a href="/category/arcade-challenge/">
-				Arcade Challenge
-				<span class="count">4</span>
+			<a href="/category/databases/">
+				Databases
+				<span class="count">3</span>
 			</a>
 		</li>
 		
@@ -649,6 +798,48 @@ NOCAPTCHA_SECRET=yoursecret
 			<a href="/category/general/">
 				General
 				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/vcs/">
+				VCS
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/ubuntu/">
+				Ubuntu
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/powershell/">
+				PowerShell
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/smtp/">
+				SMTP
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/sql/">
+				SQL
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/net/">
+				.NET
+				<span class="count">2</span>
 			</a>
 		</li>
 		
@@ -758,6 +949,55 @@ NOCAPTCHA_SECRET=yoursecret
 		</li>
 		
 		<li>
+			<a href="/category/phpstorm/">
+				PHPStorm
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/elastic-search/">
+				Elastic Search
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/kibana/">
+				Kibana
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/data-manipulation/">
+				Data Manipulation
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/telnet/">
+				Telnet
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/iis/">
+				IIS
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/centos/">
+				CentOS
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/net-core/">
 				.NET Core
 				<span class="count">1</span>
@@ -849,22 +1089,8 @@ NOCAPTCHA_SECRET=yoursecret
 		</li>
 		
 		<li>
-			<a href="/category/ubuntu/">
-				Ubuntu
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/ssh/">
 				SSH
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/databases/">
-				Databases
 				<span class="count">1</span>
 			</a>
 		</li>

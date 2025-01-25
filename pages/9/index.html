@@ -78,281 +78,46 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/render-a-simple-rgb-colored-image-in-c">Render a simple RGB colored image in C++</a></h1>
+		<h1 class="heading"><a href="/til/posts/truncate-a-file-using-redirection-in-linux">Truncate a file using redirection in Linux</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p><img src="../../../static/til_images/rgb-colored-spectrum.png" style="width: 500px; height: 300px;" /></p>
+		<p>Simply put, sometimes, there are situations in where you just want to clear the contents of a file without deleting it.</p>
 
-<p>Recently, I started reading a book called <a href="https://graphicscodex.courses.nvidia.com/app.html">The Graphics Codex</a>, it's an amazing book about Computer Graphics covering a lot of content and I find it quite resourceful. I wanted to build my own toy raytracer for the sake of exploring, so that's why I started to refresh my graphics coding knowledge a bit.</p>
+<p>This could be for many reasons like to avoid permission related issues, or maybe the file could be having useless logs that amasses to a size that measures in GBs.</p>
 
-<p>Just like any graphics renderer, in order to view your image. you must be able to write your image to a file, right?</p>
-
-<p>Below, I wrote a really simple code to generate the entire RGB colored spectrum from top to bottom:</p>
+<p>So, the easiest solution is to clear it away from a terminal is by shell redirection like so:</p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
-<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
-
-<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">800</span><span class="p">;</span>
-<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">height</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">800</span><span class="p">;</span>
-
-<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;P3</span><span class="se">\n</span><span class="s">&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">width</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">height</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">255</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="n">height</span><span class="mi">-1</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&gt;=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">--</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">width</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="k">auto</span><span class="w"> </span><span class="n">r</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kt">double</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="n">width</span><span class="mi">-1</span><span class="p">);</span>
-<span class="w">            </span><span class="k">auto</span><span class="w"> </span><span class="n">g</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kt">double</span><span class="p">(</span><span class="n">j</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="n">height</span><span class="mi">-1</span><span class="p">);</span>
-<span class="w">            </span><span class="k">auto</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.25</span><span class="p">;</span>
-
-<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">ir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="mf">255.999</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">r</span><span class="p">);</span>
-<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">ig</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="mf">255.999</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">g</span><span class="p">);</span>
-<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">ib</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="mf">255.999</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">b</span><span class="p">);</span>
-
-<span class="w">            </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">ir</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">ig</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">ib</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="p">}</span>
+<pre><span></span><code>:&gt;<span class="w"> </span>filename
 </code></pre>
 </div>
 
-<p>You can generate it by simply creating an executable like this:</p>
-
-<div class="codehilite">
-<pre><span></span><code>g++<span class="w"> </span>-o<span class="w"> </span>pixels<span class="w"> </span>pixels.cpp
-</code></pre>
-</div>
-
-<p>Now, when you execute it by typing <code>./pixels</code>, you'll get a list of numbers that's pretty much a combination and permutation of RGB color values.</p>
-
-<p>Lastly, to generate a colored image, like the one above, just redirect the output to an image format, in this example, I used PPM image format:</p>
-
-<div class="codehilite">
-<pre><span></span><code>./pixels<span class="w"> </span>&gt;<span class="w"> </span>image.ppm<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>xdg-open<span class="w"> </span>image.ppm
-</code></pre>
-</div>
-
-<p>And that's it, you have generated your own colored image! &#x1F601;</p>
-
-<p>Hope you found this useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>June 11th, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/graphics/">
-					Graphics
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/one-year-of-writing-til-articles">One year of writing TIL articles</a></h1>
-		<p class="description">A little self-reflection on how writing TIL articles has improved my productivity and learning.</p>
-	</div>
-	<div class="article-body">
-		<p>Last year, around this time, I was working from home due to the COVID-19 restrictions placed by the UAE Government.</p>
-
-<p>During this time, I noticed that I ran out of ideas for my blog and didn't even get time to maintain it for a long time.</p>
-
-<p>Then, I came across <a href="https://github.com/jbranchaud/til">Josh Branchaud's TIL collection</a>, which inspired me to start my own TIL section in my blog. At first, I had the idea of merging it with my main blog but then, I thought of keeping it separate and well, fast-forward to a year now, it's been one of the most productive platforms for writing short articles based on whatever I have learnt or solved.</p>
-
-<p>As for those of you who might not know, TIL a.k.a stands for <strong>Today I Learned</strong> and what I really liked about it is that there isn't any barrier that stops you from writing a short article and that was the one thing that motivated me to write something on my blog.</p>
-
-<h2>Has it helped it you?</h2>
-
-<p>Yes, it did help me in two ways.</p>
-
-<p>Professionally, it has motivated me to learn more about my field and share my knowledge about whatever I learned while solving a particular problem or a tip that I found useful. The idea was likened to a personal StackOverflow repository that I would often revisit to refresh my memory.</p>
-
-<p>Personally, it helped me reflect my values as a programmer and made me realize that there's a lot of things to learn out there and it's pretty much endless as there's always something to learn every single day. And yes, it helped me improve my writing abilities too.</p>
-
-<p>Although, this article resides in a what I would call it as a "Technical blog", I guess, this applies to everyone who wants to refresh their writing productivity and help them get started back on the tracks again.</p>
-
-<p>Hope you liked reading this article.</p>
-
-<p>Stay tuned for more!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>June 4th, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/selfreflection/">
-					Self-reflection
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/understanding-spf-dkim-and-dmarc-protocols">Understanding SPF, DKIM and DMARC protocols</a></h1>
-		<p class="description">An insight into the three main email security protocols that protects your email from malicious attackers.</p>
-	</div>
-	<div class="article-body">
-		<p>Today, email spam is one of the most common cyberattacks conducted by people with malicious intent intending to steal your passwords and personal credentials, leading users to phishing sites to steal bank account details, identity theft and so on.</p>
-
-<p>Because of this, ISPs and email providers such as Gmail and Office 365 are taking anti-spam measures by enforcing stricter protocols in the type of emails that they receive, so it's good to implement those protocols and ensure that your email gets delivered and not delayed or worse, rejected by the mail servers.</p>
-
-<h2>So, what are those protocols?</h2>
-
-<p><a href="#spf-record">SPF</a>, <a href="#dkim-record">DKIM</a> and <a href="#dmarc-record">DMARC</a> are the three main secure protocols used to authenticate your mail server and this will prove the ISPs and other mail service providers that the mail being sent is legitimate and authorized.</p>
-
-<h2><a id="spf-record"></a> What is SPF?</h2>
-
-<p>It's an acronym for <strong>Sender Policy Framework</strong>. SPF is nothing but a DNS TXT record that specifies the server(s) and IP addresses that are allowed to send email from a specific domain.</p>
-
-<p>Assuming you are the sender, just think of sending a postcard to your friend in which you add your address as well, so that your friend knows who the recipient is and he/she would most likely open it because they trust it.</p>
-
-<p>But in technical terms, the actual recipient is not the user but rather the mail server that receives the mail.</p>
-
-<h3>Create an SPF record</h3>
-
-<p>An SPF record is a very simple string and it can be easily created. However, there are a few parts to it:</p>
-
-<ol>
-<li>Version of SPF used.</li>
-<li>IP addresses that are authorized to send emails.</li>
-<li>Third party domain(s) that are authorized to send emails.</li>
-<li>An ending tag named "all" which tells the receiving server on what policy to apply if the sending server is not a part of the SPF record.</li>
-</ol>
-
-<p>So, let's what does it look like and what each part of it does:</p>
-
-<div class="codehilite">
-<pre><span></span><code>v=spf1 ip4:111.111.111.111 include:example-domain.com -all
-</code></pre>
-</div>
-
-<p><code>v=spf1</code> states the SPF version being implemented. Currently, there's no any other version at this point. So, it should always stay as this version until another version is released.</p>
-
-<p><code>ip4:111.111.111.111</code> is the IP address of the mail server/domain that's authorized to send emails for that domain. You can use multiple IP addresses and can be listed individually like this <code>ip4:111.111.111.111 ip4:222.222.222.222</code> or through a <a href="https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing">CIDR</a> like <code>ip4:111.111.111.0/20</code>. If both IPv4 and IPv6 addresses are being used by mail server, make sure that both of those addresses are being listed.</p>
-
-<p><code>include:example-domain.com</code> is a secondary domain that's authorized to send emails on behalf of the primary mail domain(s) listed. Just like the previous rule above, you can add multiple secondary domains but bear in mind that only a maximum of 10 domains are allowed for any sending domain.</p>
-
-<p><code>-all</code> is a tag that instructs the receiving server on how to handle messages from a domain that isn't a part of the SPF record. There are some options and they are all dictated by a single character that precedes the <code>all</code> keyword. The options are:</p>
+<p>Let me break down the command here:</p>
 
 <ul>
-<li><code>-all</code> means hard fail. The receiving server should reject the email if the sender domain is not authorized.</li>
-<li><code>~all</code> means soft fail. The receiving server can flag it as a possible spam if the sender domain is not authorized. </li>
-<li><code>+all</code> means authorized. The receiving server allows the email even if the sender domain is not authorized. Now, this is not recommended and please do not use this option.</li>
+<li>The <code>:</code> symbol means <code>true</code> and doesn't produce any output.</li>
+<li>The '>' symbol is used for redirecting the output of the preceding command (in this case, it's empty!)</li>
+<li><code>filename</code> is the file that you want to truncate. If it doesn't exist, the file will be created.</li>
 </ul>
 
-<h2><a id="dkim-record"></a> What is DKIM?</h2>
-
-<p>It's an acronym for <strong>DomainKeys Identified Mail</strong> a.k.a Email signing. Just like <a href="#spf-record">SPF</a>, DKIM is also a simple DNS TXT record that tells the receiving server that the mail is certified which allows to build a trust between both the sending and receiving servers.</p>
-
-<p>To handle this trust, DKIM makes uses of an RSA cryptographic algorithm to create a pair of <strong>public</strong> and <strong>private</strong> encryption keys. The private key will remain on the server (i.e. the mail server) whereas the public key is placed in your DNS records.</p>
-
-<h2>How to create a DKIM record?</h2>
-
-<p>Depending on your mail provider, it can be easily generated by tools provided by them and once generated, it can be copy-pasted to the DNS records.</p>
-
-<p>This is how a typical DKIM record would look like:</p>
+<p>Alternatively, you can do the same by using the <code>cat</code> command to output the contents of the <code>/dev/null</code> device (which only contains a EOL character) to empty a file:</p>
 
 <div class="codehilite">
-<pre><span></span><code>v=DKIM1; k=rsa;
-p=iHeFQ+7rCiSQs3DPjR2eUSZSv4i/Kp+sipRfVH7BGf+SxcwOkX7X8R1RVObMQsFcbIxnrq7Ba2QCf0YZlL9iqJf32V+baDI8IykuDztuoNUF2Kk0pawZkbSPNHYRtLxV2CTOtc+x4eIeSeYptaiu7g7GupekLZ2DE1ODHhuP4I=
+<pre><span></span><code>cat<span class="w"> </span>/dev/null<span class="w"> </span>&gt;<span class="w"> </span>filename
 </code></pre>
 </div>
 
-<p>Regardless of how it's being generated, this is what each part of the header means:</p>
-
-<p><code>v=DKIM1</code> is the DKIM protocol version used.</p>
-
-<p><code>p=</code> is the Base64 encoded public key generated.</p>
-
-<p><code>k=</code> is the mechanism used to decode the DKIM signature. The encryption key is usually based on <code>rsa-sha1</code> or <code>rsa-sha256</code> signing algorithm.</p>
-
-<p>You can use DMARC analyzer's <a href="https://dmarcanalyzer.com/dkim/dkim-checker">DKIM checker</a> to check if your DKIM record is valid.</p>
-
-<h2><a id="dmarc-record"></a> What is DMARC?</h2>
-
-<p>It's an acronym for <strong>Domain-based Message Authentication, Reporting and Conformance</strong>. This protocol is built around SPF and DKIM and it ensures the following:</p>
-
-<ol>
-<li>Verifies that the sender's email is protected by SPF and DKIM protocols.</li>
-<li>Instructs the receiving mail server on what to do if the authentication fails.</li>
-<li>Provides a way for the receiving server to send a report to the sender about the DMARC evaluation i.e. whether it passed or failed.</li>
-</ol>
-
-<p>If you have come this far in the article, you might have understood why both <a href="#spf-record">SPF</a> and <a href="#dkim-record">DKIM</a> were explained and why they are quite necessary.</p>
-
-<h2>How to create a DMARC record?</h2>
-
-<p>Once you have both SPF and DKIM records in place, then it's easy to create your DMARC record. There are many sites and I would recommend you to try MXToolbox's <a href="https://mxtoolbox.com/DMARCRecordGenerator.aspx">DMARC Record Generator</a>.</p>
-
-<p>This is how a DMARC record would look like:</p>
-
-<div class="codehilite">
-<pre><span></span><code>v=DMARC1; p=none; fo=1; rua=mailto:address@example.com;
-</code></pre>
-</div>
-
-<p>And here's what each part of the header translates to:</p>
-
-<p><code>v</code> is the version tag, similar to the SPF record. It should always be <code>DMARC1</code> in the record.</p>
-
-<p><code>p</code> is the policy tag. <code>none</code> means to not do anything to the email, <code>quarantine</code> means to flag it as spam and <code>reject</code> means to reject the email.</p>
-
-<p><code>fo</code> is the tag that lets the receiving servers know that failed messages must be returned to the sender or not. There are four values for this tag:</p>
-
-<ul>
-<li><code>0</code>: Generate a report if both DKIM and SPF produce a "Pass" result.</li>
-<li><code>1</code>: Generate a report if both DKIM and SPF produce a result other than "Pass".</li>
-<li><code>d</code>: Generate a report if the email had failed the DKIM evaluation.</li>
-<li><code>s</code>: Generate a report if the email had failed the SPF evaluation.</li>
-</ul>
-
-<p>It's actually recommended to use <code>fo=1</code> which can help you look for any email delivery issues.</p>
-
-<p><code>rua</code> tells the receiving server on where to send the aggregate reports. This could provide insights into the health of the email server and can help identify any malicious activities.</p>
-
-<p>There are many optional tags that can be used but these are the tags are most commonly used by default.</p>
-
-<h2>Conclusion</h2>
-
-<p>With the increase in spam emails, it's good to take such preventive measures to ensure that you are following best practices and doing your part to prevent malicious emails and other security related issues.</p>
-
-<p>If you want to read more about these protocols, you can read the following links recommended below:</p>
-
-<ul>
-<li><a href="https://dmarcanalyzer.com/spf/">Sender Policy Framework (SPF)</a></li>
-<li><a href="https://dkim.org">DomainKeys Identified Mail</a></li>
-<li><a href="https://dmarc.org">Domain-based Message Authentication, Reporting and Conformance</a></li>
-</ul>
-
-<p>Hope you liked reading this article! &#x1F604;</p>
+<p>Hope this comes in handy!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>April 10th, 2021</time>
+		<time>October 2nd, 2021</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/email/">
-					Email
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/security/">
-					Security
+				<a href="/category/linux/">
+					Linux
 				</a>
 			</li>
 			
@@ -364,80 +129,26 @@ p=iHeFQ+7rCiSQs3DPjR2eUSZSv4i/Kp+sipRfVH7BGf+SxcwOkX7X8R1RVObMQsFcbIxnrq7Ba2QCf0
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/find-directories-created-within-a-date-range">Find directories created within a date range</a></h1>
+		<h1 class="heading"><a href="/til/posts/how-to-identify-which-linux-distribution-is-running-in-your-system">How to identify which Linux distribution is running in your system?</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>Executing these commands helps me create a sorted list of files/directories created within a specific date range:</p>
+		<p>If you've read my <a href="/til/posts/check-ubuntu-version/">earlier post</a>, I was using Ubuntu, at that time, and I thought that was how you identify which distro is running in your system but using <code>lsb_release -a</code> is not always going to work as some distributions may not have it installed.</p>
+
+<p>Try the following command to identify the distribution you are running in your system:</p>
 
 <div class="codehilite">
-<pre><span></span><code>touch<span class="w"> </span>-t<span class="w"> </span><span class="m">202104100000</span><span class="w"> </span>start
-touch<span class="w"> </span>-t<span class="w"> </span><span class="m">202104150000</span><span class="w"> </span>stop
-find<span class="w"> </span>.<span class="w"> </span>-type<span class="w"> </span>d<span class="w"> </span>-maxdepth<span class="w"> </span><span class="m">1</span><span class="w"> </span>-newer<span class="w"> </span>start<span class="w"> </span><span class="se">\!</span><span class="w"> </span>-newer<span class="w"> </span>stop<span class="w"> </span><span class="p">|</span><span class="w"> </span>sort<span class="w"> </span>&gt;&gt;<span class="w"> </span>directories.txt
+<pre><span></span><code>cat<span class="w"> </span>/etc/os-release
 </code></pre>
 </div>
 
-<p>Someday, these commands shall come in handy, bud! &#x1F60E;</p>
-
-	</div>
-	<div class="article-footer">
-		<time>April 10th, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/unix/">
-					UNIX
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/perform-git-operations-using-path-directory">Perform Git operations using path directory</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>The <code>-C</code> flag means the path of the directory and using this flag, you can perform any Git operations outside the project's directory without having to enter the directory all the time:</p>
+<p>And you'll get the following output:</p>
 
 <div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>-C<span class="w"> </span>/path/to/directory<span class="w"> </span>&lt;command&gt;
-</code></pre>
-</div>
-
-<p>Hope this tip helps you out!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>April 10th, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/git/">
-					Git
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/exclude-directories-while-searching-for-a-pattern-in-files">Exclude directories while searching for a pattern in files</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Looking for a specific text pattern in a directory but wanted to avoid some paths? Here's a quick command that you can try:</p>
-
-<div class="codehilite">
-<pre><span></span><code>grep<span class="w"> </span>-R<span class="w"> </span>--exclude-dir<span class="o">=</span>path/to/directory<span class="w"> </span><span class="s1">&#39;some pattern&#39;</span><span class="w"> </span>/path/to/search
+<pre><span></span><code><span class="nv">NAME</span><span class="o">=</span><span class="s2">&quot;XXXX&quot;</span>
+<span class="nv">ID</span><span class="o">=</span><span class="s2">&quot;XXXX&quot;</span>
+<span class="nv">DISTRIB_ID</span><span class="o">=</span><span class="s2">&quot;XXXX&quot;</span>
+<span class="nv">PRETTY_NAME</span><span class="o">=</span><span class="s2">&quot;XXXX&quot;</span>
 </code></pre>
 </div>
 
@@ -445,12 +156,12 @@ find<span class="w"> </span>.<span class="w"> </span>-type<span class="w"> </spa
 
 	</div>
 	<div class="article-footer">
-		<time>April 10th, 2021</time>
+		<time>October 2nd, 2021</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/unix/">
-					UNIX
+				<a href="/category/linux/">
+					Linux
 				</a>
 			</li>
 			
@@ -462,29 +173,287 @@ find<span class="w"> </span>.<span class="w"> </span>-type<span class="w"> </spa
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/fetch-selected-files-from-your-remote-repository">Fetch selected files from your remote repository</a></h1>
+		<h1 class="heading"><a href="/til/posts/display-list-of-files-with-their-extension-and-file-sizes">Display list of files with their extension and file sizes</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>Wanted to fetch a specific file from your Git repository except that the repository doesn't exist in your local machine?</p>
+		<p>Last month, I was trying to free up some space in my company servers and I realized that there were a lot of <code>.zip</code> files taking up a lot of space.</p>
 
-<p>Try this out:</p>
+<p>So, I wrote the following command to list files by their extension:</p>
 
 <div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>init
-git<span class="w"> </span>remote<span class="w"> </span>add<span class="w"> </span>origin<span class="w"> </span>&lt;your_repo_link&gt;.git
-git<span class="w"> </span>fetch
-git<span class="w"> </span>checkout<span class="w"> </span>&lt;your_branch_name&gt;<span class="w"> </span>--<span class="w"> </span>&lt;/path/to/file&gt;
+<pre><span></span><code>find<span class="w"> </span>.<span class="w"> </span>-iname<span class="w"> </span><span class="se">\*</span>.extension<span class="w"> </span>-exec<span class="w"> </span>du<span class="w"> </span>-sh<span class="w"> </span><span class="o">{}</span><span class="w"> </span><span class="se">\;</span><span class="w"> </span>&gt;<span class="w"> </span>file-list.txt
 </code></pre>
 </div>
 
-<p>After executing these commands, you should be able to see the selected directory/file in your project directory.</p>
+<p>And later to determine which files are the largest, I executed this command to sort the list by file size:</p>
 
-<p>Hope you found this useful!</p>
+<div class="codehilite">
+<pre><span></span><code>sort<span class="w"> </span>-rh<span class="w"> </span>file-list.txt<span class="w"> </span>&gt;<span class="w"> </span>newfile.txt
+</code></pre>
+</div>
+
+<p>Hope this tip helps you too! &#x1F604;</p>
 
 	</div>
 	<div class="article-footer">
-		<time>April 10th, 2021</time>
+		<time>September 20th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/writings/posts/darklight-mode-with-css-and-javascript">Dark/Light mode with CSS and JavaScript</a></h1>
+		<p class="description">A simple guide on how to implement a dark/light theme switcher with CSS and JavaScript</p>
+	</div>
+	<div class="article-body">
+		<p>It's quite common these days that many websites let their users to decide their preferred color scheme(s). Giving this sort of customizability offers good user experience.</p>
+
+<p>In this article, I'll provide a simple step-by-step guide on how to implement a dark/light theme switcher with HTML, CSS and JavaScript.</p>
+
+<div class="post-notification warning">
+    <h3>Prerequisites</h3>
+    <p>This article assumes that the reader has a basic know-how on HTML, CSS, JavaScript and basic knowledge on using the command-line.</p>
+</div>
+
+<h2>Using CSS variables</h2>
+
+<p>I always wanted to implement one for this website too and I thought of making use of CSS variables as I found it to be quite straight forward and I don't have to worry too much about browser support.</p>
+
+<p>Try adding the below CSS to your stylesheet:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="w">    </span><span class="p">:</span><span class="nd">root</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nv">--background-color</span><span class="p">:</span><span class="w"> </span><span class="kc">white</span><span class="p">;</span>
+<span class="w">        </span><span class="nv">--font-color</span><span class="p">:</span><span class="w"> </span><span class="kc">black</span><span class="p">;</span>
+<span class="w">        </span><span class="nv">--accent-color</span><span class="p">:</span><span class="w"> </span><span class="kc">red</span><span class="p">;</span>
+<span class="w">        </span><span class="nv">--alt-background-color</span><span class="p">:</span><span class="w"> </span><span class="kc">black</span><span class="p">;</span>
+<span class="w">        </span><span class="nv">--alt-font-color</span><span class="p">:</span><span class="w"> </span><span class="kc">white</span><span class="p">;</span>
+<span class="w">        </span><span class="nv">--alt-accent-color</span><span class="p">:</span><span class="w"> </span><span class="kc">yellow</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="nt">html</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">background-color</span><span class="p">:</span><span class="w"> </span><span class="nf">var</span><span class="p">(</span><span class="nv">--background-color</span><span class="p">);</span>
+<span class="w">        </span><span class="k">color</span><span class="p">:</span><span class="w"> </span><span class="nf">var</span><span class="p">(</span><span class="nv">--font-color</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="nt">a</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">color</span><span class="p">:</span><span class="w"> </span><span class="nf">var</span><span class="p">(</span><span class="nv">--accent-color</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="nt">html</span><span class="o">[</span><span class="nt">data-theme</span><span class="o">=</span><span class="s2">&quot;dark&quot;</span><span class="o">]</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">background-color</span><span class="p">:</span><span class="w"> </span><span class="nf">var</span><span class="p">(</span><span class="nv">--alt-background-color</span><span class="p">);</span>
+<span class="w">        </span><span class="k">color</span><span class="p">:</span><span class="w"> </span><span class="nf">var</span><span class="p">(</span><span class="nv">--alt-font-color</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="nt">html</span><span class="o">[</span><span class="nt">data-theme</span><span class="o">=</span><span class="s2">&quot;dark&quot;</span><span class="o">]</span><span class="w"> </span><span class="nt">a</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">color</span><span class="p">:</span><span class="w"> </span><span class="nf">var</span><span class="p">(</span><span class="nv">--alt-accent-color</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">   </span>
+</code></pre>
+</div>
+
+<p>The <code>:root</code> selector contains a set of default values and in this case, these are just different colors, kind of like how we initialize variables in other programming languages.</p>
+
+<p>For example, whenever the <code>data-theme</code> attribute is set to <code>dark</code>, the default values will be overidden by the <code>html[data-theme="dark"]</code> CSS rule for the theme to take effect.</p>
+
+<p>Really, it's that simple!</p>
+
+<h2>Add some markup</h2>
+
+<p>That depends on what you really want to have in your website but for this tutorial, you can just place a simple button somewhere in your navigation bar or anywhere you like:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="p">&lt;</span><span class="nt">button</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;themeSwitcher&quot;</span><span class="p">&gt;</span>Dark/Light<span class="p">&lt;/</span><span class="nt">button</span><span class="p">&gt;</span>
+</code></pre>
+</div>
+
+<h2>Toggle between light and dark themes</h2>
+
+<p>Yes, we are getting there and you just have to write a simple logic that checks if whether the current theme is dark or light based on the class used on the <code>&lt;body&gt;</code> element.</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nx">$</span><span class="p">(</span><span class="s1">&#39;.themeSwitcher&#39;</span><span class="p">).</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;click&#39;</span><span class="p">,</span><span class="w"> </span><span class="kd">function</span><span class="p">(){</span>
+<span class="w">    </span><span class="k">switch</span><span class="p">(</span><span class="nx">$</span><span class="p">(</span><span class="s1">&#39;body&#39;</span><span class="p">).</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;data-theme&#39;</span><span class="p">)){</span>
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="s2">&quot;dark&quot;</span><span class="o">:</span>
+<span class="w">            </span><span class="nx">$</span><span class="p">(</span><span class="s1">&#39;body&#39;</span><span class="p">).</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;data-theme&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;dark&#39;</span><span class="p">);</span>
+<span class="w">            </span><span class="k">break</span><span class="p">;</span>
+
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="s2">&quot;light&quot;</span><span class="o">:</span>
+<span class="w">        </span><span class="k">default</span><span class="o">:</span>
+<span class="w">            </span><span class="nx">$</span><span class="p">(</span><span class="s1">&#39;body&#39;</span><span class="p">).</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;data-theme&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">);</span>
+<span class="w">            </span><span class="k">break</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">});</span>
+</code></pre>
+</div>
+
+<h3>Save user's preference in their browser</h3>
+
+<p>If your button works as expected, good! Now, once you refresh the page, the background would return to it's default mode but that's not what we wanted, right?</p>
+
+<p>But why does it return instead of staying dark? Because your "preference" is not stored in your browser.</p>
+
+<p>Modify your code to store your preferences in your browser:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="p">&lt;</span><span class="nt">script</span><span class="p">&gt;</span>
+<span class="nx">$</span><span class="p">(</span><span class="s1">&#39;.themeSwitcher&#39;</span><span class="p">).</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;click&#39;</span><span class="p">,</span><span class="w"> </span><span class="kd">function</span><span class="p">(){</span>
+<span class="w">    </span><span class="k">switch</span><span class="p">(</span><span class="nx">$</span><span class="p">(</span><span class="s1">&#39;body&#39;</span><span class="p">).</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;data-theme&#39;</span><span class="p">)){</span>
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="s2">&quot;dark&quot;</span><span class="o">:</span>
+<span class="w">            </span><span class="nx">$</span><span class="p">(</span><span class="s1">&#39;body&#39;</span><span class="p">).</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;data-theme&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;dark&#39;</span><span class="p">);</span>
+<span class="w">            </span><span class="nx">localStorage</span><span class="p">.</span><span class="nx">setItem</span><span class="p">(</span><span class="s2">&quot;theme&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;dark&quot;</span><span class="p">);</span>
+<span class="w">            </span><span class="k">break</span><span class="p">;</span>
+
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="s2">&quot;light&quot;</span><span class="o">:</span>
+<span class="w">        </span><span class="k">default</span><span class="o">:</span>
+<span class="w">            </span><span class="nx">$</span><span class="p">(</span><span class="s1">&#39;body&#39;</span><span class="p">).</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;data-theme&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">);</span>
+<span class="w">            </span><span class="nx">localStorage</span><span class="p">.</span><span class="nx">setItem</span><span class="p">(</span><span class="s2">&quot;theme&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="p">);</span>
+<span class="w">            </span><span class="k">break</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">});</span>
+<span class="p">&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+</code></pre>
+</div>
+
+<p>This should work fine but you'll want to avoid the "flickering" issue while changing themes or refreshing the page, in order to do that, make sure that you check the user preference before the page is completely loaded:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="p">&lt;</span><span class="nt">script</span><span class="p">&gt;</span>
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="nx">localStorage</span><span class="p">.</span><span class="nx">theme</span><span class="p">){</span>
+<span class="w">        </span><span class="nb">document</span><span class="p">.</span><span class="nx">documentElement</span><span class="p">.</span><span class="nx">setAttribute</span><span class="p">(</span><span class="s1">&#39;data-theme&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">localStorage</span><span class="p">.</span><span class="nx">getItem</span><span class="p">(</span><span class="s2">&quot;theme&quot;</span><span class="p">));</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+</code></pre>
+</div>
+
+<h2>Conclusion</h2>
+
+<p>Well, if you've noticed, I wrote a simple theme switcher for my blog too. Try it out and you can inspect the code to see how it works.</p>
+
+<p>Hope you enjoyed this article!</p>
+
+<p>Stay tuned for more!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>September 9th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/tutorial/">
+					Tutorial
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/view-your-wget-progress-even-after-closing-your-ssh-session">View your wget progress even after closing your SSH session</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Few days back, I ran a <code>wget</code> command to download a file and accidentally closed the SSH client.</p>
+
+<p>I logged in again and checked the list of active processes and thankfully, the <code>wget</code> process was still running except that I wasn't able to know the current progress of it.</p>
+
+<p>So, I did a little research and found a way to view the progress, so I tried the following command:</p>
+
+<div class="codehilite">
+<pre><span></span><code>tail<span class="w"> </span>-f<span class="w"> </span>wget_log
+</code></pre>
+</div>
+
+<p>And, I was able to view it's current download progress again.</p>
+
+<p>Hope this helps you out!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>August 13th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/wget/">
+					wget
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-use-github-personal-access-token-to-authenticate-your-git-commits">How to use GitHub Personal Access Token to authenticate your git commits?</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>On November 2020, GitHub had announced that they would no longer accept basic username/password to authenticate git commits and it would be deprecated by Mid 2021.</p>
+
+<p>Instead, they recommend you to authenticate your git commits using a Personal Access Token from your GitHub account.</p>
+
+<h2>Generate a personal access token</h2>
+
+<ol>
+<li>Unset your credentials from your remote repository: <code>git config --local --unset credential.helper</code></li>
+<li>Login to your GitHub account and go to <em>Settings</em> </li>
+<li>Then navigate to <em>Developer Settings -> Personal Access Tokens</em></li>
+<li>Click on <em>Generate new token</em></li>
+<li>Give a name to your Personal Access Token and the necessary permissions required.</li>
+<li>Once done, hit on <em>Generate token</em></li>
+<li>The token will be shown once, so make sure to copy it and store it somewhere that you can remember.</li>
+</ol>
+
+<h2>Update your remote repository</h2>
+
+<p>Once you've generated a token, you just have to update your remote repository by following the below steps:</p>
+
+<h3>1. Update remote repository URL</h3>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>remote<span class="w"> </span>set-url<span class="w"> </span>origin<span class="w"> </span>https://&lt;your_access_token&gt;@github.com/&lt;your_git_repo_url&gt;
+</code></pre>
+</div>
+
+<h3>2. Just git pull once</h3>
+
+<p>Now, just perform <code>git pull</code> operation once and you should be good:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>pull<span class="w"> </span>https://&lt;your_access_token&gt;@github.com/&lt;your_git_repo_url&gt;
+</code></pre>
+</div>
+
+<p>Hope this helps you out!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>August 13th, 2021</time>
 		<ul class="tags">
 			
 			<li>
@@ -501,27 +470,88 @@ git<span class="w"> </span>checkout<span class="w"> </span>&lt;your_branch_name&
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/find-directories-older-than-a-specific-date-and-sorted-by-size">Find directories older than a specific date and sorted by size</a></h1>
+		<h1 class="heading"><a href="/til/posts/how-to-fetch-a-json-object-from-an-array-of-json-objects-by-property-value">How to fetch a JSON object from an array of JSON objects by property value?</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>Wanted to see which directories were created on an older date along with their sizes? Try this:</p>
+		<p>Say, for example, you have an array of JSON objects that contains the following data:</p>
 
 <div class="codehilite">
-<pre><span></span><code>find<span class="w"> </span>.<span class="w"> </span>-type<span class="w"> </span>d<span class="w"> </span>-maxdepth<span class="w"> </span><span class="m">1</span><span class="w"> </span>!<span class="w"> </span>-newermt<span class="w"> </span><span class="s2">&quot;2021-04-10&quot;</span><span class="w"> </span>-exec<span class="w"> </span>du<span class="w"> </span>-sh<span class="w"> </span><span class="o">{}</span><span class="w"> </span><span class="se">\;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sort<span class="w"> </span>-h<span class="w"> </span>&gt;&gt;<span class="w"> </span>oldprojectsizes.txt
+<pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">arrOfObjects</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;John Doe&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nx">age</span><span class="o">:</span><span class="w"> </span><span class="mf">20</span><span class="p">,</span>
+<span class="w">        </span><span class="nx">email</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;john.doe@email.com&quot;</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Bob Smith&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nx">age</span><span class="o">:</span><span class="w"> </span><span class="mf">56</span><span class="p">,</span>
+<span class="w">        </span><span class="nx">email</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;bob.smith@email.com&quot;</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="p">];</span>
 </code></pre>
 </div>
 
-<p>Hope you found this tip useful!</p>
+<p>Hmm, that's pretty basic but how will get the information of "Bob Smith" using his email? Well, that's where the <code>Array.find()</code> method comes into the picture.</p>
+
+<p>Try reading the <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/find">Mozilla Documentation</a> on <code>Array.prototype.find()</code> and implement the following:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;email&quot;</span><span class="p">;</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">valueToFind</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;bob.smith@email.com&quot;</span><span class="p">;</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">arrOfObjects</span><span class="p">.</span><span class="nx">find</span><span class="p">(</span><span class="nx">obj</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">obj</span><span class="p">[</span><span class="nx">key</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nx">value</span><span class="p">;</span>
+<span class="p">});</span>
+
+<span class="c1">//This should give you the record of Bob Smith.</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">result</span><span class="p">)</span><span class="w"> </span>
+</code></pre>
+</div>
+
+<p>This works fine on all browsers except <strong>Internet Explorer</strong> (I mean, it sucks anyways!), which is okay!</p>
+
+<p>Hope you found this useful!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>April 10th, 2021</time>
+		<time>August 13th, 2021</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/unix/">
-					UNIX
+				<a href="/category/javascript/">
+					JavaScript
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-update-values-of-a-column-from-one-table-to-another">How to update values of a column from one table to another?</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Sometimes, I come across situations where I would need to update a newly added in a pivot table and this query does come in handy:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">UPDATE</span><span class="w"> </span><span class="n">table_a</span><span class="w"> </span><span class="k">INNER</span><span class="w"> </span><span class="k">JOIN</span><span class="w"> </span><span class="n">table_b</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">table_b</span><span class="p">.</span><span class="n">col_x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">table_a</span><span class="p">.</span><span class="n">col_x</span><span class="w"> </span><span class="k">SET</span><span class="w"> </span><span class="n">table_a</span><span class="p">.</span><span class="n">col_y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">table_b</span><span class="p">.</span><span class="n">col_y</span><span class="p">;</span>
+</code></pre>
+</div>
+
+<p>Hope you found this useful too!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>August 13th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/mysql/">
+					MySQL
 				</a>
 			</li>
 			
@@ -569,11 +599,11 @@ git<span class="w"> </span>checkout<span class="w"> </span>&lt;your_branch_name&
 		
 	
 		
-			<a class="" href="/pages/17">...</a>
+			<a class="" href="/pages/19">...</a>
 		
 	
 		
-			<a class="" href="/pages/28">28</a>
+			<a class="" href="/pages/30">30</a>
 		
 	
 
@@ -610,28 +640,35 @@ git<span class="w"> </span>checkout<span class="w"> </span>&lt;your_branch_name&
 		<li>
 			<a href="/category/linux/">
 				Linux
-				<span class="count">22</span>
+				<span class="count">24</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/laravel/">
 				Laravel
-				<span class="count">18</span>
+				<span class="count">20</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/devops/">
 				DevOps
-				<span class="count">15</span>
+				<span class="count">20</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/php/">
 				PHP
-				<span class="count">13</span>
+				<span class="count">14</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/git/">
+				Git
+				<span class="count">12</span>
 			</a>
 		</li>
 		
@@ -678,9 +715,9 @@ git<span class="w"> </span>checkout<span class="w"> </span>&lt;your_branch_name&
 		</li>
 		
 		<li>
-			<a href="/category/git/">
-				Git
-				<span class="count">10</span>
+			<a href="/category/mysql/">
+				MySQL
+				<span class="count">9</span>
 			</a>
 		</li>
 		
@@ -695,13 +732,6 @@ git<span class="w"> </span>checkout<span class="w"> </span>&lt;your_branch_name&
 			<a href="/category/unix/">
 				UNIX
 				<span class="count">8</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/mysql/">
-				MySQL
-				<span class="count">7</span>
 			</a>
 		</li>
 		
@@ -723,6 +753,13 @@ git<span class="w"> </span>checkout<span class="w"> </span>&lt;your_branch_name&
 			<a href="/category/essay/">
 				Essay
 				<span class="count">6</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/c/">
+				C#
+				<span class="count">5</span>
 			</a>
 		</li>
 		
@@ -755,16 +792,16 @@ git<span class="w"> </span>checkout<span class="w"> </span>&lt;your_branch_name&
 		</li>
 		
 		<li>
-			<a href="/category/c/">
-				C#
+			<a href="/category/arcade-challenge/">
+				Arcade Challenge
 				<span class="count">4</span>
 			</a>
 		</li>
 		
 		<li>
-			<a href="/category/arcade-challenge/">
-				Arcade Challenge
-				<span class="count">4</span>
+			<a href="/category/databases/">
+				Databases
+				<span class="count">3</span>
 			</a>
 		</li>
 		
@@ -807,6 +844,48 @@ git<span class="w"> </span>checkout<span class="w"> </span>&lt;your_branch_name&
 			<a href="/category/general/">
 				General
 				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/vcs/">
+				VCS
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/ubuntu/">
+				Ubuntu
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/powershell/">
+				PowerShell
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/smtp/">
+				SMTP
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/sql/">
+				SQL
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/net/">
+				.NET
+				<span class="count">2</span>
 			</a>
 		</li>
 		
@@ -916,6 +995,55 @@ git<span class="w"> </span>checkout<span class="w"> </span>&lt;your_branch_name&
 		</li>
 		
 		<li>
+			<a href="/category/phpstorm/">
+				PHPStorm
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/elastic-search/">
+				Elastic Search
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/kibana/">
+				Kibana
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/data-manipulation/">
+				Data Manipulation
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/telnet/">
+				Telnet
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/iis/">
+				IIS
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/centos/">
+				CentOS
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/net-core/">
 				.NET Core
 				<span class="count">1</span>
@@ -1007,22 +1135,8 @@ git<span class="w"> </span>checkout<span class="w"> </span>&lt;your_branch_name&
 		</li>
 		
 		<li>
-			<a href="/category/ubuntu/">
-				Ubuntu
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/ssh/">
 				SSH
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/databases/">
-				Databases
 				<span class="count">1</span>
 			</a>
 		</li>

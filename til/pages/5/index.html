@@ -77,113 +77,102 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-identify-which-linux-distribution-is-running-in-your-system">How to identify which Linux distribution is running in your system?</a></h1>
+		<h1 class="heading"><a href="/til/posts/install-pfx-certificate-on-a-linux-server">Install PFX certificate on a Linux server</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>If you've read my <a href="/til/posts/check-ubuntu-version/">earlier post</a>, I was using Ubuntu, at that time, and I thought that was how you identify which distro is running in your system but using <code>lsb_release -a</code> is not always going to work as some distributions may not have it installed.</p>
+		<p>I would consider this as an extended post to my <a href="https://www.megacolorboy.com/til/posts/extract-private-key-and-certificate-from-pfx-file/">previous post</a> that I had written six months ago.</p>
 
-<p>Try the following command to identify the distribution you are running in your system:</p>
+<p>A PFX Certificate usually contains the following in PKCS#12 format:</p>
+
+<ul>
+<li>The actual certificate.</li>
+<li>The private key to the certificate.</li>
+<li>The Intermediate authority certificate that ensures the trustworthiness of the certificate.</li>
+</ul>
+
+<p>To extract all those files, here are the steps that I have documented:</p>
+
+<div class="post-notification warning">
+    <h3><i class="ph-warning-light"></i> Note</h3>
+    <p>If the .PFX file prompts you for a passphrase, please check with your project manager or client regarding this information.</p>
+</div>
+
+<h2>Extract the Encrypted Private Key</h2>
 
 <div class="codehilite">
-<pre><span></span><code>cat<span class="w"> </span>/etc/os-release
+<pre><span></span><code>openssl<span class="w"> </span>pkcs12<span class="w"> </span>-in<span class="w"> </span>&lt;filename.pfx&gt;<span class="w"> </span>-nocerts<span class="w"> </span>-out<span class="w"> </span>encrypted.key
 </code></pre>
 </div>
 
-<p>And you'll get the following output:</p>
+<h2>Extract RSA Private Key</h2>
 
 <div class="codehilite">
-<pre><span></span><code><span class="nv">NAME</span><span class="o">=</span><span class="s2">&quot;XXXX&quot;</span>
-<span class="nv">ID</span><span class="o">=</span><span class="s2">&quot;XXXX&quot;</span>
-<span class="nv">DISTRIB_ID</span><span class="o">=</span><span class="s2">&quot;XXXX&quot;</span>
-<span class="nv">PRETTY_NAME</span><span class="o">=</span><span class="s2">&quot;XXXX&quot;</span>
+<pre><span></span><code>openssl<span class="w"> </span>rsa<span class="w"> </span>-in<span class="w"> </span>encrypted.key<span class="w"> </span>-out<span class="w"> </span>private.key
 </code></pre>
 </div>
 
-<p>Hope this helps you out!</p>
+<h2>Extract Certificate</h2>
+
+<div class="codehilite">
+<pre><span></span><code>openssl<span class="w"> </span>pkcs12<span class="w"> </span>-in<span class="w"> </span>&lt;filename.pfx&gt;<span class="w"> </span>-clcerts<span class="w"> </span>-nokeys<span class="w"> </span>-out<span class="w"> </span>certificate.crt
+</code></pre>
+</div>
+
+<h2>Extract Combined Chain Certificate (Optional)</h2>
+
+<div class="codehilite">
+<pre><span></span><code>openssl<span class="w"> </span>pkcs12<span class="w"> </span>-in<span class="w"> </span>&lt;filename.pfx&gt;<span class="w"> </span>-cacerts<span class="w"> </span>-nokeys<span class="w"> </span>-chain<span class="w"> </span><span class="p">|</span><span class="w"> </span>sed<span class="w"> </span>-ne<span class="w"> </span><span class="s1">&#39;/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p&#39;</span><span class="w"> </span>&gt;<span class="w"> </span>combined_chain_certificate.crt
+</code></pre>
+</div>
+
+<p>Once you are done extracting all the required files, you can add the certificates like this:</p>
+
+<h3>Apache configuration:</h3>
+
+<div class="codehilite">
+<pre><span></span><code>SSLCertificateFile<span class="w"> </span>/path/to/certificate.crt
+SSLCertificateKeyFile<span class="w"> </span>/path/to/private.key
+
+<span class="c1"># Optional, if you have it, else skip.</span>
+SSLCertificateChainFile<span class="w"> </span>/path/to/combined_chain_certificate.crt
+</code></pre>
+</div>
+
+<p>Test if it works:</p>
+
+<div class="codehilite">
+<pre><span></span><code>apachectl<span class="w"> </span>configtest
+systemctl<span class="w"> </span>restart<span class="w"> </span>httpd
+</code></pre>
+</div>
+
+<h3>Nginx configuration:</h3>
+
+<div class="codehilite">
+<pre><span></span><code><span class="c1"># If you don&#39;t have a combined chain certificate:</span>
+ssl_certificate<span class="w"> </span>/path/to/certificate.crt<span class="p">;</span>
+ssl_certificate_key<span class="w"> </span>/path/to/private.key<span class="p">;</span>
+
+<span class="c1"># If you have a combined chain certificate:</span>
+ssl_certificate<span class="w"> </span>/path/to/combined_chain_certificate.crt
+ssl_certificate_key<span class="w"> </span>/path/to/private.key<span class="p">;</span>
+</code></pre>
+</div>
+
+<p>Test if it works:</p>
+
+<div class="codehilite">
+<pre><span></span><code>nginx<span class="w"> </span>-t
+systemctl<span class="w"> </span>restart<span class="w"> </span>nginx
+</code></pre>
+</div>
+
+<p>Hope you found this tip useful.</p>
 
 	</div>
 	<div class="article-footer">
-		<time>October 2nd, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/linux/">
-					Linux
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/display-list-of-files-with-their-extension-and-file-sizes">Display list of files with their extension and file sizes</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Last month, I was trying to free up some space in my company servers and I realized that there were a lot of <code>.zip</code> files taking up a lot of space.</p>
-
-<p>So, I wrote the following command to list files by their extension:</p>
-
-<div class="codehilite">
-<pre><span></span><code>find<span class="w"> </span>.<span class="w"> </span>-iname<span class="w"> </span><span class="se">\*</span>.extension<span class="w"> </span>-exec<span class="w"> </span>du<span class="w"> </span>-sh<span class="w"> </span><span class="o">{}</span><span class="w"> </span><span class="se">\;</span><span class="w"> </span>&gt;<span class="w"> </span>file-list.txt
-</code></pre>
-</div>
-
-<p>And later to determine which files are the largest, I executed this command to sort the list by file size:</p>
-
-<div class="codehilite">
-<pre><span></span><code>sort<span class="w"> </span>-rh<span class="w"> </span>file-list.txt<span class="w"> </span>&gt;<span class="w"> </span>newfile.txt
-</code></pre>
-</div>
-
-<p>Hope this tip helps you too! &#x1F604;</p>
-
-	</div>
-	<div class="article-footer">
-		<time>September 20th, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/linux/">
-					Linux
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/view-your-wget-progress-even-after-closing-your-ssh-session">View your wget progress even after closing your SSH session</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Few days back, I ran a <code>wget</code> command to download a file and accidentally closed the SSH client.</p>
-
-<p>I logged in again and checked the list of active processes and thankfully, the <code>wget</code> process was still running except that I wasn't able to know the current progress of it.</p>
-
-<p>So, I did a little research and found a way to view the progress, so I tried the following command:</p>
-
-<div class="codehilite">
-<pre><span></span><code>tail<span class="w"> </span>-f<span class="w"> </span>wget_log
-</code></pre>
-</div>
-
-<p>And, I was able to view it's current download progress again.</p>
-
-<p>Hope this helps you out!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>August 13th, 2021</time>
+		<time>September 24th, 2022</time>
 		<ul class="tags">
 			
 			<li>
@@ -193,8 +182,8 @@
 			</li>
 			
 			<li>
-				<a href="/category/wget/">
-					wget
+				<a href="/category/linux/">
+					Linux
 				</a>
 			</li>
 			
@@ -206,56 +195,113 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-use-github-personal-access-token-to-authenticate-your-git-commits">How to use GitHub Personal Access Token to authenticate your git commits?</a></h1>
+		<h1 class="heading"><a href="/til/posts/install-microsoft-sql-server-driver-for-php-on-amazon-linux-2">Install Microsoft SQL Server Driver for PHP on Amazon Linux 2</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>On November 2020, GitHub had announced that they would no longer accept basic username/password to authenticate git commits and it would be deprecated by Mid 2021.</p>
+		<p>Recently, I tried to install Microsoft SQL Server driver for PHP on Amazon Linux and searching on how-to do was really annoying.</p>
 
-<p>Instead, they recommend you to authenticate your git commits using a Personal Access Token from your GitHub account.</p>
+<p>I read a few articles on StackOverflow and found some samples on GitHub Gists and thought of sharing on how I installed it.</p>
 
-<h2>Generate a personal access token</h2>
+<h2>Prerequisites</h2>
 
 <ol>
-<li>Unset your credentials from your remote repository: <code>git config --local --unset credential.helper</code></li>
-<li>Login to your GitHub account and go to <em>Settings</em> </li>
-<li>Then navigate to <em>Developer Settings -> Personal Access Tokens</em></li>
-<li>Click on <em>Generate new token</em></li>
-<li>Give a name to your Personal Access Token and the necessary permissions required.</li>
-<li>Once done, hit on <em>Generate token</em></li>
-<li>The token will be shown once, so make sure to copy it and store it somewhere that you can remember.</li>
+<li>Amazon Linux 2 installed.</li>
+<li>Ensure the ports 80 and 443 are open on your instance.</li>
+<li>PHP &gt;= v5.6 and the following extensions: <code>php-devel</code>, <code>php-pear</code>, <code>php-pdo</code>, and <code>php-xml</code>.</li>
+<li>Know-how on using the terminal.</li>
 </ol>
 
-<h2>Update your remote repository</h2>
+<h2>Installation steps</h2>
 
-<p>Once you've generated a token, you just have to update your remote repository by following the below steps:</p>
-
-<h3>1. Update remote repository URL</h3>
+<p>These are the commands used to install the SQL Server driver:</p>
 
 <div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>remote<span class="w"> </span>set-url<span class="w"> </span>origin<span class="w"> </span>https://&lt;your_access_token&gt;@github.com/&lt;your_git_repo_url&gt;
+<pre><span></span><code>sudo<span class="w"> </span>su
+sudo<span class="w"> </span>yum-config-manager<span class="w"> </span>--add-repo<span class="w"> </span>https://packages.microsoft.com/config/rhel/7/prod.repo
+sudo<span class="w"> </span>yum<span class="w"> </span>update
+sudo<span class="w"> </span><span class="nv">ACCEPT_EULA</span><span class="o">=</span>Y<span class="w"> </span>yum<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>msodbcsql<span class="w"> </span>mssql-tools<span class="w"> </span>unixODBC-devel<span class="w"> </span>re2c<span class="w"> </span>gcc-c++<span class="w"> </span>gcc
+sudo<span class="w"> </span>pecl<span class="w"> </span>install<span class="w"> </span>sqlsrv
+sudo<span class="w"> </span>pecl<span class="w"> </span>install<span class="w"> </span>pdo_sqlsrv
 </code></pre>
 </div>
 
-<h3>2. Just git pull once</h3>
+<h2>Modify php.ini</h2>
 
-<p>Now, just perform <code>git pull</code> operation once and you should be good:</p>
+<p>You can either to go to your <code>php.ini</code> file and add the <code>extension=sqlsrv</code> extension or add it like this:</p>
 
 <div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>pull<span class="w"> </span>https://&lt;your_access_token&gt;@github.com/&lt;your_git_repo_url&gt;
+<pre><span></span><code><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;extension=sqlsrv&quot;</span><span class="w"> </span>&gt;&gt;<span class="w"> </span><span class="sb">`</span>php<span class="w"> </span>--ini<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s2">&quot;Loaded Configuration&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sed<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;s|.*:\s*||&quot;</span><span class="sb">`</span>
+<span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;extension=pdo_sqlsrv&quot;</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>/etc/php.d/30-pdo_sqlsrv.ini
 </code></pre>
 </div>
 
-<p>Hope this helps you out!</p>
+<h2>Restart the service</h2>
+
+<p>Ensure that the server can connect and restart the service:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>setsebool<span class="w"> </span>-P<span class="w"> </span>httpd_can_network_connect_db<span class="w"> </span><span class="m">1</span>
+sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class="w"> </span>httpd<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>sudo<span class="w"> </span>apachectl<span class="w"> </span>restart
+</code></pre>
+</div>
+
+<p>Next, run the following the command to see that both <code>pdo_sqlsrv</code> and <code>sqlsrv</code> are installed:</p>
+
+<div class="codehilite">
+<pre><span></span><code>php<span class="w"> </span>-m<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s2">&quot;sqlsrv&quot;</span><span class="sb">`</span>
+</code></pre>
+</div>
+
+<h2>Test if the driver works</h2>
+
+<p>Create a <code>test.php</code> file in your root directory and copy-paste this snippet to test if it works:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="nb">error_reporting</span><span class="p">(</span><span class="k">E_ALL</span><span class="p">);</span>
+<span class="nb">ini_set</span><span class="p">(</span><span class="s1">&#39;display_errors&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+
+<span class="nv">$serverName</span> <span class="o">=</span> <span class="s2">&quot;YOUR_DB_HOST&quot;</span><span class="p">;</span>
+<span class="nv">$connectionOptions</span> <span class="o">=</span> <span class="k">array</span><span class="p">(</span>
+    <span class="s2">&quot;Database&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;YOUR_DB_NAME&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Uid&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;YOUR_DB_USER&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;PWD&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;YOUR_DB_PASSWORD&quot;</span>
+<span class="p">);</span>
+
+<span class="nv">$conn</span> <span class="o">=</span> <span class="nb">sqlsrv_connect</span><span class="p">(</span><span class="nv">$serverName</span><span class="p">,</span> <span class="nv">$connectionOptions</span><span class="p">);</span>
+
+<span class="k">if</span><span class="p">(</span><span class="nv">$conn</span> <span class="o">===</span> <span class="k">false</span> <span class="p">)</span> <span class="p">{</span>
+    <span class="k">print</span> <span class="s2">&quot;Connected successfully.&quot;</span><span class="p">;</span> 
+<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="k">print</span> <span class="s2">&quot;Error while connecting to server.&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="cp">?&gt;</span>
+</code></pre>
+</div>
+
+<p>Hope you found this tip useful!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>August 13th, 2021</time>
+		<time>September 18th, 2022</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/git/">
-					Git
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/php/">
+					PHP
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/aws/">
+					AWS
 				</a>
 			</li>
 			
@@ -267,51 +313,98 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-fetch-a-json-object-from-an-array-of-json-objects-by-property-value">How to fetch a JSON object from an array of JSON objects by property value?</a></h1>
+		<h1 class="heading"><a href="/til/posts/logging-client-ip-addresses-on-apache-server">Logging client IP addresses on Apache server</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>Say, for example, you have an array of JSON objects that contains the following data:</p>
+		<p>If you want to log the actual client IP address, you need to extract the <code>X-Forward-For</code> header from the request and in order to do that, you need to make a tiny edit in your <code>httpd.conf</code> file.</p>
 
-<div class="codehilite">
-<pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">arrOfObjects</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;John Doe&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nx">age</span><span class="o">:</span><span class="w"> </span><span class="mf">20</span><span class="p">,</span>
-<span class="w">        </span><span class="nx">email</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;john.doe@email.com&quot;</span>
-<span class="w">    </span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Bob Smith&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nx">age</span><span class="o">:</span><span class="w"> </span><span class="mf">56</span><span class="p">,</span>
-<span class="w">        </span><span class="nx">email</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;bob.smith@email.com&quot;</span>
-<span class="w">    </span><span class="p">},</span>
-<span class="p">];</span>
-</code></pre>
-</div>
+<ol>
+<li>Go to <code>/etc/apache2/conf</code> or <code>/etc/httpd/conf</code> and open <code>httpd.conf</code> file.</li>
+<li>Search for the string that starts with: <code>LogFormat "%h %l %u %t \"%r\" %&gt;s %b \"%{Referer}i\" \"%{User-Agent}i\"" combined</code>.</li>
+<li>Modify the <code>%h</code> to <code>%{X-Forwarded-For}i</code>. Now, it should look like this: <code>LogFormat "%{X-Forwarded-For}i %l %u %t \"%r\" %&gt;s %b \"%{Referer}i\" \"%{User-Agent}i\"" combined</code>.</li>
+<li>Test the config to ensure that there are no typos by typing: <code>apachectl configtest</code>.</li>
+<li>Save and restart the service by typing: <code>systemctl restart httpd</code> or <code>systemctl restart apache2</code>.</li>
+<li>In your terminal, type <code>tail -f /var/log/httpd/access.log</code> and you'll be seeing the client IP being logged in your logs.</li>
+</ol>
 
-<p>Hmm, that's pretty basic but how will get the information of "Bob Smith" using his email? Well, that's where the <code>Array.find()</code> method comes into the picture.</p>
-
-<p>Try reading the <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/find">Mozilla Documentation</a> on <code>Array.prototype.find()</code> and implement the following:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;email&quot;</span><span class="p">;</span>
-<span class="kd">var</span><span class="w"> </span><span class="nx">valueToFind</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;bob.smith@email.com&quot;</span><span class="p">;</span>
-<span class="kd">var</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">arrOfObjects</span><span class="p">.</span><span class="nx">find</span><span class="p">(</span><span class="nx">obj</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">obj</span><span class="p">[</span><span class="nx">key</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nx">value</span><span class="p">;</span>
-<span class="p">});</span>
-
-<span class="c1">//This should give you the record of Bob Smith.</span>
-<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">result</span><span class="p">)</span><span class="w"> </span>
-</code></pre>
-</div>
-
-<p>This works fine on all browsers except <strong>Internet Explorer</strong> (I mean, it sucks anyways!), which is okay!</p>
-
-<p>Hope you found this useful!</p>
+<p>Hope you found this tip useful!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>August 13th, 2021</time>
+		<time>August 18th, 2022</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/apache/">
+					Apache
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/using-iife-in-javascript">Using IIFE in JavaScript</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>IIFE a.k.a Immediately-Invoked Function Expression &mdash; is a way to execute functions as soon as the function is created.</p>
+
+<p>Using IIFE, you can easily isolate declared variables away from the global scope.</p>
+
+<p>This is how the syntax would look like:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="c1">// ES5 Standard</span>
+<span class="kd">let</span><span class="w"> </span><span class="nx">foo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nx">message</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Hello world&quot;</span>
+<span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">message</span><span class="p">);</span>
+<span class="p">})();</span>
+</code></pre>
+</div>
+
+<p>They can be defined with arrow functions as well:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="c1">// ES6 Standard</span>
+<span class="kd">let</span><span class="w"> </span><span class="nx">foo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nx">message</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Hello world&quot;</span>
+<span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">message</span><span class="p">);</span>
+<span class="p">})();</span>
+</code></pre>
+</div>
+
+<p>According to <strong>MDN Docs</strong>, it's a design pattern a.k.a Self-Executing Anonymous Function. There are two parts to this:</p>
+
+<ol>
+<li><p>The function that's enclosed within the Grouping Operator <code>()</code>, which would prevent it from polluting the global space and access to the variables within it's scope.</p></li>
+<li><p>The <code>();</code> will create the Immediately Invoked Function Expression on-the-fly.</p></li>
+</ol>
+
+<h2>When to use it?</h2>
+
+<p>There are many interesting cases such as if you are following the <a href="https://www.patterns.dev/posts/classic-design-patterns/">Module Pattern</a> especially if you want to avoid polluting the global namespace or just that you don't want your code to interfere with other code thus ensures code safety.</p>
+
+<h2>Readings</h2>
+
+<ul>
+<li><a href="https://developer.mozilla.org/en-US/docs/Glossary/IIFE">IIFE - MDN Web Docs Glossary</a></li>
+</ul>
+
+	</div>
+	<div class="article-footer">
+		<time>August 10th, 2022</time>
 		<ul class="tags">
 			
 			<li>
@@ -328,27 +421,46 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-update-values-of-a-column-from-one-table-to-another">How to update values of a column from one table to another?</a></h1>
+		<h1 class="heading"><a href="/til/posts/download-a-webpage-along-with-its-assets-using-wget">Download a webpage along with it's assets using wget</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>Sometimes, I come across situations where I would need to update a newly added in a pivot table and this query does come in handy:</p>
+		<p>I wanted to download a webpage along with it's assets and scripts, I tried using Chrome's <strong>Save as...</strong> option but it wasn't working as expected.</p>
+
+<p>I did a little googling and thought of using <code>wget</code> to do the job and it worked. Here's the command I used:</p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="k">UPDATE</span><span class="w"> </span><span class="n">table_a</span><span class="w"> </span><span class="k">INNER</span><span class="w"> </span><span class="k">JOIN</span><span class="w"> </span><span class="n">table_b</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">table_b</span><span class="p">.</span><span class="n">col_x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">table_a</span><span class="p">.</span><span class="n">col_x</span><span class="w"> </span><span class="k">SET</span><span class="w"> </span><span class="n">table_a</span><span class="p">.</span><span class="n">col_y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">table_b</span><span class="p">.</span><span class="n">col_y</span><span class="p">;</span>
+<pre><span></span><code>wget<span class="w"> </span>-p<span class="w"> </span>-k<span class="w"> </span>-H<span class="w"> </span>--nd<span class="w"> </span>https://www.example.com
 </code></pre>
 </div>
 
-<p>Hope you found this useful too!</p>
+<p>Let's see what do those flags mean:</p>
+
+<ul>
+<li><code>-p</code>: Downloads all the necessary files to properly display the downloaded HTML page.</li>
+<li><code>-k</code>: After the download is complete, it converts the links in the document to make them suitable for local viewing.</li>
+<li><code>-H</code>: This would download files that spans different hosts.</li>
+<li><code>--nd</code>: While retrieving files recursively, it will not create a hierarchy of directories and downloads the files into a single directory instead.</li>
+</ul>
+
+<p>If you open <code>index.html</code> directly on the browser, the assets might be broken as the <code>-k</code> flag doesn't seem to make the assets relative to the root directory. In order to view it, you can view it on a localhost server like WAMP, XAMPP or if you are using Python, you can type <code>python -m http.server</code> and view your downloaded file.</p>
+
+<p>Might be a bit messy but gets the job done.</p>
 
 	</div>
 	<div class="article-footer">
-		<time>August 13th, 2021</time>
+		<time>July 17th, 2022</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/mysql/">
-					MySQL
+				<a href="/category/wget/">
+					wget
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
 				</a>
 			</li>
 			
@@ -360,93 +472,279 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-switch-between-integrated-terminal-and-editor-in-visual-studio-code">How to switch between integrated terminal and editor in Visual Studio Code?</a></h1>
+		<h1 class="heading"><a href="/til/posts/extract-private-key-and-certificate-from-pfx-file">Extract private key and certificate from .pfx file</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>While, I'm trying to adjust myself to using Visual Studio Code, I found it quite annoying that there isn't a shortcut to switch focus between the editor and the integrated terminal. For a guy, like me, who makes use of the keyboard all the time, that's pretty important.</p>
+		<p>Ever wondered what's a <code>.pfx</code> file? It's just a combination of both private key and the certificate and this file is usually used in Microsoft IIS Servers.</p>
 
-<p>I did some research and found a way on how to do it. Just type <code>Ctrl+Shift+P</code> and type <code>Open Keyboard Shortcuts</code> and add these lines:</p>
+<p>However, you can't use this file in Linux servers as both private key and the certificate are supposed to be individual files.</p>
+
+<p>Here's how you can extract both private key and certificate files:</p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="p">[</span>
-<span class="w">    </span><span class="p">{</span><span class="nt">&quot;key&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ctrl+`&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;command&quot;</span><span class="p">:</span><span class="s2">&quot;workbench.action.terminal.focus&quot;</span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span><span class="nt">&quot;key&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ctrl+`&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;command&quot;</span><span class="p">:</span><span class="s2">&quot;workbench.action.focusActiveEditorGroup&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;when&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;terminalFocus&quot;</span><span class="p">},</span>
-<span class="p">]</span>
+<pre><span></span><code>openssl<span class="w"> </span>pkcs12<span class="w"> </span>-in<span class="w"> </span>file.pfx<span class="w"> </span>-nocerts<span class="w"> </span>-out<span class="w"> </span>privatekey.pem<span class="w"> </span>-nodes
+openssl<span class="w"> </span>pkcs12<span class="w"> </span>-in<span class="w"> </span>file.pfx<span class="w"> </span>-nokeys<span class="w"> </span>-out<span class="w"> </span>certificate.crt
 </code></pre>
 </div>
 
-<p>Save the file and now, you'll be able to switch between the two by pressing <code>Ctrl+`</code> keys.</p>
-
-<p>Hope you found this tip useful!</p>
+<p>Hope this tip helps you out!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>July 21st, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/vscode/">
-					VSCode
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/redirect-from-http-to-https-in-apache-virtualhosts">Redirect from HTTP to HTTPS in Apache VirtualHosts</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Here's a simple technique on how I learned to redirect a site from HTTP to HTTPS automatically using Apache's VirtualHost configuration.</p>
-
-<p>Go to your configuration file or <code>000-default.conf</code> and modify your configuration to something like this:</p>
-
-<div class="codehilite">
-<pre><span></span><code>&lt;VirtualHost<span class="w"> </span>*:80&gt;
-<span class="w">    </span>ServerName<span class="w"> </span>your.domain.com
-<span class="w">    </span>Redirect<span class="w"> </span>permanent<span class="w"> </span>/<span class="w"> </span>https://your.domain.com/
-&lt;/VirtualHost&gt;
-
-&lt;VirtualHost<span class="w"> </span>*:443&gt;
-<span class="w">    </span>ServerName<span class="w"> </span>your.domain.com
-<span class="w">    </span>SSLEngine<span class="w"> </span>On
-<span class="w">    </span><span class="c1"># insert code here...</span>
-&lt;/VirtualHost&gt;
-</code></pre>
-</div>
-
-<p>Save the file and check if the configuration is correct before your restart the server:</p>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>apachectl<span class="w"> </span>configtest
-</code></pre>
-</div>
-
-<p>If you get the message, <code>Syntax OK</code>, then go ahead and restart the server:</p>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class="w"> </span>apache2
-</code></pre>
-</div>
-
-<p>Now, your visitors will be redirected from HTTP to HTTPS automatically!</p>
-
-<p>Hope you found this tip useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>July 9th, 2021</time>
+		<time>March 12th, 2022</time>
 		<ul class="tags">
 			
 			<li>
 				<a href="/category/devops/">
 					DevOps
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/install-nginx-and-php-on-windows">Install NGINX and PHP on Windows</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Thought of writing a small tutorial on how to install NGINX and PHP on Windows. You can also use this as a reference if you wanted to install them on Windows Server too.</p>
+
+<div class="post-notification warning">
+    <h3><i class="ph-warning-light"></i> Note</h3>
+    <p>This tutorial won't teach you how to configure both PHP and NGINX configurations as there are a lot of tutorials focusing on that topic.</p>
+</div>
+
+<h2>Setting up NGINX</h2>
+
+<ol>
+<li>Download <a href="http://nginx.org/en/docs/windows.html">NGINX for Windows</a></li>
+<li>Go to <code>C:/</code> directory and create a folder named <code>C:/nginx</code>.</li>
+<li>Unzip the downloaded <code>.zip</code> file in <code>C:/nginx</code> directory.</li>
+<li>Go to <code>C:/nginx</code> and create two new folders named <code>sites-available</code> and <code>sites-enabled</code>.</li>
+<li>To test, if it's working, double-click on <code>C:/nginx/nginx.exe</code> and type <code>localhost</code> in the browser. You should be able to see a Welcome page.</li>
+<li>Kill the NGINX process from Task Manager.</li>
+</ol>
+
+<h2>Setting up PHP</h2>
+
+<ol>
+<li>Download <a href="https://windows.php.net/downloads/releases/php-8.1.1-nts-Win32-vs16-x64.zip">PHP 8.1 for Windows</a>.</li>
+<li>Go to <code>C:/</code> directory and create a folder named <code>C:/php</code> or if you wanted to have multiple versions, <code>C:/php8.1</code>.</li>
+<li>Unzip the downloaded <code>.zip</code> file in <code>C:/php</code> directory.</li>
+<li>Add PHP to your system environment variables by adding the path <code>C:/php</code></li>
+<li>Open Command Prompt and type <code>php -v</code>. You see should be able to see the version if it's installed correctly.</li>
+</ol>
+
+<h2>Run NGINX and PHP as separate services</h2>
+
+<p>Generally, it's good practice to run both PHP and NGINX as background services or else, you might have to start the processes manually every time the server goes down.</p>
+
+<p>As I was looking for a way to do that, I stumbled upon this post on <a href="https://stackoverflow.com/questions/40846356/run-nginx-as-windows-service">StackOverflow</a> and it was quite helpful.</p>
+
+<h3>Install NSSM Service Manager</h3>
+
+<p>NSSM Service Manager is a free open-source alternative that helps you create a service with the help of GUI. Below are the steps that I followed:</p>
+
+<ol>
+<li>Download <a href="https://nssm.cc/download">NSSM Service Manager</a></li>
+<li>Go to <code>C:/</code> directory and create a folder named <code>C:/nssm</code>.</li>
+<li>Unzip the downloaded <code>.zip</code> file in <code>C:/nssm</code> directory.</li>
+</ol>
+
+<h3>Install NGINX as a service</h3>
+
+<ol>
+<li>Open Command Prompt as an Administrator.</li>
+<li>Go to <code>C:/nssm/win64/</code> directory.</li>
+<li>Type <code>nssm install nginx</code></li>
+<li>Define the path of the <code>nginx.exe</code> file.</li>
+<li>Click on <code>Install Service</code>.</li>
+<li>Press <code>Win+R</code> and type <code>services.msc</code>.</li>
+<li>Look for <code>nginx</code> and start the service.</li>
+<li>Open your browser and type <code>localhost</code> to see if it's working correctly.</li>
+</ol>
+
+<h3>Install PHP as a service</h3>
+
+<ol>
+<li>Open Command Prompt as an Administrator.</li>
+<li>Go to <code>C:/nssm/win64/</code> directory.</li>
+<li>Type <code>nssm install php</code></li>
+<li>Define the path of the <code>php-cgi.exe</code> file.</li>
+<li>Add the arguments: <code>-b 127.0.0.1:9000</code></li>
+<li>Click on <code>Install Service</code>.</li>
+<li>Press <code>Win+R</code> and type <code>services.msc</code>.</li>
+<li>Look for <code>php</code> and start the service.</li>
+</ol>
+
+<h3>Test to see if it works!</h3>
+
+<p>Before you proceed with the following steps, ensure that you include the <code>*.conf</code> files from the <code>sites-enabled</code> folder in your <code>nginx.conf</code> file.</p>
+
+<p>Add the line <code>include "C:/nginx/sites-enabled/*.conf";</code> in your <code>nginx.conf</code> file and follow the steps below:</p>
+
+<ol>
+<li>Go to <code>C:/nginx/sites-available</code> directory and create <code>example.com.conf</code>.</li>
+<li>Go to <code>C:/nginx/html</code> and create directory.</li>
+<li>Refer to the <a href="#nginx-config">sample configuration</a> provided and make the necessary changes.</li>
+<li>To enable the site, you have to create a symlink: <code>mklink "C:\nginx\sites-enabled\example.com.conf" "C:\nginx\sites-available\example.com.conf"</code>.</li>
+<li>Ensure the configuration doesn't have any errors by typing <code>nginx -t</code> in <code>C:/nginx</code> directory.</li>
+<li>Restart the NSSM service.</li>
+<li>Add an entry in your hosts file: <code>127.0.0.1 example.com</code>.</li>
+<li>And you're done!</li>
+</ol>
+
+<div class="post-notification warning">
+    <h3><i class="ph-warning-light"></i> Tip</h3>
+    <p>If you get a "Connection Refused" or error that is similar to that, it's most probably due to firewall or maybe the PHP service isn't running.</p>
+</div>
+
+<h3>Useful commands while using NSSM</h3>
+
+<div class="codehilite">
+<pre><span></span><code><span class="c1"># Start a service</span>
+nssm<span class="w"> </span>start<span class="w"> </span><span class="s2">&quot;servicename&quot;</span><span class="w"> </span>
+
+<span class="c1"># Restart a service</span>
+nssm<span class="w"> </span>restart<span class="w"> </span><span class="s2">&quot;servicename&quot;</span><span class="w"> </span>
+
+<span class="c1"># Stop a service</span>
+nssm<span class="w"> </span>stop<span class="w"> </span><span class="s2">&quot;servicename&quot;</span><span class="w"> </span>
+
+<span class="c1"># Install a service</span>
+nssm<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;servicename&quot;</span><span class="w"> </span>
+
+<span class="c1"># Remove/Uninstall a service</span>
+nssm<span class="w"> </span>remove<span class="w"> </span><span class="s2">&quot;servicename&quot;</span><span class="w"> </span>
+</code></pre>
+</div>
+
+<h3>Sample NGINX Virtual Host Configuration</h3>
+
+<div class="codehilite">
+<pre><span></span><code>server<span class="w"> </span><span class="o">{</span>
+
+<span class="w">    </span><span class="c1"># Your Domain Name</span>
+<span class="w">    </span>listen<span class="w"> </span><span class="m">80</span><span class="p">;</span>
+<span class="w">    </span>server_name<span class="w"> </span>example.com<span class="p">;</span>
+
+<span class="w">    </span>autoindex<span class="w"> </span>off<span class="p">;</span>
+<span class="w">    </span>add_header<span class="w"> </span>X-Frame-Options<span class="w"> </span><span class="s2">&quot;SAMEORIGIN&quot;</span><span class="p">;</span>
+<span class="w">    </span>add_header<span class="w"> </span>Strict-Transport-Security<span class="w"> </span><span class="s2">&quot;max-age=31536000; includeSubDomains&quot;</span><span class="w"> </span>always<span class="p">;</span>
+<span class="w">    </span>add_header<span class="w"> </span>X-Content-Type-Options<span class="w"> </span><span class="s2">&quot;nosniff&quot;</span><span class="p">;</span>
+<span class="w">    </span>add_header<span class="w"> </span>X-XSS-Protection<span class="w"> </span><span class="s2">&quot;1; mode=block&quot;</span><span class="p">;</span>
+<span class="w">    </span>add_header<span class="w"> </span>Access-Control-Allow-Origin<span class="w"> </span>*<span class="p">;</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="o">(</span>!-e<span class="w"> </span><span class="nv">$request_filename</span><span class="o">)</span><span class="w"> </span><span class="o">{</span>
+<span class="w">        </span>rewrite<span class="w">  </span>^/<span class="o">[</span>_0-9a-zA-Z-<span class="o">]</span>+<span class="o">(</span>/wp-<span class="o">(</span>content<span class="p">|</span>admin<span class="p">|</span>includes<span class="o">)</span>.*<span class="o">)</span><span class="w"> </span><span class="nv">$1</span><span class="w"> </span><span class="k">break</span><span class="p">;</span>
+<span class="w">        </span>rewrite<span class="w">  </span>^/<span class="o">[</span>_0-9a-zA-Z-<span class="o">]</span>+<span class="o">(</span>/.*<span class="se">\.</span>php<span class="o">)</span>$<span class="w"> </span><span class="nv">$1</span><span class="w"> </span><span class="k">break</span><span class="p">;</span>
+<span class="w">    </span><span class="o">}</span>
+
+<span class="w">    </span><span class="c1"># Uncomment these lines if SSL is provided</span>
+<span class="w">    </span><span class="c1">#==========================</span>
+<span class="w">    </span><span class="c1">#listen 443 ssl;</span>
+<span class="w">    </span><span class="c1">#ssl_certificate your-ssl.pem;</span>
+<span class="w">    </span><span class="c1">#ssl_certificate_key your-ssl.key;</span>
+<span class="w">    </span><span class="c1">#ssl_protocols TLSv1 TLSv1.1 TLSv1.2; </span>
+<span class="w">    </span><span class="c1">#ssl_prefer_server_ciphers on;</span>
+<span class="w">    </span><span class="c1">#ssl_ciphers &#39;EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH&#39;;</span>
+<span class="w">    </span><span class="c1">#==========================</span>
+
+<span class="w">    </span><span class="c1"># Log files for Debugging</span>
+<span class="w">    </span>access_log<span class="w"> </span>logs/example-access.log<span class="p">;</span>
+<span class="w">    </span>error_log<span class="w"> </span>logs/example-error.log<span class="p">;</span>
+
+<span class="w">    </span><span class="c1"># Directory</span>
+<span class="w">    </span>root<span class="w"> </span><span class="s2">&quot;C:/nginx/html/example.com&quot;</span><span class="p">;</span>
+<span class="w">    </span>index<span class="w"> </span>index.php<span class="w"> </span>index.html<span class="w"> </span>index.htm<span class="p">;</span>
+
+<span class="w">    </span>location<span class="w"> </span>/<span class="w"> </span><span class="o">{</span>
+<span class="w">        </span>try_files<span class="w"> </span><span class="nv">$uri</span><span class="w"> </span><span class="nv">$uri</span>/<span class="w"> </span>/index.php?<span class="nv">$query_string</span><span class="p">;</span>
+<span class="w">    </span><span class="o">}</span>
+
+<span class="w">    </span>location<span class="w"> </span>~<span class="w"> </span>/<span class="se">\.</span><span class="o">(</span>?!well-known<span class="o">)</span>.*<span class="w"> </span><span class="o">{</span>
+<span class="w">        </span>deny<span class="w"> </span>all<span class="p">;</span>
+<span class="w">        </span>access_log<span class="w"> </span>off<span class="p">;</span>
+<span class="w">        </span>log_not_found<span class="w"> </span>off<span class="p">;</span>
+<span class="w">    </span><span class="o">}</span>
+
+<span class="w">    </span><span class="c1"># Deny yaml, twig, markdown, ini file access</span>
+<span class="w">    </span>location<span class="w"> </span>~*<span class="w"> </span>/.+<span class="se">\.</span><span class="o">(</span>markdown<span class="p">|</span>md<span class="p">|</span>twig<span class="p">|</span>yaml<span class="p">|</span>yml<span class="p">|</span>ini<span class="o">)</span>$<span class="w"> </span><span class="o">{</span>
+<span class="w">        </span>deny<span class="w"> </span>all<span class="p">;</span>
+<span class="w">        </span>access_log<span class="w"> </span>off<span class="p">;</span>
+<span class="w">        </span>log_not_found<span class="w"> </span>off<span class="p">;</span>
+<span class="w">    </span><span class="o">}</span>
+
+<span class="w">    </span><span class="c1"># PHP-FPM Configuration Nginx</span>
+<span class="w">    </span>location<span class="w"> </span>~<span class="w"> </span><span class="se">\.</span>php$<span class="w"> </span><span class="o">{</span>
+<span class="w">        </span>fastcgi_pass<span class="w">   </span><span class="m">127</span>.0.0.1:9000<span class="p">;</span>
+<span class="w">        </span>fastcgi_index<span class="w">  </span>index.php<span class="p">;</span>
+<span class="w">        </span>fastcgi_param<span class="w">  </span>SCRIPT_FILENAME<span class="w">  </span><span class="nv">$document_root$fastcgi_script_name</span><span class="p">;</span>
+<span class="w">        </span>include<span class="w">        </span>fastcgi_params<span class="p">;</span>
+<span class="w">    </span><span class="o">}</span>
+<span class="o">}</span>
+</code></pre>
+</div>
+
+<h2>Conclusion</h2>
+
+<p>If you've gotten this far, give yourself a pat in the back.</p>
+
+<p>Hope you've found this tutorial useful and please share it with your friends and colleagues if they really need it!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>February 27th, 2022</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/tutorial/">
+					Tutorial
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/count-the-number-of-matches-of-a-pattern-in-vim">Count the number of matches of a pattern in VIM</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>You can the count the number of matches of a pattern by using the <code>n</code> flag while using the substitute command. Try the following command:</p>
+
+<div class="codehilite">
+<pre><span></span><code>:%s/something//gn
+</code></pre>
+</div>
+
+<p>If you want to know on how many lines it matches, just omit the <code>g</code> flag:</p>
+
+<div class="codehilite">
+<pre><span></span><code>:%s/something//n
+</code></pre>
+</div>
+
+<p>Hope this tip helped you out!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>January 16th, 2022</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/vim/">
+					VIM
 				</a>
 			</li>
 			
@@ -494,11 +792,11 @@
 		
 	
 		
-			<a class="" href="/til/pages/11">...</a>
+			<a class="" href="/til/pages/12">...</a>
 		
 	
 		
-			<a class="" href="/til/pages/18">18</a>
+			<a class="" href="/til/pages/19">19</a>
 		
 	
 
@@ -525,28 +823,35 @@
 		<li>
 			<a href="/category/linux/">
 				Linux
-				<span class="count">22</span>
+				<span class="count">24</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/laravel/">
 				Laravel
-				<span class="count">18</span>
+				<span class="count">20</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/devops/">
 				DevOps
-				<span class="count">15</span>
+				<span class="count">20</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/php/">
 				PHP
-				<span class="count">13</span>
+				<span class="count">14</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/git/">
+				Git
+				<span class="count">12</span>
 			</a>
 		</li>
 		
@@ -593,9 +898,9 @@
 		</li>
 		
 		<li>
-			<a href="/category/git/">
-				Git
-				<span class="count">10</span>
+			<a href="/category/mysql/">
+				MySQL
+				<span class="count">9</span>
 			</a>
 		</li>
 		
@@ -610,13 +915,6 @@
 			<a href="/category/unix/">
 				UNIX
 				<span class="count">8</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/mysql/">
-				MySQL
-				<span class="count">7</span>
 			</a>
 		</li>
 		
@@ -638,6 +936,13 @@
 			<a href="/category/essay/">
 				Essay
 				<span class="count">6</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/c/">
+				C#
+				<span class="count">5</span>
 			</a>
 		</li>
 		
@@ -670,16 +975,16 @@
 		</li>
 		
 		<li>
-			<a href="/category/c/">
-				C#
+			<a href="/category/arcade-challenge/">
+				Arcade Challenge
 				<span class="count">4</span>
 			</a>
 		</li>
 		
 		<li>
-			<a href="/category/arcade-challenge/">
-				Arcade Challenge
-				<span class="count">4</span>
+			<a href="/category/databases/">
+				Databases
+				<span class="count">3</span>
 			</a>
 		</li>
 		
@@ -722,6 +1027,48 @@
 			<a href="/category/general/">
 				General
 				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/vcs/">
+				VCS
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/ubuntu/">
+				Ubuntu
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/powershell/">
+				PowerShell
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/smtp/">
+				SMTP
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/sql/">
+				SQL
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/net/">
+				.NET
+				<span class="count">2</span>
 			</a>
 		</li>
 		
@@ -831,6 +1178,55 @@
 		</li>
 		
 		<li>
+			<a href="/category/phpstorm/">
+				PHPStorm
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/elastic-search/">
+				Elastic Search
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/kibana/">
+				Kibana
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/data-manipulation/">
+				Data Manipulation
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/telnet/">
+				Telnet
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/iis/">
+				IIS
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/centos/">
+				CentOS
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/net-core/">
 				.NET Core
 				<span class="count">1</span>
@@ -922,22 +1318,8 @@
 		</li>
 		
 		<li>
-			<a href="/category/ubuntu/">
-				Ubuntu
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/ssh/">
 				SSH
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/databases/">
-				Databases
 				<span class="count">1</span>
 			</a>
 		</li>

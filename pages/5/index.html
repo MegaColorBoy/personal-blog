@@ -78,26 +78,376 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/logging-client-ip-addresses-on-apache-server">Logging client IP addresses on Apache server</a></h1>
+		<h1 class="heading"><a href="/til/posts/setup-a-virtual-environment-for-python-development">Setup a virtual environment for Python development</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>If you want to log the actual client IP address, you need to extract the <code>X-Forward-For</code> header from the request and in order to do that, you need to make a tiny edit in your <code>httpd.conf</code> file.</p>
+		<p><code>virtualenv</code> is a tool used that allows you to install and isolate Python packages that are specific to your project rather than installing them globally on your system, which might, at some point, break other tools or services in your system.</p>
 
-<ol>
-<li>Go to <code>/etc/apache2/conf</code> or <code>/etc/httpd/conf</code> and open <code>httpd.conf</code> file.</li>
-<li>Search for the string that starts with: <code>LogFormat "%h %l %u %t \"%r\" %&gt;s %b \"%{Referer}i\" \"%{User-Agent}i\"" combined</code>.</li>
-<li>Modify the <code>%h</code> to <code>%{X-Forwarded-For}i</code>. Now, it should look like this: <code>LogFormat "%{X-Forwarded-For}i %l %u %t \"%r\" %&gt;s %b \"%{Referer}i\" \"%{User-Agent}i\"" combined</code>.</li>
-<li>Test the config to ensure that there are no typos by typing: <code>apachectl configtest</code>.</li>
-<li>Save and restart the service by typing: <code>systemctl restart httpd</code> or <code>systemctl restart apache2</code>.</li>
-<li>In your terminal, type <code>tail -f /var/log/httpd/access.log</code> and you'll be seeing the client IP being logged in your logs.</li>
-</ol>
+<p>In this simple guide, I'll show you how to install and create your own Python virtual environment for development.</p>
+
+<p>Before you begin, please make sure that you have installed Python 3 or greater on your system.</p>
+
+<h2>Install virtualenv</h2>
+
+<p>Using the <code>pip</code> tool, you can execute the following command:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>virtualenvwrapper
+</code></pre>
+</div>
+
+<p>Then you need to add the following lines to your <code>.bashrc</code> startup file (found in the home directory).</p>
+
+<p>These lines determine where your virtual environments should live, the location of the script installed and the location of the development project directories:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">WORKON_HOME</span><span class="o">=</span><span class="nv">$HOME</span>/.virtualenvs
+<span class="nb">export</span><span class="w"> </span><span class="nv">VIRTUALENVWRAPPER_PYTHON</span><span class="o">=</span>/usr/bin/python3
+<span class="nb">export</span><span class="w"> </span><span class="nv">VIRTUALENVWRAPPER_VIRTUALENV_ARGS</span><span class="o">=</span><span class="s1">&#39; -p /usr/bin/python3 &#39;</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">PROJECT_HOME</span><span class="o">=</span><span class="nv">$HOME</span>/Devel
+<span class="nb">source</span><span class="w"> </span>/usr/local/bin/virtualenvwrapper.sh
+</code></pre>
+</div>
+
+<p>Next, restart the startup file:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nb">source</span><span class="w"> </span>.bashrc
+</code></pre>
+</div>
+
+<p>Once done, it'l execute a bunch of scripts for a few minutes and once the installation is successful, you can start using the <code>mkvirtualenv</code> command to create your virtual environment.</p>
+
+<h2>Creating a virtual environment</h2>
+
+<p>Really, it's quite trivial to create a virtual environment like this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>mkvirtualenv<span class="w"> </span>my_virtual_environment
+</code></pre>
+</div>
+
+<p>Once done, you'll notice that your terminal looks something like this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>(my_virtual_environment) user@desktop:~$
+</code></pre>
+</div>
+
+<p>This indicates that you are inside the virtual environment and can begin installing your Python packages and begin developing your application.</p>
+
+<h2>Using the virtual environment</h2>
+
+<p>There are a few commands that I'd like to share (and you should also know) while working with a virtual environment:</p>
+
+<ul>
+<li><code>deactivate</code> &mdash; get out of the current virtual environment</li>
+<li><code>workon</code> &mdash; list available virtual environments on the system</li>
+<li><code>workon name_of_environment</code> &mdash; activate the specified virtual environment</li>
+<li><code>rmvirtualenv name_of_environment</code> &mdash; remove the specified virtual environment</li>
+</ul>
+
+<h2>Conclusion</h2>
+
+<p>If you are a Python developer or write code in Python, then virtual environments are super handy and disposable especially while testing and working on different projects.</p>
+
+<p>Unless, your project is package-dependant, you don't really need to isolate your development environment.</p>
+
+<p>Hope you found this article useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>January 3rd, 2023</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/python/">
+					Python
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/install-teamviewer-on-fedora-linux-3637">Install TeamViewer on Fedora Linux 36/37</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>If you are using Fedora Linux or any other Linux distribution and want a short guide on how to install TeamViewer on your workstation, then this article is for you.</p>
+
+<p>Usually, I use it access remote servers or my computer at work but I myself never did it on a Linux workstation. It worked out for me, so it should work for you too!</p>
+
+<h2>1. Download TeamViewer RPM Package</h2>
+
+<p>You can find the <a href="https://www.teamviewer.com/en/download/linux/">latest release</a> on TeamViewer's official site.</p>
+
+<p>Make sure that you have install <code>wget</code> on your system to easily download it via the Terminal:</p>
+
+<div class="codehilite">
+<pre><span></span><code>wget<span class="w"> </span>https://download.teamviewer.com/download/linux/teamviewer.x86_64.rpm
+</code></pre>
+</div>
+
+<h2>2. Download minizip module</h2>
+
+<p>During installation, it failed for me as I was missing a certain <code>libminizip.so</code> module. So, I looked up online and found the module and downloaded it on my workstation:</p>
+
+<div class="codehilite">
+<pre><span></span><code>wget<span class="w"> </span>https://rpmfind.net/linux/fedora/linux/updates/36/Everything/x86_64/Packages/m/minizip-compat-1.2.11-33.fc36.x86_64.rpm
+</code></pre>
+</div>
+
+<p>Once the download is complete, you can install it:</p>
+
+<div class="codehilite">
+<pre><span></span><code>rpm<span class="w"> </span>-i<span class="w"> </span>minizip-compat-1.2.11-33.fc36.x86_64.rpm
+</code></pre>
+</div>
+
+<h2>3. Install TeamViewer</h2>
+
+<p>Now, the final step is to install the RPM package for TeamViewer:</p>
+
+<div class="codehilite">
+<pre><span></span><code>rpm<span class="w"> </span>-i<span class="w"> </span>teamviewer_15.37.3.x86_64.rpm
+</code></pre>
+</div>
+
+<p>Hope you found this short guide useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>January 1st, 2023</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/productivity/">
+					Productivity
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/connect-to-a-remote-windows-machine-from-a-linux-machine">Connect to a Remote Windows machine from a Linux machine</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Last week, my Windows machine was down and I was struggling to connect to a remote server as I'm using Fedora Linux at home.</p>
+
+<p>I tried installing and using GNOME Connections but it crashed and didn't work well for me. I found another tool named <code>rdesktop</code> which was stable and worked well for my case.</p>
+
+<p>Installing it is as easy as typing the following command using the <code>dnf</code> package manager:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>dnf<span class="w"> </span>install<span class="w"> </span>rdesktop
+</code></pre>
+</div>
+
+<p>Now, you can connect to your remote desktop machine using the following command:</p>
+
+<div class="codehilite">
+<pre><span></span><code>rdesktop<span class="w"> </span>-d<span class="w"> </span>&lt;domain&gt;<span class="w"> </span>-u<span class="w"> </span>&lt;username&gt;<span class="w"> </span>-p<span class="w"> </span>-<span class="w"> </span>&lt;ipaddress&gt;
+</code></pre>
+</div>
+
+<p>Upon execution of this command, you'll be prompted to enter the password and after that, you're all good to go!</p>
 
 <p>Hope you found this tip useful!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>August 18th, 2022</time>
+		<time>January 1st, 2023</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/productivity/">
+					Productivity
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="travel article lazy" data-src="https://res.cloudinary.com/dajwxxago/image/upload/v1672488741/europetrip/day1/IMG_4414.JPG">
+    <div class="container">
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/travel/">
+					Travel
+				</a>
+			</li>
+			
+		</ul>
+    	<h1 class="heading"><a href="/travel/posts/exploring-europe">Exploring Europe</a></h1>
+        <p class="description">Sharing about my experiences and the places that I explored in my short three-day trip to Europe.</p>
+        <time>December 31st, 2022</time>
+    </div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/writings/posts/trying-out-the-redragon-k552-kumara-rgb-mechanical-keyboard">Trying out the Redragon K552 Kumara RGB Mechanical Keyboard</a></h1>
+		<p class="description">My experiences using a mechanical keyboard for the first time.</p>
+	</div>
+	<div class="article-body">
+		<figure>
+    <img src="/static/images/redragon-k552-kumara.jpeg" />
+    <figcaption>Redragon K552 Kumara RGB Keyboard</figcaption>
+</figure>
+
+<p>Yes, I finally did it and bought myself a mechanical keyboard after tirelessly scrolling through Amazon and YouTube for a good keyboard that doesn't hurt my pocket in the long run.</p>
+
+<h2>What does it feel like?</h2>
+
+<p>Got it delivered yesterday and as I unboxed it, I noticed that the build quality is strong and it's quite a heavy keyboard that has around 18 RGB modes to spice things up a bit.</p>
+
+<p>I got the one with the Outemu Red Switches (More like a Cherry MX Red clones) and since it's a linear switch, the typing experience is buttery smooth and not at all noisy. This should be good for typing in office environments or gamers who like to be fast while playing their favorite games.</p>
+
+<p>Currently, I have one issue with it i.e. that keyboard is a bit high and it kind of tires my wrists after typing for longer sessions but I guess, it can be fixed with a wrist rest (Maybe, a nice wooden one 👀).</p>
+
+<p>On my first try, the keys seemed a bit fast for me as I'm not really used to typing on linear switches, let alone, on a mechanical keyboard. But as of writing this article, I got my speed back up and I have been able to achieve around 75-80WPM.</p>
+
+<h2>Conclusion</h2>
+
+<p>Apart from that, I'm quite happy about this purchase and would definitely hope that it lasts longer until I get another mechanical keyboard.</p>
+
+<p>If you are looking to buy this keyboard, I'd recommend you to give a shot and see it for yourself because I feel that every programmer deserves to type on a good keyboard.</p>
+
+<p>Stay tuned for more content.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>November 27th, 2022</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/productivity/">
+					Productivity
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/tech/">
+					Tech
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/writings/posts/learning-c-10-and-net-core-6">Learning C# 10 and .NET Core 6</a></h1>
+		<p class="description">Getting back into the old roots again.</p>
+	</div>
+	<div class="article-body">
+		<p>To those who haven't been following me a lot, I used to build games on Unity 3D and build desktop applications on .NET and C# during my university days.</p>
+
+<p>Ever since I discovered PHP and Laravel, I never went back to .NET and now after taking a look at the <a href="https://www.techempower.com/benchmarks/#section=data-r21">Fortune benchmarks</a> for .NET Core 6 vs Laravel, I decided to take some time out to learn it again.</p>
+
+<p>I started two weeks ago and the learning curve seemed quite familiar due to previous development experiences. I don't know if it's me but I felt like Laravel might have borrowed a few concepts from .NET Core Framework but hey, everyone needs some sort of inspiration, right?</p>
+
+<p>Unlike .NET, Laravel is usually and still is a "batteries included" type of framework and that helps you get the job done. However, from what I have researched, applications built on .NET seems to be more performant than applications built on Laravel.</p>
+
+<h2>So, what's the current progress?</h2>
+
+<p>Well, I haven't touched the ASP.MVC part yet as I'm geting myself familiar with the coding conventions, static typing (yes, it does take sometime to get used to) by writing some test console-based applications and solving Project Euler problems.</p>
+
+<p>Hopefully, I'll be able to share about what I have learnt using the framework on this blog by either building new applications or rewriting some of my Laravel projects.</p>
+
+<p>Stay tuned for more!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>November 27th, 2022</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/learning/">
+					Learning
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/programming/">
+					Programming
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/temporarily-disable-ipv6-protocol-on-ubuntu">Temporarily disable IPV6 protocol on Ubuntu</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Few days ago, I resolved an issue that I faced on an Ubuntu server that was related to SMTP not working, as a result, the server was always throwing a <code>504 Gateway Timeout</code> error.</p>
+
+<p>During troubleshooting, I found out that <code>telnet smtp.office365.com 587</code> was not giving any response and thought that the port was blocked on the client's network but no, it wasn't.</p>
+
+<p>I did a little digging and learnt that it could be due to the fact that SMTP traffic over IPV6 might be blocked on the client's network.</p>
+
+<p>So, I tried executing the following commands to disable IPV6 temporarily:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>sysctl<span class="w"> </span>-w<span class="w"> </span>net.ipv6.conf.all.disable_ipv6<span class="o">=</span><span class="m">1</span>
+sudo<span class="w"> </span>sysctl<span class="w"> </span>-w<span class="w"> </span>net.ipv6.conf.default.disable_ipv6<span class="o">=</span><span class="m">1</span>
+</code></pre>
+</div>
+
+<p>And voila, the mails were going and SMTP traffic was working over IPV4.</p>
+
+<p>If you want to enable it again, try the following:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>sysctl<span class="w"> </span>-w<span class="w"> </span>net.ipv6.conf.all.disable_ipv6<span class="o">=</span><span class="m">0</span>
+sudo<span class="w"> </span>sysctl<span class="w"> </span>-w<span class="w"> </span>net.ipv6.conf.default.disable_ipv6<span class="o">=</span><span class="m">0</span>
+</code></pre>
+</div>
+
+<p>Hope you found this tip useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>November 27th, 2022</time>
 		<ul class="tags">
 			
 			<li>
@@ -107,8 +457,14 @@
 			</li>
 			
 			<li>
-				<a href="/category/apache/">
-					Apache
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/ubuntu/">
+					Ubuntu
 				</a>
 			</li>
 			
@@ -120,203 +476,32 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/using-iife-in-javascript">Using IIFE in JavaScript</a></h1>
+		<h1 class="heading"><a href="/til/posts/view-list-of-services-in-linux">View list of services in Linux</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>IIFE a.k.a Immediately-Invoked Function Expression &mdash; is a way to execute functions as soon as the function is created.</p>
-
-<p>Using IIFE, you can easily isolate declared variables away from the global scope.</p>
-
-<p>This is how the syntax would look like:</p>
+		<p>If you wanted to see a list of services available on your Linux server/desktop, try the following command:</p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="c1">// ES5 Standard</span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">foo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
-<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nx">message</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Hello world&quot;</span>
-<span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">message</span><span class="p">);</span>
-<span class="p">})();</span>
+<pre><span></span><code>systemctl<span class="w"> </span>list-unit-files<span class="w"> </span>--type<span class="o">=</span>service
 </code></pre>
 </div>
 
-<p>They can be defined with arrow functions as well:</p>
+<p>Upon executing this command, you'll be able to see a list of services along with their statuses i.e whether the service is enabled or disabled.</p>
+
+<p>This can come in handy if you want to know the status of a specific service like <code>nginx</code>:</p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="c1">// ES6 Standard</span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">foo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nx">message</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Hello world&quot;</span>
-<span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">message</span><span class="p">);</span>
-<span class="p">})();</span>
+<pre><span></span><code>systemctl<span class="w"> </span>list-unit-files<span class="w"> </span>--type<span class="o">=</span>service<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s2">&quot;nginx&quot;</span>
 </code></pre>
 </div>
 
-<p>According to <strong>MDN Docs</strong>, it's a design pattern a.k.a Self-Executing Anonymous Function. There are two parts to this:</p>
-
-<ol>
-<li><p>The function that's enclosed within the Grouping Operator <code>()</code>, which would prevent it from polluting the global space and access to the variables within it's scope.</p></li>
-<li><p>The <code>();</code> will create the Immediately Invoked Function Expression on-the-fly.</p></li>
-</ol>
-
-<h2>When to use it?</h2>
-
-<p>There are many interesting cases such as if you are following the <a href="https://www.patterns.dev/posts/classic-design-patterns/">Module Pattern</a> especially if you want to avoid polluting the global namespace or just that you don't want your code to interfere with other code thus ensures code safety.</p>
-
-<h2>Readings</h2>
-
-<ul>
-<li><a href="https://developer.mozilla.org/en-US/docs/Glossary/IIFE">IIFE - MDN Web Docs Glossary</a></li>
-</ul>
+<p>Hope you found this tip useful.</p>
 
 	</div>
 	<div class="article-footer">
-		<time>August 10th, 2022</time>
+		<time>November 27th, 2022</time>
 		<ul class="tags">
-			
-			<li>
-				<a href="/category/javascript/">
-					JavaScript
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="day article">
-	<h2><a href="/blogmarks/posts/9th-august-2022">9th August 2022 &mdash; Blogmarks</a></h2>
-	<ul>
-<li><a href="https://charlieharrington.com/library/">Charlie Harlington's Library</a> &mdash; The library makes use of a Read-Only API for static datasets that doesn't require you to code. To know how it works, <a href="https://charlieharrington.com/sql-powered-reading-list/">click here</a> for a quick read.</li>
-<li><blockquote>Companies amass coordination power by having good ideas, executing them using more good ideas, and capturing a big part of the resulting value created (that is, when they’re not extracting value out of monopoly controls over markets). &mdash; <cite><a href="https://thesephist.com/posts/legacy/">Build Unix, Not Uber by The Sephist</a></cite></blockquote></li>
-<li><a href="https://quentin.delcourt.be/blog/software-engineering-books-to-read-and-reread/index.html">Software engineering books to read and unread</a> &mdash; Useful book recommendations by <a href="https://quentin.delcourt.be">Quentin Delcourt</a> that are timeless.</li>
-</ul>
-
-</div>
-
-				
-					
-<div class="day article">
-	<h2><a href="/blogmarks/posts/7th-august-2022">7th August 2022 &mdash; Blogmarks</a></h2>
-	<ul>
-<li><a href="https://github.com/WerWolv/ImHex">ImHex</a> &mdash; A Hex Editor for Reverse Engineers, Programmers and people who value their retinas when working at 3 AM.</li>
-<li><a href="https://www.youtube.com/c/Bisqwit/videos">Bisqwit</a> &mdash; Found this cool programmer on YouTube who writes game emulators and 3D renderers from scratch. Inspiring guy!</li>
-<li><a href="https://browser.engineering">Web Browser Engineering</a> &mdash; I came across this site recently and it was quite intriguing. I really wanted to get my hands-on this tutorial and learn more about Web Browsers. Thank you <a href="https://pavpanchekha.com">Pavel Panchekha</a> for this!</li>
-</ul>
-
-</div>
-
-				
-					
-<div class="day article">
-	<h2><a href="/blogmarks/posts/25th-july-2022">25th July 2022 &mdash; Blogmarks</a></h2>
-	<ul>
-<li><a href="https://beej.us/guide">Beej's Network Guide</a> &mdash; Beej has updated the classic Linux Network Programming Guide. Used to read back in my university days. Time to read it again 🤔</li>
-<li><a href="https://qubes-os.org/intro">Qubes OS</a> &mdash; A free open-source, security-oriented operating system. Quite interesting. I guess, it's targeted towards the paranoid 🤫</li>
-<li><blockquote>Every line of code is written without a reason, maintained out of weakness, and deleted by chance. &mdash; <cite><a href="https://programmingisterrible.com/post/139222674273/how-to-write-disposable-code-in-large-systems">Jean-Paul Sartre's Programming in ANSI C</a></cite></blockquote></li>
-</ul>
-
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/built-a-new-generative-art-pattern-generator">Built a new generative art pattern generator</a></h1>
-		<p class="description">Thought of giving a colorful touch to the site.</p>
-	</div>
-	<div class="article-body">
-		<p>Ten days ago, I launched a new makeover for the blog and I felt that it needed a little bit of a colorful yet unique touch.</p>
-
-<p>Recently, I started playing around with the concept of Generative Art and have been studying a lot of about various patterns like:</p>
-
-<ul>
-<li>Bauhaus</li>
-<li>Truchet Tiles</li>
-<li>Piet Mondrian</li>
-</ul>
-
-<p>So, I thought of writing a new pattern generator using CSS and JavaScript that would assign each article a unique, colorful pattern. Though, it's not yet quite complete, I would consider it to be an experimental feature to see if it goes well with the site.</p>
-
-<p>What do you think about it? Does it look good? What kind of patterns should I add to my generator?</p>
-
-<p>Interested on how it's implemented? Have a look at the <a href="/static/js/art.js">source code</a>.</p>
-
-<p>Hope you found this article to be inspiring!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>July 24th, 2022</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/update/">
-					Update
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/generative-art/">
-					Generative Art
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/css/">
-					CSS
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/javascript/">
-					JavaScript
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/download-a-webpage-along-with-its-assets-using-wget">Download a webpage along with it's assets using wget</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>I wanted to download a webpage along with it's assets and scripts, I tried using Chrome's <strong>Save as...</strong> option but it wasn't working as expected.</p>
-
-<p>I did a little googling and thought of using <code>wget</code> to do the job and it worked. Here's the command I used:</p>
-
-<div class="codehilite">
-<pre><span></span><code>wget<span class="w"> </span>-p<span class="w"> </span>-k<span class="w"> </span>-H<span class="w"> </span>--nd<span class="w"> </span>https://www.example.com
-</code></pre>
-</div>
-
-<p>Let's see what do those flags mean:</p>
-
-<ul>
-<li><code>-p</code>: Downloads all the necessary files to properly display the downloaded HTML page.</li>
-<li><code>-k</code>: After the download is complete, it converts the links in the document to make them suitable for local viewing.</li>
-<li><code>-H</code>: This would download files that spans different hosts.</li>
-<li><code>--nd</code>: While retrieving files recursively, it will not create a hierarchy of directories and downloads the files into a single directory instead.</li>
-</ul>
-
-<p>If you open <code>index.html</code> directly on the browser, the assets might be broken as the <code>-k</code> flag doesn't seem to make the assets relative to the root directory. In order to view it, you can view it on a localhost server like WAMP, XAMPP or if you are using Python, you can type <code>python -m http.server</code> and view your downloaded file.</p>
-
-<p>Might be a bit messy but gets the job done.</p>
-
-	</div>
-	<div class="article-footer">
-		<time>July 17th, 2022</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/wget/">
-					wget
-				</a>
-			</li>
 			
 			<li>
 				<a href="/category/linux/">
@@ -324,21 +509,14 @@
 				</a>
 			</li>
 			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
 		</ul>
 	</div>
-</div>
-
-				
-					
-<div class="day article">
-	<h2><a href="/blogmarks/posts/16th-july-2022">16th July 2022 &mdash; Blogmarks</a></h2>
-	<ul>
-<li><a href="https://bearblog.dev">Bear Blog</a> &mdash; A privacy-first, no-nonsense, super-fast blogging platform. Not really needed for me but quite an interesting platform.</li>
-<li><blockquote>Becoming a good engineer is about collecting experience. Each project, even small ones, is a chance to add new techniques and tools to your toolbox. Where this delivers even more value is when you can solve problems by pairing techniques learned on one project with tools learned working on another. It all adds up. &mdash; <cite><a href="https://addyosmani.com/blog/software-engineering-soft-parts/">Addy Osmani</a></cite></blockquote></li>
-<li><a href="https://cohost.org/blackle/post/42994-contraption">Interactive Mechanical Contraption in pure CSS</a> &mdash; Believe it or not, it's unreal. It doesn't even look like it's done using CSS. Love it! ❤️</li>
-<li><a href="https://defensivecss.dev">Defensive CSS</a> &mdash; I came across this site two days ago. I like how Ahmad Shadeed describes different CSS patterns in detail.</li>
-</ul>
-
 </div>
 
 				
@@ -381,11 +559,11 @@
 		
 	
 		
-			<a class="" href="/pages/21">...</a>
+			<a class="" href="/pages/23">...</a>
 		
 	
 		
-			<a class="" href="/pages/28">28</a>
+			<a class="" href="/pages/30">30</a>
 		
 	
 
@@ -422,28 +600,35 @@
 		<li>
 			<a href="/category/linux/">
 				Linux
-				<span class="count">22</span>
+				<span class="count">24</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/laravel/">
 				Laravel
-				<span class="count">18</span>
+				<span class="count">20</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/devops/">
 				DevOps
-				<span class="count">15</span>
+				<span class="count">20</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/php/">
 				PHP
-				<span class="count">13</span>
+				<span class="count">14</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/git/">
+				Git
+				<span class="count">12</span>
 			</a>
 		</li>
 		
@@ -490,9 +675,9 @@
 		</li>
 		
 		<li>
-			<a href="/category/git/">
-				Git
-				<span class="count">10</span>
+			<a href="/category/mysql/">
+				MySQL
+				<span class="count">9</span>
 			</a>
 		</li>
 		
@@ -507,13 +692,6 @@
 			<a href="/category/unix/">
 				UNIX
 				<span class="count">8</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/mysql/">
-				MySQL
-				<span class="count">7</span>
 			</a>
 		</li>
 		
@@ -535,6 +713,13 @@
 			<a href="/category/essay/">
 				Essay
 				<span class="count">6</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/c/">
+				C#
+				<span class="count">5</span>
 			</a>
 		</li>
 		
@@ -567,16 +752,16 @@
 		</li>
 		
 		<li>
-			<a href="/category/c/">
-				C#
+			<a href="/category/arcade-challenge/">
+				Arcade Challenge
 				<span class="count">4</span>
 			</a>
 		</li>
 		
 		<li>
-			<a href="/category/arcade-challenge/">
-				Arcade Challenge
-				<span class="count">4</span>
+			<a href="/category/databases/">
+				Databases
+				<span class="count">3</span>
 			</a>
 		</li>
 		
@@ -619,6 +804,48 @@
 			<a href="/category/general/">
 				General
 				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/vcs/">
+				VCS
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/ubuntu/">
+				Ubuntu
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/powershell/">
+				PowerShell
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/smtp/">
+				SMTP
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/sql/">
+				SQL
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/net/">
+				.NET
+				<span class="count">2</span>
 			</a>
 		</li>
 		
@@ -728,6 +955,55 @@
 		</li>
 		
 		<li>
+			<a href="/category/phpstorm/">
+				PHPStorm
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/elastic-search/">
+				Elastic Search
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/kibana/">
+				Kibana
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/data-manipulation/">
+				Data Manipulation
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/telnet/">
+				Telnet
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/iis/">
+				IIS
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/centos/">
+				CentOS
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/net-core/">
 				.NET Core
 				<span class="count">1</span>
@@ -819,22 +1095,8 @@
 		</li>
 		
 		<li>
-			<a href="/category/ubuntu/">
-				Ubuntu
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/ssh/">
 				SSH
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/databases/">
-				Databases
 				<span class="count">1</span>
 			</a>
 		</li>

@@ -77,467 +77,265 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/add-search-functionality-to-your-static-site">Add search functionality to your static site</a></h1>
+		<h1 class="heading"><a href="/til/posts/create-a-unique-multidimensional-array-using-a-key-index">Create a unique multidimensional array using a key index</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>If you have a static site or a blog generated using a static-site generator but want to add a simple search functionality? This could be of your interest.</p>
-
-<p>I'll take you through an example on how to build a simple search engine using a JSON file and AJAX requests.</p>
-
-<h2>1. Generate a JSON dump of your site</h2>
-
-<p>Although, it's not a database but it can act as an alternative to having one. Your JSON dump can contain any metadata that you wanted your users to search in your site. In my case, I thought of allowing the user to search <code>title</code> and <code>category</code>. </p>
-
-<p>Is your site generated using Python and want to create a JSON dump? <a href="til/posts/read-and-write-json-to-a-file-in-python">Read this article</a> for more information.</p>
-
-<h2>2. Build search functionality</h2>
-
-<p>I won't go through the aspects of UI design in this article as I feel that it's subjective and depends on one's preferences but let's keep it simple enough for this tutorial.</p>
-
-<p>Before you begin writing the function, place this component in your HTML template:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="p">&lt;</span><span class="nt">div</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;searchbox&quot;</span><span class="p">&gt;</span>
-    <span class="p">&lt;</span><span class="nt">input</span> <span class="na">id</span><span class="o">=</span><span class="s">&quot;searchinput&quot;</span> <span class="na">type</span><span class="o">=</span><span class="s">&quot;text&quot;</span><span class="p">&gt;</span>
-    <span class="p">&lt;</span><span class="nt">div</span> <span class="na">id</span><span class="o">=</span><span class="s">&quot;searchresults&quot;</span><span class="p">&gt;</span>
-        <span class="p">&lt;</span><span class="nt">ul</span><span class="p">&gt;&lt;/</span><span class="nt">ul</span><span class="p">&gt;</span>
-    <span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
-<span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
-</code></pre>
-</div>
-
-<p>Anyway, here's the function and you can place it directly on your template or in a separate <code>.js</code> file:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">_url</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;path-of-your-file.json&quot;</span><span class="p">;</span>
-
-<span class="nx">$</span><span class="p">(</span><span class="nb">document</span><span class="p">).</span><span class="nx">ready</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
-<span class="w">    </span><span class="nx">$</span><span class="p">(</span><span class="s1">&#39;#searchinput&#39;</span><span class="p">).</span><span class="nx">keyup</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">){</span>
-<span class="w">        </span><span class="kd">var</span><span class="w"> </span><span class="nx">keyword</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">$</span><span class="p">(</span><span class="k">this</span><span class="p">).</span><span class="nx">val</span><span class="p">();</span>
-<span class="w">        </span><span class="kd">var</span><span class="w"> </span><span class="nx">code</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">e</span><span class="p">.</span><span class="nx">keyCode</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="nx">e</span><span class="p">.</span><span class="nx">keyCode</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="nx">e</span><span class="p">.</span><span class="nx">which</span><span class="p">;</span>
-
-<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="nx">code</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mf">13</span><span class="p">){</span>
-<span class="w">            </span><span class="nx">$</span><span class="p">.</span><span class="nx">ajax</span><span class="p">({</span>
-<span class="w">                </span><span class="nx">url</span><span class="o">:</span><span class="w"> </span><span class="nx">_url</span><span class="p">,</span>
-<span class="w">                </span><span class="nx">type</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;GET&quot;</span><span class="p">,</span>
-<span class="w">                </span><span class="k">async</span><span class="o">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
-<span class="w">            </span><span class="p">}).</span><span class="nx">done</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">){</span>
-<span class="w">                </span><span class="kd">var</span><span class="w"> </span><span class="nx">results</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="p">;</span>
-<span class="w">                </span><span class="k">if</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">articles</span><span class="p">.</span><span class="nx">length</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">0</span><span class="p">){</span>
-<span class="w">                    </span><span class="nx">$</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">articles</span><span class="p">,</span><span class="w"> </span><span class="kd">function</span><span class="p">(</span><span class="nx">key</span><span class="p">,</span><span class="w"> </span><span class="nx">value</span><span class="p">){</span>
-<span class="w">                        </span><span class="k">if</span><span class="p">(</span><span class="nx">v</span><span class="p">.</span><span class="nx">title</span><span class="p">.</span><span class="nx">search</span><span class="p">(</span><span class="nx">pattern</span><span class="p">)</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="o">-</span><span class="mf">1</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nx">v</span><span class="p">.</span><span class="nx">category</span><span class="p">.</span><span class="nx">search</span><span class="p">(</span><span class="nx">pattern</span><span class="p">)</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="o">-</span><span class="mf">1</span><span class="p">){</span>
-<span class="w">                            </span><span class="nx">results</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="sb">`&lt;li&gt;&lt;a href=&quot;</span><span class="si">${</span><span class="nx">v</span><span class="p">.</span><span class="nx">slug</span><span class="si">}</span><span class="sb">&quot;&gt;</span><span class="si">${</span><span class="nx">v</span><span class="p">.</span><span class="nx">title</span><span class="si">}</span><span class="sb">&lt;/a&gt;&lt;/li&gt;`</span><span class="p">;</span>
-<span class="w">                        </span><span class="p">}</span>
-<span class="w">                    </span><span class="p">});</span>
-<span class="w">                    </span><span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#searchresults ul&quot;</span><span class="p">).</span><span class="nx">html</span><span class="p">(</span><span class="nx">results</span><span class="p">);</span>
-<span class="w">                </span><span class="p">}</span>
-<span class="w">            </span><span class="p">});</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">});</span>
-<span class="p">});</span>
-</code></pre>
-</div>
-
-<p>That's it! Now, when you execute your script, you should be able to view your search results just like as if it were using a database.</p>
-
-<p>If you want to make it similar to mine, please feel free to inspect the code on the browser or go to my <a href="https://github.com/megacolorboy/personal-blog/blob/master/static/js/search.js">repository</a> to see how it works.</p>
-
-	</div>
-	<div class="article-footer">
-		<time>June 6th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/javascript/">
-					JavaScript
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/read-and-write-json-to-a-file-in-python">Read and Write JSON to a file in Python</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>You can make use of the built-in <code>json</code> package in Python to read and write JSON data to a file.</p>
-
-<h2>Writing JSON to a file</h2>
-
-<p>You can store the information in a dictionary or <code>dict</code> object, which can contain any type of data like integers, booleans, arrays or nested objects.</p>
-
-<p>By using a <code>dict</code> object, the <code>json</code> package will transform your dictionary into a serialized JSON string.</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="kn">import</span> <span class="nn">json</span>
-
-<span class="n">dataObj</span> <span class="o">=</span> <span class="p">{}</span>
-<span class="n">dataObj</span><span class="p">[</span><span class="s1">&#39;posts&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="n">dataObj</span><span class="p">[</span><span class="s1">&#39;posts&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
-    <span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;Hello world&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;category&#39;</span><span class="p">:</span> <span class="s1">&#39;Introduction&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;slug&#39;</span><span class="p">:</span> <span class="s1">&#39;hello-world&#39;</span>
-<span class="p">})</span>
-
-<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;data.json&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
-    <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">dataObj</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span>
-</code></pre>
-</div>
-
-<h2>Reading JSON from a file</h2>
-
-<p>Reading is as easy as writing to a file. Using the same package again, we can parse the JSON string directly from the file.</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="kn">import</span> <span class="nn">json</span>
-
-<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;data.json&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
-    <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;posts&#39;</span><span class="p">]:</span>
-        <span class="nb">print</span> <span class="s1">&#39;Title: &#39;</span> <span class="o">+</span> <span class="n">item</span><span class="p">[</span><span class="s1">&#39;title&#39;</span><span class="p">]</span>
-        <span class="nb">print</span> <span class="s1">&#39;Category: &#39;</span> <span class="o">+</span> <span class="n">item</span><span class="p">[</span><span class="s1">&#39;category&#39;</span><span class="p">]</span>
-        <span class="nb">print</span> <span class="s1">&#39;Slug: &#39;</span> <span class="o">+</span> <span class="n">item</span><span class="p">[</span><span class="s1">&#39;slug&#39;</span><span class="p">]</span>
-</code></pre>
-</div>
-
-<p>I read about different package alternatives like <code>simplejson</code> but I guess for now, this is a great way to get started especially, if you're working with web applications and are interacting with a serialized JSON data on a daily basis.</p>
-
-	</div>
-	<div class="article-footer">
-		<time>June 5th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/python/">
-					Python
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/build-a-menu-tree-using-recursion">Build a menu tree using recursion</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Hmm, what is the most efficient way to build a menu tree? &#x1F605;</p>
-
-<p>Most people would go for a brute force solution if it's a straightforward menu but would that be possible if we intend to create multiple levels of menu items?</p>
-
-<p>Sure, you could but as the number of loops increases, the complexity of time increases too. Not to forget, you'll end up writing code that'll look messy and unscalable.</p>
-
-<p>I always loved the idea and simplicity of using recursion. So, I thought of exercising my recursion skills by writing a method that can generate a dynamic menu with <strong>x</strong> number of parent and child menu items.</p>
-
-<p>The following example is written in PHP:</p>
+		<p>Let's say, you have a multidimensional array like this:</p>
 
 <div class="codehilite">
 <pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="k">class</span> <span class="nc">FooController</span> <span class="k">extends</span> <span class="nx">Controller</span> <span class="p">{</span>
-    <span class="k">protected</span> <span class="nv">$menuHTML</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">;</span>
+<span class="nv">$cars</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">[</span>
+        <span class="s2">&quot;id&quot;</span> <span class="o">=&gt;</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="s2">&quot;name&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;Mercedes Benz&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;color&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;Black&quot;</span>
+    <span class="p">],</span>
+    <span class="p">[</span>
+        <span class="s2">&quot;id&quot;</span> <span class="o">=&gt;</span> <span class="mi">2</span><span class="p">,</span>
+        <span class="s2">&quot;name&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;Toyota&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;color&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;Red&quot;</span>
+    <span class="p">],</span>
+    <span class="p">[</span>
+        <span class="s2">&quot;id&quot;</span> <span class="o">=&gt;</span> <span class="mi">3</span><span class="p">,</span>
+        <span class="s2">&quot;name&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;Toyota&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;color&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;White&quot;</span>
+    <span class="p">],</span>
+    <span class="p">[</span>
+        <span class="s2">&quot;id&quot;</span> <span class="o">=&gt;</span> <span class="mi">4</span><span class="p">,</span>
+        <span class="s2">&quot;name&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;Nissan&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;color&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;Grey&quot;</span>
+    <span class="p">],</span>
+<span class="p">];</span>
+<span class="cp">?&gt;</span>
+</code></pre>
+</div>
 
-    <span class="k">private</span> <span class="k">function</span> <span class="nf">menuItems</span><span class="p">()</span> <span class="p">{</span>
-        <span class="k">return</span> <span class="p">[</span>
-            <span class="p">[</span>
-                <span class="s1">&#39;title&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;Item 1&#39;</span><span class="p">,</span>
-                <span class="s1">&#39;link&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;/item-1&#39;</span>
-            <span class="p">],</span>
-            <span class="p">[</span>
-                <span class="s1">&#39;title&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;Item 2&#39;</span><span class="p">,</span>
-                <span class="s1">&#39;link&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;/item-2&#39;</span><span class="p">,</span>
-                <span class="s1">&#39;child_items&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span>
-                    <span class="p">[</span>
-                       <span class="s1">&#39;title&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;Item 2.1&#39;</span><span class="p">,</span>
-                       <span class="s1">&#39;link&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;/item-2.1&#39;</span>
-                    <span class="p">],</span>       
-                    <span class="p">[</span>
-                        <span class="s1">&#39;title&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;Item 2.2&#39;</span><span class="p">,</span>
-                        <span class="s1">&#39;link&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;/item-2.2&#39;</span>
-                    <span class="p">],</span>       
-                <span class="p">]</span>
-            <span class="p">],</span>
-            <span class="p">[</span>
-                <span class="s1">&#39;title&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;Item 3&#39;</span><span class="p">,</span>
-                <span class="s1">&#39;link&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;/item-3&#39;</span>
-            <span class="p">],</span>
-            <span class="p">[</span>
-                <span class="s1">&#39;title&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;Item 4&#39;</span><span class="p">,</span>
-                <span class="s1">&#39;link&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;/item-4&#39;</span>
-            <span class="p">],</span>
-        <span class="p">];</span>
-    <span class="p">}</span>
+<p>And say, you want to be able to return unique cars by <code>name</code> or <code>color</code>, use this method:</p>
 
-    <span class="c1">// Build a menu tree</span>
-    <span class="k">private</span> <span class="k">function</span> <span class="nf">buildMenu</span><span class="p">(</span><span class="nv">$menu</span><span class="p">)</span> <span class="p">{</span>
-        <span class="k">foreach</span><span class="p">(</span><span class="nv">$menu</span> <span class="k">as</span> <span class="nv">$menuItem</span><span class="p">){</span>
-            <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">menuHTML</span> <span class="o">.=</span> <span class="s1">&#39;&lt;li class=&quot;item&quot;&gt;&#39;</span><span class="p">;</span>
-            <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">menuHTML</span> <span class="o">.=</span> <span class="s1">&#39;&lt;a href=&quot;&#39;</span><span class="o">.</span><span class="nv">$menuItem</span><span class="p">[</span><span class="s1">&#39;link&#39;</span><span class="p">]</span><span class="o">.</span><span class="s1">&#39;&quot;&gt;&#39;</span><span class="o">.</span><span class="nv">$menuItem</span><span class="p">[</span><span class="s1">&#39;title&#39;</span><span class="p">]</span><span class="o">.</span><span class="s1">&#39;&lt;/a&gt;&#39;</span><span class="p">;</span>
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="k">function</span> <span class="nf">multi_array_unique</span><span class="p">(</span><span class="nv">$array</span><span class="p">,</span> <span class="nv">$key</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nv">$i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="nv">$temp_array</span> <span class="o">=</span> <span class="p">[];</span>
+    <span class="nv">$key_array</span> <span class="o">=</span> <span class="p">[];</span>
 
-            <span class="c1">// Check if it has any child items</span>
-            <span class="k">if</span><span class="p">(</span><span class="nb">array_key_exists</span><span class="p">(</span><span class="s2">&quot;child_items&quot;</span><span class="p">,</span> <span class="nv">$menuItem</span><span class="p">){</span>
-                <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">menuHTML</span> <span class="o">.=</span> <span class="s1">&#39;&lt;ul class=&quot;submenu&quot;&gt;&#39;</span><span class="p">;</span>
-                <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">buildMenu</span><span class="p">(</span><span class="nv">$menuItem</span><span class="p">[</span><span class="s1">&#39;child_items&#39;</span><span class="p">]);</span>
-                <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">menuHTML</span> <span class="o">.=</span> <span class="s1">&#39;&lt;/ul&gt;&#39;</span><span class="p">;</span>
-            <span class="p">}</span>
-
-            <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">menuHTML</span> <span class="o">.=</span> <span class="s1">&#39;&lt;/li&gt;&#39;</span>
+    <span class="k">foreach</span><span class="p">(</span><span class="nv">$array</span> <span class="k">as</span> <span class="nv">$val</span><span class="p">)</span> <span class="p">{</span>
+        <span class="c1">// insert only unique keys</span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nb">in_array</span><span class="p">(</span><span class="nv">$val</span><span class="p">[</span><span class="nv">$key</span><span class="p">],</span> <span class="nv">$key_array</span><span class="p">))</span> <span class="p">{</span>
+            <span class="nv">$key_array</span><span class="p">[</span><span class="nv">$i</span><span class="p">]</span> <span class="o">=</span> <span class="nv">$val</span><span class="p">[</span><span class="nv">$key</span><span class="p">];</span>
+            <span class="nv">$temp_array</span><span class="p">[</span><span class="nv">$i</span><span class="p">]</span> <span class="o">=</span> <span class="nv">$val</span><span class="p">;</span>
         <span class="p">}</span>
+        <span class="nv">$i</span><span class="o">++</span><span class="p">;</span>
     <span class="p">}</span>
-
-    <span class="c1">// Return the complete menu</span>
-    <span class="k">private</span> <span class="k">function</span> <span class="nf">getMenu</span><span class="p">(</span><span class="nv">$menu</span><span class="p">)</span> <span class="p">{</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">buildMenu</span><span class="p">(</span><span class="nv">$menu</span><span class="p">);</span>
-        <span class="k">return</span> <span class="s1">&#39;&lt;ul class=&quot;mainmenu&quot;&gt;&#39;</span><span class="o">.</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">menuHTML</span><span class="o">.</span><span class="s1">&#39;&lt;/ul&gt;&#39;</span><span class="p">;</span>
-    <span class="p">}</span>
-
-    <span class="k">public</span> <span class="k">function</span> <span class="fm">__construct</span><span class="p">()</span> <span class="p">{</span>
-        <span class="nx">pre</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">getMenu</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">menuItems</span><span class="p">());</span>
-        <span class="k">die</span><span class="p">;</span>
-    <span class="p">}</span>
+    <span class="k">return</span> <span class="nv">$temp_array</span><span class="p">;</span>
 <span class="p">}</span>
 <span class="cp">?&gt;</span>
 </code></pre>
 </div>
 
-<p>Once you run it, you'll see something like this:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="p">&lt;</span><span class="nt">ul</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;mainmenu&quot;</span><span class="p">&gt;</span>
-    <span class="p">&lt;</span><span class="nt">li</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;item&quot;</span><span class="p">&gt;&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;/item-1&quot;</span><span class="p">&gt;</span>Item 1<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;&lt;/</span><span class="nt">li</span><span class="p">&gt;</span>
-    <span class="p">&lt;</span><span class="nt">li</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;item&quot;</span><span class="p">&gt;&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;/item-2&quot;</span><span class="p">&gt;</span>Item 2<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;</span>
-        <span class="p">&lt;</span><span class="nt">ul</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;submenu&quot;</span><span class="p">&gt;</span>
-            <span class="p">&lt;</span><span class="nt">li</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;item&quot;</span><span class="p">&gt;&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;/item-2.1&quot;</span><span class="p">&gt;</span>Item 2.1<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;&lt;/</span><span class="nt">li</span><span class="p">&gt;</span>
-            <span class="p">&lt;</span><span class="nt">li</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;item&quot;</span><span class="p">&gt;&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;/item-2.2&quot;</span><span class="p">&gt;</span>Item 2.2<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;&lt;/</span><span class="nt">li</span><span class="p">&gt;</span>
-        <span class="p">&lt;/</span><span class="nt">ul</span><span class="p">&gt;</span>
-    <span class="p">&lt;/</span><span class="nt">li</span><span class="p">&gt;</span>
-    <span class="p">&lt;</span><span class="nt">li</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;item&quot;</span><span class="p">&gt;&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;/item-3&quot;</span><span class="p">&gt;</span>Item 3<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;&lt;/</span><span class="nt">li</span><span class="p">&gt;</span>
-    <span class="p">&lt;</span><span class="nt">li</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;item&quot;</span><span class="p">&gt;&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;/item-4&quot;</span><span class="p">&gt;</span>Item 4<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;&lt;/</span><span class="nt">li</span><span class="p">&gt;</span>
-<span class="p">&lt;/</span><span class="nt">ul</span><span class="p">&gt;</span>
-</code></pre>
-</div>
-
-<p>There a lot of ways to achieve this same result using recursion but it sure is easier to read, scalable and extensible, ain't it?</p>
-
-	</div>
-	<div class="article-footer">
-		<time>June 3rd, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/algorithms/">
-					Algorithms
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/using-default-function-parameters-in-internet-explorer">Using default function parameters in Internet Explorer</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Today, I wrote a simple method that fetches images from the database via AJAX and also, I defined an empty object as a default parameter:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="kd">function</span><span class="w"> </span><span class="nx">fetchImages</span><span class="p">(</span><span class="nx">obj</span><span class="o">=</span><span class="p">{}){</span>
-<span class="w">    </span><span class="c1">// some code here...</span>
-<span class="p">}</span>
-
-<span class="nx">fetchImages</span><span class="p">();</span>
-</code></pre>
-</div>
-
-<p>The default <code>obj</code> parameter would contain extra parameters like <code>id</code>, <code>slug</code> and <code>page</code>, which would be then used to fetch a particular group of images, else, it'll fetch a random set of images.</p>
-
-<p>This method worked fine in Google Chrome and Mozilla Firefox but not in Internet Explorer. I thought of inspecting the code and I was facing weird errors like <code>undefined</code> or <code>Expected: ')'</code> on the IE console.</p>
-
-<p>Luckily, I had compared it to the other methods that didn't have any default parameters, so I did a little research and turns out that according to <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/default_parameters">Mozilla's documentation</a>, default function parameters are proposed by the ES6 syntax and at this point, I realized that Internet Explorer <strong>doesn't support ES6 syntax</strong>. What a bummer! &#x1F612;</p>
-
-<p>However, there's a way to prevent this from happening by rewriting the method like this:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="kd">function</span><span class="w"> </span><span class="nx">fetchImages</span><span class="p">(</span><span class="nx">obj</span><span class="p">){</span>
-<span class="w">    </span><span class="c1">// Check if obj is defined, else make it assign it as an empty object.</span>
-<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">obj</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="p">{};</span>
-
-<span class="w">    </span><span class="c1">// some code here...</span>
-<span class="p">}</span>
-</code></pre>
-</div>
-
-<p>And BAM! The method worked flawlessly just as it's intended to do so. &#x1F60E;</p>
-
-<p>Addtionally, you may refer to the <a href="http://kangax.github.io/compat-table/es6/">ECMAScript 6 Compatibility table</a> that you might find it quite helpful to check browser compatiblity for Internet Explorer versions 11 and under.</p>
-
-	</div>
-	<div class="article-footer">
-		<time>June 3rd, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/javascript/">
-					JavaScript
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-identify-the-current-target-of-an-event">How to identify the current target of an event?</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Using the <code>event.currentTarget</code> property which belongs to the <code>Event</code> interface can help you in many ways to identify target of the current event especially if you want to fetch attributes or modify the classname of an element that belongs to a group of elements sharing the same classname.</p>
-
-<p>There are many examples but I chose to write a small snippet of highlighting a tab:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="kd">function</span><span class="w"> </span><span class="nx">highlightTab</span><span class="p">(</span><span class="nx">e</span><span class="p">){</span>
-<span class="w">    </span><span class="c1">// Find elements that has the classname &#39;active&#39; </span>
-<span class="w">    </span><span class="c1">// and remove them</span>
-<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="nb">document</span><span class="p">.</span><span class="nx">querySelector</span><span class="p">(</span><span class="s1">&#39;div.tab_item.active&#39;</span><span class="p">)</span><span class="w"> </span><span class="o">!==</span><span class="w"> </span><span class="kc">null</span><span class="p">){</span>
-<span class="w">        </span><span class="nb">document</span><span class="p">.</span><span class="nx">querySelector</span><span class="p">(</span><span class="s1">&#39;div.tab_item.active&#39;</span><span class="p">).</span><span class="nx">classList</span><span class="p">.</span><span class="nx">remove</span><span class="p">(</span><span class="s1">&#39;active&#39;</span><span class="p">);</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="c1">// Add active class to target node</span>
-<span class="w">    </span><span class="nx">e</span><span class="p">.</span><span class="nx">currentTarget</span><span class="p">.</span><span class="nx">className</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="s2">&quot; active&quot;</span><span class="p">;</span>
-
-<span class="w">    </span><span class="c1">// Add active class to target&#39;s child node</span>
-<span class="w">    </span><span class="c1">// e.currentTarget.querySelector(&#39;a.child_anchor_link&#39;).className += &quot; active&quot;;</span>
-
-<span class="w">    </span><span class="c1">// Add active class to target&#39;s parent node</span>
-<span class="w">    </span><span class="c1">// e.currentTarget.parentNode.className += &quot; active&quot;;</span>
-<span class="p">}</span>
-</code></pre>
-</div>
-
-<p>Read <a href="https://developer.mozilla.org/en-US/docs/Web/API/Event/currentTarget">Mozilla's official documentation</a> to know more about getting the current target of an event and it's compatibility with different web browsers.</p>
-
-	</div>
-	<div class="article-footer">
-		<time>June 1st, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/javascript/">
-					JavaScript
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/allow-inline-elements-in-ckeditor">Allow inline elements in CKEditor</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Using CKEditor is awesome but I hate it when it removes inline elements like <code>&lt;span&gt;</code>, <code>&lt;i&gt;</code> or any DOM elements that contain attributes like classnames or ID, by default.</p>
-
-<p>Well, CKEditor's <a href="https://ckeditor.com/docs/ckeditor4/latest/guide/dev_allowed_content_rules.html">documentation</a> states that you can allow it by adding this line to your configuration:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">editor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">CKEDITOR</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="s1">&#39;textarea_edit&#39;</span><span class="p">,{</span>
-<span class="w">    </span><span class="nx">allowedContent</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
-<span class="p">});</span>
-</code></pre>
-</div>
-
-<p>After adding this line, CKEditor will stop removing those elements from your HTML content but it's also open to all tags. </p>
-
-<p>You can set rules to allow only specific ones like this:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">editor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">CKEDITOR</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="s1">&#39;textarea_edit&#39;</span><span class="p">,{</span>
-<span class="w">    </span><span class="nx">allowedContent</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;span; i; ul; li; a[!href]&#39;</span>
-<span class="p">});</span>
-</code></pre>
-</div>
-
-<p>Hope this helps you out! &#x1F60A;</p>
-
-	</div>
-	<div class="article-footer">
-		<time>June 1st, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/javascript/">
-					JavaScript
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/check-if-the-current-route-exists-before-fetching-its-parameters">Check if the current route exists before fetching it's parameters</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>If you've ever come across this type of error when you're trying to fetch parameters of the current route:</p>
-
-<div class="codehilite">
-<pre><span></span><code>Symfony\Component\Debug\Exception\FatalThrowableError: Call to member function parameters() on null
-</code></pre>
-</div>
-
-<p>It's probably because the route doesn't exist, which is why it failed to call the <code>parameters()</code> function. It can be easily resolved by checking if the route exists before calling the function:</p>
+<p>Call this method from anywhere in your code like this:</p>
 
 <div class="codehilite">
 <pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="k">namespace</span> <span class="nx">App\Http\Controllers</span><span class="p">;</span>
-<span class="k">use</span> <span class="nx">Route</span><span class="p">;</span>
+<span class="nv">$unique_cars</span> <span class="o">=</span> <span class="nx">multi_array_unique</span><span class="p">(</span><span class="nv">$cars</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">);</span>
+<span class="nx">dd</span><span class="p">(</span><span class="nv">$unique_cars</span><span class="p">);</span>
+<span class="cp">?&gt;</span>
+</code></pre>
+</div>
 
-<span class="k">class</span> <span class="nc">FooController</span> <span class="k">extends</span> <span class="nx">Controller</span> <span class="p">{</span>
-    <span class="k">public</span> <span class="k">function</span> <span class="fm">__construct</span><span class="p">(</span><span class="nx">Request</span> <span class="nv">$request</span><span class="p">){</span>
-        <span class="c1">// insert code here...</span>
+<p>And now, you'll get something like this:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="p">[</span>
+    <span class="p">[</span>
+        <span class="s2">&quot;id&quot;</span> <span class="o">=&gt;</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="s2">&quot;name&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;Mercedes Benz&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;color&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;Black&quot;</span>
+    <span class="p">],</span>
+    <span class="p">[</span>
+        <span class="s2">&quot;id&quot;</span> <span class="o">=&gt;</span> <span class="mi">2</span><span class="p">,</span>
+        <span class="s2">&quot;name&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;Toyota&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;color&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;Red&quot;</span>
+    <span class="p">],</span>
+    <span class="p">[</span>
+        <span class="s2">&quot;id&quot;</span> <span class="o">=&gt;</span> <span class="mi">4</span><span class="p">,</span>
+        <span class="s2">&quot;name&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;Nissan&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;color&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;Grey&quot;</span>
+    <span class="p">],</span>
+<span class="p">];</span>
+<span class="cp">?&gt;</span>
+</code></pre>
+</div>
+
+<p>You might wonder why I tried this instead of PHP's <code>array_unique()</code> method and the reason I didn't use it is because it doesn't support multidimensional arrays.</p>
+
+<p>Hope you found this useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>July 18th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/php/">
+					PHP
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/extract-youtube-channel-id-from-url">Extract YouTube Channel ID from URL</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Using PHP's in-built function, <code>parse_url</code>, you can write a helper method to pull the channel ID off a YouTube URL especially if you're pulling videos using YouTube's Data API. Here's the code:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="k">public</span> <span class="k">function</span> <span class="nf">extractChannelID</span><span class="p">(</span><span class="nv">$url</span><span class="p">){</span>
+    <span class="c1">// Parse the link and trim any whitespaces</span>
+    <span class="nv">$parsed_link</span> <span class="o">=</span> <span class="nb">parse_url</span><span class="p">(</span><span class="nb">rtrim</span><span class="p">(</span><span class="nv">$url</span><span class="p">,</span> <span class="s1">&#39;/&#39;</span><span class="p">));</span>
+
+    <span class="c1">// Return the channel ID if it matches the pattern</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nb">isset</span><span class="p">(</span><span class="nv">$parsed_link</span><span class="p">[</span><span class="s1">&#39;path&#39;</span><span class="p">])</span> <span class="o">&amp;&amp;</span> <span class="nb">preg_match</span><span class="p">(</span><span class="s1">&#39;/^\/channel\/(([^\/])+?)$/&#39;</span><span class="p">,</span> <span class="nv">$parsed_link</span><span class="p">[</span><span class="s1">&#39;path&#39;</span><span class="p">],</span> <span class="nv">$matches</span><span class="p">))</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nv">$matches</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
     <span class="p">}</span>
 
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">foo</span><span class="p">(</span><span class="nx">Request</span> <span class="nv">$request</span><span class="p">){</span>
-        <span class="nv">$params</span> <span class="o">=</span> <span class="nv">$request</span><span class="o">-&gt;</span><span class="na">route</span><span class="p">()</span> <span class="o">?</span> <span class="nx">Route</span><span class="o">::</span><span class="na">current</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">parameters</span><span class="p">()</span> <span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">;</span>
-        <span class="k">return</span> <span class="nv">$params</span><span class="p">;</span>
-    <span class="p">}</span>
+    <span class="k">throw</span> <span class="k">new</span> <span class="nx">Exception</span><span class="p">(</span><span class="s2">&quot;This </span><span class="si">{</span><span class="nv">$url</span><span class="si">}</span><span class="s2"> is not a valid YouTube channel URL&quot;</span><span class="p">);</span>
+    <span class="k">return</span> <span class="k">null</span><span class="p">;</span>
 <span class="p">}</span>
 <span class="cp">?&gt;</span>
 </code></pre>
 </div>
 
-<p>Although, the sample code above is to fetch parameters of the current route, you can apply this before calling any method from the <code>Route</code> class.</p>
+<p>Writing tiny methods like these can help save time and be reusable in more than one context. </p>
 
-<p>This works for version 5.2 and above.</p>
+<p>Hope you find this tip useful! &#x1F601;</p>
 
 	</div>
 	<div class="article-footer">
-		<time>May 30th, 2020</time>
+		<time>July 13th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/php/">
+					PHP
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/using-zipcloak-to-encrypt-files-within-an-archive">Using zipcloak to encrypt files within an archive</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Whenever you're sending a bunch of files or an archive that contains sensitive or confidential information, it's wise to encrypt before you send it to the person that you intend to.</p>
+
+<p>Using <code>zipcloak</code>, you'll be able to encrypt files within your existing archive.</p>
+
+<p>Do the following after you've <a href="til/posts/zip-a-file">created a zip archive</a>:</p>
+
+<div class="codehilite">
+<pre><span></span><code>zipcloak<span class="w"> </span>files.zip<span class="w">    </span>
+</code></pre>
+</div>
+
+<p>Now, you'll be prompted twice to enter a new password and verify your entered password. If they match, your archive will get encrypted. So whenever, you try to unzip or open using an Archive Manager, you'll be prompted to enter the password or else, you won't be able to access it.</p>
+
+<p>You also have the choice of not encrypting the original archive and creating a new one instead, just like this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>zipcloak<span class="w"> </span>files.zip<span class="w"> </span>-O<span class="w"> </span>encrypted.zip<span class="w">    </span>
+</code></pre>
+</div>
+
+<p>On the other hand, if you do wish to remove the encryption from your archive, just type the following:</p>
+
+<div class="codehilite">
+<pre><span></span><code>zipcloak<span class="w"> </span>-d<span class="w"> </span>files.zip
+</code></pre>
+</div>
+
+<p>And you'll be prompted again to enter your password before it removes it's encryption.</p>
+
+<p>Hope this helps you out! &#x1F601;</p>
+
+	</div>
+	<div class="article-footer">
+		<time>July 7th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-cache-your-queries-on-your-laravel-application">How to cache your queries on your Laravel application?</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Although, Laravel is a good framework, it's quite heavy when it comes to executing queries especially if you're using the <a href="https://laravel.com/docs/7.x/eloquent">Eloquent ORM</a> instead of the normal <a href="https://laravel.com/docs/7.x/queries">query builder</a>.</p>
+
+<p>But Laravel does offer the option of caching your queries in the server and will only make calls to your database if there's a change in content.</p>
+
+<p>Quite handy when you're having a content-heavy website and huge amount of user traffic.</p>
+
+<p>Using the <code>Cache</code> class, you can cache your queries like this:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="nv">$apples</span> <span class="o">=</span> <span class="nx">\Cache</span><span class="o">::</span><span class="na">rememberForever</span><span class="p">(</span><span class="s1">&#39;apples_cache&#39;</span><span class="p">,</span> <span class="k">function</span><span class="p">(){</span>
+    <span class="k">return</span> <span class="nx">FruitsModel</span><span class="o">::</span><span class="na">where</span><span class="p">(</span><span class="s1">&#39;item_name&#39;</span><span class="p">,</span> <span class="s1">&#39;LIKE&#39;</span><span class="p">,</span> <span class="s1">&#39;%apples&#39;</span><span class="p">)</span>
+        <span class="o">-&gt;</span><span class="na">get</span><span class="p">();</span>
+<span class="p">});</span>
+<span class="cp">?&gt;</span>
+</code></pre>
+</div>
+
+<p>In the above example, <code>apples_cache</code> is the key that stores your queries of apples forever and which will be used to obtain your cached results from the server. </p>
+
+<p>Oh, be sure to create distinctive names for different types of queries or else, you'll end up being confused! &#128540;</p>
+
+<p>You can also give it a time limit in milliseconds:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="nv">$apples</span> <span class="o">=</span> <span class="nx">\Cache</span><span class="o">::</span><span class="na">remember</span><span class="p">(</span><span class="s1">&#39;apples_cache&#39;</span><span class="p">,</span> <span class="mi">300000</span><span class="p">,</span> <span class="k">function</span><span class="p">(){</span>
+    <span class="k">return</span> <span class="nx">FruitsModel</span><span class="o">::</span><span class="na">where</span><span class="p">(</span><span class="s1">&#39;item_name&#39;</span><span class="p">,</span> <span class="s1">&#39;LIKE&#39;</span><span class="p">,</span> <span class="s1">&#39;%apples&#39;</span><span class="p">)</span>
+        <span class="o">-&gt;</span><span class="na">get</span><span class="p">();</span>
+<span class="p">});</span>
+<span class="cp">?&gt;</span>
+</code></pre>
+</div>
+
+<p>Hope this tip helps you out! &#x1F600;</p>
+
+	</div>
+	<div class="article-footer">
+		<time>July 5th, 2020</time>
 		<ul class="tags">
 			
 			<li>
@@ -554,129 +352,64 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/queues-and-stacks">Queues & Stacks</a></h1>
+		<h1 class="heading"><a href="/til/posts/looping-infinitely-around-an-array">Looping infinitely around an array</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>Let's look at the differences between the two data structures:</p>
+		<p>Sometimes, I find myself in a situation where I might have a fixed array of colors, text, numbers or something like that but I want to loop around infinitely like a carousel.</p>
 
-<ol>
-<li><strong>Queues</strong>: First-In First-Out</li>
-<li><strong>Stacks</strong>: Last-In Last-Out</li>
-</ol>
-
-<h2>Queues</h2>
-
-<p>This follows a <strong>First-In First-Out</strong> processing order i.e. the first element added to a queue will be processed first. A queue should support two operations:</p>
-
-<ul>
-<li>Enqueue</li>
-<li>Dequeue</li>
-</ul>
-
-<h3>Enqueue</h3>
-
-<p>Adds the element to the tail of a queue. The tail position gets incremented.</p>
-
-<h3>Dequeue</h3>
-
-<p>Removes the first element of a queue i.e. the head element. Once, it's removed, the subsequent element becomes the new head element of the queue. The position of the new head element gets incremented and the previous one is assigned a negative integer like -1 or some garbage value. </p>
-
-<p><strong>Implementation of a standard queue using C++:</strong></p>
+<p>Let's say we have an array like this:</p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">Queue</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="k">private</span><span class="o">:</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">pos</span><span class="p">;</span>
-<span class="w">        </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">data</span><span class="p">;</span>
+<pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">colors</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;#111&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;#222&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;#333&quot;</span><span class="p">];</span>
+</code></pre>
+</div>
 
-<span class="w">    </span><span class="k">public</span><span class="o">:</span>
-<span class="w">        </span><span class="n">Queue</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="n">pos</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span>
+<p>The code is an array of three colors that we want to apply to, hmmm, say a list of HTML DOM elements like <code>&lt;div&gt;</code> containers or any element that you prefer. In this example, we'll add some colors to a bunch of <code>&lt;div&gt;</code> elements that has the classname <code>.card</code> or we'll just call them "cards".</p>
 
-<span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="n">enqueue</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="n">data</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">value</span><span class="p">);</span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span>
+<h2>Behold, the Modulus operator!</h2>
 
-<span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="n">dequeue</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">isEmpty</span><span class="p">()){</span>
-<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
-<span class="w">            </span><span class="p">}</span>
-<span class="w">            </span><span class="n">pos</span><span class="o">++</span><span class="p">;</span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span>
+<p>You may think of writing different conditions or loops to achieve a solution but a more elegant one is by using the Modulus operator a.k.a the Remainder operator (<code>%</code>). Using this operator gives you the remainder after the division of a number.</p>
 
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">front</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="n">pos</span><span class="p">];</span>
-<span class="w">        </span><span class="p">}</span>
+<p>Hmm, confused? Okay, here's a simple example of how a Modulus operator would be like:</p>
 
-<span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="n">isEmpty</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">pos</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
-<span class="w">        </span><span class="p">}</span>
+<blockquote>
+  <p>In plain english, if you have 10 apples and you divide them by 4 and by doing so, you'll end up with 2 sets of 4 apples and the remaining set would be 2 apples. Thus, the remainder is 2.</p>
+</blockquote>
+
+<p>Did that make sense? If not, then try the following code in your browser:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">10</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mf">4</span><span class="p">;</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">x</span><span class="p">);</span><span class="w"> </span><span class="c1">// output will be 2</span>
+</code></pre>
+</div>
+
+<p>Let's say we have 10 "cards" and we want every 3 three cards to have 3 different colors, we must just define a way to determine the index of each color while iterating through a loop of cards. So, we can easily get the index by doing so:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">currentColor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">colors</span><span class="p">[</span><span class="nx">i</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="nx">colors</span><span class="p">.</span><span class="nx">length</span><span class="o">-</span><span class="mf">1</span><span class="p">];</span>
+</code></pre>
+</div>
+
+<p>Here's the full code:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">elements</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">document</span><span class="p">.</span><span class="nx">querySelectorAll</span><span class="p">(</span><span class="s1">&#39;.card&#39;</span><span class="p">);</span>
+<span class="k">for</span><span class="p">(</span><span class="kd">var</span><span class="w"> </span><span class="nx">i</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">&lt;</span><span class="nx">elements</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">++</span><span class="p">){</span>
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">currentColor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">colors</span><span class="p">[</span><span class="nx">i</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="nx">colors</span><span class="p">.</span><span class="nx">length</span><span class="o">-</span><span class="mf">1</span><span class="p">];</span>
+<span class="w">    </span><span class="nx">elements</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">style</span><span class="p">.</span><span class="nx">backgroundColor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">currentColor</span><span class="p">;</span>
 <span class="p">}</span>
 </code></pre>
 </div>
 
-<p>In terms of memory management, a standard Queue is quite inefficient and incapable of handling dynamic memory.</p>
+<p>The following code will apply the colors to each "card" with respect to it's order and will reset back to the first color once it's reached it's last color based on the remainder of the next iteration in the loop.</p>
 
-<h2>Stacks</h2>
-
-<p>This follows a <strong>Last-In First-Out</strong> processing order i.e. the last element added to a queue will be the first to be removed. Just like queues, it has two simple operations:</p>
-
-<ul>
-<li>Push</li>
-<li>Pop</li>
-</ul>
-
-<h3>Push</h3>
-
-<p>Each element is pushed towards the end of the stack. Think of it as a card deck where you stack a card on top of another card.</p>
-
-<h3>Pop</h3>
-
-<p>It removes the most recent element i.e. the newly added element from the stack.</p>
-
-<p><strong>Implementation of a stack using C++:</strong></p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">Stack</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="k">private</span><span class="o">:</span>
-<span class="w">        </span><span class="n">vector</span><span class="o">&amp;</span><span class="n">ltint</span><span class="o">&gt;</span><span class="w"> </span><span class="n">data</span><span class="p">;</span>
-<span class="w">    </span><span class="k">public</span><span class="o">:</span>
-<span class="w">        </span><span class="kt">void</span><span class="w"> </span><span class="n">push</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="n">data</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">value</span><span class="p">);</span>
-<span class="w">        </span><span class="p">}</span>
-
-<span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="n">isEmpty</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">empty</span><span class="p">();</span>
-<span class="w">        </span><span class="p">}</span>
-
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">top</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">back</span><span class="p">();</span>
-<span class="w">        </span><span class="p">}</span>
-
-<span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="n">pop</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">isEmpty</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
-<span class="w">                </span><span class="n">data</span><span class="p">.</span><span class="n">pop_back</span><span class="p">();</span>
-<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
-<span class="w">            </span><span class="p">}</span>
-<span class="w">            </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
-<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
-<span class="w">            </span><span class="p">}</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="p">}</span>
-</code></pre>
-</div>
-
-<p>Unlike queues, stacks are easier to implement and pretty efficient at managing dynamic memory.</p>
-
-<p>Oh, if you ever get to use these, don't worry about implementing them, nearly all programming languages have their own implementations of <code>stack</code> and <code>queue</code> that comes with it's own standard library.</p>
+<p>Read about <a href="https://en.wikipedia.org/wiki/Modulo_operation">Modulus Operation</a> to know more about it.</p>
 
 	</div>
 	<div class="article-footer">
-		<time>May 30th, 2020</time>
+		<time>July 4th, 2020</time>
 		<ul class="tags">
 			
 			<li>
@@ -685,9 +418,152 @@
 				</a>
 			</li>
 			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/enable-http-strict-transport-security-hsts">Enable HTTP Strict Transport Security (HSTS)</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>As part of a project that I was working on, I learnt about <a href="https://en.wikipedia.org/wiki/HTTP_Strict_Transport_Security">HTTP Strict Transport Security</a> protocol which tells the browser about making future web requests over HTTPS only. So, even if you attempt to use <code>http://</code>, the browser will force you to use <code>https://</code> URLs in the future.</p>
+
+<p>You can enable it by writing this header in your <code>.htaccess</code> file in your <code>public</code> directory:</p>
+
+<div class="codehilite">
+<pre><span></span><code>Header<span class="w"> </span>always<span class="w"> </span><span class="nb">set</span><span class="w"> </span>Strict-Transport-Security<span class="w"> </span><span class="s2">&quot;max-age=31536000&quot;</span><span class="w"> </span><span class="nv">env</span><span class="o">=</span>HTTPS
+</code></pre>
+</div>
+
+<p>Please note that once you enable this protocol, your web application is committed to using SSL i.e. you won't be able to use insecure HTTP for your web application.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>June 22nd, 2020</time>
+		<ul class="tags">
+			
 			<li>
-				<a href="/category/data-structures/">
-					Data Structures
+				<a href="/category/apache/">
+					Apache
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/forcing-http-to-https-redirect-after-enabling-ssl">Forcing HTTP to HTTPS redirect after enabling SSL</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>You can manually force HTTP to HTTPS after enabling your SSL certificate by adding the following condition at the beginning of your <code>.htaccess</code> file in your <code>public</code> directory:</p>
+
+<div class="codehilite">
+<pre><span></span><code>RewriteCond<span class="w"> </span>%<span class="o">{</span>HTTP:X-Forward-Proto<span class="o">}</span><span class="w"> </span>!<span class="o">=</span>https
+RewriteRule<span class="w"> </span>.*<span class="w"> </span>https://%<span class="o">{</span>HTTP_HOST<span class="o">}</span>%<span class="o">{</span>REQUEST_URI<span class="o">}</span><span class="w"> </span><span class="o">[</span><span class="nv">R</span><span class="o">=</span><span class="m">301</span>,L<span class="o">]</span>
+</code></pre>
+</div>
+
+<p>Save your file and restart your Apache server and now, your web application will redirect all your users to <code>https://</code> instead of <code>http://</code> URLs in the future.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>June 22nd, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/apache/">
+					Apache
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/enable-copy-paste-clipboard-in-urxvt-terminal-emulator">Enable copy-paste clipboard in URxvt Terminal Emulator</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>In my current Arch Linux installation, I decided to use a window manager called i3. It's really awesome and it comes with a really lightweight terminal emulator called <strong>urxvt</strong>. It's very minimal and I lked it but when I tried to copy-paste text from one terminal to another, I wasn't able to.</p>
+
+<p>However, thanks to the internet, I did some research and figured a way out.</p>
+
+<h2>1. Install xClip</h2>
+
+<p>First, you need to ensure that you have installed the <code>xclip</code> package, which will be used to copy-paste text in the emulator.</p>
+
+<p>Type the following command to install the package:</p>
+
+<div class="codehilite">
+<pre><span></span><code>pacman<span class="w"> </span>-S<span class="w"> </span>xclip
+</code></pre>
+</div>
+
+<h2>2. Activate Clipboard using Perl</h2>
+
+<p>Now, you have to paste these custom commands into your <code>clipboard</code> file, which is found in <code>/usr/lib/urxvt/perl</code> directory:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="c1"># paste selection from clipboard</span>
+<span class="k">sub</span><span class="w"> </span><span class="nf">paste</span><span class="w"> </span><span class="p">{</span>
+<span class="w">     </span><span class="k">my</span><span class="w"> </span><span class="p">(</span><span class="nv">$self</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">@_</span><span class="p">;</span>
+<span class="w">     </span><span class="k">my</span><span class="w"> </span><span class="nv">$content</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`/usr/bin/xclip -loop 1 -out -selection clipboard`</span><span class="w"> </span><span class="p">;</span>
+<span class="w">     </span><span class="nv">$self</span><span class="o">-&gt;</span><span class="n">tt_write</span><span class="w"> </span><span class="p">(</span><span class="nv">$content</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="c1"># copy text to clipbard on selection</span>
+<span class="k">sub</span><span class="w"> </span><span class="nf">on_sel_grab</span><span class="w"> </span><span class="p">{</span>
+<span class="w">     </span><span class="k">my</span><span class="w"> </span><span class="nv">$query</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">$_</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">selection</span><span class="p">;</span>
+<span class="w">     </span><span class="nb">open</span><span class="w"> </span><span class="p">(</span><span class="k">my</span><span class="w"> </span><span class="nv">$pipe</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;| /usr/bin/xclip -in -selection clipboard&#39;</span><span class="p">)</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="nb">die</span><span class="p">;</span>
+<span class="w">     </span><span class="k">print</span><span class="w"> </span><span class="nv">$pipe</span><span class="w"> </span><span class="nv">$query</span><span class="p">;</span>
+<span class="w">     </span><span class="nb">close</span><span class="w"> </span><span class="nv">$pipe</span><span class="p">;</span>
+<span class="w"> </span><span class="p">}</span>
+</code></pre>
+</div>
+
+<h2>3. Modify your .Xresources</h2>
+
+<p>Add these keybindings to your <code>.Xresources</code> file:</p>
+
+<div class="codehilite">
+<pre><span></span><code>URxvt.keysym.Shift-Control-V:<span class="w"> </span>perl:clipboard:paste
+URxvt.iso14755:<span class="w"> </span>False
+URxvt.perl-ext-common:<span class="w"> </span>default,clipboard
+</code></pre>
+</div>
+
+<p>After adding it, refresh your <code>.Xresources</code> settings:</p>
+
+<div class="codehilite">
+<pre><span></span><code>xrdb<span class="w"> </span>-merge<span class="w"> </span>.Xresources
+</code></pre>
+</div>
+
+<p>Reboot your terminal and try selecting some text from your terminal using your mouse and paste it using <code>Ctrl</code>+<code>Shift</code>+<code>V</code> and it should work! </p>
+
+<p>That's it! Enjoy &#x1F603;</p>
+
+	</div>
+	<div class="article-footer">
+		<time>June 20th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
 				</a>
 			</li>
 			
@@ -738,6 +614,10 @@
 			<a class="" href="/til/pages/18">18</a>
 		
 	
+		
+			<a class="" href="/til/pages/19">19</a>
+		
+	
 
 	
 		<a href="/til/pages/16">&raquo;</a>
@@ -762,28 +642,35 @@
 		<li>
 			<a href="/category/linux/">
 				Linux
-				<span class="count">22</span>
+				<span class="count">24</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/laravel/">
 				Laravel
-				<span class="count">18</span>
+				<span class="count">20</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/devops/">
 				DevOps
-				<span class="count">15</span>
+				<span class="count">20</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/php/">
 				PHP
-				<span class="count">13</span>
+				<span class="count">14</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/git/">
+				Git
+				<span class="count">12</span>
 			</a>
 		</li>
 		
@@ -830,9 +717,9 @@
 		</li>
 		
 		<li>
-			<a href="/category/git/">
-				Git
-				<span class="count">10</span>
+			<a href="/category/mysql/">
+				MySQL
+				<span class="count">9</span>
 			</a>
 		</li>
 		
@@ -847,13 +734,6 @@
 			<a href="/category/unix/">
 				UNIX
 				<span class="count">8</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/mysql/">
-				MySQL
-				<span class="count">7</span>
 			</a>
 		</li>
 		
@@ -875,6 +755,13 @@
 			<a href="/category/essay/">
 				Essay
 				<span class="count">6</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/c/">
+				C#
+				<span class="count">5</span>
 			</a>
 		</li>
 		
@@ -907,16 +794,16 @@
 		</li>
 		
 		<li>
-			<a href="/category/c/">
-				C#
+			<a href="/category/arcade-challenge/">
+				Arcade Challenge
 				<span class="count">4</span>
 			</a>
 		</li>
 		
 		<li>
-			<a href="/category/arcade-challenge/">
-				Arcade Challenge
-				<span class="count">4</span>
+			<a href="/category/databases/">
+				Databases
+				<span class="count">3</span>
 			</a>
 		</li>
 		
@@ -959,6 +846,48 @@
 			<a href="/category/general/">
 				General
 				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/vcs/">
+				VCS
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/ubuntu/">
+				Ubuntu
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/powershell/">
+				PowerShell
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/smtp/">
+				SMTP
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/sql/">
+				SQL
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/net/">
+				.NET
+				<span class="count">2</span>
 			</a>
 		</li>
 		
@@ -1068,6 +997,55 @@
 		</li>
 		
 		<li>
+			<a href="/category/phpstorm/">
+				PHPStorm
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/elastic-search/">
+				Elastic Search
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/kibana/">
+				Kibana
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/data-manipulation/">
+				Data Manipulation
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/telnet/">
+				Telnet
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/iis/">
+				IIS
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/centos/">
+				CentOS
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/net-core/">
 				.NET Core
 				<span class="count">1</span>
@@ -1159,22 +1137,8 @@
 		</li>
 		
 		<li>
-			<a href="/category/ubuntu/">
-				Ubuntu
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/ssh/">
 				SSH
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/databases/">
-				Databases
 				<span class="count">1</span>
 			</a>
 		</li>

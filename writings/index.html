@@ -77,6 +77,252 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/writings/posts/laravel-scopes-vs-builder-queries-which-should-you-use">Laravel Scopes vs. Builder Queries: Which Should You Use?</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>If you're building a Laravel application, you're probably spending a lot of time writing queries. And as your project grows, you'll inevitably face this question: <em>Should I use scopes or builder queries?</em> While both have their place, choosing the right tool for the job can make a world of difference. Here's my opinionated take on the matter.</p>
+
+<h2>The Case for Scopes</h2>
+
+<p><strong>Scopes</strong> are, quite simply, one of Laravel's hidden gems. They let you encapsulate common query logic within your models, making your code clean, reusable, and easy to read. Think of them as tiny, purposeful functions designed to save you time and sanity.</p>
+
+<p>Take this example:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+    <span class="c1">// In your model</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">scopeActive</span><span class="p">(</span><span class="nv">$query</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">return</span> <span class="nv">$query</span><span class="o">-&gt;</span><span class="na">where</span><span class="p">(</span><span class="s1">&#39;status&#39;</span><span class="p">,</span> <span class="s1">&#39;active&#39;</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="c1">// Usage</span>
+    <span class="nv">$activeUsers</span> <span class="o">=</span> <span class="nx">User</span><span class="o">::</span><span class="na">active</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">get</span><span class="p">();</span>
+<span class="cp">?&gt;</span>
+</code></pre>
+</div>
+
+<p>Suddenly, instead of littering your controllers with <code>where('status', 'active')</code> everywhere, you have a single, reusable method that reads like English. Scopes shine when you need commonly used filters like <code>active</code>, <code>published</code>, or <code>recent</code>. They’re easy to use, they’re consistent, and they make your code feel more intuitive.</p>
+
+<h3>Why I Prefer Scopes for Reusability</h3>
+
+<p>Here’s the thing: in any sizable Laravel app, you’ll inevitably find patterns in your queries. Rewriting the same query logic over and over? That’s a code smell. By using scopes, you centralize your query logic, reducing redundancy and improving maintainability.</p>
+
+<p>For example:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+    <span class="nv">$pubishedPosts</span> <span class="o">=</span> <span class="nx">Post</span><span class="o">::</span><span class="na">published</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">recent</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">get</span><span class="p">();</span>
+<span class="cp">?&gt;</span>
+</code></pre>
+</div>
+
+<p>This reads beautifully and keeps your codebase DRY (Don’t Repeat Yourself). If the definition of "published" or "recent" changes, you only need to update it in one place. Scopes turn repetitive query logic into single lines of magic.</p>
+
+<h2>The Case for Builder Queries</h2>
+
+<p>That said, not everything belongs in a scope. Some queries are just too specific, too complex, or too dynamic. This is where <strong>builder queries</strong> come in.</p>
+
+<p>Imagine you’re building a report that requires multiple joins, conditional logic, or dynamic filters. Scopes could become unwieldy here. Instead, a well-crafted builder query in your controller, service, or repository might make more sense:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+    <span class="nv">$users</span> <span class="o">=</span> <span class="nx">User</span><span class="o">::</span><span class="na">where</span><span class="p">(</span><span class="s1">&#39;status&#39;</span><span class="p">,</span> <span class="s1">&#39;active&#39;</span><span class="p">)</span>
+        <span class="o">-&gt;</span><span class="na">whereDate</span><span class="p">(</span><span class="s1">&#39;created_at&#39;</span><span class="p">,</span> <span class="s1">&#39;&gt;&#39;</span><span class="p">,</span> <span class="nx">now</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">subDays</span><span class="p">(</span><span class="mi">30</span><span class="p">))</span>
+        <span class="o">-&gt;</span><span class="na">orderBy</span><span class="p">(</span><span class="s1">&#39;created_at&#39;</span><span class="p">,</span> <span class="s1">&#39;desc&#39;</span><span class="p">)</span>
+        <span class="o">-&gt;</span><span class="na">get</span><span class="p">();</span>
+<span class="cp">?&gt;</span>
+</code></pre>
+</div>
+
+<p>Builder queries are perfect for:</p>
+
+<ul>
+<li>One-off operations.</li>
+<li>Highly dynamic queries.</li>
+<li>Scenarios where scopes would make your models bloated or overly complex.</li>
+</ul>
+
+<p>The flexibility of builder queries is unmatched. You can construct them on the fly, adapt them to user inputs, and handle edge cases without worrying about making your models an unreadable mess.</p>
+
+<h2>My Opinionated Take: Use Scopes as a Default, Builder Queries for the Edge Cases</h2>
+
+<p>If I had to pick a side, I’d say: lean on scopes as your default tool, and reserve builder queries for those rare cases when scopes just don’t cut it. Why?</p>
+
+<ol>
+<li><strong>Scopes enhance readability.</strong> Your queries read like sentences, and your intentions are crystal clear.</li>
+<li><strong>Scopes promote DRY principles.</strong> They’re reusable and encapsulate logic, which makes future maintenance a breeze.</li>
+<li><strong>Builder queries are powerful but can become messy.</strong> Unless you’re careful, a complex query in your controller can grow into a sprawling monstrosity. Keep your controllers lean and delegate to scopes or dedicated query classes where possible.</li>
+</ol>
+
+<h2>When Not to Use Scopes</h2>
+
+<p>There are times when using a scope might do more harm than good:</p>
+
+<ul>
+<li><strong>Too much complexity:</strong> If a scope needs multiple parameters or involves complex joins, it’s better suited as a custom query builder or a dedicated repository method.</li>
+<li><strong>Rarely used logic:</strong> Don’t clutter your models with scopes for queries that are only needed once or twice.</li>
+<li><strong>Dynamic, user-driven queries:</strong> When filters are highly variable, builder queries give you the flexibility you need.</li>
+</ul>
+
+<h2>Conclusion: Balance Is Key</h2>
+
+<p>Laravel gives you powerful tools to write queries, and both scopes and builder queries have their roles. Use scopes to simplify and centralize reusable logic, and reach for builder queries when flexibility and complexity demand it. By balancing both, you’ll keep your codebase clean, maintainable, and a joy to work with.</p>
+
+<p>So, what’s your take? Are you a scope enthusiast or a builder query champion? Either way, Laravel’s got you covered.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>January 25th, 2025</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/laravel/">
+					Laravel
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/php/">
+					PHP
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/writings/posts/a-starter-guide-to-software-version-control">A Starter Guide to Software Version Control</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Version Control Systems (VCS) are indispensable tools for modern software development. When I first started working with version control, I was overwhelmed by the terminology and the various workflows. Over time, I realized that mastering VCS isn't just about understanding commands—it's about adopting practices that make development smoother and more collaborative. In this post, I’ll share my journey, the lessons I’ve learned, and a practical approach to version control that works for teams of any size.</p>
+
+<h2>What is Version Control?</h2>
+
+<p>I remember my first experience losing hours of work because I accidentally overwrote a file. That’s when I discovered the magic of version control. It’s like having a time machine for your code! At its core, version control tracks and manages changes to your software code. Here’s why it’s essential:</p>
+
+<ul>
+<li><strong>Collaborate with ease</strong>: Gone are the days of emailing files back and forth. Multiple developers can work on the same codebase without stepping on each other’s toes.</li>
+<li><strong>Track every change</strong>: With a detailed history of changes, debugging becomes less of a nightmare.</li>
+<li><strong>Rollback anytime</strong>: If something breaks, you can revert to a stable version in seconds.</li>
+</ul>
+
+<p>Today, tools like Git, Subversion (SVN), and Mercurial are popular choices, with Git leading the pack. If you haven’t tried Git yet, you’re missing out on a developer’s best friend.</p>
+
+<h2>Key Concepts</h2>
+
+<p>Here’s a quick glossary that helped me when I was starting out:</p>
+
+<ol>
+<li><strong>Repository</strong>: Think of this as your project’s home. It stores your code and its entire version history.</li>
+<li><strong>Commit</strong>: A snapshot of your code changes. A good commit is like leaving breadcrumbs for your future self or teammates.</li>
+<li><strong>Branch</strong>: This was a game-changer for me. Branches let you work on new features or fixes without touching the main codebase.</li>
+<li><strong>Merge</strong>: When you’re ready to bring your work back into the main project, merging combines it with the existing code.</li>
+<li><strong>Tag</strong>: These are like bookmarks, marking specific points in your project’s history—perfect for releases.</li>
+</ol>
+
+<h2>Types of Branches</h2>
+
+<p>When I joined my first team project, I was introduced to a branching strategy that revolutionized the way I worked. Here’s how it breaks down:</p>
+
+<h3>1. Main Branches</h3>
+
+<ul>
+<li><strong>Main (<code>main</code> or <code>master</code>)</strong>: This is the crown jewel—the stable, production-ready branch. It’s sacred territory where only thoroughly tested code belongs.</li>
+<li><strong>Development (<code>dev</code>)</strong>: This is where the magic happens. New features and fixes are integrated and tested here before they’re ready for production.</li>
+</ul>
+
+<h3>2. Feature Branches</h3>
+
+<p>When you’re working on something new, create a feature branch. Here’s how it works:</p>
+
+<ul>
+<li><strong>Purpose</strong>: To develop a specific feature.</li>
+<li><strong>Workflow</strong>: Start from <code>dev</code>, and when you’re done, merge back into <code>dev</code>.</li>
+<li><strong>Naming Convention</strong>: <code>feature/new-login-system</code></li>
+</ul>
+
+<h3>3. Release Branches</h3>
+
+<p>Preparing for a new release? Here’s what you do:</p>
+
+<ul>
+<li><strong>Purpose</strong>: To finalize a version for production.</li>
+<li><strong>Workflow</strong>: Start from <code>dev</code>, do final testing and fixes, then merge into <code>main</code>.</li>
+<li><strong>Naming Convention</strong>: <code>release/v1.0</code></li>
+</ul>
+
+<h3>4. Hotfix Branches</h3>
+
+<p>Production bugs can’t wait. That’s where hotfix branches save the day:</p>
+
+<ul>
+<li><strong>Purpose</strong>: To fix critical issues in production.</li>
+<li><strong>Workflow</strong>: Start from <code>main</code>, fix the issue, then merge into both <code>main</code> and <code>dev</code>.</li>
+<li><strong>Naming Convention</strong>: <code>hotfix/login-bugfix</code></li>
+</ul>
+
+<h2>A Practical Workflow Example</h2>
+
+<p>Here’s a typical workflow I follow:</p>
+
+<ol>
+<li><strong>Feature Development</strong>: Let’s say I’m building a new login system. I’d create a branch called <code>feature/new-login-system</code> off <code>dev</code>. Once the feature is complete and tested, I merge it back into <code>dev</code>.</li>
+<li><strong>Preparing for Release</strong>: When it’s time to launch, I’d create a branch called <code>release/v1.0</code> from <code>dev</code>. After some final tweaks, I merge it into <code>main</code> and tag it as <code>v1.0</code>.</li>
+<li><strong>Production Hotfix</strong>: If a bug pops up in <code>v1.0</code>, I’d create a branch called <code>hotfix/login-bugfix</code> from <code>main</code>. Once fixed, I’d merge it into both <code>main</code> and <code>dev</code> and tag it as <code>v1.0.1</code>.</li>
+</ol>
+
+<h2>Best Practices</h2>
+
+<p>Here are some lessons I learned the hard way:</p>
+
+<ol>
+<li><strong>Write Clear Commit Messages</strong>: Your future self will thank you. A good message explains what changed and why.</li>
+<li><strong>Keep Commits Small</strong>: Each commit should represent a single, logical change. This makes debugging a breeze.</li>
+<li><strong>Review Before Merging</strong>: Always use pull requests or merge requests. Two heads are better than one.</li>
+<li><strong>Use Tags for Releases</strong>: Tags are lifesavers when you need to rollback or track changes.</li>
+<li><strong>Backup Your Repository</strong>: This might sound obvious, but don’t take it for granted.</li>
+</ol>
+
+<h2>Why Version Control is a Game-Changer?</h2>
+
+<p>For me, version control transformed how I approach coding. It made collaboration smoother, debugging faster, and deployments safer. Whether you’re working solo or with a team, adopting a thoughtful version control strategy is a must.</p>
+
+<h2>Final Thoughts</h2>
+
+<p>Version control is more than just a tool—it’s a mindset. By following the practices and strategies outlined here, you’ll be well on your way to mastering it. Trust me, your future self—and your teammates—will thank you.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>January 24th, 2025</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/git/">
+					Git
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/vcs/">
+					VCS
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/writings/posts/cicada-3301">Cicada 3301</a></h1>
 		<p class="description">A short docu-series about one of the most mysterious puzzles on the internet.</p>
 	</div>
@@ -793,423 +1039,6 @@
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/containerize-your-laravel-application-for-development">Containerize your Laravel application for Development</a></h1>
-		<p class="description">A short tutorial on how to containerize your Laravel application and use it for testing and development purposes.</p>
-	</div>
-	<div class="article-body">
-		<p>Since I started exploring Docker containers during my spare time, I learnt how to containerize a Laravel application using Docker Compose.</p>
-
-<p>In this guide, I'll show you how to containerize your application and by the end of this tutorial, you'll have your application running on four separate service containers:</p>
-
-<ul>
-<li>App service running <code>php7.4-fpm</code>.</li>
-<li>A database service running <code>mysql-80</code>.</li>
-<li>An NGINX service.</li>
-<li>A phpMyAdmin service for you to view and manage your database.</li>
-</ul>
-
-<h2>Prerequisites</h2>
-
-<ul>
-<li>You need to have Docker and Docker Compose installed on your system</li>
-<li>A non-root user with sudo privileges (If you are using any UNIX-based environment).</li>
-<li>An existing working Laravel project.</li>
-</ul>
-
-<p>I tried this on my personal laptop that runs on Fedora Workstation 36 and hopefully, it should work on Windows and macOS as well. If you are a Windows user, I would recommend you to try WSL2 with Ubuntu installed in it.</p>
-
-<h2>Configure your app service</h2>
-
-<p>First, you need to create a Dockerfile for your app service in your project's root directory:</p>
-
-<div class="codehilite">
-<pre><span></span><code>touch<span class="w"> </span>Dockerfile
-vim<span class="w"> </span>Dockerfile
-</code></pre>
-</div>
-
-<p>In this tutorial, I'll be using PHP7.4 but you can use any version that you need. Here you go:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">FROM</span><span class="w"> </span><span class="s">php:7.4-fpm</span>
-
-<span class="c"># Arguments defined in docker-compose.yml</span>
-<span class="k">ARG</span><span class="w"> </span><span class="k">user</span>
-<span class="s">ARG uid </span>
-
-<span class="c"># Install system dependencies</span>
-<span class="k">RUN</span><span class="w"> </span>apt-get<span class="w"> </span>update<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>git<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>curl<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>libpng-dev<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>libonig-dev<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>libxml2-dev<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>zip<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>unzip
-
-<span class="c"># Clear cache</span>
-<span class="k">RUN</span><span class="w"> </span>apt-get<span class="w"> </span>clean<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>rm<span class="w"> </span>-rf<span class="w"> </span>/var/lib/apt/lists/*
-
-<span class="c"># Install PHP extensions</span>
-<span class="k">RUN</span><span class="w"> </span>docker-php-ext-install<span class="w"> </span>pdo_mysql<span class="w"> </span>mbstring<span class="w"> </span>exif<span class="w"> </span>pcntl<span class="w"> </span>bcmath<span class="w"> </span>gd
-
-<span class="c"># Get latest Composer</span>
-<span class="k">COPY</span><span class="w"> </span>--from<span class="o">=</span>composer:latest<span class="w"> </span>/usr/bin/composer<span class="w"> </span>/usr/bin/composer
-
-<span class="c"># Create system user to run Composer and Artisan Commands</span>
-<span class="k">RUN</span><span class="w"> </span>useradd<span class="w"> </span>-G<span class="w"> </span>www-data,root<span class="w"> </span>-u<span class="w"> </span><span class="nv">$uid</span><span class="w"> </span>-d<span class="w"> </span>/home/<span class="nv">$user</span><span class="w"> </span><span class="nv">$user</span>
-<span class="k">RUN</span><span class="w"> </span>mkdir<span class="w"> </span>-p<span class="w"> </span>/home/<span class="nv">$user</span>/.composer<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>chown<span class="w"> </span>-R<span class="w"> </span><span class="nv">$user</span>:<span class="nv">$user</span><span class="w"> </span>/home/<span class="nv">$user</span>
-
-<span class="c"># Set working directory</span>
-<span class="k">WORKDIR</span><span class="w"> </span><span class="s">/var/www</span>
-
-<span class="k">USER</span><span class="w"> </span><span class="s">$user</span>
-</code></pre>
-</div>
-
-<p>So, what's happening in the configuration above is that, it pulls a PHP7.4-FPM image from Docker Hub. Next, it'll define the user of the service and install all the necessary dependencies that are given above and set the working directory to <code>/var/www/</code>. The last step will change to the newly created user, which would make sure that you are using the service as a normal user.</p>
-
-<p>Again, if you are a bit playful, try configuring it to however you want it and see if it works.</p>
-
-<h2>Set up NGINX and MySQL</h2>
-
-<p>I have been following some tutorials and I liked the idea of creating dedicated directories to organize your files related to configuring each service container.</p>
-
-<p>Create a directory named <code>.docker</code> in your project's root directory:</p>
-
-<div class="codehilite">
-<pre><span></span><code>mkdir<span class="w"> </span>-p<span class="w"> </span>.docker
-</code></pre>
-</div>
-
-<h3>NGINX</h3>
-
-<p>Go to <code>.docker</code> directory and create <code>nginx</code> directory:</p>
-
-<div class="codehilite">
-<pre><span></span><code>mkdir<span class="w"> </span>-p<span class="w"> </span>nginx
-</code></pre>
-</div>
-
-<p>Now let's set up the NGINX service by creating a <code>.conf</code> file:</p>
-
-<div class="codehilite">
-<pre><span></span><code>touch<span class="w"> </span>myservice.conf
-</code></pre>
-</div>
-
-<p>Now, copy the following configuration to your <code>.conf</code> file:</p>
-
-<div class="codehilite">
-<pre><span></span><code>server<span class="w"> </span><span class="o">{</span>
-<span class="w">    </span>listen<span class="w"> </span><span class="m">80</span><span class="p">;</span>
-<span class="w">    </span>index<span class="w"> </span>index.php<span class="w"> </span>index.html<span class="p">;</span>
-<span class="w">    </span>error_log<span class="w">  </span>/var/log/nginx/error.log<span class="p">;</span>
-<span class="w">    </span>access_log<span class="w"> </span>/var/log/nginx/access.log<span class="p">;</span>
-<span class="w">    </span>root<span class="w"> </span>/var/www/public<span class="p">;</span>
-<span class="w">    </span>location<span class="w"> </span>~<span class="w"> </span><span class="se">\.</span>php$<span class="w"> </span><span class="o">{</span>
-<span class="w">        </span>try_files<span class="w"> </span><span class="nv">$uri</span><span class="w"> </span><span class="o">=</span><span class="m">404</span><span class="p">;</span>
-<span class="w">        </span>fastcgi_split_path_info<span class="w"> </span>^<span class="o">(</span>.+<span class="se">\.</span>php<span class="o">)(</span>/.+<span class="o">)</span>$<span class="p">;</span>
-<span class="w">        </span>fastcgi_pass<span class="w"> </span>app:9000<span class="p">;</span>
-<span class="w">        </span>fastcgi_index<span class="w"> </span>index.php<span class="p">;</span>
-<span class="w">        </span>include<span class="w"> </span>fastcgi_params<span class="p">;</span>
-<span class="w">        </span>fastcgi_param<span class="w"> </span>SCRIPT_FILENAME<span class="w"> </span><span class="nv">$document_root$fastcgi_script_name</span><span class="p">;</span>
-<span class="w">        </span>fastcgi_param<span class="w"> </span>PATH_INFO<span class="w"> </span><span class="nv">$fastcgi_path_info</span><span class="p">;</span>
-<span class="w">    </span><span class="o">}</span>
-<span class="w">    </span>location<span class="w"> </span>/<span class="w"> </span><span class="o">{</span>
-<span class="w">        </span>try_files<span class="w"> </span><span class="nv">$uri</span><span class="w"> </span><span class="nv">$uri</span>/<span class="w"> </span>/index.php?<span class="nv">$query_string</span><span class="p">;</span>
-<span class="w">        </span>gzip_static<span class="w"> </span>on<span class="p">;</span>
-<span class="w">    </span><span class="o">}</span>
-<span class="o">}</span>
-</code></pre>
-</div>
-
-<h3>MySQL</h3>
-
-<p>Since this is a Laravel application, you can skip this step by running migrations and seeding your database or you can try creating a directory inside the <code>.docker</code> folder to store your MySQL related configuration:</p>
-
-<div class="codehilite">
-<pre><span></span><code>mkdir<span class="w"> </span>-p<span class="w"> </span>mysql
-</code></pre>
-</div>
-
-<p>Once created, create a file named <code>init_db.sql</code> that would contain your entire database dump to be seeded once you run your docker service.</p>
-
-<h2>Set up multiple containers using Docker Compose</h2>
-
-<p>This the configuration I have used to create four separate services, please take a look and feel free to modify it based on your requirements.</p>
-
-<p>In this configuration, all services will share a bridge network named <code>yourapp</code> which is defined at the bottom of this configuration.</p>
-
-<p>Here is the configuration:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;3.8&#39;</span>
-<span class="nt">services</span><span class="p">:</span>
-<span class="w">  </span><span class="c1"># PHP Service</span>
-<span class="w">  </span><span class="nt">app</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">build</span><span class="p">:</span>
-<span class="w">      </span><span class="nt">args</span><span class="p">:</span>
-<span class="w">        </span><span class="nt">user</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">username</span>
-<span class="w">        </span><span class="nt">uid</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1000</span>
-<span class="w">      </span><span class="nt">context</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./</span>
-<span class="w">      </span><span class="nt">dockerfile</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Dockerfile</span>
-<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yourapp</span><span class="w"> </span>
-<span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yourapp-app</span>
-<span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">unless-stopped</span>
-<span class="w">    </span><span class="nt">working_dir</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/var/www/</span>
-<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./:/var/www</span>
-<span class="w">    </span><span class="nt">networks</span><span class="p">:</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yourapp</span>
-
-<span class="w">  </span><span class="c1"># MySQL Service</span>
-<span class="w">  </span><span class="nt">db</span><span class="p">:</span><span class="w"> </span>
-<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mysql:8.0</span>
-<span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yourapp-db</span>
-<span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">unless-stopped</span>
-<span class="w">    </span><span class="nt">environment</span><span class="p">:</span>
-<span class="w">      </span><span class="nt">MYSQL_DATABASE</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${DB_DATABASE}</span>
-<span class="w">      </span><span class="nt">MYSQL_ROOT_PASSWORD</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${DB_PASSWORD}</span>
-<span class="w">      </span><span class="nt">MYSQL_PASSWORD</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${DB_PASSWORD}</span>
-<span class="w">      </span><span class="nt">MYSQL_USER</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${DB_USERNAME}</span>
-<span class="w">      </span><span class="nt">SERVICE_TAGS</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dev</span><span class="w"> </span>
-<span class="w">      </span><span class="nt">SERVICE_NAME</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mysql</span>
-<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./.docker/mysql:/docker-entrypoint-initdb.d</span>
-<span class="w">    </span><span class="nt">healthcheck</span><span class="p">:</span>
-<span class="w">      </span><span class="nt">test</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mysqladmin ping -h 127.0.0.1 -u ${DB_USERNAME} --password=${DB_PASSWORD}</span>
-<span class="w">      </span><span class="nt">interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5s</span>
-<span class="w">      </span><span class="nt">retries</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span>
-<span class="w">    </span><span class="nt">networks</span><span class="p">:</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yourapp</span>
-
-<span class="w">  </span><span class="c1"># NGINX Service</span>
-<span class="w">  </span><span class="nt">nginx</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nginx:alpine</span>
-<span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yourapp-nginx</span>
-<span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">unless-stopped</span>
-<span class="w">    </span><span class="nt">ports</span><span class="p">:</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8000:80</span>
-<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./:/var/www</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./.docker/nginx:/etc/nginx/conf.d/</span>
-<span class="w">    </span><span class="nt">networks</span><span class="p">:</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yourapp</span>
-
-<span class="w">  </span><span class="c1"># phpMyAdmin service</span>
-<span class="w">  </span><span class="nt">phpmyadmin</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">phpmyadmin/phpmyadmin:5</span>
-<span class="w">    </span><span class="nt">ports</span><span class="p">:</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8080:80</span>
-<span class="w">    </span><span class="nt">environment</span><span class="p">:</span>
-<span class="w">      </span><span class="nt">PMA_HOST</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">db</span>
-<span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span>
-<span class="w">      </span><span class="nt">db</span><span class="p">:</span><span class="w"> </span>
-<span class="w">        </span><span class="nt">condition</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">service_healthy</span>
-<span class="w">    </span><span class="nt">networks</span><span class="p">:</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yourapp</span>
-
-<span class="nt">networks</span><span class="p">:</span>
-<span class="w">  </span><span class="nt">yourapp</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">driver</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">bridge</span>
-</code></pre>
-</div>
-
-<h2>Configure your application</h2>
-
-<p>Open your current <code>.env</code> file of your laravel project and just add the necessary database configuration:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="l l-Scalar l-Scalar-Plain">DB_HOST=yourapp-db</span>
-<span class="l l-Scalar l-Scalar-Plain">DB_PORT=3306</span>
-<span class="l l-Scalar l-Scalar-Plain">DB_DATABASE=your_database_name</span>
-<span class="l l-Scalar l-Scalar-Plain">DB_USERNAME=your_database_user_name</span>
-<span class="l l-Scalar l-Scalar-Plain">DB_PASSWORD=your_database_password</span>
-</code></pre>
-</div>
-
-<h2>Build the application image</h2>
-
-<p>After you are done with configuring, run the following command to build your application image:</p>
-
-<div class="codehilite">
-<pre><span></span><code>docker-compose<span class="w"> </span>build<span class="w"> </span>yourapp
-</code></pre>
-</div>
-
-<p>Depending on your network speed, it might take a few minutes to build your image.</p>
-
-<h2>Run the application</h2>
-
-<p>Once the build is complete, execute the following command:</p>
-
-<div class="codehilite">
-<pre><span></span><code>docker-compose<span class="w"> </span>up<span class="w"> </span>-d
-</code></pre>
-</div>
-
-<p>The following command will run your containers in the background. To display your information about the state of your docker services:</p>
-
-<div class="codehilite">
-<pre><span></span><code>docker-compose<span class="w"> </span>ps
-</code></pre>
-</div>
-
-<p>Install your application's dependencies:</p>
-
-<div class="codehilite">
-<pre><span></span><code>docker-compose<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>yourapp<span class="w"> </span>rm<span class="w"> </span>-rf<span class="w"> </span>vendor<span class="w"> </span>composer.lock
-docker-compose<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>yourapp<span class="w"> </span>composer<span class="w"> </span>install
-</code></pre>
-</div>
-
-<p>And then run the following commands to run your Laravel application:</p>
-
-<div class="codehilite">
-<pre><span></span><code>docker-compose<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>yourapp<span class="w"> </span>php<span class="w"> </span>artisan<span class="w"> </span>key:generate
-docker-compose<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>yourapp<span class="w"> </span>php<span class="w"> </span>artisan<span class="w"> </span>config:clear
-docker-compose<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>yourapp<span class="w"> </span>php<span class="w"> </span>artisan<span class="w"> </span>cache:clear
-docker-compose<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>yourapp<span class="w"> </span>php<span class="w"> </span>artisan<span class="w"> </span>view:clear
-docker-compose<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>yourapp<span class="w"> </span>php<span class="w"> </span>artisan<span class="w"> </span>route:clear
-docker-compose<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>yourapp<span class="w"> </span>php<span class="w"> </span>artisan<span class="w"> </span>storage:link<span class="w"> </span>
-</code></pre>
-</div>
-
-<p>Now, you can go to your browser, type your <code>http://localhost:8000</code> to access your application.</p>
-
-<h2>Conclusion</h2>
-
-<p>If you've come to this part, give yourself a pat in the back!</p>
-
-<p>From now onwards, you don't really need to install and set up a local web server and database to run and test your application.</p>
-
-<p>Furthermore, you'll be having a disposable environment in your hand, which means you can easily replicate and distribute it to other developers in your team, so that no one says "It works on my machine and not on yours!"</p>
-
-<p>Hope you liked this tutorial!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>October 23rd, 2022</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/tutorial/">
-					Tutorial
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/docker/">
-					Docker
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/devops/">
-					DevOps
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/laravel/">
-					Laravel
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/my-thoughts-on-using-visual-studio-code">My thoughts on using Visual Studio Code</a></h1>
-		<p class="description">My experiences on what made me like using Visual Studio Code.</p>
-	</div>
-	<div class="article-body">
-		<p>Ever since my university days, I've always used Sublime Text for any sort of text editing and programming tasks, in general.</p>
-
-<p>Despite the annoying "Subscription" dialog box, I like it because it's lightweight, simple and had nice keybindings that made it much more productive.</p>
-
-<p>This week, I thought of taking Visual Studio Code for a drive, not because many developers are using it but personally, I wanted to know if it can be better than Sublime Text.</p>
-
-<p>The answer is yes, it is and here's what I have experienced so far.</p>
-
-<h2>Portability</h2>
-
-<p>What I like at first is that, it's cross-platform and has support for different operating systems in various architectures. At work, I use Windows 10 and at home, I use Fedora 35 Workstation and it runs fine on both operating systems.</p>
-
-<h2>Intellisense, Intellisense, Intellisense...</h2>
-
-<p>Intellisense is a term used by Microsoft that includes various features like: code completion, code hinting, method parameter information and more. By default, the editor supports Intellisense for JavaScript, TypeScript, HTML and CSS. But if you install different programming language extensions like Python, PHP, Golang and so on, you'll be able to configure your editor to have a much more richer experience.</p>
-
-<p>At work, I write PHP code and use Laravel framework to develop web applications, I installed the following extensions to make my coding experience much more productive:</p>
-
-<ol>
-<li>PHP Intelephense (bmewburn.vscode-intelephense-client)</li>
-<li>phpfmt (kokororin.vscode-phpfmt)</li>
-<li>Laravel Snippets (onecentlin.laravel-blade)</li>
-</ol>
-
-<h2>Sublime Text and Vim Keybindings</h2>
-
-<p>If you've never used Vim, please go ahead and try. I believe that every programmer should try using VIM instead of fearing the keybindings (like <code>:q</code>) as they were developed for a <a href="https://betterprogramming.pub/why-you-should-learn-vim-keybindings-even-if-you-dont-use-vim-6563c5357b64?gi=92b77d015592">reason</a>.</p>
-
-<p>But unlike Vim, Sublime Text keybindings are quite fun especially when you want to duplicate a line of code, indent lines of code, matching multiple instances of the same keyword and modifying them with multiple cursors at the same time.</p>
-
-<p>Try installing these extensions and see if you like them:</p>
-
-<ol>
-<li>Vim Emulation for Visual Studio Code (vscodevim.vim)</li>
-<li>Sublime Text Keymap and Settings Importer (ms-vscode.sublime-keybindings)</li>
-</ol>
-
-<h2>Integrated Terminal</h2>
-
-<p>You can use different type of shells like Windows Powershell, Command Prompt, Git Bash and much more. Besides IMO, I found that using the integrated terminal was quite productive as I didn't have to switch windows in between.</p>
-
-<h2>Looks minimal</h2>
-
-<p>When it comes to UI/UX, the word <strong>minimalism</strong> is often subjective but I guess Microsoft embraced the principles of minimalism for this editor.</p>
-
-<h2>Lots of extensions and great support</h2>
-
-<p>Thanks to the open source community, there are hundreds and thousands of extensions out there. By installing various extensions, you can make it your own editor and that part fascinates me.</p>
-
-<p>Besides, it's developed by Microsoft, so it definitely has a strong support and community out there.</p>
-
-<h2>Conclusion</h2>
-
-<p>I guess the simplicity and flexibility of this editor is what made it more powerful amongst the developer community.</p>
-
-<p>Now, I'm not going to say that it's a flawless editor, just like every other pieces of software, it does have it's cons. However, I decided to try out Visual Studio Code for a while and see how it goes for me.</p>
-
-<p>If it doesn't then maybe I might write a post about why I didn't like using it, in the future.</p>
-
-<p>Hope you liked reading this article.</p>
-
-	</div>
-	<div class="article-footer">
-		<time>September 17th, 2022</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/productivity/">
-					Productivity
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -1260,28 +1089,35 @@ docker-compose<span class="w"> </span><span class="nb">exec</span><span class="w
 		<li>
 			<a href="/category/linux/">
 				Linux
-				<span class="count">22</span>
+				<span class="count">24</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/laravel/">
 				Laravel
-				<span class="count">18</span>
+				<span class="count">20</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/devops/">
 				DevOps
-				<span class="count">15</span>
+				<span class="count">20</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/php/">
 				PHP
-				<span class="count">13</span>
+				<span class="count">14</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/git/">
+				Git
+				<span class="count">12</span>
 			</a>
 		</li>
 		
@@ -1328,9 +1164,9 @@ docker-compose<span class="w"> </span><span class="nb">exec</span><span class="w
 		</li>
 		
 		<li>
-			<a href="/category/git/">
-				Git
-				<span class="count">10</span>
+			<a href="/category/mysql/">
+				MySQL
+				<span class="count">9</span>
 			</a>
 		</li>
 		
@@ -1345,13 +1181,6 @@ docker-compose<span class="w"> </span><span class="nb">exec</span><span class="w
 			<a href="/category/unix/">
 				UNIX
 				<span class="count">8</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/mysql/">
-				MySQL
-				<span class="count">7</span>
 			</a>
 		</li>
 		
@@ -1373,6 +1202,13 @@ docker-compose<span class="w"> </span><span class="nb">exec</span><span class="w
 			<a href="/category/essay/">
 				Essay
 				<span class="count">6</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/c/">
+				C#
+				<span class="count">5</span>
 			</a>
 		</li>
 		
@@ -1405,16 +1241,16 @@ docker-compose<span class="w"> </span><span class="nb">exec</span><span class="w
 		</li>
 		
 		<li>
-			<a href="/category/c/">
-				C#
+			<a href="/category/arcade-challenge/">
+				Arcade Challenge
 				<span class="count">4</span>
 			</a>
 		</li>
 		
 		<li>
-			<a href="/category/arcade-challenge/">
-				Arcade Challenge
-				<span class="count">4</span>
+			<a href="/category/databases/">
+				Databases
+				<span class="count">3</span>
 			</a>
 		</li>
 		
@@ -1457,6 +1293,48 @@ docker-compose<span class="w"> </span><span class="nb">exec</span><span class="w
 			<a href="/category/general/">
 				General
 				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/vcs/">
+				VCS
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/ubuntu/">
+				Ubuntu
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/powershell/">
+				PowerShell
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/smtp/">
+				SMTP
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/sql/">
+				SQL
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/net/">
+				.NET
+				<span class="count">2</span>
 			</a>
 		</li>
 		
@@ -1566,6 +1444,55 @@ docker-compose<span class="w"> </span><span class="nb">exec</span><span class="w
 		</li>
 		
 		<li>
+			<a href="/category/phpstorm/">
+				PHPStorm
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/elastic-search/">
+				Elastic Search
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/kibana/">
+				Kibana
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/data-manipulation/">
+				Data Manipulation
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/telnet/">
+				Telnet
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/iis/">
+				IIS
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/centos/">
+				CentOS
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/net-core/">
 				.NET Core
 				<span class="count">1</span>
@@ -1657,22 +1584,8 @@ docker-compose<span class="w"> </span><span class="nb">exec</span><span class="w
 		</li>
 		
 		<li>
-			<a href="/category/ubuntu/">
-				Ubuntu
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/ssh/">
 				SSH
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/databases/">
-				Databases
 				<span class="count">1</span>
 			</a>
 		</li>
