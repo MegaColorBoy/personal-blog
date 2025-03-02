@@ -77,6 +77,626 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-filter-records-based-on-a_string-column-containing-numbers-with-commas-and-dots">How to Filter Records Based on a String Column Containing Numbers with Commas and Dots?</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Last month, I encountered a scenario where I needed to filter records in a database based on a "revenue" column. The challenge? The <code>revenue</code> column was stored as a string data type, and some of the values contained commas (<code>,</code>) and dots (<code>.</code>). Here’s how I tackled the problem and wrote an SQL query to filter records based on the numeric value of the <code>revenue</code> column.</p>
+
+<h2>What I faced?</h2>
+
+<p>The <code>revenue</code> column was stored as a string, and the values looked like this:</p>
+
+<ul>
+<li>"50,000,000"</li>
+<li>"75.000.000"</li>
+<li>"10000000"</li>
+</ul>
+
+<p>I needed to filter records where the revenue was greater than <strong>"50,000,000"</strong>. However, since the column was a string, I couldn’t directly compare it to a numeric value.</p>
+
+<h2>What I did?</h2>
+
+<p>To handle this, I used a combination of SQL functions:</p>
+
+<ol>
+<li><code>REPLACE</code>: To remove commas (<code>,</code>) and dots (<code>.</code>) from the string.</li>
+<li><code>CAST</code>: To convert the cleaned string into a numeric data type (<code>DECIMAL</code> in this case).</li>
+</ol>
+
+<p>Here’s the SQL query I wrote:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">your_table</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="k">CAST</span><span class="p">(</span><span class="k">REPLACE</span><span class="p">(</span><span class="n">revenue</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;,&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="nb">DECIMAL</span><span class="p">(</span><span class="mi">18</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">))</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">50000000</span><span class="p">;</span>
+</code></pre>
+</div>
+
+<p>Need a breakdown? Here you go:</p>
+
+<ol>
+<li><code>REPLACE(revenue, ',', '')</code>:
+This removes commas from the <code>revenue</code> string. For example, <strong>"50,000,000"</strong> becomes <strong>"50000000"</strong>.</li>
+<li><code>CAST(... AS DECIMAL(18, 2))</code>:
+This converts the cleaned string into a <code>DECIMAL</code> value with 18 total digits and 2 decimal places. For example, <strong>"50000000"</strong> becomes <strong>50000000.00</strong>.</li>
+<li><code>&gt; 50000000</code>:
+Finally, the query filters records where the numeric value of <code>revenue</code> is greater than <strong>50,000,000</strong>.</li>
+</ol>
+
+<h2>Handling Dots as Thousand Separators</h2>
+
+<p>If the <code>revenue</code> column uses dots (<code>.</code>) as thousand separators (e.g., <strong>"75.000.000"</strong>), you can extend the <code>REPLACE</code> function to remove dots as well:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">your_table</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="k">CAST</span><span class="p">(</span><span class="k">REPLACE</span><span class="p">(</span><span class="k">REPLACE</span><span class="p">(</span><span class="n">revenue</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;,&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">),</span><span class="w"> </span><span class="s1">&#39;.&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="nb">DECIMAL</span><span class="p">(</span><span class="mi">18</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">))</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">50000000</span><span class="p">;</span>
+</code></pre>
+</div>
+
+<p>This ensures that both commas and dots are removed before converting the string to a numeric value.</p>
+
+<h2>Why did I do this?</h2>
+
+<p>This approach is helpful when:</p>
+
+<ul>
+<li>You’re working with data stored as strings but need to perform numeric comparisons.</li>
+<li>The data contains formatting characters like commas or dots.</li>
+<li>You want to avoid manual data cleaning or preprocessing.</li>
+</ul>
+
+<p>By using SQL functions like <code>REPLACE</code> and <code>CAST</code>, you can handle these scenarios directly in your queries.</p>
+
+<p>Oh, this works for SQL and MySQL as well!</p>
+
+<p>Hope you found this article useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>January 19th, 2025</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/sql/">
+					SQL
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/mysql/">
+					MySQL
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/databases/">
+					Databases
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/data-manipulation/">
+					Data Manipulation
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-cherry-pick-commits-from-one-git-branch-to-another">How to Cherry-Pick Commits from One Git Branch to Another?</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Although I had heard of Git's <code>cherry-pick</code> command, I never used it until a few months ago when I encountered a situation that demanded it. A client required us to work on multiple incidents and change requests (CRs), but they only wanted specific, approved updates pushed to the repository.</p>
+
+<p>This created a challenge, especially when I was simultaneously working on CRs and incidents. I needed a way to isolate and push only the approved changes while keeping the rest intact. That’s when I decided to try out Git’s <code>cherry-pick</code> command—and it worked like a charm! It made managing my codebase much easier.</p>
+
+<p>Here’s a simple walkthrough of how you can use it too:</p>
+
+<h2>The Scenario</h2>
+
+<p>I had two branches in my Git repository:</p>
+
+<ul>
+<li><strong>Branch A</strong>: The primary branch where ongoing development happens.</li>
+<li><strong>Branch B</strong>: A feature branch where I accidentally pushed updates that should partially go into <strong>Branch A</strong>.</li>
+</ul>
+
+<p>While it’s straightforward to merge changes from one branch into another, I only needed a subset of the commits from <strong>Branch B</strong> to be applied to <strong>Branch A</strong>. This is where Git’s <code>cherry-pick</code> command shines.</p>
+
+<p>Go along with me and follow it step-by-step:</p>
+
+<h2>1. Switch to the Target Branch</h2>
+
+<p>First, check out the branch where you want to apply the commits (in my case, <strong>Branch A</strong>):</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>checkout<span class="w"> </span>A
+</code></pre>
+</div>
+
+<h2>2. Find the Commits to Cherry-Pick</h2>
+
+<p>Use the <code>git log</code> command to list the commits in <strong>Branch B</strong> and identify the specific commit hashes you want to cherry-pick:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>log<span class="w"> </span>B
+</code></pre>
+</div>
+
+<p>You should see output similar to this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>commit<span class="w"> </span>abc1234<span class="w"> </span><span class="o">(</span>HEAD<span class="w"> </span>-&gt;<span class="w"> </span>B<span class="o">)</span>
+Author:<span class="w"> </span>Your<span class="w"> </span>Name<span class="w"> </span>&lt;you@example.com&gt;
+Date:<span class="w">   </span>Mon<span class="w"> </span>Jan<span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="m">12</span>:00:00<span class="w"> </span><span class="m">2025</span><span class="w"> </span>+0000
+
+<span class="w">    </span>Add<span class="w"> </span>feature<span class="w"> </span>X
+
+commit<span class="w"> </span>def5678
+Author:<span class="w"> </span>Your<span class="w"> </span>Name<span class="w"> </span>&lt;you@example.com&gt;
+Date:<span class="w">   </span>Sun<span class="w"> </span>Dec<span class="w"> </span><span class="m">31</span><span class="w"> </span><span class="m">12</span>:00:00<span class="w"> </span><span class="m">2024</span><span class="w"> </span>+0000
+
+<span class="w">    </span>Fix<span class="w"> </span>bug<span class="w"> </span>Y
+</code></pre>
+</div>
+
+<p>Take note of the commit hash(es) you need. For example, let’s say you want to cherry-pick <code>abc1234</code> and <code>def5678</code>.</p>
+
+<h2>3. Cherry-Pick the Commit(s)</h2>
+
+<h3>Single Commit</h3>
+
+<p>To apply a single commit from <strong>Branch B</strong> onto <strong>Branch A</strong>, use:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>cherry-pick<span class="w"> </span>abc1234
+</code></pre>
+</div>
+
+<h3>Multiple Commits</h3>
+
+<p>To apply multiple non-contiguous commits, list their hashes:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>cherry-pick<span class="w"> </span>abc1234<span class="w"> </span>def5678
+</code></pre>
+</div>
+
+<h3>Range of Commits</h3>
+
+<p>To cherry-pick a range of contiguous commits, use the <code>^..&lt;</code> notation:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>cherry-pick<span class="w"> </span>def5678^..abc1234
+</code></pre>
+</div>
+
+<p>This includes all commits from <code>def5678</code> to <code>abc1234</code>, inclusive.</p>
+
+<h2>4. Resolve Any Conflicts</h2>
+
+<p>If there are conflicts during the cherry-picking process, Git will pause and notify you. Resolve the conflicts in your files, then mark them as resolved:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>add<span class="w"> </span>&lt;file&gt;
+</code></pre>
+</div>
+
+<p>Continue the cherry-pick process:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>cherry-pick<span class="w"> </span>--continue
+</code></pre>
+</div>
+
+<p>To abort the cherry-pick if things go wrong:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>cherry-pick<span class="w"> </span>--abort
+</code></pre>
+</div>
+
+<ol start="5">
+<li>Verify the Result</li>
+</ol>
+
+<p>Once the cherry-picking is complete, you can inspect your branch to ensure the changes were applied:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>log
+</code></pre>
+</div>
+
+<p>You should see the cherry-picked commits in <strong>Branch A</strong>.</p>
+
+<h2>When is cherry-picking useful?</h2>
+
+<p>Cherry-picking is perfect when you need specific commits from another branch without merging all its changes. This is especially helpful in scenarios like:</p>
+
+<ul>
+<li>Applying a bug fix from a feature branch to the main branch.</li>
+<li>Pulling specific updates without merging unrelated work.</li>
+</ul>
+
+<h2>Bonus Tips</h2>
+
+<ul>
+<li>Always double-check commit hashes before cherry-picking to avoid unexpected results.</li>
+<li>Use descriptive commit messages to make it easier to identify what each commit does</li>
+<li>If you find yourself cherry-picking often, consider rethinking your branch workflows to reduce the need for it.</li>
+</ul>
+
+<p>That’s it! Now you know how to cherry-pick commits in Git. It’s a small but incredibly powerful tool to keep in your Git arsenal.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>January 18th, 2025</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/git/">
+					Git
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/vcs/">
+					VCS
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-check-if-smtp-is-reachable-from-my-machine-using-telnet">How to Check if SMTP is Reachable from My Machine Using Telnet?</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Recently, I learned how to test SMTP server connectivity using <code>telnet</code>. This is a handy way to verify if an SMTP server is reachable, troubleshoot email delivery issues, and manually interact with the server to diagnose problems. </p>
+
+<p>Here’s how I did it:</p>
+
+<h2>1. Ensure Telnet is Installed</h2>
+
+<p>First, I made sure <code>telnet</code> was installed on my machine. Most Linux distributions come with <code>telnet</code> pre-installed, but if it’s missing, here’s how to install it:</p>
+
+<h3>For Ubuntu/Debian:</h3>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>telnet
+</code></pre>
+</div>
+
+<h3>For CentOS/RHEL:</h3>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>yum<span class="w"> </span>install<span class="w"> </span>telnet
+</code></pre>
+</div>
+
+<h3>For Windows</h3>
+
+<p>Ironically, <code>telnet</code> is not enabled by default on Windows, but you can enable it:</p>
+
+<ol>
+<li>Open the Control Panel.</li>
+<li>Go to <strong>Programs</strong> &gt; <strong>Programs and Features</strong> &gt; <strong>Turn Windows features on or off</strong>.</li>
+<li>Check the box for <strong>Telnet Client</strong> and click <strong>OK</strong>.</li>
+<li>Once enabled, open the Command Prompt (<code>cmd</code>) to use Telnet.</li>
+</ol>
+
+<h2>2. Open a Telnet Connection to the SMTP Server</h2>
+
+<p>To connect to the SMTP server, I used the following command:</p>
+
+<div class="codehilite">
+<pre><span></span><code>telnet<span class="w"> </span>&lt;smtp_server_address&gt;<span class="w"> </span><span class="m">25</span>
+</code></pre>
+</div>
+
+<p>Replace <code>&lt;smtp_server_address&gt;</code> with the SMTP server’s hostname or IP address. For example:</p>
+
+<div class="codehilite">
+<pre><span></span><code>telnet<span class="w"> </span>smtp.example.com<span class="w"> </span><span class="m">25</span>
+</code></pre>
+</div>
+
+<p>If the connection is successful, the server responds with a <code>220</code> message, like this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>220 smtp.example.com ESMTP Postfix
+</code></pre>
+</div>
+
+<p>This means the SMTP server is reachable and ready to accept commands.</p>
+
+<h2>3. Test SMTP Commands (Optional)</h2>
+
+<p>To further test the SMTP server, I manually interacted with it using basic SMTP commands:</p>
+
+<h3>Greet the Server:</h3>
+
+<p>I sent an <code>EHLO</code> command to introduce myself:</p>
+
+<div class="codehilite">
+<pre><span></span><code>EHLO example.com
+</code></pre>
+</div>
+
+<p>The server responded with a list of supported features.</p>
+
+<h3>Start an Email Transaction:</h3>
+
+<p>I specified the sender using the <code>MAIL FROM</code> command:</p>
+
+<div class="codehilite">
+<pre><span></span><code>MAIL FROM:&lt;test@example.com&gt;
+</code></pre>
+</div>
+
+<p>The server responded with <code>250 OK</code>.</p>
+
+<h3>Specify the Recipient:</h3>
+
+<p>I added the recipient using the <code>RCPT TO</code> command:</p>
+
+<div class="codehilite">
+<pre><span></span><code>RCPT TO:&lt;user@example.com&gt;
+</code></pre>
+</div>
+
+<p>The server responded with <code>250 OK</code>.</p>
+
+<h3>Enter the Email Data:</h3>
+
+<p>I typed <code>DATA</code> to start composing the email:</p>
+
+<div class="codehilite">
+<pre><span></span><code>DATA
+</code></pre>
+</div>
+
+<p>After entering the email content, I ended the message with a single <code>.</code> on a new line:</p>
+
+<div class="codehilite">
+<pre><span></span><code>Subject: Test Email
+This is a test email sent via Telnet.
+.
+</code></pre>
+</div>
+
+<p>The server responded with <code>250 OK</code>, confirming that the email was accepted.</p>
+
+<h3>Quit the Session:</h3>
+
+<p>Finally, I ended the session with the <code>QUIT</code> command:</p>
+
+<div class="codehilite">
+<pre><span></span><code>QUIT
+</code></pre>
+</div>
+
+<h2>4. Troubleshoot Connection Issues</h2>
+
+<p>If the connection fails, I might see an error like:</p>
+
+<div class="codehilite">
+<pre><span></span><code>telnet: Unable to connect to remote host: Connection refused
+</code></pre>
+</div>
+
+<p>This could mean:</p>
+
+<ul>
+<li>The SMTP server is not running.</li>
+<li>The port is blocked by a firewall.</li>
+<li>The server uses a different port (e.g., 587 for submission or 465 for SMTPS).</li>
+</ul>
+
+<p>To resolve this, I checked:</p>
+
+<ul>
+<li>If the SMTP server is running and listening on the correct port.</li>
+<li>If my firewall or network allows outbound connections to the SMTP port.</li>
+</ul>
+
+<h2>Example Workflow:</h2>
+
+<p>Here’s what a successful Telnet session looks like:</p>
+
+<div class="codehilite">
+<pre><span></span><code>$<span class="w"> </span>telnet<span class="w"> </span>smtp.example.com<span class="w"> </span><span class="m">25</span>
+Trying<span class="w"> </span><span class="m">192</span>.0.2.1...
+Connected<span class="w"> </span>to<span class="w"> </span>smtp.example.com.
+Escape<span class="w"> </span>character<span class="w"> </span>is<span class="w"> </span><span class="s1">&#39;^]&#39;</span>.
+<span class="m">220</span><span class="w"> </span>smtp.example.com<span class="w"> </span>ESMTP<span class="w"> </span>Postfix
+EHLO<span class="w"> </span>example.com
+<span class="m">250</span>-smtp.example.com
+<span class="m">250</span>-PIPELINING
+<span class="m">250</span>-SIZE<span class="w"> </span><span class="m">10240000</span>
+<span class="m">250</span>-VRFY
+<span class="m">250</span>-ETRN
+<span class="m">250</span>-STARTTLS
+<span class="m">250</span>-ENHANCEDSTATUSCODES
+<span class="m">250</span>-8BITMIME
+<span class="m">250</span><span class="w"> </span>DSN
+MAIL<span class="w"> </span>FROM:&lt;test@example.com&gt;
+<span class="m">250</span><span class="w"> </span><span class="m">2</span>.1.0<span class="w"> </span>Ok
+RCPT<span class="w"> </span>TO:&lt;user@example.com&gt;
+<span class="m">250</span><span class="w"> </span><span class="m">2</span>.1.5<span class="w"> </span>Ok
+DATA
+<span class="m">354</span><span class="w"> </span>End<span class="w"> </span>data<span class="w"> </span>with<span class="w"> </span>&lt;CR&gt;&lt;LF&gt;.&lt;CR&gt;&lt;LF&gt;
+Subject:<span class="w"> </span>Test<span class="w"> </span>Email
+This<span class="w"> </span>is<span class="w"> </span>a<span class="w"> </span><span class="nb">test</span><span class="w"> </span>email<span class="w"> </span>sent<span class="w"> </span>via<span class="w"> </span>Telnet.
+.
+<span class="m">250</span><span class="w"> </span><span class="m">2</span>.0.0<span class="w"> </span>Ok:<span class="w"> </span>queued<span class="w"> </span>as<span class="w"> </span><span class="m">12345</span>
+QUIT
+<span class="m">221</span><span class="w"> </span><span class="m">2</span>.0.0<span class="w"> </span>Bye
+Connection<span class="w"> </span>closed<span class="w"> </span>by<span class="w"> </span>foreign<span class="w"> </span>host.
+</code></pre>
+</div>
+
+<h2>Why This is Useful?</h2>
+
+<p>Using Telnet to test SMTP connectivity is a quick and effective way to:</p>
+
+<ul>
+<li>Verify if the SMTP server is reachable.</li>
+<li>Diagnose email delivery issues.</li>
+<li>Manually test SMTP commands and server responses.</li>
+</ul>
+
+<p>Hope you've found this article useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>January 17th, 2025</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/smtp/">
+					SMTP
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/telnet/">
+					Telnet
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-change-the-modification-date-of-a-folder-using-power-shell">How to Change the Modification Date of a Folder Using PowerShell?</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Recently, I had an interesting experience with a client who can be a bit nosy—and occasionally bossy too. They have a strict policy of deploying updates during off-peak hours on Fridays. </p>
+
+<p>Like most developers, I’m not a fan of deploying on Fridays 😡.</p>
+
+<p>To navigate this, I deploy the updates on the server earlier in the week (without their knowledge) and place them in a separate directory until we receive the green light to switch the website to the new directory via server settings.</p>
+
+<p>If you’re wondering why I use a separate directory, it’s to ensure I have a quick rollback option if needed. Oh, and did I mention they’ve blocked <code>git</code> on the production server? So, no version control system (VCS) for us.</p>
+
+<p>Anyway, once I deployed earlier than planned and realized they might check the deployment timestamps. To stay ahead, I wrote a quick PowerShell script to tweak the folder timestamps.</p>
+
+<h2>Steps to Change Folder Modification Date</h2>
+
+<h3>Open PowerShell as Administrator</h3>
+
+<ul>
+<li>Search for <strong>"PowerShell"</strong> in the Start menu.</li>
+<li>Right-click on it and select <strong>Run as Administrator</strong>.</li>
+</ul>
+
+<h3>Run the Command</h3>
+
+<p>Use the following command to set the modification date for a folder:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nv">$path</span> <span class="p">=</span> <span class="s2">&quot;C:\Path\To\Your\Folder&quot;</span>
+<span class="nv">$date</span> <span class="p">=</span> <span class="nb">Get-Date</span> <span class="s2">&quot;2025-01-01 10:00:00&quot;</span>
+<span class="p">(</span><span class="nb">Get-Item</span> <span class="nv">$path</span><span class="p">).</span><span class="n">LastWriteTime</span> <span class="p">=</span> <span class="nv">$date</span>
+</code></pre>
+</div>
+
+<ul>
+<li>Replace <code>C:\Path\To\Your\Folder</code> with the full path of the folder.</li>
+<li>Replace <code>2025-01-01 10:00:00</code> with the desired date and time in the format <code>yyyy-MM-dd HH:mm:ss</code>.</li>
+</ul>
+
+<h3>Verify the Change</h3>
+
+<p>To confirm the modification date has been updated, use:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="p">(</span><span class="nb">Get-Item</span> <span class="nv">$path</span><span class="p">).</span><span class="n">LastWriteTime</span>
+</code></pre>
+</div>
+
+<h2>Other Timestamps You Can Modify</h2>
+
+<p>PowerShell allows you to adjust other timestamps as well:</p>
+
+<h3>Creation Date:</h3>
+
+<div class="codehilite">
+<pre><span></span><code><span class="p">(</span><span class="nb">Get-Item</span> <span class="nv">$path</span><span class="p">).</span><span class="n">CreationTime</span> <span class="p">=</span> <span class="nv">$date</span>
+</code></pre>
+</div>
+
+<h3>Accessed Date:</h3>
+
+<div class="codehilite">
+<pre><span></span><code><span class="p">(</span><span class="nb">Get-Item</span> <span class="nv">$path</span><span class="p">).</span><span class="n">LastAccessTime</span> <span class="p">=</span> <span class="nv">$date</span>
+</code></pre>
+</div>
+
+<h2>Why This is Useful?</h2>
+
+<p>This method is great for:</p>
+
+<ul>
+<li>Organizing folders with custom timestamps.</li>
+<li>Simulating specific scenarios for testing.</li>
+<li>Avoiding the hassle of installing third-party tools.</li>
+</ul>
+
+<p>Situations like this has made me realize that the flexibility of PowerShell makes it the perfect tool for quick tasks. It’s amazing how a simple command can give you full control over folder metadata!</p>
+
+<p>Hope you found this useful (and keep your tracks clear!)</p>
+
+	</div>
+	<div class="article-footer">
+		<time>January 16th, 2025</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/powershell/">
+					PowerShell
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/fixing-a-core-clr-load-error-in-iis-with-self-contained-deployment">Fixing a CoreCLR Load Error in IIS with Self-Contained Deployment</a></h1>
 		<p class="description"></p>
 	</div>
@@ -549,269 +1169,6 @@ find<span class="w"> </span><span class="o">[</span>foldername<span class="o">]<
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/using-records-for-dtos">Using records for DTOs</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>If you're building an application or API using .NET Core in where you might have to integrate with any external services or third-party APIs, this is for you.</p>
-
-<h2>What are records?</h2>
-
-<p>It's a feature introduced since <strong>C# 9.0</strong> that allows you to create simple and immutable data types. When representing DTOs (Data Transfer Objects), it comes in handy because the syntax in concise and it's primarily used to transfer data between layers of an application such as the Core and Presentation Layer. </p>
-
-<p>Here's an example of a car using a regular <code>class</code> type:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">public</span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">Car</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="k">public</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="n">Manufacturer</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">get</span><span class="p">;</span><span class="w"> </span><span class="k">init</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
-<span class="w">    </span><span class="k">public</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">Price</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">get</span><span class="p">;</span><span class="w"> </span><span class="k">init</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
-<span class="w">    </span><span class="k">public</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="n">Color</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">get</span><span class="p">;</span><span class="w"> </span><span class="k">init</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
-<span class="p">}</span>
-</code></pre>
-</div>
-
-<p>And here's a simplified version of that using <code>record</code> type:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">public</span><span class="w"> </span><span class="k">record</span><span class="w"> </span><span class="nf">Car</span><span class="p">(</span>
-<span class="w">    </span><span class="kt">string</span><span class="w"> </span><span class="n">Manufacturer</span><span class="p">,</span>
-<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">Price</span><span class="p">,</span>
-<span class="w">    </span><span class="kt">string</span><span class="w"> </span><span class="n">Color</span>
-<span class="p">);</span>
-</code></pre>
-</div>
-
-<p>Making use of the <code>record</code> type to manage Data Transfer Objects makes use of clean coding practicies by writing concise yet maintainable code.</p>
-
-<h2>So, no need of using classes?</h2>
-
-<p>Well, it depends because records aren't meant to replace classes for all scenarios. It's still recommended to use regular classes for complex types with complex behavior and whereas, records can be used for simple data structures.</p>
-
-<p>Hope you found this article useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>June 18th, 2024</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/net-core/">
-					.NET Core
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/c/">
-					C#
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/oop/">
-					OOP
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/using-property-pattern-matching-in-c">Using Property Pattern Matching in C#</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Alright, we've all been there especially when it comes to writing IF conditions with multiple checks in a single line like the example below:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">if</span><span class="p">(</span><span class="n">employee</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="k">null</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">employee</span><span class="p">.</span><span class="n">Age</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">20</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">employee</span><span class="p">.</span><span class="n">Address</span><span class="p">.</span><span class="n">City</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s">&quot;Dubai&quot;</span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="c1">// Do something here...</span>
-<span class="p">}</span>
-</code></pre>
-</div>
-
-<p>As you can see, this condition is straight-forward but can sometimes hinder readability and doesn't really ensure type safety.</p>
-
-<p>Here's where you can make use <strong>Property Pattern Matching</strong>.</p>
-
-<h2>What's Property Pattern Matching?</h2>
-
-<p>This type of pattern matching is used to match the defined expression if the conditions/nested conditions successfully matches the corresponding property or the field of the result and output of the result is not null. Here's an example of how it might be like:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">if</span><span class="p">(</span><span class="n">employee</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">Age</span><span class="p">:</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">20</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">Address</span><span class="p">.</span><span class="n">City</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s">&quot;Dubai&quot;</span><span class="w"> </span><span class="p">})</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="c1">// Do something here...</span>
-<span class="p">}</span>
-</code></pre>
-</div>
-
-<p>This pattern elevates your code's readability, ensures type safety and enable flexibility in terms of data manipulation.</p>
-
-<p>Hope you found this tip useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>June 17th, 2024</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/c/">
-					C#
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/programming/">
-					Programming
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/remove-control-flags">Remove Control Flags</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>There are times when we write flags to control the flow of the program. I mean, it's good to use control flags (sometimes) but it's not necessary to be used in most cases. Like the one shown below:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">public</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="nf">HandlePaymentRecords</span><span class="p">(</span><span class="n">List</span><span class="o">&lt;</span><span class="n">PaymentRecord</span><span class="o">&gt;</span><span class="w"> </span><span class="n">paymentRecords</span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">isSuccessful</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">true</span><span class="p">;</span>
-
-<span class="w">    </span><span class="k">foreach</span><span class="p">(</span><span class="kt">var</span><span class="w"> </span><span class="n">paymentRecord</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="n">paymentRecords</span><span class="p">)</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">ProcessPaymentRecord</span><span class="p">(</span><span class="n">paymentRecord</span><span class="p">))</span>
-<span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="n">isSuccessful</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">false</span><span class="p">;</span>
-<span class="w">            </span><span class="k">break</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">isSuccessful</span><span class="p">;</span>
-<span class="p">}</span>
-</code></pre>
-</div>
-
-<p>The name of method states it's purpose but it seems a tad bit complicated and might confuse some developers who get on-board with it. </p>
-
-<p>Instead, you can make of use of a refactoring technique called <strong>Remove Control Flags</strong> and modify the method to look like this:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">public</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="nf">HandlePaymentProcess</span><span class="p">(</span><span class="n">List</span><span class="o">&lt;</span><span class="n">PaymentRecord</span><span class="o">&gt;</span><span class="w"> </span><span class="n">paymentRecords</span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="k">foreach</span><span class="p">(</span><span class="kt">var</span><span class="w"> </span><span class="n">paymentRecord</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="n">paymentRecords</span><span class="p">)</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">ProcessPaymentRecord</span><span class="p">(</span><span class="n">paymentRecord</span><span class="p">))</span>
-<span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="k">false</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="k">true</span><span class="p">;</span>
-<span class="p">}</span>
-</code></pre>
-</div>
-
-<p>The logic is the same but now the code is now simplified, less complex to read and much more maintainable.</p>
-
-<p>Less code is good code.</p>
-
-<p>Hope this helps you out!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>June 16th, 2024</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/c/">
-					C#
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/clean-code/">
-					Clean Code
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/refactoring/">
-					Refactoring
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/error-loading-v8-startup-snapshot-file-in-visual-studio-code">Error loading V8 startup snapshot file in Visual Studio Code</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Unusually, one fine afternoon, I was facing issues with opening my VSCode editor and I faced the followinge error when I tried <code>code .</code> on my project directory:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="o">[</span><span class="m">0830</span>/101630.031:FATAL:v8_initializer.cc<span class="o">(</span><span class="m">527</span><span class="o">)]</span><span class="w"> </span>Error<span class="w"> </span>loading<span class="w"> </span>V8<span class="w"> </span>startup<span class="w"> </span>snapshot<span class="w"> </span>file
-</code></pre>
-</div>
-
-<p>I didn't really understand what might have caused it but after reading this <a href="https://github.com/microsoft/vscode/issues/183314">issue raised on GitHub</a>, I realized that occurred due to a corrupted update while I was shutting down my PC (Good job, Windows! :facepalm:)</p>
-
-<p>If you're are lucky enough, here's how you can get it back to work:</p>
-
-<ol>
-<li>Go <code>C:\Users\XXX\AppData\Local\Programs\Microsoft VS Code</code> directory</li>
-<li>If you spot a folder titled <code>_</code>, copy the contents and paste it in the VS Code directly</li>
-<li>Try starting your editor again</li>
-</ol>
-
-<p>The following steps worked out for me and if it worked out for you, that's great! Else, you'll have to re-install your editor all over again, which means you might have to re-install your extensions and re-configure it again (if you haven't taken a backup of it).</p>
-
-<p>Hope this helps you out!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>May 29th, 2024</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/vscode/">
-					VSCode
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/troubleshooting/">
-					Troubleshooting
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -839,11 +1196,11 @@ find<span class="w"> </span><span class="o">[</span>foldername<span class="o">]<
 		
 	
 		
-			<a class="" href="/til/pages/15">...</a>
+			<a class="" href="/til/pages/16">...</a>
 		
 	
 		
-			<a class="" href="/til/pages/19">19</a>
+			<a class="" href="/til/pages/20">20</a>
 		
 	
 
@@ -875,6 +1232,13 @@ find<span class="w"> </span><span class="o">[</span>foldername<span class="o">]<
 		</li>
 		
 		<li>
+			<a href="/category/devops/">
+				DevOps
+				<span class="count">21</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/laravel/">
 				Laravel
 				<span class="count">20</span>
@@ -882,9 +1246,9 @@ find<span class="w"> </span><span class="o">[</span>foldername<span class="o">]<
 		</li>
 		
 		<li>
-			<a href="/category/devops/">
-				DevOps
-				<span class="count">20</span>
+			<a href="/category/git/">
+				Git
+				<span class="count">15</span>
 			</a>
 		</li>
 		
@@ -892,13 +1256,6 @@ find<span class="w"> </span><span class="o">[</span>foldername<span class="o">]<
 			<a href="/category/php/">
 				PHP
 				<span class="count">14</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/git/">
-				Git
-				<span class="count">12</span>
 			</a>
 		</li>
 		
@@ -938,16 +1295,16 @@ find<span class="w"> </span><span class="o">[</span>foldername<span class="o">]<
 		</li>
 		
 		<li>
-			<a href="/category/productivity/">
-				Productivity
+			<a href="/category/mysql/">
+				MySQL
 				<span class="count">10</span>
 			</a>
 		</li>
 		
 		<li>
-			<a href="/category/mysql/">
-				MySQL
-				<span class="count">9</span>
+			<a href="/category/productivity/">
+				Productivity
+				<span class="count">10</span>
 			</a>
 		</li>
 		
@@ -987,6 +1344,13 @@ find<span class="w"> </span><span class="o">[</span>foldername<span class="o">]<
 		</li>
 		
 		<li>
+			<a href="/category/vcs/">
+				VCS
+				<span class="count">5</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/c/">
 				C#
 				<span class="count">5</span>
@@ -1022,16 +1386,16 @@ find<span class="w"> </span><span class="o">[</span>foldername<span class="o">]<
 		</li>
 		
 		<li>
-			<a href="/category/arcade-challenge/">
-				Arcade Challenge
+			<a href="/category/databases/">
+				Databases
 				<span class="count">4</span>
 			</a>
 		</li>
 		
 		<li>
-			<a href="/category/databases/">
-				Databases
-				<span class="count">3</span>
+			<a href="/category/arcade-challenge/">
+				Arcade Challenge
+				<span class="count">4</span>
 			</a>
 		</li>
 		
@@ -1078,8 +1442,8 @@ find<span class="w"> </span><span class="o">[</span>foldername<span class="o">]<
 		</li>
 		
 		<li>
-			<a href="/category/vcs/">
-				VCS
+			<a href="/category/software-development/">
+				Software Development
 				<span class="count">2</span>
 			</a>
 		</li>
@@ -1225,6 +1589,20 @@ find<span class="w"> </span><span class="o">[</span>foldername<span class="o">]<
 		</li>
 		
 		<li>
+			<a href="/category/self-development/">
+				Self Development
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/goals/">
+				Goals
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/phpstorm/">
 				PHPStorm
 				<span class="count">1</span>
@@ -1325,13 +1703,6 @@ find<span class="w"> </span><span class="o">[</span>foldername<span class="o">]<
 		<li>
 			<a href="/category/csr/">
 				CSR
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/software-development/">
-				Software Development
 				<span class="count">1</span>
 			</a>
 		</li>

@@ -77,6 +77,427 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/removing-commits-from-a-branch-using-git-interactive-rebase">Removing Commits from a Branch Using Git Interactive Rebase</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>I'm working on a project that had approximately five minor incident fixes. However, I got approval from the client side to push only three of them. Luckily, my commits are atomic, so making this build was easier than I thought.</p>
+
+<p>At this moment, I decided to clone the latest branch into a temporary branch and roll back two commits for today's deployment while keeping the latest branch intact with all the fixes.</p>
+
+<p>To achieve this, I used <strong>Git interactive rebase</strong>, a powerful tool for modifying commit history.</p>
+
+<h2>Why Use Interactive Rebase?</h2>
+
+<p>Interactive rebase allows you to modify commit history, including:</p>
+
+<ul>
+<li>Removing unwanted commits</li>
+<li>Reordering commits</li>
+<li>Squashing multiple commits into one</li>
+<li>Editing commit messages</li>
+</ul>
+
+<h2>How I Did It?</h2>
+
+<p>Here’s the step-by-step process I followed:</p>
+
+<h3>1. Clone the Branch</h3>
+
+<p>Before making any changes, I cloned the branch to have a backup:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>checkout<span class="w"> </span>-b<span class="w"> </span>my-cloned-branch<span class="w"> </span>original-branch
+</code></pre>
+</div>
+
+<h3>2. Start Interactive Rebase</h3>
+
+<p>To remove specific commits, I ran:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>rebase<span class="w"> </span>-i<span class="w"> </span>HEAD~N
+</code></pre>
+</div>
+
+<p>Where <code>N</code> is the number of commits I wanted to review. This opened an editor displaying the most recent commits.</p>
+
+<h3>3. Modify the Commit List</h3>
+
+<p>The interactive rebase interface showed something like this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>pick<span class="w"> </span>abc123<span class="w"> </span>Commit<span class="w"> </span>message<span class="w"> </span><span class="m">1</span>
+pick<span class="w"> </span>def456<span class="w"> </span>Commit<span class="w"> </span>message<span class="w"> </span><span class="m">2</span>
+pick<span class="w"> </span>ghi789<span class="w"> </span>Commit<span class="w"> </span>message<span class="w"> </span><span class="m">3</span>
+</code></pre>
+</div>
+
+<p>To <strong>remove</strong> a commit, I replaced <code>pick</code> with <code>drop</code>.</p>
+
+<p>To <strong>edit</strong> or <strong>squash</strong> commits, I could replace <code>pick</code> with commands like <code>edit</code> or <code>squash</code>.</p>
+
+<p>After making my changes, I saved and closed the editor.</p>
+
+<h3>4. Handle Any Conflicts (If Needed)</h3>
+
+<p>If Git encountered conflicts, it prompted me to resolve them. I fixed the files and continued the rebase:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>rebase<span class="w"> </span>--continue
+</code></pre>
+</div>
+
+<h2>Key Takeaways</h2>
+
+<ul>
+<li>Interactive rebase is powerful for cleaning up commit history.</li>
+<li>Always clone or create a backup branch before rebasing.</li>
+<li>If working with a team, communicate before modifying shared branches.</li>
+</ul>
+
+<p>This was a great learning experience, and now I feel more confident managing Git history efficiently!</p>
+
+<p>Hope you found this tip useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>February 24th, 2025</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/git/">
+					Git
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/vcs/">
+					VCS
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/recovering-my-sql-after-an-accidental-binlog-deletion">Recovering MySQL After an Accidental Binlog Deletion</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Last night, I found myself debugging a MySQL issue at an ungodly hour. The <strong>MySQL80 service refused to start</strong>, throwing a vague error:  </p>
+
+<blockquote>
+  <p><em>The MySQL80 service started and then stopped…</em>  </p>
+</blockquote>
+
+<p>Digging into <code>mysql.err</code>, I discovered the culprit—someone (not me! 😤) had <strong>accidentally deleted a binary log (<code>mysql-bin.000xxx</code>)</strong> while MySQL was still tracking it. Since MySQL relies on binlogs for replication and crash recovery, it panicked when it couldn't find the missing file.  </p>
+
+<h2>The Fix</h2>
+
+<p>To get MySQL running again, I had to:  </p>
+
+<ul>
+<li><strong>Disable binary logging</strong> (since this is a standalone server)  </li>
+<li><strong>Delete the corrupt binlog index file</strong> (<code>mysql-bin.index</code>)  </li>
+<li><strong>Purge all old binlog files</strong> that were hogging disk space  </li>
+</ul>
+
+<h2>How to Properly Disable Binary Logging in MySQL 8.0?</h2>
+
+<p>Since <strong>MySQL 8.0 enables binlogs by default</strong>, simply removing <code>log-bin=mysql-bin</code> from <code>my.ini</code> wasn’t enough. I had to:  </p>
+
+<h3>Comment out the existing binlog setting in my.ini</h3>
+
+<div class="codehilite">
+<pre><span></span><code><span class="c1"># log-bin=mysql-bin</span>
+</code></pre>
+</div>
+
+<h3>Explicitly disable binary logging</h3>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">[mysqld]</span>
+<span class="na">skip-log-bin</span>
+</code></pre>
+</div>
+
+<h3>Delete the old <code>mysql-bin.index</code> file</h3>
+
+<ul>
+<li>This file keeps track of all binary log files.  </li>
+<li>Since a referenced binlog file was deleted, MySQL would <strong>fail to start</strong> if the index still contained entries for missing files.  </li>
+<li>Deleting it ensures that MySQL doesn’t look for non-existent logs.  </li>
+</ul>
+
+<p>After restarting the service, I confirmed binlogging was off with:  </p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">SHOW</span><span class="w"> </span><span class="n">VARIABLES</span><span class="w"> </span><span class="k">LIKE</span><span class="w"> </span><span class="s1">&#39;log_bin&#39;</span><span class="p">;</span>
+</code></pre>
+</div>
+
+<p>Output:  </p>
+
+<div class="codehilite">
+<pre><span></span><code>log_bin<span class="w"> </span><span class="p">|</span><span class="w"> </span>OFF
+</code></pre>
+</div>
+
+<p>In conclusion, crisis averted, disk space reclaimed and finally got some sleep. 😴</p>
+
+<p>Hope you found this useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>February 18th, 2025</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/mysql/">
+					MySQL
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/databases/">
+					Databases
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-revert-a-git-commit-on-the-server">How to Revert a Git Commit on the Server?</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Today I learned how to revert a Git commit after pulling it on a server. Whether you've made a mistake or just need to backtrack, Git offers several ways to undo commits depending on your situation. Here's a quick guide on how to handle it.</p>
+
+<h2>If You Haven't Pushed the Commit Yet</h2>
+
+<p>If the commit hasn't been pushed to the remote repository, you can use <code>git reset</code> to undo it.</p>
+
+<h2>Soft Reset (keeps changes staged)</h2>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>reset<span class="w"> </span>--soft<span class="w"> </span>HEAD~1
+</code></pre>
+</div>
+
+<p>This moves the HEAD back by one commit but keeps your changes staged.</p>
+
+<h2>Mixed Reset (keeps changes unstaged):</h2>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>reset<span class="w"> </span>--mixed<span class="w"> </span>HEAD~1
+</code></pre>
+</div>
+
+<p>This moves the HEAD back by one commit and unstages your changes.</p>
+
+<h2>Hard Reset (discards changes):</h2>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>reset<span class="w"> </span>--hard<span class="w"> </span>HEAD~1
+</code></pre>
+</div>
+
+<p>This completely removes the last commit and discards any changes.</p>
+
+<blockquote>
+  <p><strong>Tip:</strong> Replace <code>HEAD~1</code> with <code>HEAD~2</code> to go back two commits, and so on.</p>
+</blockquote>
+
+<h2>If You've Already Pushed the Commit</h2>
+
+<h3>Revert the Commit (Safe for Shared Repositories):</h3>
+
+<p>If you've already pushed the commit and want to undo it without rewriting history, use <code>git revert</code>. This creates a new commit that undoes the changes.</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>revert<span class="w"> </span>&lt;commit_hash&gt;
+</code></pre>
+</div>
+
+<p>Find the commit hash using:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>log<span class="w"> </span>--oneline
+</code></pre>
+</div>
+
+<h3>Force Reset (If You're Okay Rewriting History):</h3>
+
+<p>If you don't mind rewriting history (and no one else is working on the branch), you can force reset.</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>reset<span class="w"> </span>--hard<span class="w"> </span>&lt;commit_hash&gt;
+git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>HEAD<span class="w"> </span>--force
+</code></pre>
+</div>
+
+<div class="post-notification">
+    <h3>⚠️Warning</h3>
+    <p>This is not recommended if others are working on the same branch as it can cause conflicts.</p>
+</div>
+
+<h2>If You Just Pulled and Want to Undo That</h2>
+
+<p>If you just pulled and want to undo the merge, you can reset to the previous state using <code>ORIG_HEAD</code>.</p>
+
+<h3>Undo a Merge Pull:</h3>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>reset<span class="w"> </span>--hard<span class="w"> </span>ORIG_HEAD
+</code></pre>
+</div>
+
+<p>This will bring your repository back to the state before the last pull.</p>
+
+<h3>Final Thoughts</h3>
+
+<p>Reverting commits can seem daunting at first, but once you understand the tools Git offers, it's pretty straightforward. Always double-check before using <code>--hard</code> or <code>--force</code> to avoid accidental data loss!</p>
+
+<p>Hope this helps you get back on track!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>February 5th, 2025</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/git/">
+					Git
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/vcs/">
+					VCS
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-delete-multiple-git-branches-from-the-command-line">How to Delete Multiple Git Branches from the Command Line?</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Whether you're cleaning up local branches after a feature merge or tidying up remote branches, here’s how you can do it.</p>
+
+<h2>Deleting Multiple Local Branches</h2>
+
+<p>To delete multiple local branches safely (only if they’ve been merged), use:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>branch<span class="w"> </span>-d<span class="w"> </span>branch1<span class="w"> </span>branch2<span class="w"> </span>branch3
+</code></pre>
+</div>
+
+<p>If the branches haven't been merged and you still want to delete them, force delete with:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>branch<span class="w"> </span>-D<span class="w"> </span>branch1<span class="w"> </span>branch2<span class="w"> </span>branch3
+</code></pre>
+</div>
+
+<h2>Deleting Multiple Remote Branches</h2>
+
+<p>For remote branches, you can delete them by running:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>--delete<span class="w"> </span>branch1<span class="w"> </span>branch2<span class="w"> </span>branch3
+</code></pre>
+</div>
+
+<p>Alternatively, you can use the colon <code>:</code> syntax:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>:branch1<span class="w"> </span>:branch2<span class="w"> </span>:branch3
+</code></pre>
+</div>
+
+<h2>Deleting Multiple Branches Using a Pattern</h2>
+
+<p>If you want to delete branches that follow a naming pattern (like <code>feature/</code> branches), you can use <code>grep</code> and <code>xargs</code>:</p>
+
+<h3>For local branches:</h3>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>branch<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;feature/&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>xargs<span class="w"> </span>git<span class="w"> </span>branch<span class="w"> </span>-d
+</code></pre>
+</div>
+
+<p>To force delete:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>branch<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;feature/&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>xargs<span class="w"> </span>git<span class="w"> </span>branch<span class="w"> </span>-D
+</code></pre>
+</div>
+
+<h3>For remote branches:</h3>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>branch<span class="w"> </span>-r<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;origin/feature/&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sed<span class="w"> </span><span class="s1">&#39;s/origin\///&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>xargs<span class="w"> </span>-I<span class="w"> </span><span class="o">{}</span><span class="w"> </span>git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>--delete<span class="w"> </span><span class="o">{}</span>
+</code></pre>
+</div>
+
+<h2>Final Tips</h2>
+
+<ul>
+<li><strong>List branches before deleting:</strong> Use <code>git branch</code> for local and <code>git branch -r</code> for remote branches to verify which ones you’re about to delete.</li>
+<li><strong>Be cautious with force delete (<code>-D</code>):</strong> It will remove branches even if they haven’t been merged, so make sure you won’t lose important work.</li>
+</ul>
+
+<p>Hope you found this useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>February 5th, 2025</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/git/">
+					Git
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/vcs/">
+					VCS
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/mastering-php-storm-essential-shortcuts-and-tips-for-faster-coding">Mastering PHPStorm: Essential Shortcuts and Tips for Faster Coding</a></h1>
 		<p class="description"></p>
 	</div>
@@ -602,626 +1023,6 @@ sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class=
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-filter-records-based-on-a_string-column-containing-numbers-with-commas-and-dots">How to Filter Records Based on a String Column Containing Numbers with Commas and Dots?</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Last month, I encountered a scenario where I needed to filter records in a database based on a "revenue" column. The challenge? The <code>revenue</code> column was stored as a string data type, and some of the values contained commas (<code>,</code>) and dots (<code>.</code>). Here’s how I tackled the problem and wrote an SQL query to filter records based on the numeric value of the <code>revenue</code> column.</p>
-
-<h2>What I faced?</h2>
-
-<p>The <code>revenue</code> column was stored as a string, and the values looked like this:</p>
-
-<ul>
-<li>"50,000,000"</li>
-<li>"75.000.000"</li>
-<li>"10000000"</li>
-</ul>
-
-<p>I needed to filter records where the revenue was greater than <strong>"50,000,000"</strong>. However, since the column was a string, I couldn’t directly compare it to a numeric value.</p>
-
-<h2>What I did?</h2>
-
-<p>To handle this, I used a combination of SQL functions:</p>
-
-<ol>
-<li><code>REPLACE</code>: To remove commas (<code>,</code>) and dots (<code>.</code>) from the string.</li>
-<li><code>CAST</code>: To convert the cleaned string into a numeric data type (<code>DECIMAL</code> in this case).</li>
-</ol>
-
-<p>Here’s the SQL query I wrote:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span>
-<span class="k">FROM</span><span class="w"> </span><span class="n">your_table</span>
-<span class="k">WHERE</span><span class="w"> </span><span class="k">CAST</span><span class="p">(</span><span class="k">REPLACE</span><span class="p">(</span><span class="n">revenue</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;,&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="nb">DECIMAL</span><span class="p">(</span><span class="mi">18</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">))</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">50000000</span><span class="p">;</span>
-</code></pre>
-</div>
-
-<p>Need a breakdown? Here you go:</p>
-
-<ol>
-<li><code>REPLACE(revenue, ',', '')</code>:
-This removes commas from the <code>revenue</code> string. For example, <strong>"50,000,000"</strong> becomes <strong>"50000000"</strong>.</li>
-<li><code>CAST(... AS DECIMAL(18, 2))</code>:
-This converts the cleaned string into a <code>DECIMAL</code> value with 18 total digits and 2 decimal places. For example, <strong>"50000000"</strong> becomes <strong>50000000.00</strong>.</li>
-<li><code>&gt; 50000000</code>:
-Finally, the query filters records where the numeric value of <code>revenue</code> is greater than <strong>50,000,000</strong>.</li>
-</ol>
-
-<h2>Handling Dots as Thousand Separators</h2>
-
-<p>If the <code>revenue</code> column uses dots (<code>.</code>) as thousand separators (e.g., <strong>"75.000.000"</strong>), you can extend the <code>REPLACE</code> function to remove dots as well:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span>
-<span class="k">FROM</span><span class="w"> </span><span class="n">your_table</span>
-<span class="k">WHERE</span><span class="w"> </span><span class="k">CAST</span><span class="p">(</span><span class="k">REPLACE</span><span class="p">(</span><span class="k">REPLACE</span><span class="p">(</span><span class="n">revenue</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;,&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">),</span><span class="w"> </span><span class="s1">&#39;.&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="nb">DECIMAL</span><span class="p">(</span><span class="mi">18</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">))</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">50000000</span><span class="p">;</span>
-</code></pre>
-</div>
-
-<p>This ensures that both commas and dots are removed before converting the string to a numeric value.</p>
-
-<h2>Why did I do this?</h2>
-
-<p>This approach is helpful when:</p>
-
-<ul>
-<li>You’re working with data stored as strings but need to perform numeric comparisons.</li>
-<li>The data contains formatting characters like commas or dots.</li>
-<li>You want to avoid manual data cleaning or preprocessing.</li>
-</ul>
-
-<p>By using SQL functions like <code>REPLACE</code> and <code>CAST</code>, you can handle these scenarios directly in your queries.</p>
-
-<p>Oh, this works for SQL and MySQL as well!</p>
-
-<p>Hope you found this article useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>January 19th, 2025</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/sql/">
-					SQL
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/mysql/">
-					MySQL
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/databases/">
-					Databases
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/data-manipulation/">
-					Data Manipulation
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-cherry-pick-commits-from-one-git-branch-to-another">How to Cherry-Pick Commits from One Git Branch to Another?</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Although I had heard of Git's <code>cherry-pick</code> command, I never used it until a few months ago when I encountered a situation that demanded it. A client required us to work on multiple incidents and change requests (CRs), but they only wanted specific, approved updates pushed to the repository.</p>
-
-<p>This created a challenge, especially when I was simultaneously working on CRs and incidents. I needed a way to isolate and push only the approved changes while keeping the rest intact. That’s when I decided to try out Git’s <code>cherry-pick</code> command—and it worked like a charm! It made managing my codebase much easier.</p>
-
-<p>Here’s a simple walkthrough of how you can use it too:</p>
-
-<h2>The Scenario</h2>
-
-<p>I had two branches in my Git repository:</p>
-
-<ul>
-<li><strong>Branch A</strong>: The primary branch where ongoing development happens.</li>
-<li><strong>Branch B</strong>: A feature branch where I accidentally pushed updates that should partially go into <strong>Branch A</strong>.</li>
-</ul>
-
-<p>While it’s straightforward to merge changes from one branch into another, I only needed a subset of the commits from <strong>Branch B</strong> to be applied to <strong>Branch A</strong>. This is where Git’s <code>cherry-pick</code> command shines.</p>
-
-<p>Go along with me and follow it step-by-step:</p>
-
-<h2>1. Switch to the Target Branch</h2>
-
-<p>First, check out the branch where you want to apply the commits (in my case, <strong>Branch A</strong>):</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>checkout<span class="w"> </span>A
-</code></pre>
-</div>
-
-<h2>2. Find the Commits to Cherry-Pick</h2>
-
-<p>Use the <code>git log</code> command to list the commits in <strong>Branch B</strong> and identify the specific commit hashes you want to cherry-pick:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>log<span class="w"> </span>B
-</code></pre>
-</div>
-
-<p>You should see output similar to this:</p>
-
-<div class="codehilite">
-<pre><span></span><code>commit<span class="w"> </span>abc1234<span class="w"> </span><span class="o">(</span>HEAD<span class="w"> </span>-&gt;<span class="w"> </span>B<span class="o">)</span>
-Author:<span class="w"> </span>Your<span class="w"> </span>Name<span class="w"> </span>&lt;you@example.com&gt;
-Date:<span class="w">   </span>Mon<span class="w"> </span>Jan<span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="m">12</span>:00:00<span class="w"> </span><span class="m">2025</span><span class="w"> </span>+0000
-
-<span class="w">    </span>Add<span class="w"> </span>feature<span class="w"> </span>X
-
-commit<span class="w"> </span>def5678
-Author:<span class="w"> </span>Your<span class="w"> </span>Name<span class="w"> </span>&lt;you@example.com&gt;
-Date:<span class="w">   </span>Sun<span class="w"> </span>Dec<span class="w"> </span><span class="m">31</span><span class="w"> </span><span class="m">12</span>:00:00<span class="w"> </span><span class="m">2024</span><span class="w"> </span>+0000
-
-<span class="w">    </span>Fix<span class="w"> </span>bug<span class="w"> </span>Y
-</code></pre>
-</div>
-
-<p>Take note of the commit hash(es) you need. For example, let’s say you want to cherry-pick <code>abc1234</code> and <code>def5678</code>.</p>
-
-<h2>3. Cherry-Pick the Commit(s)</h2>
-
-<h3>Single Commit</h3>
-
-<p>To apply a single commit from <strong>Branch B</strong> onto <strong>Branch A</strong>, use:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>cherry-pick<span class="w"> </span>abc1234
-</code></pre>
-</div>
-
-<h3>Multiple Commits</h3>
-
-<p>To apply multiple non-contiguous commits, list their hashes:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>cherry-pick<span class="w"> </span>abc1234<span class="w"> </span>def5678
-</code></pre>
-</div>
-
-<h3>Range of Commits</h3>
-
-<p>To cherry-pick a range of contiguous commits, use the <code>^..&lt;</code> notation:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>cherry-pick<span class="w"> </span>def5678^..abc1234
-</code></pre>
-</div>
-
-<p>This includes all commits from <code>def5678</code> to <code>abc1234</code>, inclusive.</p>
-
-<h2>4. Resolve Any Conflicts</h2>
-
-<p>If there are conflicts during the cherry-picking process, Git will pause and notify you. Resolve the conflicts in your files, then mark them as resolved:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>add<span class="w"> </span>&lt;file&gt;
-</code></pre>
-</div>
-
-<p>Continue the cherry-pick process:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>cherry-pick<span class="w"> </span>--continue
-</code></pre>
-</div>
-
-<p>To abort the cherry-pick if things go wrong:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>cherry-pick<span class="w"> </span>--abort
-</code></pre>
-</div>
-
-<ol start="5">
-<li>Verify the Result</li>
-</ol>
-
-<p>Once the cherry-picking is complete, you can inspect your branch to ensure the changes were applied:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>log
-</code></pre>
-</div>
-
-<p>You should see the cherry-picked commits in <strong>Branch A</strong>.</p>
-
-<h2>When is cherry-picking useful?</h2>
-
-<p>Cherry-picking is perfect when you need specific commits from another branch without merging all its changes. This is especially helpful in scenarios like:</p>
-
-<ul>
-<li>Applying a bug fix from a feature branch to the main branch.</li>
-<li>Pulling specific updates without merging unrelated work.</li>
-</ul>
-
-<h2>Bonus Tips</h2>
-
-<ul>
-<li>Always double-check commit hashes before cherry-picking to avoid unexpected results.</li>
-<li>Use descriptive commit messages to make it easier to identify what each commit does</li>
-<li>If you find yourself cherry-picking often, consider rethinking your branch workflows to reduce the need for it.</li>
-</ul>
-
-<p>That’s it! Now you know how to cherry-pick commits in Git. It’s a small but incredibly powerful tool to keep in your Git arsenal.</p>
-
-	</div>
-	<div class="article-footer">
-		<time>January 18th, 2025</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/git/">
-					Git
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/vcs/">
-					VCS
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-check-if-smtp-is-reachable-from-my-machine-using-telnet">How to Check if SMTP is Reachable from My Machine Using Telnet?</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Recently, I learned how to test SMTP server connectivity using <code>telnet</code>. This is a handy way to verify if an SMTP server is reachable, troubleshoot email delivery issues, and manually interact with the server to diagnose problems. </p>
-
-<p>Here’s how I did it:</p>
-
-<h2>1. Ensure Telnet is Installed</h2>
-
-<p>First, I made sure <code>telnet</code> was installed on my machine. Most Linux distributions come with <code>telnet</code> pre-installed, but if it’s missing, here’s how to install it:</p>
-
-<h3>For Ubuntu/Debian:</h3>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>telnet
-</code></pre>
-</div>
-
-<h3>For CentOS/RHEL:</h3>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>yum<span class="w"> </span>install<span class="w"> </span>telnet
-</code></pre>
-</div>
-
-<h3>For Windows</h3>
-
-<p>Ironically, <code>telnet</code> is not enabled by default on Windows, but you can enable it:</p>
-
-<ol>
-<li>Open the Control Panel.</li>
-<li>Go to <strong>Programs</strong> &gt; <strong>Programs and Features</strong> &gt; <strong>Turn Windows features on or off</strong>.</li>
-<li>Check the box for <strong>Telnet Client</strong> and click <strong>OK</strong>.</li>
-<li>Once enabled, open the Command Prompt (<code>cmd</code>) to use Telnet.</li>
-</ol>
-
-<h2>2. Open a Telnet Connection to the SMTP Server</h2>
-
-<p>To connect to the SMTP server, I used the following command:</p>
-
-<div class="codehilite">
-<pre><span></span><code>telnet<span class="w"> </span>&lt;smtp_server_address&gt;<span class="w"> </span><span class="m">25</span>
-</code></pre>
-</div>
-
-<p>Replace <code>&lt;smtp_server_address&gt;</code> with the SMTP server’s hostname or IP address. For example:</p>
-
-<div class="codehilite">
-<pre><span></span><code>telnet<span class="w"> </span>smtp.example.com<span class="w"> </span><span class="m">25</span>
-</code></pre>
-</div>
-
-<p>If the connection is successful, the server responds with a <code>220</code> message, like this:</p>
-
-<div class="codehilite">
-<pre><span></span><code>220 smtp.example.com ESMTP Postfix
-</code></pre>
-</div>
-
-<p>This means the SMTP server is reachable and ready to accept commands.</p>
-
-<h2>3. Test SMTP Commands (Optional)</h2>
-
-<p>To further test the SMTP server, I manually interacted with it using basic SMTP commands:</p>
-
-<h3>Greet the Server:</h3>
-
-<p>I sent an <code>EHLO</code> command to introduce myself:</p>
-
-<div class="codehilite">
-<pre><span></span><code>EHLO example.com
-</code></pre>
-</div>
-
-<p>The server responded with a list of supported features.</p>
-
-<h3>Start an Email Transaction:</h3>
-
-<p>I specified the sender using the <code>MAIL FROM</code> command:</p>
-
-<div class="codehilite">
-<pre><span></span><code>MAIL FROM:&lt;test@example.com&gt;
-</code></pre>
-</div>
-
-<p>The server responded with <code>250 OK</code>.</p>
-
-<h3>Specify the Recipient:</h3>
-
-<p>I added the recipient using the <code>RCPT TO</code> command:</p>
-
-<div class="codehilite">
-<pre><span></span><code>RCPT TO:&lt;user@example.com&gt;
-</code></pre>
-</div>
-
-<p>The server responded with <code>250 OK</code>.</p>
-
-<h3>Enter the Email Data:</h3>
-
-<p>I typed <code>DATA</code> to start composing the email:</p>
-
-<div class="codehilite">
-<pre><span></span><code>DATA
-</code></pre>
-</div>
-
-<p>After entering the email content, I ended the message with a single <code>.</code> on a new line:</p>
-
-<div class="codehilite">
-<pre><span></span><code>Subject: Test Email
-This is a test email sent via Telnet.
-.
-</code></pre>
-</div>
-
-<p>The server responded with <code>250 OK</code>, confirming that the email was accepted.</p>
-
-<h3>Quit the Session:</h3>
-
-<p>Finally, I ended the session with the <code>QUIT</code> command:</p>
-
-<div class="codehilite">
-<pre><span></span><code>QUIT
-</code></pre>
-</div>
-
-<h2>4. Troubleshoot Connection Issues</h2>
-
-<p>If the connection fails, I might see an error like:</p>
-
-<div class="codehilite">
-<pre><span></span><code>telnet: Unable to connect to remote host: Connection refused
-</code></pre>
-</div>
-
-<p>This could mean:</p>
-
-<ul>
-<li>The SMTP server is not running.</li>
-<li>The port is blocked by a firewall.</li>
-<li>The server uses a different port (e.g., 587 for submission or 465 for SMTPS).</li>
-</ul>
-
-<p>To resolve this, I checked:</p>
-
-<ul>
-<li>If the SMTP server is running and listening on the correct port.</li>
-<li>If my firewall or network allows outbound connections to the SMTP port.</li>
-</ul>
-
-<h2>Example Workflow:</h2>
-
-<p>Here’s what a successful Telnet session looks like:</p>
-
-<div class="codehilite">
-<pre><span></span><code>$<span class="w"> </span>telnet<span class="w"> </span>smtp.example.com<span class="w"> </span><span class="m">25</span>
-Trying<span class="w"> </span><span class="m">192</span>.0.2.1...
-Connected<span class="w"> </span>to<span class="w"> </span>smtp.example.com.
-Escape<span class="w"> </span>character<span class="w"> </span>is<span class="w"> </span><span class="s1">&#39;^]&#39;</span>.
-<span class="m">220</span><span class="w"> </span>smtp.example.com<span class="w"> </span>ESMTP<span class="w"> </span>Postfix
-EHLO<span class="w"> </span>example.com
-<span class="m">250</span>-smtp.example.com
-<span class="m">250</span>-PIPELINING
-<span class="m">250</span>-SIZE<span class="w"> </span><span class="m">10240000</span>
-<span class="m">250</span>-VRFY
-<span class="m">250</span>-ETRN
-<span class="m">250</span>-STARTTLS
-<span class="m">250</span>-ENHANCEDSTATUSCODES
-<span class="m">250</span>-8BITMIME
-<span class="m">250</span><span class="w"> </span>DSN
-MAIL<span class="w"> </span>FROM:&lt;test@example.com&gt;
-<span class="m">250</span><span class="w"> </span><span class="m">2</span>.1.0<span class="w"> </span>Ok
-RCPT<span class="w"> </span>TO:&lt;user@example.com&gt;
-<span class="m">250</span><span class="w"> </span><span class="m">2</span>.1.5<span class="w"> </span>Ok
-DATA
-<span class="m">354</span><span class="w"> </span>End<span class="w"> </span>data<span class="w"> </span>with<span class="w"> </span>&lt;CR&gt;&lt;LF&gt;.&lt;CR&gt;&lt;LF&gt;
-Subject:<span class="w"> </span>Test<span class="w"> </span>Email
-This<span class="w"> </span>is<span class="w"> </span>a<span class="w"> </span><span class="nb">test</span><span class="w"> </span>email<span class="w"> </span>sent<span class="w"> </span>via<span class="w"> </span>Telnet.
-.
-<span class="m">250</span><span class="w"> </span><span class="m">2</span>.0.0<span class="w"> </span>Ok:<span class="w"> </span>queued<span class="w"> </span>as<span class="w"> </span><span class="m">12345</span>
-QUIT
-<span class="m">221</span><span class="w"> </span><span class="m">2</span>.0.0<span class="w"> </span>Bye
-Connection<span class="w"> </span>closed<span class="w"> </span>by<span class="w"> </span>foreign<span class="w"> </span>host.
-</code></pre>
-</div>
-
-<h2>Why This is Useful?</h2>
-
-<p>Using Telnet to test SMTP connectivity is a quick and effective way to:</p>
-
-<ul>
-<li>Verify if the SMTP server is reachable.</li>
-<li>Diagnose email delivery issues.</li>
-<li>Manually test SMTP commands and server responses.</li>
-</ul>
-
-<p>Hope you've found this article useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>January 17th, 2025</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/smtp/">
-					SMTP
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/telnet/">
-					Telnet
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/devops/">
-					DevOps
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-change-the-modification-date-of-a-folder-using-power-shell">How to Change the Modification Date of a Folder Using PowerShell?</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Recently, I had an interesting experience with a client who can be a bit nosy—and occasionally bossy too. They have a strict policy of deploying updates during off-peak hours on Fridays. </p>
-
-<p>Like most developers, I’m not a fan of deploying on Fridays 😡.</p>
-
-<p>To navigate this, I deploy the updates on the server earlier in the week (without their knowledge) and place them in a separate directory until we receive the green light to switch the website to the new directory via server settings.</p>
-
-<p>If you’re wondering why I use a separate directory, it’s to ensure I have a quick rollback option if needed. Oh, and did I mention they’ve blocked <code>git</code> on the production server? So, no version control system (VCS) for us.</p>
-
-<p>Anyway, once I deployed earlier than planned and realized they might check the deployment timestamps. To stay ahead, I wrote a quick PowerShell script to tweak the folder timestamps.</p>
-
-<h2>Steps to Change Folder Modification Date</h2>
-
-<h3>Open PowerShell as Administrator</h3>
-
-<ul>
-<li>Search for <strong>"PowerShell"</strong> in the Start menu.</li>
-<li>Right-click on it and select <strong>Run as Administrator</strong>.</li>
-</ul>
-
-<h3>Run the Command</h3>
-
-<p>Use the following command to set the modification date for a folder:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="nv">$path</span> <span class="p">=</span> <span class="s2">&quot;C:\Path\To\Your\Folder&quot;</span>
-<span class="nv">$date</span> <span class="p">=</span> <span class="nb">Get-Date</span> <span class="s2">&quot;2025-01-01 10:00:00&quot;</span>
-<span class="p">(</span><span class="nb">Get-Item</span> <span class="nv">$path</span><span class="p">).</span><span class="n">LastWriteTime</span> <span class="p">=</span> <span class="nv">$date</span>
-</code></pre>
-</div>
-
-<ul>
-<li>Replace <code>C:\Path\To\Your\Folder</code> with the full path of the folder.</li>
-<li>Replace <code>2025-01-01 10:00:00</code> with the desired date and time in the format <code>yyyy-MM-dd HH:mm:ss</code>.</li>
-</ul>
-
-<h3>Verify the Change</h3>
-
-<p>To confirm the modification date has been updated, use:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="p">(</span><span class="nb">Get-Item</span> <span class="nv">$path</span><span class="p">).</span><span class="n">LastWriteTime</span>
-</code></pre>
-</div>
-
-<h2>Other Timestamps You Can Modify</h2>
-
-<p>PowerShell allows you to adjust other timestamps as well:</p>
-
-<h3>Creation Date:</h3>
-
-<div class="codehilite">
-<pre><span></span><code><span class="p">(</span><span class="nb">Get-Item</span> <span class="nv">$path</span><span class="p">).</span><span class="n">CreationTime</span> <span class="p">=</span> <span class="nv">$date</span>
-</code></pre>
-</div>
-
-<h3>Accessed Date:</h3>
-
-<div class="codehilite">
-<pre><span></span><code><span class="p">(</span><span class="nb">Get-Item</span> <span class="nv">$path</span><span class="p">).</span><span class="n">LastAccessTime</span> <span class="p">=</span> <span class="nv">$date</span>
-</code></pre>
-</div>
-
-<h2>Why This is Useful?</h2>
-
-<p>This method is great for:</p>
-
-<ul>
-<li>Organizing folders with custom timestamps.</li>
-<li>Simulating specific scenarios for testing.</li>
-<li>Avoiding the hassle of installing third-party tools.</li>
-</ul>
-
-<p>Situations like this has made me realize that the flexibility of PowerShell makes it the perfect tool for quick tasks. It’s amazing how a simple command can give you full control over folder metadata!</p>
-
-<p>Hope you found this useful (and keep your tracks clear!)</p>
-
-	</div>
-	<div class="article-footer">
-		<time>January 16th, 2025</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/powershell/">
-					PowerShell
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/devops/">
-					DevOps
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -1241,11 +1042,11 @@ Connection<span class="w"> </span>closed<span class="w"> </span>by<span class="w
 		
 	
 		
-			<a class="" href="/til/pages/16">...</a>
+			<a class="" href="/til/pages/17">...</a>
 		
 	
 		
-			<a class="" href="/til/pages/19">19</a>
+			<a class="" href="/til/pages/20">20</a>
 		
 	
 
@@ -1277,6 +1078,13 @@ Connection<span class="w"> </span>closed<span class="w"> </span>by<span class="w
 		</li>
 		
 		<li>
+			<a href="/category/devops/">
+				DevOps
+				<span class="count">21</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/laravel/">
 				Laravel
 				<span class="count">20</span>
@@ -1284,9 +1092,9 @@ Connection<span class="w"> </span>closed<span class="w"> </span>by<span class="w
 		</li>
 		
 		<li>
-			<a href="/category/devops/">
-				DevOps
-				<span class="count">20</span>
+			<a href="/category/git/">
+				Git
+				<span class="count">15</span>
 			</a>
 		</li>
 		
@@ -1294,13 +1102,6 @@ Connection<span class="w"> </span>closed<span class="w"> </span>by<span class="w
 			<a href="/category/php/">
 				PHP
 				<span class="count">14</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/git/">
-				Git
-				<span class="count">12</span>
 			</a>
 		</li>
 		
@@ -1340,16 +1141,16 @@ Connection<span class="w"> </span>closed<span class="w"> </span>by<span class="w
 		</li>
 		
 		<li>
-			<a href="/category/productivity/">
-				Productivity
+			<a href="/category/mysql/">
+				MySQL
 				<span class="count">10</span>
 			</a>
 		</li>
 		
 		<li>
-			<a href="/category/mysql/">
-				MySQL
-				<span class="count">9</span>
+			<a href="/category/productivity/">
+				Productivity
+				<span class="count">10</span>
 			</a>
 		</li>
 		
@@ -1389,6 +1190,13 @@ Connection<span class="w"> </span>closed<span class="w"> </span>by<span class="w
 		</li>
 		
 		<li>
+			<a href="/category/vcs/">
+				VCS
+				<span class="count">5</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/c/">
 				C#
 				<span class="count">5</span>
@@ -1424,16 +1232,16 @@ Connection<span class="w"> </span>closed<span class="w"> </span>by<span class="w
 		</li>
 		
 		<li>
-			<a href="/category/arcade-challenge/">
-				Arcade Challenge
+			<a href="/category/databases/">
+				Databases
 				<span class="count">4</span>
 			</a>
 		</li>
 		
 		<li>
-			<a href="/category/databases/">
-				Databases
-				<span class="count">3</span>
+			<a href="/category/arcade-challenge/">
+				Arcade Challenge
+				<span class="count">4</span>
 			</a>
 		</li>
 		
@@ -1480,8 +1288,8 @@ Connection<span class="w"> </span>closed<span class="w"> </span>by<span class="w
 		</li>
 		
 		<li>
-			<a href="/category/vcs/">
-				VCS
+			<a href="/category/software-development/">
+				Software Development
 				<span class="count">2</span>
 			</a>
 		</li>
@@ -1627,6 +1435,20 @@ Connection<span class="w"> </span>closed<span class="w"> </span>by<span class="w
 		</li>
 		
 		<li>
+			<a href="/category/self-development/">
+				Self Development
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/goals/">
+				Goals
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/phpstorm/">
 				PHPStorm
 				<span class="count">1</span>
@@ -1727,13 +1549,6 @@ Connection<span class="w"> </span>closed<span class="w"> </span>by<span class="w
 		<li>
 			<a href="/category/csr/">
 				CSR
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/software-development/">
-				Software Development
 				<span class="count">1</span>
 			</a>
 		</li>

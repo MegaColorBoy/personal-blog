@@ -78,6 +78,736 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/installing-and-configuring-elasticsearch-and-kibana-on-ubuntu">Installing and Configuring Elasticsearch and Kibana on Ubuntu</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>I've always wanted to write this article but never got the chance to do so, I had written some notes on how to set up Elasticsearch and Kibana on an Ubuntu server (20.04 or later). Whether you're building a search engine, analyzing logs, or just exploring the Elastic Stack, this guide will help you get everything up and running smoothly. </p>
+
+<p>Here's how I did it:</p>
+
+<h2>Setting up Elasticsearch</h2>
+
+<h3>Add the Elasticsearch GPG key and repository</h3>
+
+<div class="codehilite">
+<pre><span></span><code>curl<span class="w"> </span>-fsSL<span class="w"> </span>https://artifacts.elastic.co/GPG-KEY-elasticsearch<span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>gpg<span class="w"> </span>--dearmor<span class="w"> </span>-o<span class="w"> </span>/usr/share/keyrings/elastic.gpg
+<span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;deb [signed-by=/usr/share/keyrings/elastic.gpg] https://artifacts.elastic.co/packages/7.x/apt stable main&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>tee<span class="w"> </span>-a<span class="w"> </span>/etc/apt/sources.list.d/elastic-7.x.list
+</code></pre>
+</div>
+
+<h3>Install Elasticsearch</h3>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>update
+sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>elasticsearch
+</code></pre>
+</div>
+
+<h3>Configure Elasticsearch by editing /etc/elasticsearch/elasticsearch.yml</h3>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nt">network.host</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">localhost</span>
+<span class="nt">http.port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">9200</span>
+<span class="nt">http.host</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0.0.0</span>
+</code></pre>
+</div>
+
+<h3>Start and enable Elasticsearch</h3>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>systemctl<span class="w"> </span>start<span class="w"> </span>elasticsearch
+sudo<span class="w"> </span>systemctl<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>elasticsearch
+</code></pre>
+</div>
+
+<h3>Set up an NGINX reverse proxy for Elasticsearch</h3>
+
+<p>Add this server block to your NGINX config (e.g., <code>/etc/nginx/sites-available/your_domain</code>):</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">server</span><span class="w"> </span><span class="p">{</span>
+<span class="w">   </span><span class="kn">listen</span><span class="w"> </span><span class="mi">8834</span><span class="p">;</span>
+
+<span class="w">   </span><span class="c1"># Uncomment for SSL</span>
+<span class="w">   </span><span class="c1"># listen 8834 ssl;</span>
+<span class="w">   </span><span class="c1"># ssl_certificate /path/to/certificate/crt.pem;</span>
+<span class="w">   </span><span class="c1"># ssl_certificate_key /path/to/key/key.pem;</span>
+<span class="w">   </span><span class="c1"># ssl_protocols TLSv1 TLSv1.1 TLSv1.2;</span>
+<span class="w">   </span><span class="c1"># ssl_prefer_server_ciphers on;</span>
+<span class="w">   </span><span class="c1"># ssl_ciphers &#39;EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH&#39;;</span>
+
+<span class="w">   </span><span class="kn">server_name</span><span class="w"> </span><span class="s">your_domain</span><span class="p">;</span>
+
+<span class="w">   </span><span class="kn">location</span><span class="w"> </span><span class="s">/</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="kn">proxy_pass</span><span class="w"> </span><span class="s">http://localhost:9200</span><span class="p">;</span>
+<span class="w">      </span><span class="kn">proxy_http_version</span><span class="w"> </span><span class="mi">1</span><span class="s">.1</span><span class="p">;</span>
+<span class="w">      </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">Upgrade</span><span class="w"> </span><span class="nv">$http_upgrade</span><span class="p">;</span>
+<span class="w">      </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">Connection</span><span class="w"> </span><span class="s">&#39;upgrade&#39;</span><span class="p">;</span>
+<span class="w">      </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">Host</span><span class="w"> </span><span class="nv">$host</span><span class="p">;</span>
+<span class="w">      </span><span class="kn">proxy_cache_bypass</span><span class="w"> </span><span class="nv">$http_upgrade</span><span class="p">;</span>
+<span class="w">   </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<p>and then test and restart NGINX service:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>nginx<span class="w"> </span>-t
+sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class="w"> </span>nginx
+</code></pre>
+</div>
+
+<p>Once done, you can verify if Elasticsearch is running by visiting <code>http://yourdomain.com:8834</code> in your browser. You should see a JSON response with Elasticsearch details.</p>
+
+<h2>Setting up Kibana</h2>
+
+<h3>Install Kibana</h3>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>kibana
+</code></pre>
+</div>
+
+<h3>Configure Kibana by editing /etc/kibana/kibana.yml</h3>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nt">server.port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5601</span>
+<span class="nt">server.host</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0.0.0</span>
+<span class="nt">elasticsearch.hosts</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;http://localhost:9200&quot;</span><span class="p p-Indicator">]</span>
+</code></pre>
+</div>
+
+<h3>Start and enable Kibana</h3>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>systemctl<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>kibana
+sudo<span class="w"> </span>systemctl<span class="w"> </span>start<span class="w"> </span>kibana
+</code></pre>
+</div>
+
+<h3>Create an admin user for Kibana</h3>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;your_admin_username:`openssl passwd -apr1`&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>tee<span class="w"> </span>-a<span class="w"> </span>/etc/nginx/htpasswd.users
+</code></pre>
+</div>
+
+<p>Make sure that you enter a strong password when prompted.</p>
+
+<h3>Set up an NGINX reverse proxy for Kibana</h3>
+
+<p>Add this server block to your NGINX config:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">server</span><span class="w"> </span><span class="p">{</span>
+<span class="w">   </span><span class="kn">listen</span><span class="w"> </span><span class="mi">8833</span><span class="p">;</span>
+
+<span class="w">   </span><span class="c1"># Uncomment for SSL</span>
+<span class="w">   </span><span class="c1"># listen 8833 ssl;</span>
+<span class="w">   </span><span class="c1"># ssl_certificate /path/to/certificate/crt.pem;</span>
+<span class="w">   </span><span class="c1"># ssl_certificate_key /path/to/key/key.pem;</span>
+<span class="w">   </span><span class="c1"># ssl_protocols TLSv1 TLSv1.1 TLSv1.2;</span>
+<span class="w">   </span><span class="c1"># ssl_prefer_server_ciphers on;</span>
+<span class="w">   </span><span class="c1"># ssl_ciphers &#39;EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH&#39;;</span>
+
+<span class="w">   </span><span class="kn">server_name</span><span class="w"> </span><span class="s">your_domain</span><span class="p">;</span>
+
+<span class="w">   </span><span class="kn">auth_basic</span><span class="w"> </span><span class="s">&quot;Restricted</span><span class="w"> </span><span class="s">Access&quot;</span><span class="p">;</span>
+<span class="w">   </span><span class="kn">auth_basic_user_file</span><span class="w"> </span><span class="s">/etc/nginx/htpasswd.users</span><span class="p">;</span>
+
+<span class="w">   </span><span class="kn">location</span><span class="w"> </span><span class="s">/</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="kn">proxy_pass</span><span class="w"> </span><span class="s">http://localhost:5601</span><span class="p">;</span>
+<span class="w">      </span><span class="kn">proxy_http_version</span><span class="w"> </span><span class="mi">1</span><span class="s">.1</span><span class="p">;</span>
+<span class="w">      </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">Upgrade</span><span class="w"> </span><span class="nv">$http_upgrade</span><span class="p">;</span>
+<span class="w">      </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">Connection</span><span class="w"> </span><span class="s">&#39;upgrade&#39;</span><span class="p">;</span>
+<span class="w">      </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">Host</span><span class="w"> </span><span class="nv">$host</span><span class="p">;</span>
+<span class="w">      </span><span class="kn">proxy_cache_bypass</span><span class="w"> </span><span class="nv">$http_upgrade</span><span class="p">;</span>
+<span class="w">   </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<p>and then test and restart NGINX service:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>nginx<span class="w"> </span>-t
+sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class="w"> </span>nginx
+</code></pre>
+</div>
+
+<p>Once done, you can try to access Kibana by visiting <code>http://yourdomain.com:8833</code>. You'll be prompted for the admin credentials you created earlier.</p>
+
+<h2>Wrapping Up</h2>
+
+<p>And there you go! Elasticsearch and Kibana are now up and running on your Ubuntu server, ready to help you search, analyze, and visualize your data. Whether you're diving into logs, building a search feature, or just experimenting with the Elastic Stack, this setup should give you a solid foundation.</p>
+
+<h2>References</h2>
+
+<ul>
+<li><a href="https://burnhamforensics.com/2019/02/06/how-to-install-and-configure-nginx-for-kibana/">Burnham Forensics: NGINX for Kibana</a></li>
+<li><a href="https://itnixpro.com/configure-nginx-reverse-proxy-for-kibana/">ITNixPro: NGINX Reverse Proxy for Kibana</a></li>
+<li><a href="https://www.digitalocean.com/community/tutorials/how-to-install-elasticsearch-logstash-and-kibana-elastic-stack-on-ubuntu-22-04">DigitalOcean: Elastic Stack on Ubuntu</a></li>
+</ul>
+
+<p>Hope you found this useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>January 22nd, 2025</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/elastic-search/">
+					Elastic Search
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/kibana/">
+					Kibana
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/ubuntu/">
+					Ubuntu
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-send-test-emails-via-power-shell">How to Send Test Emails via PowerShell?</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<h2>How to Send Test Emails via PowerShell</h2>
+
+<p>Whenever I wanted to send a test mail from a Windows Server, I make use of PowerShell. This makes it easier and is a quick yet efficient way to test email functionality, troubleshoot SMTP servers, or verify email delivery. </p>
+
+<p>Here’s what I usually do, including examples with and without user authentication.</p>
+
+<h2>1. Basic Command to Send a Test Email</h2>
+
+<p>The <code>Send-MailMessage</code> cmdlet in PowerShell makes it easy to send emails via an SMTP server. Here’s the basic command I used:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nb">Send-MailMessage</span> <span class="n">-SmtpServer</span> <span class="s2">&quot;0.0.0.0&quot;</span> <span class="n">-Port</span> <span class="n">25</span> <span class="n">-From</span> <span class="s2">&quot;sample@example.com&quot;</span> <span class="n">-To</span> <span class="s2">&quot;john.doe@example.com&quot;</span> <span class="n">-Subject</span> <span class="s2">&quot;A subject&quot;</span> <span class="n">-Body</span> <span class="s2">&quot;A body&quot;</span>
+</code></pre>
+</div>
+
+<ul>
+<li><code>-SmtpServer</code>: The IP address or hostname of the SMTP server.</li>
+<li><code>-Port</code>: The SMTP port (default is 25).</li>
+<li><code>-From</code>: The sender’s email address.</li>
+<li><code>-To</code>: The recipient’s email address.</li>
+<li><code>-Subject</code>: The subject of the email.</li>
+<li><code>-Body</code>: The content of the email.</li>
+</ul>
+
+<p>This command works for SMTP servers that don’t require authentication (e.g., internal SMTP relays).</p>
+
+<h2>2. Sending Emails with User Authentication</h2>
+
+<p>If the SMTP server requires authentication, you can add the <code>-Credential</code> parameter to provide a username and password. Here’s how:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nv">$credential</span> <span class="p">=</span> <span class="nb">Get-Credential</span>
+<span class="nb">Send-MailMessage</span> <span class="n">-SmtpServer</span> <span class="s2">&quot;smtp.example.com&quot;</span> <span class="n">-Port</span> <span class="n">587</span> <span class="n">-From</span> <span class="s2">&quot;sample@example.com&quot;</span> <span class="n">-To</span> <span class="s2">&quot;john.doe@example.com&quot;</span> <span class="n">-Subject</span> <span class="s2">&quot;A subject&quot;</span> <span class="n">-Body</span> <span class="s2">&quot;A body&quot;</span> <span class="n">-Credential</span> <span class="nv">$credential</span> <span class="n">-UseSsl</span>
+</code></pre>
+</div>
+
+<ul>
+<li><code>-Credential</code>: Prompts for a username and password. You can also create a <code>PSCredential</code> object programmatically.</li>
+<li><code>-UseSsl</code>: Enables SSL/TLS encryption, which is often required for authenticated SMTP servers (e.g., port 587).</li>
+</ul>
+
+<h3>Example with Hardcoded Credentials:</h3>
+
+<p>If you don’t want to be prompted for credentials, you can create a <code>PSCredential</code> object like this on PowerShell ISE:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nv">$username</span> <span class="p">=</span> <span class="s2">&quot;sample@example.com&quot;</span>
+<span class="nv">$password</span> <span class="p">=</span> <span class="nb">ConvertTo-SecureString</span> <span class="s2">&quot;YourPassword&quot;</span> <span class="n">-AsPlainText</span> <span class="n">-Force</span>
+<span class="nv">$credential</span> <span class="p">=</span> <span class="nb">New-Object</span> <span class="n">System</span><span class="p">.</span><span class="n">Management</span><span class="p">.</span><span class="n">Automation</span><span class="p">.</span><span class="n">PSCredential</span> <span class="p">(</span><span class="nv">$username</span><span class="p">,</span> <span class="nv">$password</span><span class="p">)</span>
+
+<span class="nb">Send-MailMessage</span> <span class="n">-SmtpServer</span> <span class="s2">&quot;smtp.example.com&quot;</span> <span class="n">-Port</span> <span class="n">587</span> <span class="n">-From</span> <span class="s2">&quot;sample@example.com&quot;</span> <span class="n">-To</span> <span class="s2">&quot;john.doe@example.com&quot;</span> <span class="n">-Subject</span> <span class="s2">&quot;A subject&quot;</span> <span class="n">-Body</span> <span class="s2">&quot;A body&quot;</span> <span class="n">-Credential</span> <span class="nv">$credential</span> <span class="n">-UseSsl</span>
+</code></pre>
+</div>
+
+<h2>3. Adding Attachments</h2>
+
+<p>You can also attach files to your email using the <code>-Attachments</code> parameter:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nb">Send-MailMessage</span> <span class="n">-SmtpServer</span> <span class="s2">&quot;smtp.example.com&quot;</span> <span class="n">-Port</span> <span class="n">587</span> <span class="n">-From</span> <span class="s2">&quot;sample@example.com&quot;</span> <span class="n">-To</span> <span class="s2">&quot;john.doe@example.com&quot;</span> <span class="n">-Subject</span> <span class="s2">&quot;A subject&quot;</span> <span class="n">-Body</span> <span class="s2">&quot;A body&quot;</span> <span class="n">-Attachments</span> <span class="s2">&quot;C:\path\to\file.txt&quot;</span> <span class="n">-Credential</span> <span class="nv">$credential</span> <span class="n">-UseSsl</span>
+</code></pre>
+</div>
+
+<h2>4. Troubleshooting Tips</h2>
+
+<h3>Connection Issues:</h3>
+
+<p>If the email fails to send, ensure the SMTP server is reachable and the port is open. Use <code>Test-NetConnection</code> to verify connectivity:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nb">Test-NetConnection</span> <span class="n">-ComputerName</span> <span class="n">smtp</span><span class="p">.</span><span class="n">example</span><span class="p">.</span><span class="n">com</span> <span class="n">-Port</span> <span class="n">587</span>
+</code></pre>
+</div>
+
+<h3>Authentication Errors:</h3>
+
+<p>Double-check the username and password. If the SMTP server requires a specific authentication method (e.g., OAuth), you may need additional configuration.</p>
+
+<h3>SSL/TLS Errors:</h3>
+
+<p>Ensure the <code>-UseSsl</code> parameter is used if the SMTP server requires encryption.</p>
+
+<h2>Example Workflow:</h2>
+
+<p>Here’s a complete example with authentication and attachments:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="c"># Create credentials</span>
+<span class="nv">$username</span> <span class="p">=</span> <span class="s2">&quot;sample@example.com&quot;</span>
+<span class="nv">$password</span> <span class="p">=</span> <span class="nb">ConvertTo-SecureString</span> <span class="s2">&quot;YourPassword&quot;</span> <span class="n">-AsPlainText</span> <span class="n">-Force</span>
+<span class="nv">$credential</span> <span class="p">=</span> <span class="nb">New-Object</span> <span class="n">System</span><span class="p">.</span><span class="n">Management</span><span class="p">.</span><span class="n">Automation</span><span class="p">.</span><span class="n">PSCredential</span> <span class="p">(</span><span class="nv">$username</span><span class="p">,</span> <span class="nv">$password</span><span class="p">)</span>
+
+<span class="c"># Send email with attachment</span>
+<span class="nb">Send-MailMessage</span> <span class="n">-SmtpServer</span> <span class="s2">&quot;smtp.example.com&quot;</span> <span class="n">-Port</span> <span class="n">587</span> <span class="n">-From</span> <span class="s2">&quot;sample@example.com&quot;</span> <span class="n">-To</span> <span class="s2">&quot;john.doe@example.com&quot;</span> <span class="n">-Subject</span> <span class="s2">&quot;Test Email with Attachment&quot;</span> <span class="n">-Body</span> <span class="s2">&quot;Please find the attached file.&quot;</span> <span class="n">-Attachments</span> <span class="s2">&quot;C:\path\to\file.txt&quot;</span> <span class="n">-Credential</span> <span class="nv">$credential</span> <span class="n">-UseSsl</span>
+</code></pre>
+</div>
+
+<h2>Why do this way?</h2>
+
+<p>Using PowerShell to send test emails is a powerful way to:</p>
+
+<ul>
+<li>Test SMTP server configurations.</li>
+<li>Verify email delivery and troubleshoot issues.</li>
+<li>Automate email notifications in scripts.</li>
+</ul>
+
+<p>Whether you’re working with an internal SMTP relay or an external server requiring authentication, PowerShell’s <code>Send-MailMessage</code> cmdlet makes it easy to get the job done.</p>
+
+<p>Hope you found this useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>January 21st, 2025</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/powershell/">
+					PowerShell
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/smtp/">
+					SMTP
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-find-users-with-duplicate-email-addresses-in-sql">How to Find Users with Duplicate Email Addresses in SQL?</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>When managing a database with user information, ensuring data integrity is crucial. One common issue that can arise is duplicate email addresses in the <code>users</code> table. </p>
+
+<p>Let me show you how to write a simple yet powerful SQL query to identify such duplicates!</p>
+
+<h2>The Problem</h2>
+
+<p>In many applications, email addresses should be unique identifiers for users. However, duplicates can sneak into the database due to bugs, manual data imports, or other anomalies. Detecting and resolving these duplicates is essential to maintain data integrity and ensure proper functionality of user-related features, such as authentication.</p>
+
+<h2>The Solution</h2>
+
+<p>Using SQL, you can quickly find all duplicate email addresses in your <code>users</code> table by leveraging the <code>GROUP BY</code> and <code>HAVING</code> clauses.</p>
+
+<p>Here’s the query:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">email</span><span class="p">,</span><span class="w"> </span><span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">email_count</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">users</span>
+<span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">email</span>
+<span class="k">HAVING</span><span class="w"> </span><span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+</code></pre>
+</div>
+
+<h2>How It Works:</h2>
+
+<ol>
+<li><code>GROUP BY email</code>: Groups the rows in the <code>users</code> table by the email column, so each group represents a unique email.</li>
+<li><code>COUNT(*)</code>: Counts the number of rows in each group.</li>
+<li><code>HAVING COUNT(*) &gt; 1</code>: Filters the groups to only include those where the count is greater than 1, i.e., duplicate email addresses.</li>
+</ol>
+
+<h2>Enhanced Query for User Details</h2>
+
+<p>If you want to see more details about the users who share the same email address (e.g., user IDs, names), you can use a subquery:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">u</span><span class="p">.</span><span class="o">*</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="n">u</span>
+<span class="k">JOIN</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="k">SELECT</span><span class="w"> </span><span class="n">email</span>
+<span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">users</span>
+<span class="w">    </span><span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">email</span>
+<span class="w">    </span><span class="k">HAVING</span><span class="w"> </span><span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1</span>
+<span class="p">)</span><span class="w"> </span><span class="n">dup_emails</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">u</span><span class="p">.</span><span class="n">email</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dup_emails</span><span class="p">.</span><span class="n">email</span><span class="p">;</span>
+</code></pre>
+</div>
+
+<h2>Explanation</h2>
+
+<ul>
+<li>The subquery identifies all duplicate email addresses.</li>
+<li>The main query joins this result with the <code>users</code> table to retrieve detailed information about each user associated with the duplicate emails.</li>
+</ul>
+
+<h2>Final Thoughts</h2>
+
+<p>This simple query can save you a lot of time when auditing your database for duplicate entries. Whether you’re cleaning up data or debugging an issue, identifying duplicates is an important step toward ensuring a robust and reliable application.</p>
+
+<p>Hope you found this tip useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>January 20th, 2025</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/databases/">
+					Databases
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/sql/">
+					SQL
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/mysql/">
+					MySQL
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-filter-records-based-on-a_string-column-containing-numbers-with-commas-and-dots">How to Filter Records Based on a String Column Containing Numbers with Commas and Dots?</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Last month, I encountered a scenario where I needed to filter records in a database based on a "revenue" column. The challenge? The <code>revenue</code> column was stored as a string data type, and some of the values contained commas (<code>,</code>) and dots (<code>.</code>). Here’s how I tackled the problem and wrote an SQL query to filter records based on the numeric value of the <code>revenue</code> column.</p>
+
+<h2>What I faced?</h2>
+
+<p>The <code>revenue</code> column was stored as a string, and the values looked like this:</p>
+
+<ul>
+<li>"50,000,000"</li>
+<li>"75.000.000"</li>
+<li>"10000000"</li>
+</ul>
+
+<p>I needed to filter records where the revenue was greater than <strong>"50,000,000"</strong>. However, since the column was a string, I couldn’t directly compare it to a numeric value.</p>
+
+<h2>What I did?</h2>
+
+<p>To handle this, I used a combination of SQL functions:</p>
+
+<ol>
+<li><code>REPLACE</code>: To remove commas (<code>,</code>) and dots (<code>.</code>) from the string.</li>
+<li><code>CAST</code>: To convert the cleaned string into a numeric data type (<code>DECIMAL</code> in this case).</li>
+</ol>
+
+<p>Here’s the SQL query I wrote:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">your_table</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="k">CAST</span><span class="p">(</span><span class="k">REPLACE</span><span class="p">(</span><span class="n">revenue</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;,&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="nb">DECIMAL</span><span class="p">(</span><span class="mi">18</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">))</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">50000000</span><span class="p">;</span>
+</code></pre>
+</div>
+
+<p>Need a breakdown? Here you go:</p>
+
+<ol>
+<li><code>REPLACE(revenue, ',', '')</code>:
+This removes commas from the <code>revenue</code> string. For example, <strong>"50,000,000"</strong> becomes <strong>"50000000"</strong>.</li>
+<li><code>CAST(... AS DECIMAL(18, 2))</code>:
+This converts the cleaned string into a <code>DECIMAL</code> value with 18 total digits and 2 decimal places. For example, <strong>"50000000"</strong> becomes <strong>50000000.00</strong>.</li>
+<li><code>&gt; 50000000</code>:
+Finally, the query filters records where the numeric value of <code>revenue</code> is greater than <strong>50,000,000</strong>.</li>
+</ol>
+
+<h2>Handling Dots as Thousand Separators</h2>
+
+<p>If the <code>revenue</code> column uses dots (<code>.</code>) as thousand separators (e.g., <strong>"75.000.000"</strong>), you can extend the <code>REPLACE</code> function to remove dots as well:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">your_table</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="k">CAST</span><span class="p">(</span><span class="k">REPLACE</span><span class="p">(</span><span class="k">REPLACE</span><span class="p">(</span><span class="n">revenue</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;,&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">),</span><span class="w"> </span><span class="s1">&#39;.&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="nb">DECIMAL</span><span class="p">(</span><span class="mi">18</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">))</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">50000000</span><span class="p">;</span>
+</code></pre>
+</div>
+
+<p>This ensures that both commas and dots are removed before converting the string to a numeric value.</p>
+
+<h2>Why did I do this?</h2>
+
+<p>This approach is helpful when:</p>
+
+<ul>
+<li>You’re working with data stored as strings but need to perform numeric comparisons.</li>
+<li>The data contains formatting characters like commas or dots.</li>
+<li>You want to avoid manual data cleaning or preprocessing.</li>
+</ul>
+
+<p>By using SQL functions like <code>REPLACE</code> and <code>CAST</code>, you can handle these scenarios directly in your queries.</p>
+
+<p>Oh, this works for SQL and MySQL as well!</p>
+
+<p>Hope you found this article useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>January 19th, 2025</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/sql/">
+					SQL
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/mysql/">
+					MySQL
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/databases/">
+					Databases
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/data-manipulation/">
+					Data Manipulation
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-cherry-pick-commits-from-one-git-branch-to-another">How to Cherry-Pick Commits from One Git Branch to Another?</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Although I had heard of Git's <code>cherry-pick</code> command, I never used it until a few months ago when I encountered a situation that demanded it. A client required us to work on multiple incidents and change requests (CRs), but they only wanted specific, approved updates pushed to the repository.</p>
+
+<p>This created a challenge, especially when I was simultaneously working on CRs and incidents. I needed a way to isolate and push only the approved changes while keeping the rest intact. That’s when I decided to try out Git’s <code>cherry-pick</code> command—and it worked like a charm! It made managing my codebase much easier.</p>
+
+<p>Here’s a simple walkthrough of how you can use it too:</p>
+
+<h2>The Scenario</h2>
+
+<p>I had two branches in my Git repository:</p>
+
+<ul>
+<li><strong>Branch A</strong>: The primary branch where ongoing development happens.</li>
+<li><strong>Branch B</strong>: A feature branch where I accidentally pushed updates that should partially go into <strong>Branch A</strong>.</li>
+</ul>
+
+<p>While it’s straightforward to merge changes from one branch into another, I only needed a subset of the commits from <strong>Branch B</strong> to be applied to <strong>Branch A</strong>. This is where Git’s <code>cherry-pick</code> command shines.</p>
+
+<p>Go along with me and follow it step-by-step:</p>
+
+<h2>1. Switch to the Target Branch</h2>
+
+<p>First, check out the branch where you want to apply the commits (in my case, <strong>Branch A</strong>):</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>checkout<span class="w"> </span>A
+</code></pre>
+</div>
+
+<h2>2. Find the Commits to Cherry-Pick</h2>
+
+<p>Use the <code>git log</code> command to list the commits in <strong>Branch B</strong> and identify the specific commit hashes you want to cherry-pick:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>log<span class="w"> </span>B
+</code></pre>
+</div>
+
+<p>You should see output similar to this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>commit<span class="w"> </span>abc1234<span class="w"> </span><span class="o">(</span>HEAD<span class="w"> </span>-&gt;<span class="w"> </span>B<span class="o">)</span>
+Author:<span class="w"> </span>Your<span class="w"> </span>Name<span class="w"> </span>&lt;you@example.com&gt;
+Date:<span class="w">   </span>Mon<span class="w"> </span>Jan<span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="m">12</span>:00:00<span class="w"> </span><span class="m">2025</span><span class="w"> </span>+0000
+
+<span class="w">    </span>Add<span class="w"> </span>feature<span class="w"> </span>X
+
+commit<span class="w"> </span>def5678
+Author:<span class="w"> </span>Your<span class="w"> </span>Name<span class="w"> </span>&lt;you@example.com&gt;
+Date:<span class="w">   </span>Sun<span class="w"> </span>Dec<span class="w"> </span><span class="m">31</span><span class="w"> </span><span class="m">12</span>:00:00<span class="w"> </span><span class="m">2024</span><span class="w"> </span>+0000
+
+<span class="w">    </span>Fix<span class="w"> </span>bug<span class="w"> </span>Y
+</code></pre>
+</div>
+
+<p>Take note of the commit hash(es) you need. For example, let’s say you want to cherry-pick <code>abc1234</code> and <code>def5678</code>.</p>
+
+<h2>3. Cherry-Pick the Commit(s)</h2>
+
+<h3>Single Commit</h3>
+
+<p>To apply a single commit from <strong>Branch B</strong> onto <strong>Branch A</strong>, use:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>cherry-pick<span class="w"> </span>abc1234
+</code></pre>
+</div>
+
+<h3>Multiple Commits</h3>
+
+<p>To apply multiple non-contiguous commits, list their hashes:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>cherry-pick<span class="w"> </span>abc1234<span class="w"> </span>def5678
+</code></pre>
+</div>
+
+<h3>Range of Commits</h3>
+
+<p>To cherry-pick a range of contiguous commits, use the <code>^..&lt;</code> notation:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>cherry-pick<span class="w"> </span>def5678^..abc1234
+</code></pre>
+</div>
+
+<p>This includes all commits from <code>def5678</code> to <code>abc1234</code>, inclusive.</p>
+
+<h2>4. Resolve Any Conflicts</h2>
+
+<p>If there are conflicts during the cherry-picking process, Git will pause and notify you. Resolve the conflicts in your files, then mark them as resolved:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>add<span class="w"> </span>&lt;file&gt;
+</code></pre>
+</div>
+
+<p>Continue the cherry-pick process:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>cherry-pick<span class="w"> </span>--continue
+</code></pre>
+</div>
+
+<p>To abort the cherry-pick if things go wrong:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>cherry-pick<span class="w"> </span>--abort
+</code></pre>
+</div>
+
+<ol start="5">
+<li>Verify the Result</li>
+</ol>
+
+<p>Once the cherry-picking is complete, you can inspect your branch to ensure the changes were applied:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>log
+</code></pre>
+</div>
+
+<p>You should see the cherry-picked commits in <strong>Branch A</strong>.</p>
+
+<h2>When is cherry-picking useful?</h2>
+
+<p>Cherry-picking is perfect when you need specific commits from another branch without merging all its changes. This is especially helpful in scenarios like:</p>
+
+<ul>
+<li>Applying a bug fix from a feature branch to the main branch.</li>
+<li>Pulling specific updates without merging unrelated work.</li>
+</ul>
+
+<h2>Bonus Tips</h2>
+
+<ul>
+<li>Always double-check commit hashes before cherry-picking to avoid unexpected results.</li>
+<li>Use descriptive commit messages to make it easier to identify what each commit does</li>
+<li>If you find yourself cherry-picking often, consider rethinking your branch workflows to reduce the need for it.</li>
+</ul>
+
+<p>That’s it! Now you know how to cherry-pick commits in Git. It’s a small but incredibly powerful tool to keep in your Git arsenal.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>January 18th, 2025</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/git/">
+					Git
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/vcs/">
+					VCS
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/how-to-check-if-smtp-is-reachable-from-my-machine-using-telnet">How to Check if SMTP is Reachable from My Machine Using Telnet?</a></h1>
 		<p class="description"></p>
 	</div>
@@ -498,525 +1228,6 @@ Connection<span class="w"> </span>closed<span class="w"> </span>by<span class="w
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/centralizing-storage-for-multiple-websites-by-mounting-a-shared-windows-network-drive-on-cent-os-using-cifs">Centralizing Storage for Multiple Websites by Mounting a Shared Windows Network Drive on CentOS Using CIFS</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Running more than 45 websites on a CentOS server can be a challenge, especially when it comes to managing storage. In my case, these websites are hosted across two different servers, and each site has its own storage folder for images and uploads.</p>
-
-<p>To streamline this, I came up with a solution: centralizing all storage uploads in one place by hosting a shared Windows network drive and mounting it on the CentOS servers. </p>
-
-<p>This way, all websites can access the same centralized storage, making management much easier.</p>
-
-<p>Here’s how I did it, step by step:</p>
-
-<h4>Step 1: Install cifs-utils</h4>
-
-<p>First, you need to install the <code>cifs-utils</code> package, which provides the necessary tools to mount CIFS shares.</p>
-
-<div class="codehilite">
-<pre><span></span><code>yum<span class="w"> </span>install<span class="w"> </span>cifs-utils
-</code></pre>
-</div>
-
-<h4>Step 2: Create a Service Account</h4>
-
-<p>Next, I created a service account on the CentOS server. This account will be used to access the shared drive. I named it <code>svc_library_core</code> and assigned it a UID of 5000. You can choose any name and UID that isn’t already in use.</p>
-
-<div class="codehilite">
-<pre><span></span><code>useradd<span class="w"> </span>-u<span class="w"> </span><span class="m">5000</span><span class="w"> </span>svc_library_core
-</code></pre>
-</div>
-
-<h4>Step 3: Create a Group for the Share</h4>
-
-<p>I also created a group on the CentOS server that will map to the shared drive. This group will contain all the Linux accounts that need access to the share. I named the group <code>share_library_core</code> and gave it a GID of 6000.</p>
-
-<div class="codehilite">
-<pre><span></span><code>groupadd<span class="w"> </span>-g<span class="w"> </span><span class="m">6000</span><span class="w"> </span>share_library_core
-</code></pre>
-</div>
-
-<h4>Step 4: Add Users to the Group</h4>
-
-<p>After creating the group, I added the necessary users to it. For example, if you want the <code>apache</code> user to have access to the share, you can add it like this:</p>
-
-<div class="codehilite">
-<pre><span></span><code>usermod<span class="w"> </span>-G<span class="w"> </span>share_library_core<span class="w"> </span>-a<span class="w"> </span>apache
-</code></pre>
-</div>
-
-<h4>Step 5: Prepare Credentials</h4>
-
-<p>To mount the drive, you’ll need to provide the credentials for the Windows share. You can either pass them directly using the <code>-o</code> option or save them in a file. I opted to save them in a file for security reasons.</p>
-
-<p>Switch to the root user and create a file to store the credentials:</p>
-
-<div class="codehilite">
-<pre><span></span><code>su<span class="w"> </span>-<span class="w"> </span>root
-touch<span class="w"> </span>/root/creds_smb_library_core
-chmod<span class="w"> </span><span class="m">0600</span><span class="w"> </span>/root/creds_smb_library_core
-vi<span class="w"> </span>/root/creds_smb_library_core
-</code></pre>
-</div>
-
-<p>Add the following lines to the file, replacing the placeholders with your actual Windows or Active Directory username and password:</p>
-
-<div class="codehilite">
-<pre><span></span><code>username=YourWindowsUsername
-password=YourWindowsPassword
-</code></pre>
-</div>
-
-<h4>Step 6: Mount the Drive</h4>
-
-<p>Now, you’re ready to mount the shared drive. Use the following command, replacing the placeholders with your actual values:</p>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>mount<span class="w"> </span>-t<span class="w"> </span>cifs<span class="w"> </span>//&lt;destination_ip&gt;/path/to/directory<span class="w"> </span>/test-directory<span class="w"> </span>-o<span class="w"> </span><span class="nv">credentials</span><span class="o">=</span>/root/creds_smb_library_core,uid<span class="o">=</span><span class="m">5000</span>,gid<span class="o">=</span><span class="m">6000</span>,iocharset<span class="o">=</span>utf8,file_mode<span class="o">=</span><span class="m">0774</span>,dir_mode<span class="o">=</span><span class="m">0775</span>
-</code></pre>
-</div>
-
-<ul>
-<li><code>//&lt;destination_ip&gt;/path/to/directory</code> is the path to the shared drive on the Windows server.</li>
-<li><code>/test-directory</code> is the local directory where you want to mount the drive.</li>
-<li><code>credentials=/root/creds_smb_library_core</code> points to the file containing your credentials.</li>
-<li><code>uid=5000</code> and <code>gid=6000</code> map the mounted drive to the service account and group you created earlier.</li>
-<li><code>iocharset=utf8</code> ensures proper character encoding.</li>
-<li><code>file_mode=0774</code> and <code>dir_mode=0775</code> set the file and directory permissions.</li>
-</ul>
-
-<h4>Step 7: Unmounting the Drive</h4>
-
-<p>If you need to unmount the drive later, you can do so with the following command:</p>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>umount<span class="w"> </span>/test-directory
-</code></pre>
-</div>
-
-<h3>Bonus: Automount Script for Server Reboots</h3>
-
-<p>One challenge I faced was ensuring that the shared drives were automatically remounted in case the servers went down or were rebooted. To handle this, I wrote a simple script that mounts the drives on startup.</p>
-
-<h4>Create the Script</h4>
-
-<p>Create a new script file, for example, <code>/usr/local/bin/mount_shares.sh</code>:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="ch">#!/bin/bash</span>
-mount<span class="w"> </span>-t<span class="w"> </span>cifs<span class="w"> </span>//&lt;destination_ip&gt;/path/to/directory<span class="w"> </span>/test-directory<span class="w"> </span>-o<span class="w"> </span><span class="nv">credentials</span><span class="o">=</span>/root/creds_smb_library_core,uid<span class="o">=</span><span class="m">5000</span>,gid<span class="o">=</span><span class="m">6000</span>,iocharset<span class="o">=</span>utf8,file_mode<span class="o">=</span><span class="m">0774</span>,dir_mode<span class="o">=</span><span class="m">0775</span>
-</code></pre>
-</div>
-
-<p>Make sure to replace the placeholders with your actual values.</p>
-
-<h4>Make the Script Executable</h4>
-
-<p>Set the executable permission on the script:</p>
-
-<div class="codehilite">
-<pre><span></span><code>chmod<span class="w"> </span>+x<span class="w"> </span>/usr/local/bin/mount_shares.sh
-</code></pre>
-</div>
-
-<h4>Add the Script to Startup</h4>
-
-<p>To ensure the script runs on startup, add it to the <code>/etc/rc.local</code> file:</p>
-
-<div class="codehilite">
-<pre><span></span><code>/usr/local/bin/mount_shares.sh
-</code></pre>
-</div>
-
-<p>Make sure <code>/etc/rc.local</code> is executable:</p>
-
-<div class="codehilite">
-<pre><span></span><code>chmod<span class="w"> </span>+x<span class="w"> </span>/etc/rc.local
-</code></pre>
-</div>
-
-<h4>Test the Script</h4>
-
-<p>Reboot your server and verify that the shared drives are automatically mounted.</p>
-
-<p>And that’s it! </p>
-
-<p>You’ve successfully mounted a shared Windows network drive on CentOS using CIFS and ensured it remounts automatically on server reboots. </p>
-
-<p>This setup has made managing storage for multiple websites much more efficient and centralized.</p>
-
-<p>Hope you found this article useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>January 14th, 2025</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/centos/">
-					CentOS
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/devops/">
-					DevOps
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/linux/">
-					Linux
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/adding-timezones-to-date-time-strings-in-c-sharp">Adding Timezones to DateTime Strings in C#</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Whether you're dealing with UTC, local times, or specific timezone offsets, there's a simple way to format your <code>DateTime</code> objects properly.</p>
-
-<p>Here’s the rundown:</p>
-
-<h2>1. Using DateTimeOffset for Timezone-Aware DateTimes</h2>
-
-<p><code>DateTimeOffset</code> is my go-to for working with date and time when I need to include the timezone. It represents both the date, time, and the offset from UTC.</p>
-
-<h3>Example: Adding UTC or Specific Timezones</h3>
-
-<div class="codehilite">
-<pre><span></span><code><span class="n">DateTime</span><span class="w"> </span><span class="n">utcDateTime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DateTime</span><span class="p">.</span><span class="n">UtcNow</span><span class="p">;</span>
-<span class="n">DateTimeOffset</span><span class="w"> </span><span class="n">utcWithOffset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">DateTimeOffset</span><span class="p">(</span><span class="n">utcDateTime</span><span class="p">,</span><span class="w"> </span><span class="n">TimeSpan</span><span class="p">.</span><span class="n">Zero</span><span class="p">);</span><span class="w"> </span><span class="c1">// UTC timezone</span>
-
-<span class="c1">// For a specific timezone, like Eastern Standard Time (UTC-05:00)</span>
-<span class="n">TimeZoneInfo</span><span class="w"> </span><span class="n">easternZone</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">TimeZoneInfo</span><span class="p">.</span><span class="n">FindSystemTimeZoneById</span><span class="p">(</span><span class="s">&quot;Eastern Standard Time&quot;</span><span class="p">);</span>
-<span class="n">DateTimeOffset</span><span class="w"> </span><span class="n">easternTime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">TimeZoneInfo</span><span class="p">.</span><span class="n">ConvertTime</span><span class="p">(</span><span class="n">utcDateTime</span><span class="p">,</span><span class="w"> </span><span class="n">easternZone</span><span class="p">);</span>
-
-<span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="n">utcWithOffset</span><span class="p">.</span><span class="n">ToString</span><span class="p">(</span><span class="s">&quot;o&quot;</span><span class="p">));</span><span class="w"> </span><span class="c1">// 2025-01-23T12:00:00.000+00:00</span>
-<span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="n">easternTime</span><span class="p">.</span><span class="n">ToString</span><span class="p">(</span><span class="s">&quot;o&quot;</span><span class="p">));</span><span class="w">  </span><span class="c1">// 2025-01-23T07:00:00.000-05:00</span>
-</code></pre>
-</div>
-
-<p>The <code>"o"</code> format is particularly handy because it outputs the ISO 8601 standard, which is great for APIs or data exchange.</p>
-
-<h2>2. Appending Timezones to Strings Manually</h2>
-
-<p>Sometimes, all you need is a <code>DateTime</code> string with a simple timezone indicator (like <code>+00:00</code> for UTC). Here's how I did that:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="n">DateTime</span><span class="w"> </span><span class="n">dateTime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DateTime</span><span class="p">.</span><span class="n">Now</span><span class="p">;</span>
-<span class="kt">string</span><span class="w"> </span><span class="n">formattedDate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dateTime</span><span class="p">.</span><span class="n">ToString</span><span class="p">(</span><span class="s">&quot;yyyy-MM-ddTHH:mm:ss.fff&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s">&quot;Z&quot;</span><span class="p">;</span><span class="w"> </span><span class="c1">// Z = UTC</span>
-<span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="n">formattedDate</span><span class="p">);</span><span class="w"> </span><span class="c1">// Outputs: 2025-01-23T12:00:00.000Z</span>
-</code></pre>
-</div>
-
-<p>For more precision, you can include the actual offset:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="kt">string</span><span class="w"> </span><span class="n">formattedDateWithOffset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dateTime</span><span class="p">.</span><span class="n">ToString</span><span class="p">(</span><span class="s">&quot;yyyy-MM-ddTHH:mm:ss.fffzzz&quot;</span><span class="p">);</span>
-<span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="n">formattedDateWithOffset</span><span class="p">);</span><span class="w"> </span><span class="c1">// Outputs: 2025-01-23T07:00:00.000-05:00</span>
-</code></pre>
-</div>
-
-<h2>3. Custom Format Specifiers for Timezones</h2>
-
-<p>Need a custom date string with the timezone? The <code>"zzz"</code> specifier has you covered:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="n">DateTime</span><span class="w"> </span><span class="n">now</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DateTime</span><span class="p">.</span><span class="n">Now</span><span class="p">;</span>
-<span class="kt">string</span><span class="w"> </span><span class="n">dateTimeWithTimeZone</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">now</span><span class="p">.</span><span class="n">ToString</span><span class="p">(</span><span class="s">&quot;yyyy-MM-ddTHH:mm:ss.fff zzz&quot;</span><span class="p">);</span>
-<span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="n">dateTimeWithTimeZone</span><span class="p">);</span><span class="w"> </span><span class="c1">// Outputs: 2025-01-23T07:00:00.000 -05:00</span>
-</code></pre>
-</div>
-
-<h2>Why you should do this?</h2>
-
-<ul>
-<li>It’s straightforward to ensure your timestamps are timezone-aware.</li>
-<li>You can easily adjust for specific timezones or stick with UTC for consistency.</li>
-<li>The formatting options (<code>"o"</code>, <code>"zzz"</code>, etc.) give you flexibility to match the needs of APIs, logs, or user-facing systems.</li>
-</ul>
-
-<p>If you've ever struggled with timezone handling in C#, give these approaches a shot. Timestamps are tricky, but with these tools in your belt, you'll nail it every time!</p>
-
-<p>Hope you found this article useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>January 13th, 2025</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/net/">
-					.NET
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/c/">
-					C#
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/a-faster-way-to-apply-linux-permissions-for-large-laravel-projects-using-xargs-and-find">A Faster Way to Apply Linux Permissions for Large Laravel Projects Using xargs and find</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Today, I learned a more efficient way to apply Linux permissions to large projects by leveraging the power of <code>xargs</code> and <code>find</code>. This method is particularly useful when dealing with Laravel projects that have many files and directories, as it allows for parallel processing and excludes specific folders (like a <code>storage</code> directory) from the permission changes.</p>
-
-<p>Here’s the step-by-step process I followed:</p>
-
-<h2>1. Set Ownership of the Entire Project Folder</h2>
-
-<p>To ensure the correct ownership for the entire project, I used the <code>chown</code> command recursively:</p>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>chown<span class="w"> </span>-R<span class="w"> </span><span class="o">[</span>username<span class="o">]</span>:<span class="o">[</span>groupname<span class="o">]</span><span class="w"> </span><span class="o">[</span>foldername<span class="o">]</span>
-</code></pre>
-</div>
-
-<p>This command sets the owner and group for all files and directories within the specified folder.</p>
-
-<h2>2. Set Permissions for the Project Folder and Its Top-Level Directories</h2>
-
-<p>Next, I applied the desired permissions to the project folder and its top-level directories using <code>chmod</code>:</p>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>chmod<span class="w"> </span><span class="m">2775</span><span class="w"> </span><span class="o">[</span>foldername<span class="o">]</span>
-</code></pre>
-</div>
-
-<p>The <code>2775</code> permission sets the folder to allow read, write, and execute for the owner and group, and read and execute for others. The <code>2</code> enables the <strong>setgid bit</strong>, which ensures that new files and directories inherit the group of the parent folder.</p>
-
-<h2>3. Find and Change Permissions for All Directories (Except the Storage Folder) in Parallel</h2>
-
-<p>To apply permissions to all directories while excluding the <code>storage</code> folder, I combined <code>find</code>, <code>xargs</code>, and <code>chmod</code>:</p>
-
-<div class="codehilite">
-<pre><span></span><code>find<span class="w"> </span><span class="o">[</span>foldername<span class="o">]</span><span class="w"> </span>-path<span class="w"> </span><span class="o">[</span>foldername<span class="o">]</span>/storage<span class="w"> </span>-prune<span class="w"> </span>-o<span class="w"> </span>-type<span class="w"> </span>d<span class="w"> </span>-print0<span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>xargs<span class="w"> </span>-0<span class="w"> </span>-P<span class="w"> </span><span class="m">2</span><span class="w"> </span>chmod<span class="w"> </span><span class="m">2775</span>
-</code></pre>
-</div>
-
-<ul>
-<li><code>find [foldername] -path [foldername]/storage -prune -o -type d</code>: Finds all directories except the <code>storage</code> folder.</li>
-<li><code>-print0</code>: Outputs the results in a null-terminated format to handle spaces in filenames.</li>
-<li><code>xargs -0 -P 2</code>: Processes the results in parallel (2 processes at a time) for faster execution.</li>
-<li><code>chmod 2775</code>: Applies the desired permissions to the directories.</li>
-</ul>
-
-<h2>4. Find and Change Permissions for All Files (Except the Storage Folder) in Parallel</h2>
-
-<p>Similarly, I applied permissions to all files while excluding the <code>storage</code> folder:</p>
-
-<div class="codehilite">
-<pre><span></span><code>find<span class="w"> </span><span class="o">[</span>foldername<span class="o">]</span><span class="w"> </span>-path<span class="w"> </span><span class="o">[</span>foldername<span class="o">]</span>/storage<span class="w"> </span>-prune<span class="w"> </span>-o<span class="w"> </span>-type<span class="w"> </span>f<span class="w"> </span>-print0<span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>xargs<span class="w"> </span>-0<span class="w"> </span>-P<span class="w"> </span><span class="m">2</span><span class="w"> </span>chmod<span class="w"> </span><span class="m">0664</span>
-</code></pre>
-</div>
-
-<ul>
-<li><code>-type f</code>: Finds all files.</li>
-<li><code>chmod 0664</code>: Sets read and write permissions for the owner and group, and read-only for others.</li>
-</ul>
-
-<h2>5. Handle the Storage Folder Separately (If It’s Too Large)</h2>
-
-<p>For the <code>storage</code> folder, I applied permissions separately to avoid overloading the system:</p>
-
-<div class="codehilite">
-<pre><span></span><code>find<span class="w"> </span><span class="o">[</span>foldername<span class="o">]</span>/storage<span class="w"> </span>-type<span class="w"> </span>d<span class="w"> </span>-print0<span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>xargs<span class="w"> </span>-0<span class="w"> </span>-P<span class="w"> </span><span class="m">2</span><span class="w"> </span>chmod<span class="w"> </span><span class="m">2775</span>
-find<span class="w"> </span><span class="o">[</span>foldername<span class="o">]</span>/storage<span class="w"> </span>-type<span class="w"> </span>f<span class="w"> </span>-print0<span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>xargs<span class="w"> </span>-0<span class="w"> </span>-P<span class="w"> </span><span class="m">2</span><span class="w"> </span>chmod<span class="w"> </span><span class="m">0664</span>
-</code></pre>
-</div>
-
-<p>This ensures that the <code>storage</code> folder and its contents have the correct permissions without affecting the rest of the project.</p>
-
-<h2>Why This Approach?</h2>
-
-<p>Using <code>xargs</code> with <code>-P</code> allows for parallel processing, which speeds up permission changes significantly for large projects. Additionally, excluding specific folders (like <code>storage</code>) ensures that sensitive or frequently accessed directories are handled separately.</p>
-
-<p>This method has saved me a lot of time and effort when managing permissions for large projects.</p>
-
-<p>Hope you found this article useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>January 12th, 2025</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/linux/">
-					Linux
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/devops/">
-					DevOps
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/laravel/">
-					Laravel
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/using-records-for-dtos">Using records for DTOs</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>If you're building an application or API using .NET Core in where you might have to integrate with any external services or third-party APIs, this is for you.</p>
-
-<h2>What are records?</h2>
-
-<p>It's a feature introduced since <strong>C# 9.0</strong> that allows you to create simple and immutable data types. When representing DTOs (Data Transfer Objects), it comes in handy because the syntax in concise and it's primarily used to transfer data between layers of an application such as the Core and Presentation Layer. </p>
-
-<p>Here's an example of a car using a regular <code>class</code> type:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">public</span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">Car</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="k">public</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="n">Manufacturer</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">get</span><span class="p">;</span><span class="w"> </span><span class="k">init</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
-<span class="w">    </span><span class="k">public</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">Price</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">get</span><span class="p">;</span><span class="w"> </span><span class="k">init</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
-<span class="w">    </span><span class="k">public</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="n">Color</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">get</span><span class="p">;</span><span class="w"> </span><span class="k">init</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
-<span class="p">}</span>
-</code></pre>
-</div>
-
-<p>And here's a simplified version of that using <code>record</code> type:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">public</span><span class="w"> </span><span class="k">record</span><span class="w"> </span><span class="nf">Car</span><span class="p">(</span>
-<span class="w">    </span><span class="kt">string</span><span class="w"> </span><span class="n">Manufacturer</span><span class="p">,</span>
-<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">Price</span><span class="p">,</span>
-<span class="w">    </span><span class="kt">string</span><span class="w"> </span><span class="n">Color</span>
-<span class="p">);</span>
-</code></pre>
-</div>
-
-<p>Making use of the <code>record</code> type to manage Data Transfer Objects makes use of clean coding practicies by writing concise yet maintainable code.</p>
-
-<h2>So, no need of using classes?</h2>
-
-<p>Well, it depends because records aren't meant to replace classes for all scenarios. It's still recommended to use regular classes for complex types with complex behavior and whereas, records can be used for simple data structures.</p>
-
-<p>Hope you found this article useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>June 18th, 2024</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/net-core/">
-					.NET Core
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/c/">
-					C#
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/oop/">
-					OOP
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/using-property-pattern-matching-in-c">Using Property Pattern Matching in C#</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Alright, we've all been there especially when it comes to writing IF conditions with multiple checks in a single line like the example below:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">if</span><span class="p">(</span><span class="n">employee</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="k">null</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">employee</span><span class="p">.</span><span class="n">Age</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">20</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">employee</span><span class="p">.</span><span class="n">Address</span><span class="p">.</span><span class="n">City</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s">&quot;Dubai&quot;</span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="c1">// Do something here...</span>
-<span class="p">}</span>
-</code></pre>
-</div>
-
-<p>As you can see, this condition is straight-forward but can sometimes hinder readability and doesn't really ensure type safety.</p>
-
-<p>Here's where you can make use <strong>Property Pattern Matching</strong>.</p>
-
-<h2>What's Property Pattern Matching?</h2>
-
-<p>This type of pattern matching is used to match the defined expression if the conditions/nested conditions successfully matches the corresponding property or the field of the result and output of the result is not null. Here's an example of how it might be like:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">if</span><span class="p">(</span><span class="n">employee</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">Age</span><span class="p">:</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">20</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">Address</span><span class="p">.</span><span class="n">City</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s">&quot;Dubai&quot;</span><span class="w"> </span><span class="p">})</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="c1">// Do something here...</span>
-<span class="p">}</span>
-</code></pre>
-</div>
-
-<p>This pattern elevates your code's readability, ensures type safety and enable flexibility in terms of data manipulation.</p>
-
-<p>Hope you found this tip useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>June 17th, 2024</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/c/">
-					C#
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/programming/">
-					Programming
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -1090,6 +1301,13 @@ find<span class="w"> </span><span class="o">[</span>foldername<span class="o">]<
 		</li>
 		
 		<li>
+			<a href="/category/devops/">
+				DevOps
+				<span class="count">21</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/laravel/">
 				Laravel
 				<span class="count">20</span>
@@ -1097,9 +1315,9 @@ find<span class="w"> </span><span class="o">[</span>foldername<span class="o">]<
 		</li>
 		
 		<li>
-			<a href="/category/devops/">
-				DevOps
-				<span class="count">20</span>
+			<a href="/category/git/">
+				Git
+				<span class="count">15</span>
 			</a>
 		</li>
 		
@@ -1107,13 +1325,6 @@ find<span class="w"> </span><span class="o">[</span>foldername<span class="o">]<
 			<a href="/category/php/">
 				PHP
 				<span class="count">14</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/git/">
-				Git
-				<span class="count">12</span>
 			</a>
 		</li>
 		
@@ -1153,16 +1364,16 @@ find<span class="w"> </span><span class="o">[</span>foldername<span class="o">]<
 		</li>
 		
 		<li>
-			<a href="/category/productivity/">
-				Productivity
+			<a href="/category/mysql/">
+				MySQL
 				<span class="count">10</span>
 			</a>
 		</li>
 		
 		<li>
-			<a href="/category/mysql/">
-				MySQL
-				<span class="count">9</span>
+			<a href="/category/productivity/">
+				Productivity
+				<span class="count">10</span>
 			</a>
 		</li>
 		
@@ -1202,6 +1413,13 @@ find<span class="w"> </span><span class="o">[</span>foldername<span class="o">]<
 		</li>
 		
 		<li>
+			<a href="/category/vcs/">
+				VCS
+				<span class="count">5</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/c/">
 				C#
 				<span class="count">5</span>
@@ -1237,16 +1455,16 @@ find<span class="w"> </span><span class="o">[</span>foldername<span class="o">]<
 		</li>
 		
 		<li>
-			<a href="/category/arcade-challenge/">
-				Arcade Challenge
+			<a href="/category/databases/">
+				Databases
 				<span class="count">4</span>
 			</a>
 		</li>
 		
 		<li>
-			<a href="/category/databases/">
-				Databases
-				<span class="count">3</span>
+			<a href="/category/arcade-challenge/">
+				Arcade Challenge
+				<span class="count">4</span>
 			</a>
 		</li>
 		
@@ -1293,8 +1511,8 @@ find<span class="w"> </span><span class="o">[</span>foldername<span class="o">]<
 		</li>
 		
 		<li>
-			<a href="/category/vcs/">
-				VCS
+			<a href="/category/software-development/">
+				Software Development
 				<span class="count">2</span>
 			</a>
 		</li>
@@ -1440,6 +1658,20 @@ find<span class="w"> </span><span class="o">[</span>foldername<span class="o">]<
 		</li>
 		
 		<li>
+			<a href="/category/self-development/">
+				Self Development
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/goals/">
+				Goals
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/phpstorm/">
 				PHPStorm
 				<span class="count">1</span>
@@ -1540,13 +1772,6 @@ find<span class="w"> </span><span class="o">[</span>foldername<span class="o">]<
 		<li>
 			<a href="/category/csr/">
 				CSR
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/software-development/">
-				Software Development
 				<span class="count">1</span>
 			</a>
 		</li>

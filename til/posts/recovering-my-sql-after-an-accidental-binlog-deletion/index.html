@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html data-theme="" lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="author" content="Abdush Shakoor">
+	
+	<meta name="description" content=".">
+	<meta name="og:title" content="Recovering MySQL After an Accidental Binlog Deletion | Abdush Shakoor's Weblog" />
+	<meta name="og:type" content="article" />
+	<meta name="og:url" content="til/posts/recovering-my-sql-after-an-accidental-binlog-deletion" />
+	<meta name="og:description" content="" />
+	<meta name="og:site_name" content="Abdush Shakoor's Weblog | Abdush Shakoor's Weblog" />
+	
+	<meta name="robots" content="follow">
+	<title>Recovering MySQL After an Accidental Binlog Deletion | Abdush Shakoor's Weblog </title>
+	<link rel="stylesheet" href="/static/css/main.css" type="text/css">
+	<link rel="stylesheet" href="/static/css/pygments.css" type="text/css">
+
+	<link rel="apple-touch-icon" sizes="57x57" href="/static/favicon/apple-icon-57x57.png">
+<link rel="apple-touch-icon" sizes="60x60" href="/static/favicon/apple-icon-60x60.png">
+<link rel="apple-touch-icon" sizes="72x72" href="/static/favicon/apple-icon-72x72.png">
+<link rel="apple-touch-icon" sizes="76x76" href="/static/favicon/apple-icon-76x76.png">
+<link rel="apple-touch-icon" sizes="114x114" href="/static/favicon/apple-icon-114x114.png">
+<link rel="apple-touch-icon" sizes="120x120" href="/static/favicon/apple-icon-120x120.png">
+<link rel="apple-touch-icon" sizes="144x144" href="/static/favicon/apple-icon-144x144.png">
+<link rel="apple-touch-icon" sizes="152x152" href="/static/favicon/apple-icon-152x152.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/static/favicon/apple-icon-180x180.png">
+<link rel="icon" type="image/static/favicon/png" sizes="192x192"  href="/static/favicon/android-icon-192x192.png">
+<link rel="icon" type="image/static/favicon/png" sizes="32x32" href="/static/favicon/favicon-32x32.png">
+<link rel="icon" type="image/static/favicon/png" sizes="96x96" href="/static/favicon/favicon-96x96.png">
+<link rel="icon" type="image/static/favicon/png" sizes="16x16" href="/static/favicon/favicon-16x16.png">
+<link rel="manifest" href="/static/favicon/manifest.json">
+<meta name="msapplication-TileColor" content="#ffffff">
+<meta name="msapplication-TileImage" content="/static/favicon/ms-icon-144x144.png">
+<meta name="theme-color" content="#ffffff">
+	
+	<!-- <script src="https://unpkg.com/phosphor-icons"></script> -->
+	<!-- <script>
+		if(localStorage.theme){
+			document.documentElement.setAttribute('data-theme', localStorage.getItem("theme"));
+		}
+	</script> -->
+</head>
+<body class="">
+	<!-- Navbar -->
+	<header class="header">
+	<!-- Logo with Author Name -->
+	<div class="author">
+		<a href="/">
+			<img src="/static/logo.png" alt="megacolorboy">
+			<div class="name">
+				<h1>Abdush Shakoor's Weblog</h1>
+				<p>Writings, experiments & ideas.</p>
+			</div>
+		</a>
+	</div>
+	<!-- Logo with Author Name -->
+	<nav>
+		<ul class="menu">
+			
+				<li><a href="/about">About</a></li>
+			
+				<li><a href="/archive">Archive</a></li>
+			
+				<li><a href="/resume">Resume</a></li>
+			
+		</ul>
+	</nav>	
+</header>
+
+<main>
+	<div class="two-col-grid">
+		<section id="primary">
+			<div class="articles">
+				
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/recovering-my-sql-after-an-accidental-binlog-deletion">Recovering MySQL After an Accidental Binlog Deletion</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Last night, I found myself debugging a MySQL issue at an ungodly hour. The <strong>MySQL80 service refused to start</strong>, throwing a vague error:  </p>
+
+<blockquote>
+  <p><em>The MySQL80 service started and then stopped…</em>  </p>
+</blockquote>
+
+<p>Digging into <code>mysql.err</code>, I discovered the culprit—someone (not me! 😤) had <strong>accidentally deleted a binary log (<code>mysql-bin.000xxx</code>)</strong> while MySQL was still tracking it. Since MySQL relies on binlogs for replication and crash recovery, it panicked when it couldn't find the missing file.  </p>
+
+<h2>The Fix</h2>
+
+<p>To get MySQL running again, I had to:  </p>
+
+<ul>
+<li><strong>Disable binary logging</strong> (since this is a standalone server)  </li>
+<li><strong>Delete the corrupt binlog index file</strong> (<code>mysql-bin.index</code>)  </li>
+<li><strong>Purge all old binlog files</strong> that were hogging disk space  </li>
+</ul>
+
+<h2>How to Properly Disable Binary Logging in MySQL 8.0?</h2>
+
+<p>Since <strong>MySQL 8.0 enables binlogs by default</strong>, simply removing <code>log-bin=mysql-bin</code> from <code>my.ini</code> wasn’t enough. I had to:  </p>
+
+<h3>Comment out the existing binlog setting in my.ini</h3>
+
+<div class="codehilite">
+<pre><span></span><code><span class="c1"># log-bin=mysql-bin</span>
+</code></pre>
+</div>
+
+<h3>Explicitly disable binary logging</h3>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">[mysqld]</span>
+<span class="na">skip-log-bin</span>
+</code></pre>
+</div>
+
+<h3>Delete the old <code>mysql-bin.index</code> file</h3>
+
+<ul>
+<li>This file keeps track of all binary log files.  </li>
+<li>Since a referenced binlog file was deleted, MySQL would <strong>fail to start</strong> if the index still contained entries for missing files.  </li>
+<li>Deleting it ensures that MySQL doesn’t look for non-existent logs.  </li>
+</ul>
+
+<p>After restarting the service, I confirmed binlogging was off with:  </p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">SHOW</span><span class="w"> </span><span class="n">VARIABLES</span><span class="w"> </span><span class="k">LIKE</span><span class="w"> </span><span class="s1">&#39;log_bin&#39;</span><span class="p">;</span>
+</code></pre>
+</div>
+
+<p>Output:  </p>
+
+<div class="codehilite">
+<pre><span></span><code>log_bin<span class="w"> </span><span class="p">|</span><span class="w"> </span>OFF
+</code></pre>
+</div>
+
+<p>In conclusion, crisis averted, disk space reclaimed and finally got some sleep. 😴</p>
+
+<p>Hope you found this useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>February 18th, 2025</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/mysql/">
+					MySQL
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/databases/">
+					Databases
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+			</div>
+		</section>
+		<section id="secondary">
+			<div class="sidebar">
+				<div class="author-intro">
+	<h3>Hello, I'm Abdush Shakoor! &#x1F44B;</h3>
+	<p>I'm a programmer & designer based in Dubai, United Arab Emirates. I love tinkering with code and writing about what I learn.</p>
+	<p>Like this article? Please share it with your friends and colleagues or else, <a href="mailto:megacolorboy@gmail.com">send me</a> a private message about your feedback.</p>
+
+	<ul class="sitemap">
+		<li><a class="back" href="/"><span>👈</span> Check out more articles!</a></li>
+	</ul>
+</div>
+			</div>
+		</section>
+	</div>
+</main>
+
+<footer>
+    <span class="copyright">&copy; Abdush Shakoor</span>
+</footer>
+
+<script src="/static/vendor/jquery/jquery-3.5.1.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+
+<script src="/static/js/art.js"></script>
+
+<script defer src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script defer id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-98290003-2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-98290003-2');
+</script>
+<script src="/static/vendor/jquery-lazy/jquery.lazy.min.js"></script>
+<script>
+  $(function () {
+    $('.lazy').lazy();
+  });
+</script>
+<!-- <script>
+    const darkModeButton = document.createElement('button');
+    const syntaxHighlightSource = document.getElementById('syntaxHighlight');
+    const menuList = document.querySelector('.menu');
+    const themeSettings = {
+        "dark": {
+            "icon": '<i class="ph-moon-fill"></i>',
+            "hljs": "/static/vendor/hljs/css/github-dark.css",
+        },
+        "light": {
+            "icon": '<i class="ph-sun-fill"></i>',
+            "hljs": "/static/vendor/hljs/css/github.min.css",
+        },
+    }
+
+    function highlightMenuLink() {
+        var currentURI = window.location.href;
+        currentURI = currentURI.replace(window.location.protocol + "//", "");
+        var currentPage	 = currentURI.split('/')[1];
+
+        if(currentPage) {
+            $('a[href="/' + currentPage + '"').parent().addClass('active');
+        }
+    }
+    
+    function initThemeSwitcher() {
+        darkModeButton.innerHTML = themeSettings.light.icon;
+        darkModeButton.classList.add('darkModeButton');
+        
+        darkModeButton.addEventListener('click', function(){
+            switch(document.documentElement.getAttribute('data-theme')) {
+                case 'dark':
+                    lightMode();
+                    break;
+
+                case 'light':
+                default:
+                    darkMode();
+                    break;
+            }
+        });
+        
+        var newItem = document.createElement('li');
+        newItem.appendChild(darkModeButton);
+        menuList.insertBefore(newItem, menuList.childNodes[menuList.childNodes - 1]);
+    }
+    
+
+    // Settings for dark mode
+    function darkMode() {
+        darkModeButton.innerHTML = themeSettings.dark.icon;
+        document.documentElement.setAttribute('data-theme', 'dark');
+        syntaxHighlightSource.setAttribute('href', themeSettings.dark.hljs);
+        localStorage.setItem("theme", "dark");
+    }
+
+    // Settings for light mode
+    function lightMode() {
+        darkModeButton.innerHTML = themeSettings.light.icon;
+        document.documentElement.setAttribute('data-theme', '');
+        syntaxHighlightSource.setAttribute('href', themeSettings.light.hljs);
+        localStorage.setItem("theme", "");
+    }
+
+    function checkTheme() {
+        const localStorageTheme = localStorage.getItem("theme");
+        switch(localStorageTheme) {
+            case "dark":
+                darkMode();
+                break;
+            
+            default:
+                lightMode();
+                break;
+        }
+    }
+
+    // Check if the theme is stored in session
+    window.onload = function() {
+        initThemeSwitcher();
+        checkTheme();
+        highlightMenuLink();
+    }
+
+    //  open and close nav 
+    $('#navbar-toggle').click(function() {
+      $('nav ul').slideToggle();
+    });
+
+    // Hamburger toggle
+    $('#navbar-toggle').on('click', function() {
+      this.classList.toggle('active');
+    });
+
+    // Click outside the dropdown will remove the dropdown class
+    $('html').click(function() {
+      $('.navbar-dropdown').hide();
+    });
+</script> -->
+</body>
+</html>
