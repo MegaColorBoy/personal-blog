@@ -77,6 +77,394 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/centralizing-storage-for-multiple-websites-by-mounting-a-shared-windows-network-drive-on-cent-os-using-cifs">Centralizing Storage for Multiple Websites by Mounting a Shared Windows Network Drive on CentOS Using CIFS</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Running more than 45 websites on a CentOS server can be a challenge, especially when it comes to managing storage. In my case, these websites are hosted across two different servers, and each site has its own storage folder for images and uploads.</p>
+
+<p>To streamline this, I came up with a solution: centralizing all storage uploads in one place by hosting a shared Windows network drive and mounting it on the CentOS servers. </p>
+
+<p>This way, all websites can access the same centralized storage, making management much easier.</p>
+
+<p>Here’s how I did it, step by step:</p>
+
+<h4>Step 1: Install cifs-utils</h4>
+
+<p>First, you need to install the <code>cifs-utils</code> package, which provides the necessary tools to mount CIFS shares.</p>
+
+<div class="codehilite">
+<pre><span></span><code>yum<span class="w"> </span>install<span class="w"> </span>cifs-utils
+</code></pre>
+</div>
+
+<h4>Step 2: Create a Service Account</h4>
+
+<p>Next, I created a service account on the CentOS server. This account will be used to access the shared drive. I named it <code>svc_library_core</code> and assigned it a UID of 5000. You can choose any name and UID that isn’t already in use.</p>
+
+<div class="codehilite">
+<pre><span></span><code>useradd<span class="w"> </span>-u<span class="w"> </span><span class="m">5000</span><span class="w"> </span>svc_library_core
+</code></pre>
+</div>
+
+<h4>Step 3: Create a Group for the Share</h4>
+
+<p>I also created a group on the CentOS server that will map to the shared drive. This group will contain all the Linux accounts that need access to the share. I named the group <code>share_library_core</code> and gave it a GID of 6000.</p>
+
+<div class="codehilite">
+<pre><span></span><code>groupadd<span class="w"> </span>-g<span class="w"> </span><span class="m">6000</span><span class="w"> </span>share_library_core
+</code></pre>
+</div>
+
+<h4>Step 4: Add Users to the Group</h4>
+
+<p>After creating the group, I added the necessary users to it. For example, if you want the <code>apache</code> user to have access to the share, you can add it like this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>usermod<span class="w"> </span>-G<span class="w"> </span>share_library_core<span class="w"> </span>-a<span class="w"> </span>apache
+</code></pre>
+</div>
+
+<h4>Step 5: Prepare Credentials</h4>
+
+<p>To mount the drive, you’ll need to provide the credentials for the Windows share. You can either pass them directly using the <code>-o</code> option or save them in a file. I opted to save them in a file for security reasons.</p>
+
+<p>Switch to the root user and create a file to store the credentials:</p>
+
+<div class="codehilite">
+<pre><span></span><code>su<span class="w"> </span>-<span class="w"> </span>root
+touch<span class="w"> </span>/root/creds_smb_library_core
+chmod<span class="w"> </span><span class="m">0600</span><span class="w"> </span>/root/creds_smb_library_core
+vi<span class="w"> </span>/root/creds_smb_library_core
+</code></pre>
+</div>
+
+<p>Add the following lines to the file, replacing the placeholders with your actual Windows or Active Directory username and password:</p>
+
+<div class="codehilite">
+<pre><span></span><code>username=YourWindowsUsername
+password=YourWindowsPassword
+</code></pre>
+</div>
+
+<h4>Step 6: Mount the Drive</h4>
+
+<p>Now, you’re ready to mount the shared drive. Use the following command, replacing the placeholders with your actual values:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>mount<span class="w"> </span>-t<span class="w"> </span>cifs<span class="w"> </span>//&lt;destination_ip&gt;/path/to/directory<span class="w"> </span>/test-directory<span class="w"> </span>-o<span class="w"> </span><span class="nv">credentials</span><span class="o">=</span>/root/creds_smb_library_core,uid<span class="o">=</span><span class="m">5000</span>,gid<span class="o">=</span><span class="m">6000</span>,iocharset<span class="o">=</span>utf8,file_mode<span class="o">=</span><span class="m">0774</span>,dir_mode<span class="o">=</span><span class="m">0775</span>
+</code></pre>
+</div>
+
+<ul>
+<li><code>//&lt;destination_ip&gt;/path/to/directory</code> is the path to the shared drive on the Windows server.</li>
+<li><code>/test-directory</code> is the local directory where you want to mount the drive.</li>
+<li><code>credentials=/root/creds_smb_library_core</code> points to the file containing your credentials.</li>
+<li><code>uid=5000</code> and <code>gid=6000</code> map the mounted drive to the service account and group you created earlier.</li>
+<li><code>iocharset=utf8</code> ensures proper character encoding.</li>
+<li><code>file_mode=0774</code> and <code>dir_mode=0775</code> set the file and directory permissions.</li>
+</ul>
+
+<h4>Step 7: Unmounting the Drive</h4>
+
+<p>If you need to unmount the drive later, you can do so with the following command:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>umount<span class="w"> </span>/test-directory
+</code></pre>
+</div>
+
+<h3>Bonus: Automount Script for Server Reboots</h3>
+
+<p>One challenge I faced was ensuring that the shared drives were automatically remounted in case the servers went down or were rebooted. To handle this, I wrote a simple script that mounts the drives on startup.</p>
+
+<h4>Create the Script</h4>
+
+<p>Create a new script file, for example, <code>/usr/local/bin/mount_shares.sh</code>:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="ch">#!/bin/bash</span>
+mount<span class="w"> </span>-t<span class="w"> </span>cifs<span class="w"> </span>//&lt;destination_ip&gt;/path/to/directory<span class="w"> </span>/test-directory<span class="w"> </span>-o<span class="w"> </span><span class="nv">credentials</span><span class="o">=</span>/root/creds_smb_library_core,uid<span class="o">=</span><span class="m">5000</span>,gid<span class="o">=</span><span class="m">6000</span>,iocharset<span class="o">=</span>utf8,file_mode<span class="o">=</span><span class="m">0774</span>,dir_mode<span class="o">=</span><span class="m">0775</span>
+</code></pre>
+</div>
+
+<p>Make sure to replace the placeholders with your actual values.</p>
+
+<h4>Make the Script Executable</h4>
+
+<p>Set the executable permission on the script:</p>
+
+<div class="codehilite">
+<pre><span></span><code>chmod<span class="w"> </span>+x<span class="w"> </span>/usr/local/bin/mount_shares.sh
+</code></pre>
+</div>
+
+<h4>Add the Script to Startup</h4>
+
+<p>To ensure the script runs on startup, add it to the <code>/etc/rc.local</code> file:</p>
+
+<div class="codehilite">
+<pre><span></span><code>/usr/local/bin/mount_shares.sh
+</code></pre>
+</div>
+
+<p>Make sure <code>/etc/rc.local</code> is executable:</p>
+
+<div class="codehilite">
+<pre><span></span><code>chmod<span class="w"> </span>+x<span class="w"> </span>/etc/rc.local
+</code></pre>
+</div>
+
+<h4>Test the Script</h4>
+
+<p>Reboot your server and verify that the shared drives are automatically mounted.</p>
+
+<p>And that’s it! </p>
+
+<p>You’ve successfully mounted a shared Windows network drive on CentOS using CIFS and ensured it remounts automatically on server reboots. </p>
+
+<p>This setup has made managing storage for multiple websites much more efficient and centralized.</p>
+
+<p>Hope you found this article useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>January 14th, 2025</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/centos/">
+					CentOS
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/adding-timezones-to-date-time-strings-in-c-sharp">Adding Timezones to DateTime Strings in C#</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Whether you're dealing with UTC, local times, or specific timezone offsets, there's a simple way to format your <code>DateTime</code> objects properly.</p>
+
+<p>Here’s the rundown:</p>
+
+<h2>1. Using DateTimeOffset for Timezone-Aware DateTimes</h2>
+
+<p><code>DateTimeOffset</code> is my go-to for working with date and time when I need to include the timezone. It represents both the date, time, and the offset from UTC.</p>
+
+<h3>Example: Adding UTC or Specific Timezones</h3>
+
+<div class="codehilite">
+<pre><span></span><code><span class="n">DateTime</span><span class="w"> </span><span class="n">utcDateTime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DateTime</span><span class="p">.</span><span class="n">UtcNow</span><span class="p">;</span>
+<span class="n">DateTimeOffset</span><span class="w"> </span><span class="n">utcWithOffset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">DateTimeOffset</span><span class="p">(</span><span class="n">utcDateTime</span><span class="p">,</span><span class="w"> </span><span class="n">TimeSpan</span><span class="p">.</span><span class="n">Zero</span><span class="p">);</span><span class="w"> </span><span class="c1">// UTC timezone</span>
+
+<span class="c1">// For a specific timezone, like Eastern Standard Time (UTC-05:00)</span>
+<span class="n">TimeZoneInfo</span><span class="w"> </span><span class="n">easternZone</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">TimeZoneInfo</span><span class="p">.</span><span class="n">FindSystemTimeZoneById</span><span class="p">(</span><span class="s">&quot;Eastern Standard Time&quot;</span><span class="p">);</span>
+<span class="n">DateTimeOffset</span><span class="w"> </span><span class="n">easternTime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">TimeZoneInfo</span><span class="p">.</span><span class="n">ConvertTime</span><span class="p">(</span><span class="n">utcDateTime</span><span class="p">,</span><span class="w"> </span><span class="n">easternZone</span><span class="p">);</span>
+
+<span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="n">utcWithOffset</span><span class="p">.</span><span class="n">ToString</span><span class="p">(</span><span class="s">&quot;o&quot;</span><span class="p">));</span><span class="w"> </span><span class="c1">// 2025-01-23T12:00:00.000+00:00</span>
+<span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="n">easternTime</span><span class="p">.</span><span class="n">ToString</span><span class="p">(</span><span class="s">&quot;o&quot;</span><span class="p">));</span><span class="w">  </span><span class="c1">// 2025-01-23T07:00:00.000-05:00</span>
+</code></pre>
+</div>
+
+<p>The <code>"o"</code> format is particularly handy because it outputs the ISO 8601 standard, which is great for APIs or data exchange.</p>
+
+<h2>2. Appending Timezones to Strings Manually</h2>
+
+<p>Sometimes, all you need is a <code>DateTime</code> string with a simple timezone indicator (like <code>+00:00</code> for UTC). Here's how I did that:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="n">DateTime</span><span class="w"> </span><span class="n">dateTime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DateTime</span><span class="p">.</span><span class="n">Now</span><span class="p">;</span>
+<span class="kt">string</span><span class="w"> </span><span class="n">formattedDate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dateTime</span><span class="p">.</span><span class="n">ToString</span><span class="p">(</span><span class="s">&quot;yyyy-MM-ddTHH:mm:ss.fff&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s">&quot;Z&quot;</span><span class="p">;</span><span class="w"> </span><span class="c1">// Z = UTC</span>
+<span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="n">formattedDate</span><span class="p">);</span><span class="w"> </span><span class="c1">// Outputs: 2025-01-23T12:00:00.000Z</span>
+</code></pre>
+</div>
+
+<p>For more precision, you can include the actual offset:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="kt">string</span><span class="w"> </span><span class="n">formattedDateWithOffset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dateTime</span><span class="p">.</span><span class="n">ToString</span><span class="p">(</span><span class="s">&quot;yyyy-MM-ddTHH:mm:ss.fffzzz&quot;</span><span class="p">);</span>
+<span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="n">formattedDateWithOffset</span><span class="p">);</span><span class="w"> </span><span class="c1">// Outputs: 2025-01-23T07:00:00.000-05:00</span>
+</code></pre>
+</div>
+
+<h2>3. Custom Format Specifiers for Timezones</h2>
+
+<p>Need a custom date string with the timezone? The <code>"zzz"</code> specifier has you covered:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="n">DateTime</span><span class="w"> </span><span class="n">now</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DateTime</span><span class="p">.</span><span class="n">Now</span><span class="p">;</span>
+<span class="kt">string</span><span class="w"> </span><span class="n">dateTimeWithTimeZone</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">now</span><span class="p">.</span><span class="n">ToString</span><span class="p">(</span><span class="s">&quot;yyyy-MM-ddTHH:mm:ss.fff zzz&quot;</span><span class="p">);</span>
+<span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="n">dateTimeWithTimeZone</span><span class="p">);</span><span class="w"> </span><span class="c1">// Outputs: 2025-01-23T07:00:00.000 -05:00</span>
+</code></pre>
+</div>
+
+<h2>Why you should do this?</h2>
+
+<ul>
+<li>It’s straightforward to ensure your timestamps are timezone-aware.</li>
+<li>You can easily adjust for specific timezones or stick with UTC for consistency.</li>
+<li>The formatting options (<code>"o"</code>, <code>"zzz"</code>, etc.) give you flexibility to match the needs of APIs, logs, or user-facing systems.</li>
+</ul>
+
+<p>If you've ever struggled with timezone handling in C#, give these approaches a shot. Timestamps are tricky, but with these tools in your belt, you'll nail it every time!</p>
+
+<p>Hope you found this article useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>January 13th, 2025</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/net/">
+					.NET
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/c/">
+					C#
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/a-faster-way-to-apply-linux-permissions-for-large-laravel-projects-using-xargs-and-find">A Faster Way to Apply Linux Permissions for Large Laravel Projects Using xargs and find</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Today, I learned a more efficient way to apply Linux permissions to large projects by leveraging the power of <code>xargs</code> and <code>find</code>. This method is particularly useful when dealing with Laravel projects that have many files and directories, as it allows for parallel processing and excludes specific folders (like a <code>storage</code> directory) from the permission changes.</p>
+
+<p>Here’s the step-by-step process I followed:</p>
+
+<h2>1. Set Ownership of the Entire Project Folder</h2>
+
+<p>To ensure the correct ownership for the entire project, I used the <code>chown</code> command recursively:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>chown<span class="w"> </span>-R<span class="w"> </span><span class="o">[</span>username<span class="o">]</span>:<span class="o">[</span>groupname<span class="o">]</span><span class="w"> </span><span class="o">[</span>foldername<span class="o">]</span>
+</code></pre>
+</div>
+
+<p>This command sets the owner and group for all files and directories within the specified folder.</p>
+
+<h2>2. Set Permissions for the Project Folder and Its Top-Level Directories</h2>
+
+<p>Next, I applied the desired permissions to the project folder and its top-level directories using <code>chmod</code>:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>chmod<span class="w"> </span><span class="m">2775</span><span class="w"> </span><span class="o">[</span>foldername<span class="o">]</span>
+</code></pre>
+</div>
+
+<p>The <code>2775</code> permission sets the folder to allow read, write, and execute for the owner and group, and read and execute for others. The <code>2</code> enables the <strong>setgid bit</strong>, which ensures that new files and directories inherit the group of the parent folder.</p>
+
+<h2>3. Find and Change Permissions for All Directories (Except the Storage Folder) in Parallel</h2>
+
+<p>To apply permissions to all directories while excluding the <code>storage</code> folder, I combined <code>find</code>, <code>xargs</code>, and <code>chmod</code>:</p>
+
+<div class="codehilite">
+<pre><span></span><code>find<span class="w"> </span><span class="o">[</span>foldername<span class="o">]</span><span class="w"> </span>-path<span class="w"> </span><span class="o">[</span>foldername<span class="o">]</span>/storage<span class="w"> </span>-prune<span class="w"> </span>-o<span class="w"> </span>-type<span class="w"> </span>d<span class="w"> </span>-print0<span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>xargs<span class="w"> </span>-0<span class="w"> </span>-P<span class="w"> </span><span class="m">2</span><span class="w"> </span>chmod<span class="w"> </span><span class="m">2775</span>
+</code></pre>
+</div>
+
+<ul>
+<li><code>find [foldername] -path [foldername]/storage -prune -o -type d</code>: Finds all directories except the <code>storage</code> folder.</li>
+<li><code>-print0</code>: Outputs the results in a null-terminated format to handle spaces in filenames.</li>
+<li><code>xargs -0 -P 2</code>: Processes the results in parallel (2 processes at a time) for faster execution.</li>
+<li><code>chmod 2775</code>: Applies the desired permissions to the directories.</li>
+</ul>
+
+<h2>4. Find and Change Permissions for All Files (Except the Storage Folder) in Parallel</h2>
+
+<p>Similarly, I applied permissions to all files while excluding the <code>storage</code> folder:</p>
+
+<div class="codehilite">
+<pre><span></span><code>find<span class="w"> </span><span class="o">[</span>foldername<span class="o">]</span><span class="w"> </span>-path<span class="w"> </span><span class="o">[</span>foldername<span class="o">]</span>/storage<span class="w"> </span>-prune<span class="w"> </span>-o<span class="w"> </span>-type<span class="w"> </span>f<span class="w"> </span>-print0<span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>xargs<span class="w"> </span>-0<span class="w"> </span>-P<span class="w"> </span><span class="m">2</span><span class="w"> </span>chmod<span class="w"> </span><span class="m">0664</span>
+</code></pre>
+</div>
+
+<ul>
+<li><code>-type f</code>: Finds all files.</li>
+<li><code>chmod 0664</code>: Sets read and write permissions for the owner and group, and read-only for others.</li>
+</ul>
+
+<h2>5. Handle the Storage Folder Separately (If It’s Too Large)</h2>
+
+<p>For the <code>storage</code> folder, I applied permissions separately to avoid overloading the system:</p>
+
+<div class="codehilite">
+<pre><span></span><code>find<span class="w"> </span><span class="o">[</span>foldername<span class="o">]</span>/storage<span class="w"> </span>-type<span class="w"> </span>d<span class="w"> </span>-print0<span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>xargs<span class="w"> </span>-0<span class="w"> </span>-P<span class="w"> </span><span class="m">2</span><span class="w"> </span>chmod<span class="w"> </span><span class="m">2775</span>
+find<span class="w"> </span><span class="o">[</span>foldername<span class="o">]</span>/storage<span class="w"> </span>-type<span class="w"> </span>f<span class="w"> </span>-print0<span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>xargs<span class="w"> </span>-0<span class="w"> </span>-P<span class="w"> </span><span class="m">2</span><span class="w"> </span>chmod<span class="w"> </span><span class="m">0664</span>
+</code></pre>
+</div>
+
+<p>This ensures that the <code>storage</code> folder and its contents have the correct permissions without affecting the rest of the project.</p>
+
+<h2>Why This Approach?</h2>
+
+<p>Using <code>xargs</code> with <code>-P</code> allows for parallel processing, which speeds up permission changes significantly for large projects. Additionally, excluding specific folders (like <code>storage</code>) ensures that sensitive or frequently accessed directories are handled separately.</p>
+
+<p>This method has saved me a lot of time and effort when managing permissions for large projects.</p>
+
+<p>Hope you found this article useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>January 12th, 2025</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/laravel/">
+					Laravel
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/using-records-for-dtos">Using records for DTOs</a></h1>
 		<p class="description"></p>
 	</div>
@@ -438,176 +826,6 @@ That's fine but when working on a large project or tight deadlines, it can be qu
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/using-the-nullcoaleascing-operator-in-c">Using the null-coaleascing operator in C#</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Null checks are the most underrated thing and despite years of experience, we still forget to write a null check in our code.</p>
-
-<p>When it comes to writing null checks, this is what one would most write:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="kt">string</span><span class="w"> </span><span class="n">foo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">null</span><span class="p">;</span>
-<span class="kt">string</span><span class="w"> </span><span class="n">bar</span><span class="p">;</span>
-<span class="k">if</span><span class="p">(</span><span class="n">foo</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="k">null</span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="n">bar</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">foo</span><span class="p">;</span>
-<span class="p">}</span>
-<span class="k">else</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="n">bar</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;Hello, friend!&quot;</span><span class="p">;</span>
-<span class="p">}</span>
-<span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="n">bar</span><span class="p">)</span><span class="w"> </span><span class="c1">// Output: Hello, friend!</span>
-</code></pre>
-</div>
-
-<p>Yes, it does the job but it's a bit lengthy and not so readable. Let's see how the <code>??</code> operator i.e. the null-coalescing operator can help simplify your logic:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="kt">string</span><span class="w"> </span><span class="n">foo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">null</span><span class="p">;</span>
-<span class="kt">string</span><span class="w"> </span><span class="n">bar</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">foo</span><span class="w"> </span><span class="o">??</span><span class="w"> </span><span class="s">&quot;Hello, friend!&quot;</span><span class="p">;</span>
-<span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="n">bar</span><span class="p">)</span><span class="w"> </span><span class="c1">// Output: Hello, friend!</span>
-</code></pre>
-</div>
-
-<p>Now, you can bid goodbyes to writing verbose null checks and make your code more cleaner and readable.</p>
-
-<p>Hope this tip helps you out!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>May 25th, 2024</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/c/">
-					C#
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/programming/">
-					Programming
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/check-if-a-string-is-a-uniqueidentifier-in-sql-server">Check if a string is a UNIQUEIDENTIFIER in SQL Server</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Recently, when I was performing a data migration that contained previous payment history, I came across a table that had a column named <code>PaymentId</code> which is supposed to have a UUID styled format but funnily enough, it was kind of confusing because some of them had numbers in it.</p>
-
-<p>Luckily, the ones that weren't in UUID format are not supposed to be migrated, so I decided to write a <code>SELECT</code> query and filter the records using the <code>TRY_CONVERT</code> function:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">SELECT</span><span class="w"> </span>
-<span class="w">    </span><span class="o">*</span><span class="w"> </span>
-<span class="k">FROM</span><span class="w"> </span>
-<span class="w">    </span><span class="n">dbo</span><span class="p">.</span><span class="n">YourTable</span><span class="w"> </span>
-<span class="k">WHERE</span><span class="w"> </span>
-<span class="w">    </span><span class="n">TRY_CONVERT</span><span class="p">(</span><span class="n">UNIQUEIDENTIFIER</span><span class="p">,</span><span class="w"> </span><span class="n">YourColumn</span><span class="p">)</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">;</span>
-</code></pre>
-</div>
-
-<p>Yes, it's that simple. You don't need to write any complex regular expressions for such operations.</p>
-
-<p>Hope you found this tip useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>February 18th, 2024</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/sql-server/">
-					SQL Server
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/filtering-results-by-weekdays-in-sql-server">Filtering results by weekdays in SQL Server</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Ever wanted to know how many people are actively posting something on a Monday? Or maybe during the weekends?</p>
-
-<p>You can do that by using the <code>DATEPART</code> and <code>DATENAME</code> functions. Let me show you how they work.</p>
-
-<h2>Using DATEPART</h2>
-
-<p>The <code>DATEPART</code> function represents weekdays as integers from 1 (Sunday) to 7 (Saturday).</p>
-
-<p>Let's say that you wanted to filter between Monday and Friday, you can achieve something like this:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">dbo</span><span class="p">.</span><span class="n">YourTable</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">DATEPART</span><span class="p">(</span><span class="n">WEEKDAY</span><span class="p">,</span><span class="w"> </span><span class="n">YourDateColumn</span><span class="p">)</span><span class="w"> </span><span class="k">BETWEEN</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="mi">6</span><span class="p">;</span>
-</code></pre>
-</div>
-
-<p>One thing to note, in SQL Server, Sunday is the first day of the week. So, if you wanted to set the first day of the week, you can write the following statement before executing your query:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">SET</span><span class="w"> </span><span class="n">DATEFIRST</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w">  </span><span class="c1">-- Set Monday as the first day of the week</span>
-<span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">dbo</span><span class="p">.</span><span class="n">YourTable</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">DATEPART</span><span class="p">(</span><span class="n">WEEKDAY</span><span class="p">,</span><span class="w"> </span><span class="n">YourDateColumn</span><span class="p">)</span><span class="w"> </span><span class="k">BETWEEN</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="mi">5</span><span class="p">;</span>
-</code></pre>
-</div>
-
-<p>In the example above, you'll achieve the same results as the previous one.</p>
-
-<h2>Using DATENAME</h2>
-
-<p>The <code>DATENAME</code> function represents weekdays as a string from Monday to Sunday.</p>
-
-<p>Let's replicate the previous example using this function:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">dbo</span><span class="p">.</span><span class="n">YourTable</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">DATENAME</span><span class="p">(</span><span class="n">WEEKDAY</span><span class="p">,</span><span class="w"> </span><span class="n">YourDateColumn</span><span class="p">)</span><span class="w"> </span><span class="k">IN</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;Monday&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Tuesday&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Wednesday&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Thursday&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Friday&#39;</span><span class="p">);</span>
-</code></pre>
-</div>
-
-<p>If you want to know more about filtering your records effectively using these methods, you can the read the documentation:</p>
-
-<ul>
-<li><a href="https://learn.microsoft.com/en-us/sql/t-sql/functions/datename-transact-sql?view=sql-server-ver16">DATENAME (Transact-SQL)</a></li>
-<li><a href="https://learn.microsoft.com/en-us/sql/t-sql/functions/datepart-transact-sql?view=sql-server-ver16">DATEPART (Transact-SQL)</a></li>
-</ul>
-
-<p>Hope you found this tip useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>February 18th, 2024</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/sql-server/">
-					SQL Server
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -670,14 +888,14 @@ That's fine but when working on a large project or tight deadlines, it can be qu
 		<li>
 			<a href="/category/linux/">
 				Linux
-				<span class="count">24</span>
+				<span class="count">25</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/devops/">
 				DevOps
-				<span class="count">21</span>
+				<span class="count">23</span>
 			</a>
 		</li>
 		
@@ -689,16 +907,16 @@ That's fine but when working on a large project or tight deadlines, it can be qu
 		</li>
 		
 		<li>
-			<a href="/category/git/">
-				Git
+			<a href="/category/php/">
+				PHP
 				<span class="count">15</span>
 			</a>
 		</li>
 		
 		<li>
-			<a href="/category/php/">
-				PHP
-				<span class="count">14</span>
+			<a href="/category/git/">
+				Git
+				<span class="count">15</span>
 			</a>
 		</li>
 		
@@ -766,6 +984,13 @@ That's fine but when working on a large project or tight deadlines, it can be qu
 		</li>
 		
 		<li>
+			<a href="/category/apache/">
+				Apache
+				<span class="count">6</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/tutorial/">
 				Tutorial
 				<span class="count">6</span>
@@ -815,13 +1040,6 @@ That's fine but when working on a large project or tight deadlines, it can be qu
 		</li>
 		
 		<li>
-			<a href="/category/apache/">
-				Apache
-				<span class="count">5</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/personal-challenge/">
 				Personal Challenge
 				<span class="count">5</span>
@@ -839,6 +1057,34 @@ That's fine but when working on a large project or tight deadlines, it can be qu
 			<a href="/category/arcade-challenge/">
 				Arcade Challenge
 				<span class="count">4</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/artificial-intelligence/">
+				Artificial Intelligence
+				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/software-development/">
+				Software Development
+				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/security/">
+				Security
+				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/ubuntu/">
+				Ubuntu
+				<span class="count">3</span>
 			</a>
 		</li>
 		
@@ -885,20 +1131,6 @@ That's fine but when working on a large project or tight deadlines, it can be qu
 		</li>
 		
 		<li>
-			<a href="/category/software-development/">
-				Software Development
-				<span class="count">2</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/ubuntu/">
-				Ubuntu
-				<span class="count">2</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/powershell/">
 				PowerShell
 				<span class="count">2</span>
@@ -941,13 +1173,6 @@ That's fine but when working on a large project or tight deadlines, it can be qu
 		</li>
 		
 		<li>
-			<a href="/category/security/">
-				Security
-				<span class="count">2</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/sql-server/">
 				SQL Server
 				<span class="count">2</span>
@@ -964,13 +1189,6 @@ That's fine but when working on a large project or tight deadlines, it can be qu
 		<li>
 			<a href="/category/ssl/">
 				SSL
-				<span class="count">2</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/artificial-intelligence/">
-				Artificial Intelligence
 				<span class="count">2</span>
 			</a>
 		</li>
@@ -1028,6 +1246,34 @@ That's fine but when working on a large project or tight deadlines, it can be qu
 			<a href="/category/wamp/">
 				WAMP
 				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/thoughts/">
+				Thoughts
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/nginx/">
+				nginx
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/grub/">
+				GRUB
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/windows/">
+				Windows
+				<span class="count">1</span>
 			</a>
 		</li>
 		
