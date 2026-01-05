@@ -77,6 +77,329 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/why-hangfire-recurring-jobs-should-always-have-stable-ids">Why Hangfire recurring jobs should always have stable IDs?</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Recently, I learned that <strong>not giving explicit IDs to Hangfire recurring jobs can silently create duplicates</strong>.</p>
+
+<p>When you call <code>RecurringJob.AddOrUpdate(...)</code> without a pre-defined ID, Hangfire auto-generates one based on the method expression. That sounds fine—until you deploy across multiple nodes or refactor your code.</p>
+
+<p>In such cases, Hangfire may generate a <em>new derived ID</em>, while the old recurring job continues running in the background. The result? <strong>Duplicate jobs executing on schedule</strong>, often goes unnoticed.</p>
+
+<h2>Simple fix</h2>
+
+<p>Make sure that you always pass a clear, human-readable ID:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="n">RecurringJob</span><span class="p">.</span><span class="n">AddOrUpdate</span><span class="o">&lt;</span><span class="n">ICustomBackgroundServiceManager</span><span class="o">&gt;</span><span class="p">(</span>
+<span class="w">    </span><span class="s">&quot;payments:reconcile-3h&quot;</span><span class="p">,</span><span class="w"> </span><span class="c1">// Human-readable ID</span>
+<span class="w">    </span><span class="n">s</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">ResendPaymentReportToVendorHourly</span><span class="p">(),</span>
+<span class="w">    </span><span class="n">Cron</span><span class="p">.</span><span class="n">Hourly</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="p">);</span>
+</code></pre>
+</div>
+
+<p>Next, ensure that overlaps are impossible in a multi-node setup by adding this attribute to your job method:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="na">[DisableConcurrentExecution(timeoutInSeconds: 3600)]</span>
+<span class="k">public</span><span class="w"> </span><span class="n">Task</span><span class="w"> </span><span class="nf">ResendPaymentReportToVendorHourly</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="cm">/* ... */</span><span class="w"> </span><span class="p">}</span>
+</code></pre>
+</div>
+
+<p>This uses a <strong>distributed lock</strong> backed by Hangfire storage—so even with multiple nodes, only one execution runs at a time. If you’re wondering whether this locks the job for the full hour: <strong>it doesn’t</strong>. The timeout exists for crash-safety, not throttling.</p>
+
+<p>After doing this, recurring jobs become much easier to reason about, identify, pause, or delete in a multi-node environment.</p>
+
+<p>Hope you found this tip useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>January 5th, 2026</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/c/">
+					C#
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/hangfire/">
+					Hangfire
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/running-laravel-queues-with-supervisor-on-ubuntu">Running Laravel queues with Supervisor on Ubuntu</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Laravel queues aren’t new to me, but I realized I’d never really written down how I usually set them up on a fresh Ubuntu server.</p>
+
+<p>Whenever I need queue workers to run continuously — and survive restarts or crashes — I almost always reach for <strong>Supervisor</strong>. It’s simple, boring, and gets the job done.</p>
+
+<p>First, install it on your server:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>update
+sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>supervisor
+</code></pre>
+</div>
+
+<p>Then create a small config file for the queue worker:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>vim<span class="w"> </span>/etc/supervisor/conf.d/laravel-worker.conf
+</code></pre>
+</div>
+
+<p>This is the setup I generally start with:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">[program:laravel-worker]</span>
+<span class="na">process_name</span><span class="o">=</span><span class="s">%(program_name)s_%(process_num)02d</span>
+<span class="na">command</span><span class="o">=</span><span class="s">php /var/www/project/artisan queue:work --sleep=3 --tries=3 --max-time=3600</span>
+<span class="na">autostart</span><span class="o">=</span><span class="s">true</span>
+<span class="na">autorestart</span><span class="o">=</span><span class="s">true</span>
+<span class="na">user</span><span class="o">=</span><span class="s">www-data</span>
+<span class="na">numprocs</span><span class="o">=</span><span class="s">2</span>
+<span class="na">redirect_stderr</span><span class="o">=</span><span class="s">true</span>
+<span class="na">stdout_logfile</span><span class="o">=</span><span class="s">/var/www/project/storage/logs/laravel-worker.log</span>
+<span class="na">stopwaitsecs</span><span class="o">=</span><span class="s">600</span>
+</code></pre>
+</div>
+
+<p>A few quick notes on what this does:</p>
+
+<ul>
+<li>It runs <code>queue:work</code> instead of <code>queue:listen</code>, so the worker stays in memory</li>
+<li>Two worker processes are started in parallel (<code>numprocs=2</code>)</li>
+<li>If the queue is empty, the worker sleeps for a few seconds instead of spinning</li>
+<li>Failed jobs are retried a limited number of times</li>
+<li>The worker is force-restarted every hour to avoid memory leaks</li>
+<li>If a worker crashes, Supervisor brings it back up automatically</li>
+</ul>
+
+<p>Once the file is saved, reload Supervisor’s config:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>supervisorctl<span class="w"> </span>reread
+sudo<span class="w"> </span>supervisorctl<span class="w"> </span>update
+</code></pre>
+</div>
+
+<p>Start the workers:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>supervisorctl<span class="w"> </span>start<span class="w"> </span>laravel-worker:*
+</code></pre>
+</div>
+
+<p>And check their status:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>supervisorctl<span class="w"> </span>status
+</code></pre>
+</div>
+
+<p>Whenever I deploy new code or change environment variables, I just restart them:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>supervisorctl<span class="w"> </span>restart<span class="w"> </span>laravel-worker:*
+</code></pre>
+</div>
+
+<p>Logs end up in Laravel’s <code>storage/logs</code>, which is usually the first place I look when something feels off.</p>
+
+<p>This setup has been reliable for me across multiple projects. No dashboards, no extra moving parts — just queue workers quietly doing their job in the background.</p>
+
+<p>Hope you found this useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>January 4th, 2026</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/laravel/">
+					Laravel
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/ubuntu/">
+					Ubuntu
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/supervisor/">
+					Supervisor
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/datetimekind-unspecified-can-quietly-break-your-dates">DateTimeKind.Unspecified can quietly break your dates</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Two months ago, a client raised a <strong>critical ticket</strong> where some users complained that their <em>Start Date of the Financial Year</em> had gone <strong>one day backward</strong>. This wasn’t caught during UAT while integrating their API, and I was surprised to run into this date conversion bug while I was on vacation (yes, that sucks!).</p>
+
+<p>I had a perfectly normal-looking date:</p>
+
+<div class="codehilite">
+<pre><span></span><code>2025-01-01 00:00:00.0000000
+</code></pre>
+</div>
+
+<p>Nothing fancy. But after converting it to UTC, I noticed something odd — the <strong>date changed</strong>.</p>
+
+<p>Luckily, I was able to trace where it was coming from, and after debugging in Visual Studio 2022, it turned out the culprit was <code>DateTimeKind.Unspecified</code>.</p>
+
+<p>When a <code>DateTime</code> is parsed without timezone information, .NET marks it as <code>Unspecified</code>. If you then call <code>ToUniversalTime()</code>, .NET <strong>assumes the value is local time</strong> and converts it to UTC. On a UTC+5:30 system, that means:</p>
+
+<div class="codehilite">
+<pre><span></span><code>2025-01-01 00:00 → 2024-12-31T18:30:00Z
+</code></pre>
+</div>
+
+<p>Same instant, different calendar date. Easy to miss, painful to debug.</p>
+
+<h2>The fix</h2>
+
+<p>If your date is already meant to be UTC, you need to say so explicitly:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="n">DateTime</span><span class="p">.</span><span class="n">SpecifyKind</span><span class="p">(</span><span class="n">inputDateTime</span><span class="p">,</span><span class="w"> </span><span class="n">DateTimeKind</span><span class="p">.</span><span class="n">Utc</span><span class="p">);</span>
+</code></pre>
+</div>
+
+<p>Or handle it defensively in one place:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">switch</span><span class="w"> </span><span class="p">(</span><span class="n">inputDateTime</span><span class="p">.</span><span class="n">Kind</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">DateTimeKind</span><span class="p">.</span><span class="n">Utc</span><span class="p">:</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">inputDateTime</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">DateTimeKind</span><span class="p">.</span><span class="n">Local</span><span class="p">:</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">inputDateTime</span><span class="p">.</span><span class="n">ToUniversalTime</span><span class="p">();</span>
+
+<span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">DateTimeKind</span><span class="p">.</span><span class="n">Unspecified</span><span class="p">:</span>
+<span class="w">    </span><span class="k">default</span><span class="p">:</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">DateTime</span><span class="p">.</span><span class="n">SpecifyKind</span><span class="p">(</span><span class="n">inputDateTime</span><span class="p">,</span><span class="w"> </span><span class="n">DateTimeKind</span><span class="p">.</span><span class="n">Utc</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<h2>Takeaway</h2>
+
+<p>Never leave <code>DateTimeKind</code> to chance especially if you’re working with APIs, audits, or anything date-sensitive.</p>
+
+<p>It’s one of those small details that only shows up when things go wrong — which makes it worth handling upfront.</p>
+
+<p>Hope you found this tip useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>January 3rd, 2026</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/c/">
+					C#
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/resize-images-from-a-file-list-using-imagemagick">Resize images from a file list using ImageMagick</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Today, a colleague of mine uploaded a large number of images, only to realise later that they were all uncompressed and the site was loading noticeably slower. </p>
+
+<p>His first thought was to compress them and re-upload everything again—but why do something redundant when you can handle it easily from the terminal using ImageMagick?</p>
+
+<p>Previously, I’ve written about how ImageMagick makes it easy to <a href="https://www.megacolorboy.com/til/posts/playing-around-with-imagemagick/">resize images</a> in bulk. However, sometimes you don’t want to touch every image in a directory.</p>
+
+<p>In cases like this, if you already know which images need resizing, you can list their filenames in a text file and let ImageMagick process only those.</p>
+
+<p>Assume a <code>files.txt</code> like this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>image1.jpg
+photo_02.png
+banner.jpeg
+</code></pre>
+</div>
+
+<p>You can then resize just those images while keeping the original aspect ratio intact and avoiding upscaling:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">while</span><span class="w"> </span><span class="nv">IFS</span><span class="o">=</span><span class="w"> </span><span class="nb">read</span><span class="w"> </span>-r<span class="w"> </span>file<span class="p">;</span><span class="w"> </span><span class="k">do</span>
+<span class="w">  </span><span class="o">[</span><span class="w"> </span>-f<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$file</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">]</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>mogrify<span class="w"> </span>-resize<span class="w"> </span>500x600<span class="se">\&gt;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$file</span><span class="s2">&quot;</span>
+<span class="k">done</span><span class="w"> </span>&lt;<span class="w"> </span>files.txt
+</code></pre>
+</div>
+
+<p>This works well when cleaning up large media folders or fixing legacy content where only a subset of images needs adjustment.</p>
+
+<p>Hope you found this tip useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>January 2nd, 2026</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/image-manipulation/">
+					Image Manipulation
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/block-browser-features-with-permissions-policy-in-nginx">Block browser features with permissions policy in Nginx</a></h1>
 		<p class="description"></p>
 	</div>
@@ -537,401 +860,6 @@ pick<span class="w"> </span>ghi789<span class="w"> </span>Commit<span class="w">
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/recovering-my-sql-after-an-accidental-binlog-deletion">Recovering MySQL After an Accidental Binlog Deletion</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Last night, I found myself debugging a MySQL issue at an ungodly hour. The <strong>MySQL80 service refused to start</strong>, throwing a vague error:  </p>
-
-<blockquote>
-  <p><em>The MySQL80 service started and then stopped…</em>  </p>
-</blockquote>
-
-<p>Digging into <code>mysql.err</code>, I discovered the culprit—someone (not me! 😤) had <strong>accidentally deleted a binary log (<code>mysql-bin.000xxx</code>)</strong> while MySQL was still tracking it. Since MySQL relies on binlogs for replication and crash recovery, it panicked when it couldn't find the missing file.  </p>
-
-<h2>The Fix</h2>
-
-<p>To get MySQL running again, I had to:  </p>
-
-<ul>
-<li><strong>Disable binary logging</strong> (since this is a standalone server)  </li>
-<li><strong>Delete the corrupt binlog index file</strong> (<code>mysql-bin.index</code>)  </li>
-<li><strong>Purge all old binlog files</strong> that were hogging disk space  </li>
-</ul>
-
-<h2>How to Properly Disable Binary Logging in MySQL 8.0?</h2>
-
-<p>Since <strong>MySQL 8.0 enables binlogs by default</strong>, simply removing <code>log-bin=mysql-bin</code> from <code>my.ini</code> wasn’t enough. I had to:  </p>
-
-<h3>Comment out the existing binlog setting in my.ini</h3>
-
-<div class="codehilite">
-<pre><span></span><code><span class="c1"># log-bin=mysql-bin</span>
-</code></pre>
-</div>
-
-<h3>Explicitly disable binary logging</h3>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">[mysqld]</span>
-<span class="na">skip-log-bin</span>
-</code></pre>
-</div>
-
-<h3>Delete the old <code>mysql-bin.index</code> file</h3>
-
-<ul>
-<li>This file keeps track of all binary log files.  </li>
-<li>Since a referenced binlog file was deleted, MySQL would <strong>fail to start</strong> if the index still contained entries for missing files.  </li>
-<li>Deleting it ensures that MySQL doesn’t look for non-existent logs.  </li>
-</ul>
-
-<p>After restarting the service, I confirmed binlogging was off with:  </p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">SHOW</span><span class="w"> </span><span class="n">VARIABLES</span><span class="w"> </span><span class="k">LIKE</span><span class="w"> </span><span class="s1">&#39;log_bin&#39;</span><span class="p">;</span>
-</code></pre>
-</div>
-
-<p>Output:  </p>
-
-<div class="codehilite">
-<pre><span></span><code>log_bin<span class="w"> </span><span class="p">|</span><span class="w"> </span>OFF
-</code></pre>
-</div>
-
-<p>In conclusion, crisis averted, disk space reclaimed and finally got some sleep. 😴</p>
-
-<p>Hope you found this useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>February 18th, 2025</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/mysql/">
-					MySQL
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/databases/">
-					Databases
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/devops/">
-					DevOps
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-revert-a-git-commit-on-the-server">How to Revert a Git Commit on the Server?</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Today I learned how to revert a Git commit after pulling it on a server. Whether you've made a mistake or just need to backtrack, Git offers several ways to undo commits depending on your situation. Here's a quick guide on how to handle it.</p>
-
-<h2>If you haven't pushed the commit yet</h2>
-
-<p>If the commit hasn't been pushed to the remote repository, you can use <code>git reset</code> to undo it.</p>
-
-<h2>Soft Reset (keeps changes staged)</h2>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>reset<span class="w"> </span>--soft<span class="w"> </span>HEAD~1
-</code></pre>
-</div>
-
-<p>This moves the HEAD back by one commit but keeps your changes staged.</p>
-
-<h2>Mixed Reset (keeps changes unstaged):</h2>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>reset<span class="w"> </span>--mixed<span class="w"> </span>HEAD~1
-</code></pre>
-</div>
-
-<p>This moves the HEAD back by one commit and unstages your changes.</p>
-
-<h2>Hard Reset (discards changes):</h2>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>reset<span class="w"> </span>--hard<span class="w"> </span>HEAD~1
-</code></pre>
-</div>
-
-<p>This completely removes the last commit and discards any changes.</p>
-
-<blockquote>
-  <p><strong>Tip:</strong> Replace <code>HEAD~1</code> with <code>HEAD~2</code> to go back two commits, and so on.</p>
-</blockquote>
-
-<h2>If you've already pushed the commit</h2>
-
-<h3>Revert the commit (safe for shared repos):</h3>
-
-<p>If you've already pushed the commit and want to undo it without rewriting history, use <code>git revert</code>. This creates a new commit that undoes the changes.</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>revert<span class="w"> </span>&lt;commit_hash&gt;
-</code></pre>
-</div>
-
-<p>Find the commit hash using:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>log<span class="w"> </span>--oneline
-</code></pre>
-</div>
-
-<h3>Force Reset (i.e. if you're okay with rewriting history):</h3>
-
-<p>If you don't mind rewriting history (and no one else is working on the branch), you can force reset.</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>reset<span class="w"> </span>--hard<span class="w"> </span>&lt;commit_hash&gt;
-git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>HEAD<span class="w"> </span>--force
-</code></pre>
-</div>
-
-<div class="post-notification">
-    <h3>⚠️Warning</h3>
-    <p>This is not recommended if others are working on the same branch as it can cause conflicts.</p>
-</div>
-
-<h2>If you just pulled and want to undo</h2>
-
-<p>If you just pulled and want to undo the merge, you can reset to the previous state using <code>ORIG_HEAD</code>.</p>
-
-<h3>Undo a merge pull:</h3>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>reset<span class="w"> </span>--hard<span class="w"> </span>ORIG_HEAD
-</code></pre>
-</div>
-
-<p>This will bring your repository back to the state before the last pull.</p>
-
-<h3>Final thoughts</h3>
-
-<p>Reverting commits can seem daunting at first, but once you understand the tools Git offers, it's pretty straightforward. Always double-check before using <code>--hard</code> or <code>--force</code> to avoid accidental data loss!</p>
-
-<p>Hope this helps you get back on track!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>February 5th, 2025</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/git/">
-					Git
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/vcs/">
-					VCS
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-delete-multiple-git-branches-from-the-command-line">How to Delete Multiple Git Branches from the Command Line?</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Whether you're cleaning up local branches after a feature merge or tidying up remote branches, here’s how you can do it.</p>
-
-<h2>Deleting Multiple Local Branches</h2>
-
-<p>To delete multiple local branches safely (only if they’ve been merged), use:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>branch<span class="w"> </span>-d<span class="w"> </span>branch1<span class="w"> </span>branch2<span class="w"> </span>branch3
-</code></pre>
-</div>
-
-<p>If the branches haven't been merged and you still want to delete them, force delete with:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>branch<span class="w"> </span>-D<span class="w"> </span>branch1<span class="w"> </span>branch2<span class="w"> </span>branch3
-</code></pre>
-</div>
-
-<h2>Deleting Multiple Remote Branches</h2>
-
-<p>For remote branches, you can delete them by running:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>--delete<span class="w"> </span>branch1<span class="w"> </span>branch2<span class="w"> </span>branch3
-</code></pre>
-</div>
-
-<p>Alternatively, you can use the colon <code>:</code> syntax:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>:branch1<span class="w"> </span>:branch2<span class="w"> </span>:branch3
-</code></pre>
-</div>
-
-<h2>Deleting Multiple Branches Using a Pattern</h2>
-
-<p>If you want to delete branches that follow a naming pattern (like <code>feature/</code> branches), you can use <code>grep</code> and <code>xargs</code>:</p>
-
-<h3>For local branches:</h3>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>branch<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;feature/&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>xargs<span class="w"> </span>git<span class="w"> </span>branch<span class="w"> </span>-d
-</code></pre>
-</div>
-
-<p>To force delete:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>branch<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;feature/&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>xargs<span class="w"> </span>git<span class="w"> </span>branch<span class="w"> </span>-D
-</code></pre>
-</div>
-
-<h3>For remote branches:</h3>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>branch<span class="w"> </span>-r<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;origin/feature/&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sed<span class="w"> </span><span class="s1">&#39;s/origin\///&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>xargs<span class="w"> </span>-I<span class="w"> </span><span class="o">{}</span><span class="w"> </span>git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>--delete<span class="w"> </span><span class="o">{}</span>
-</code></pre>
-</div>
-
-<h2>Final Tips</h2>
-
-<ul>
-<li><strong>List branches before deleting:</strong> Use <code>git branch</code> for local and <code>git branch -r</code> for remote branches to verify which ones you’re about to delete.</li>
-<li><strong>Be cautious with force delete (<code>-D</code>):</strong> It will remove branches even if they haven’t been merged, so make sure you won’t lose important work.</li>
-</ul>
-
-<p>Hope you found this useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>February 5th, 2025</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/git/">
-					Git
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/vcs/">
-					VCS
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/mastering-php-storm-essential-shortcuts-and-tips-for-faster-coding">Mastering PHPStorm: Essential Shortcuts and Tips for Faster Coding</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>As a developer, you know that every second counts. PHPStorm, the powerful IDE from JetBrains, is packed with features designed to make coding faster and more efficient—but only if you know how to use them! Here are some essential keybindings and tips that can supercharge your PHPStorm experience and help you code at lightning speed. </p>
-
-<h2>Quick Access to Any Action</h2>
-
-<p>Ever found yourself lost in PHPStorm’s vast functionality, looking for a specific tool or action? Press <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>A</kbd> to bring up the <strong>Toggle Actions</strong> dialog. This is your command center for quickly finding and triggering any action, even if you don’t know the shortcut for it.</p>
-
-<h2>Locate Symbols</h2>
-
-<p>Working on a large project? <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>N</kbd> is your friend. This key combination lets you search for any symbol in your project. Whether it's a function, method, or variable, finding it with this shortcut is a breeze. </p>
-
-<h2>File Search Made Easy</h2>
-
-<p>When you need to open a file but don’t want to dig through directories, use <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>N</kbd>. This brings up the file search dialog, allowing you to open any file in your project by typing its name.</p>
-
-<h2>Searching for Classes</h2>
-
-<p>Quickly locate classes by pressing <kbd>Ctrl</kbd> + <kbd>N</kbd>. This shortcut is a must for object-oriented projects where multiple classes interact. Simply type the class name, and PHPStorm will locate it for you.</p>
-
-<h2>Rename Symbols</h2>
-
-<p>Refactoring code often involves renaming variables, functions, or classes. Press <kbd>Shift</kbd> + <kbd>F6</kbd> to <strong>Refactor/Rename</strong> any symbol. This shortcut ensures that PHPStorm updates all references to the renamed symbol, saving you from manually updating each instance.</p>
-
-<h2>Replace Text in the Current File</h2>
-
-<p>Working on a specific file and need to make some quick replacements? <kbd>Ctrl</kbd> + <kbd>R</kbd> opens the <strong>Find and Replace</strong> dialog within the current file, making edits quick and painless.</p>
-
-<h2>Project-Wide Search</h2>
-
-<p>Need to search or replace text across the entire project? Use <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>F</kbd> for a project-wide search. For project-wide find-and-replace, press <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>R</kbd>. These shortcuts are invaluable for large-scale code adjustments.</p>
-
-<h2>Select the Next Occurrence</h2>
-
-<p>Find yourself needing to select multiple occurrences of a word or phrase? <kbd>Alt</kbd> + <kbd>J</kbd> selects the next occurrence of your current selection (case-sensitive). This feature is ideal for making consistent changes across multiple lines without using traditional search-and-replace.</p>
-
-<h2>Move Lines Up or Down</h2>
-
-<p>Reordering lines of code is common in refactoring. <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>&uarr;</kbd>/<kbd>&darr;</kbd> lets you move the current line (or selection) up or down. A simple, powerful way to reorganize your code with ease.</p>
-
-<h2>Get Quick Fixes</h2>
-
-<p>If PHPStorm detects an issue or sees a possible improvement, pressing <kbd>Alt</kbd> + <kbd>Enter</kbd> provides a <strong>Quick Fix</strong> or <strong>Suggestion</strong>. It’s a fantastic way to implement suggestions quickly and clean up your code without manually combing through error messages.</p>
-
-<h2>Extract Method Shortcut</h2>
-
-<p>Refactoring code into methods is essential for clean, reusable code. Highlight the code block and press <kbd>Ctrl</kbd> + <kbd>M</kbd> + <kbd>G</kbd> to <strong>Extract Method</strong>, instantly creating a new method from the selected code. This is a must for breaking down long, complex functions into manageable pieces.</p>
-
-<h2>Bonus: Multi-Cursor Mode</h2>
-
-<p>If you’re not using PHPStorm’s multi-cursor mode, you’re missing out on some serious productivity gains! Here’s how to use it:</p>
-
-<ol>
-<li>Select a piece of code.</li>
-<li>Press <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>Insert</kbd> to activate multi-cursor mode. Now, you can place multiple cursors wherever needed, allowing you to type or edit in multiple locations simultaneously.</li>
-</ol>
-
-<h2>Final Thoughts</h2>
-
-<p>Mastering these PHPStorm shortcuts can drastically reduce your time spent on repetitive tasks, allowing you to focus on what really matters: building great software. Give these keybindings a try, and see how they can boost your productivity and help you achieve a smoother, more efficient coding workflow.</p>
-
-	</div>
-	<div class="article-footer">
-		<time>January 23rd, 2025</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/phpstorm/">
-					PHPStorm
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -951,11 +879,11 @@ git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </
 		
 	
 		
-			<a class="" href="/til/pages/17">...</a>
+			<a class="" href="/til/pages/18">...</a>
 		
 	
 		
-			<a class="" href="/til/pages/20">20</a>
+			<a class="" href="/til/pages/21">21</a>
 		
 	
 
@@ -982,21 +910,21 @@ git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </
 		<li>
 			<a href="/category/linux/">
 				Linux
-				<span class="count">25</span>
+				<span class="count">26</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/devops/">
 				DevOps
-				<span class="count">23</span>
+				<span class="count">24</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/laravel/">
 				Laravel
-				<span class="count">20</span>
+				<span class="count">21</span>
 			</a>
 		</li>
 		
@@ -1078,6 +1006,13 @@ git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </
 		</li>
 		
 		<li>
+			<a href="/category/c/">
+				C#
+				<span class="count">7</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/apache/">
 				Apache
 				<span class="count">6</span>
@@ -1113,13 +1048,6 @@ git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </
 		</li>
 		
 		<li>
-			<a href="/category/c/">
-				C#
-				<span class="count">5</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/vscode/">
 				VSCode
 				<span class="count">5</span>
@@ -1137,6 +1065,13 @@ git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </
 			<a href="/category/personal-challenge/">
 				Personal Challenge
 				<span class="count">5</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/ubuntu/">
+				Ubuntu
+				<span class="count">4</span>
 			</a>
 		</li>
 		
@@ -1171,13 +1106,6 @@ git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </
 		<li>
 			<a href="/category/security/">
 				Security
-				<span class="count">3</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/ubuntu/">
-				Ubuntu
 				<span class="count">3</span>
 			</a>
 		</li>
@@ -1221,6 +1149,13 @@ git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </
 			<a href="/category/general/">
 				General
 				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/image-manipulation/">
+				Image Manipulation
+				<span class="count">2</span>
 			</a>
 		</li>
 		
@@ -1340,6 +1275,20 @@ git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </
 			<a href="/category/wamp/">
 				WAMP
 				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/hangfire/">
+				Hangfire
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/supervisor/">
+				Supervisor
+				<span class="count">1</span>
 			</a>
 		</li>
 		
@@ -1486,13 +1435,6 @@ git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </
 		<li>
 			<a href="/category/csr/">
 				CSR
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/image-manipulation/">
-				Image Manipulation
 				<span class="count">1</span>
 			</a>
 		</li>

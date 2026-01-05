@@ -5,8 +5,15 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta name="author" content="Abdush Shakoor">
 	
+	<meta name="description" content=".">
+	<meta name="og:title" content="DateTimeKind.Unspecified can quietly break your dates | Abdush Shakoor's Weblog" />
+	<meta name="og:type" content="article" />
+	<meta name="og:url" content="til/posts/datetimekind-unspecified-can-quietly-break-your-dates" />
+	<meta name="og:description" content="" />
+	<meta name="og:site_name" content="Abdush Shakoor's Weblog | Abdush Shakoor's Weblog" />
+	
 	<meta name="robots" content="follow">
-	<title>Image Manipulation | Abdush Shakoor's Weblog </title>
+	<title>DateTimeKind.Unspecified can quietly break your dates | Abdush Shakoor's Weblog </title>
 	<link rel="stylesheet" href="/static/css/main.css" type="text/css">
 	<link rel="stylesheet" href="/static/css/pygments.css" type="text/css">
 
@@ -67,37 +74,93 @@
 		<section id="primary">
 			<div class="articles">
 				
-				<div class="segment">
-					<div class="year"><h2>2026</h2></div>
-					<div class="posts">
-						
-						<div class="post">
-							<a href="/til/posts/resize-images-from-a-file-list-using-imagemagick">Resize images from a file list using ImageMagick</a>
-							<time>02.01.2026</time>
-						</div>
-								
-					</div>
-				</div>
-				
-				<div class="segment">
-					<div class="year"><h2>2023</h2></div>
-					<div class="posts">
-						
-						<div class="post">
-							<a href="/til/posts/playing-around-with-imagemagick">Playing around with ImageMagick</a>
-							<time>15.01.2023</time>
-						</div>
-								
-					</div>
-				</div>
-				
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/datetimekind-unspecified-can-quietly-break-your-dates">DateTimeKind.Unspecified can quietly break your dates</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Two months ago, a client raised a <strong>critical ticket</strong> where some users complained that their <em>Start Date of the Financial Year</em> had gone <strong>one day backward</strong>. This wasn’t caught during UAT while integrating their API, and I was surprised to run into this date conversion bug while I was on vacation (yes, that sucks!).</p>
+
+<p>I had a perfectly normal-looking date:</p>
+
+<div class="codehilite">
+<pre><span></span><code>2025-01-01 00:00:00.0000000
+</code></pre>
+</div>
+
+<p>Nothing fancy. But after converting it to UTC, I noticed something odd — the <strong>date changed</strong>.</p>
+
+<p>Luckily, I was able to trace where it was coming from, and after debugging in Visual Studio 2022, it turned out the culprit was <code>DateTimeKind.Unspecified</code>.</p>
+
+<p>When a <code>DateTime</code> is parsed without timezone information, .NET marks it as <code>Unspecified</code>. If you then call <code>ToUniversalTime()</code>, .NET <strong>assumes the value is local time</strong> and converts it to UTC. On a UTC+5:30 system, that means:</p>
+
+<div class="codehilite">
+<pre><span></span><code>2025-01-01 00:00 → 2024-12-31T18:30:00Z
+</code></pre>
+</div>
+
+<p>Same instant, different calendar date. Easy to miss, painful to debug.</p>
+
+<h2>The fix</h2>
+
+<p>If your date is already meant to be UTC, you need to say so explicitly:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="n">DateTime</span><span class="p">.</span><span class="n">SpecifyKind</span><span class="p">(</span><span class="n">inputDateTime</span><span class="p">,</span><span class="w"> </span><span class="n">DateTimeKind</span><span class="p">.</span><span class="n">Utc</span><span class="p">);</span>
+</code></pre>
+</div>
+
+<p>Or handle it defensively in one place:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">switch</span><span class="w"> </span><span class="p">(</span><span class="n">inputDateTime</span><span class="p">.</span><span class="n">Kind</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">DateTimeKind</span><span class="p">.</span><span class="n">Utc</span><span class="p">:</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">inputDateTime</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">DateTimeKind</span><span class="p">.</span><span class="n">Local</span><span class="p">:</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">inputDateTime</span><span class="p">.</span><span class="n">ToUniversalTime</span><span class="p">();</span>
+
+<span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">DateTimeKind</span><span class="p">.</span><span class="n">Unspecified</span><span class="p">:</span>
+<span class="w">    </span><span class="k">default</span><span class="p">:</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">DateTime</span><span class="p">.</span><span class="n">SpecifyKind</span><span class="p">(</span><span class="n">inputDateTime</span><span class="p">,</span><span class="w"> </span><span class="n">DateTimeKind</span><span class="p">.</span><span class="n">Utc</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<h2>Takeaway</h2>
+
+<p>Never leave <code>DateTimeKind</code> to chance especially if you’re working with APIs, audits, or anything date-sensitive.</p>
+
+<p>It’s one of those small details that only shows up when things go wrong — which makes it worth handling upfront.</p>
+
+<p>Hope you found this tip useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>January 3rd, 2026</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/c/">
+					C#
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
 			</div>
 		</section>
 		<section id="secondary">
 			<div class="sidebar">
 				<div class="author-intro">
-	<h3>Image Manipulation</h3>
-	<p>There are <b>2</b> posts linked to this category.</p>
+	<h3>Hello, I'm Abdush Shakoor! &#x1F44B;</h3>
+	<p>I'm a programmer & designer based in Dubai, United Arab Emirates. I love tinkering with code and writing about what I learn.</p>
+	<p>Like this article? Please share it with your friends and colleagues or else, <a href="mailto:megacolorboy@gmail.com">send me</a> a private message about your feedback.</p>
+
 	<ul class="sitemap">
 		<li><a class="back" href="/"><span>👈</span> Check out more articles!</a></li>
 	</ul>

@@ -5,8 +5,15 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta name="author" content="Abdush Shakoor">
 	
+	<meta name="description" content=".">
+	<meta name="og:title" content="Running Laravel queues with Supervisor on Ubuntu | Abdush Shakoor's Weblog" />
+	<meta name="og:type" content="article" />
+	<meta name="og:url" content="til/posts/running-laravel-queues-with-supervisor-on-ubuntu" />
+	<meta name="og:description" content="" />
+	<meta name="og:site_name" content="Abdush Shakoor's Weblog | Abdush Shakoor's Weblog" />
+	
 	<meta name="robots" content="follow">
-	<title>Image Manipulation | Abdush Shakoor's Weblog </title>
+	<title>Running Laravel queues with Supervisor on Ubuntu | Abdush Shakoor's Weblog </title>
 	<link rel="stylesheet" href="/static/css/main.css" type="text/css">
 	<link rel="stylesheet" href="/static/css/pygments.css" type="text/css">
 
@@ -67,37 +74,135 @@
 		<section id="primary">
 			<div class="articles">
 				
-				<div class="segment">
-					<div class="year"><h2>2026</h2></div>
-					<div class="posts">
-						
-						<div class="post">
-							<a href="/til/posts/resize-images-from-a-file-list-using-imagemagick">Resize images from a file list using ImageMagick</a>
-							<time>02.01.2026</time>
-						</div>
-								
-					</div>
-				</div>
-				
-				<div class="segment">
-					<div class="year"><h2>2023</h2></div>
-					<div class="posts">
-						
-						<div class="post">
-							<a href="/til/posts/playing-around-with-imagemagick">Playing around with ImageMagick</a>
-							<time>15.01.2023</time>
-						</div>
-								
-					</div>
-				</div>
-				
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/running-laravel-queues-with-supervisor-on-ubuntu">Running Laravel queues with Supervisor on Ubuntu</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Laravel queues aren’t new to me, but I realized I’d never really written down how I usually set them up on a fresh Ubuntu server.</p>
+
+<p>Whenever I need queue workers to run continuously — and survive restarts or crashes — I almost always reach for <strong>Supervisor</strong>. It’s simple, boring, and gets the job done.</p>
+
+<p>First, install it on your server:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>update
+sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>supervisor
+</code></pre>
+</div>
+
+<p>Then create a small config file for the queue worker:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>vim<span class="w"> </span>/etc/supervisor/conf.d/laravel-worker.conf
+</code></pre>
+</div>
+
+<p>This is the setup I generally start with:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">[program:laravel-worker]</span>
+<span class="na">process_name</span><span class="o">=</span><span class="s">%(program_name)s_%(process_num)02d</span>
+<span class="na">command</span><span class="o">=</span><span class="s">php /var/www/project/artisan queue:work --sleep=3 --tries=3 --max-time=3600</span>
+<span class="na">autostart</span><span class="o">=</span><span class="s">true</span>
+<span class="na">autorestart</span><span class="o">=</span><span class="s">true</span>
+<span class="na">user</span><span class="o">=</span><span class="s">www-data</span>
+<span class="na">numprocs</span><span class="o">=</span><span class="s">2</span>
+<span class="na">redirect_stderr</span><span class="o">=</span><span class="s">true</span>
+<span class="na">stdout_logfile</span><span class="o">=</span><span class="s">/var/www/project/storage/logs/laravel-worker.log</span>
+<span class="na">stopwaitsecs</span><span class="o">=</span><span class="s">600</span>
+</code></pre>
+</div>
+
+<p>A few quick notes on what this does:</p>
+
+<ul>
+<li>It runs <code>queue:work</code> instead of <code>queue:listen</code>, so the worker stays in memory</li>
+<li>Two worker processes are started in parallel (<code>numprocs=2</code>)</li>
+<li>If the queue is empty, the worker sleeps for a few seconds instead of spinning</li>
+<li>Failed jobs are retried a limited number of times</li>
+<li>The worker is force-restarted every hour to avoid memory leaks</li>
+<li>If a worker crashes, Supervisor brings it back up automatically</li>
+</ul>
+
+<p>Once the file is saved, reload Supervisor’s config:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>supervisorctl<span class="w"> </span>reread
+sudo<span class="w"> </span>supervisorctl<span class="w"> </span>update
+</code></pre>
+</div>
+
+<p>Start the workers:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>supervisorctl<span class="w"> </span>start<span class="w"> </span>laravel-worker:*
+</code></pre>
+</div>
+
+<p>And check their status:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>supervisorctl<span class="w"> </span>status
+</code></pre>
+</div>
+
+<p>Whenever I deploy new code or change environment variables, I just restart them:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>supervisorctl<span class="w"> </span>restart<span class="w"> </span>laravel-worker:*
+</code></pre>
+</div>
+
+<p>Logs end up in Laravel’s <code>storage/logs</code>, which is usually the first place I look when something feels off.</p>
+
+<p>This setup has been reliable for me across multiple projects. No dashboards, no extra moving parts — just queue workers quietly doing their job in the background.</p>
+
+<p>Hope you found this useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>January 4th, 2026</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/laravel/">
+					Laravel
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/ubuntu/">
+					Ubuntu
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/supervisor/">
+					Supervisor
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
 			</div>
 		</section>
 		<section id="secondary">
 			<div class="sidebar">
 				<div class="author-intro">
-	<h3>Image Manipulation</h3>
-	<p>There are <b>2</b> posts linked to this category.</p>
+	<h3>Hello, I'm Abdush Shakoor! &#x1F44B;</h3>
+	<p>I'm a programmer & designer based in Dubai, United Arab Emirates. I love tinkering with code and writing about what I learn.</p>
+	<p>Like this article? Please share it with your friends and colleagues or else, <a href="mailto:megacolorboy@gmail.com">send me</a> a private message about your feedback.</p>
+
 	<ul class="sitemap">
 		<li><a class="back" href="/"><span>👈</span> Check out more articles!</a></li>
 	</ul>

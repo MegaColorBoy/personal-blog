@@ -78,6 +78,329 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/why-hangfire-recurring-jobs-should-always-have-stable-ids">Why Hangfire recurring jobs should always have stable IDs?</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Recently, I learned that <strong>not giving explicit IDs to Hangfire recurring jobs can silently create duplicates</strong>.</p>
+
+<p>When you call <code>RecurringJob.AddOrUpdate(...)</code> without a pre-defined ID, Hangfire auto-generates one based on the method expression. That sounds fine—until you deploy across multiple nodes or refactor your code.</p>
+
+<p>In such cases, Hangfire may generate a <em>new derived ID</em>, while the old recurring job continues running in the background. The result? <strong>Duplicate jobs executing on schedule</strong>, often goes unnoticed.</p>
+
+<h2>Simple fix</h2>
+
+<p>Make sure that you always pass a clear, human-readable ID:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="n">RecurringJob</span><span class="p">.</span><span class="n">AddOrUpdate</span><span class="o">&lt;</span><span class="n">ICustomBackgroundServiceManager</span><span class="o">&gt;</span><span class="p">(</span>
+<span class="w">    </span><span class="s">&quot;payments:reconcile-3h&quot;</span><span class="p">,</span><span class="w"> </span><span class="c1">// Human-readable ID</span>
+<span class="w">    </span><span class="n">s</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">ResendPaymentReportToVendorHourly</span><span class="p">(),</span>
+<span class="w">    </span><span class="n">Cron</span><span class="p">.</span><span class="n">Hourly</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="p">);</span>
+</code></pre>
+</div>
+
+<p>Next, ensure that overlaps are impossible in a multi-node setup by adding this attribute to your job method:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="na">[DisableConcurrentExecution(timeoutInSeconds: 3600)]</span>
+<span class="k">public</span><span class="w"> </span><span class="n">Task</span><span class="w"> </span><span class="nf">ResendPaymentReportToVendorHourly</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="cm">/* ... */</span><span class="w"> </span><span class="p">}</span>
+</code></pre>
+</div>
+
+<p>This uses a <strong>distributed lock</strong> backed by Hangfire storage—so even with multiple nodes, only one execution runs at a time. If you’re wondering whether this locks the job for the full hour: <strong>it doesn’t</strong>. The timeout exists for crash-safety, not throttling.</p>
+
+<p>After doing this, recurring jobs become much easier to reason about, identify, pause, or delete in a multi-node environment.</p>
+
+<p>Hope you found this tip useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>January 5th, 2026</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/c/">
+					C#
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/hangfire/">
+					Hangfire
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/running-laravel-queues-with-supervisor-on-ubuntu">Running Laravel queues with Supervisor on Ubuntu</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Laravel queues aren’t new to me, but I realized I’d never really written down how I usually set them up on a fresh Ubuntu server.</p>
+
+<p>Whenever I need queue workers to run continuously — and survive restarts or crashes — I almost always reach for <strong>Supervisor</strong>. It’s simple, boring, and gets the job done.</p>
+
+<p>First, install it on your server:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>update
+sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>supervisor
+</code></pre>
+</div>
+
+<p>Then create a small config file for the queue worker:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>vim<span class="w"> </span>/etc/supervisor/conf.d/laravel-worker.conf
+</code></pre>
+</div>
+
+<p>This is the setup I generally start with:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">[program:laravel-worker]</span>
+<span class="na">process_name</span><span class="o">=</span><span class="s">%(program_name)s_%(process_num)02d</span>
+<span class="na">command</span><span class="o">=</span><span class="s">php /var/www/project/artisan queue:work --sleep=3 --tries=3 --max-time=3600</span>
+<span class="na">autostart</span><span class="o">=</span><span class="s">true</span>
+<span class="na">autorestart</span><span class="o">=</span><span class="s">true</span>
+<span class="na">user</span><span class="o">=</span><span class="s">www-data</span>
+<span class="na">numprocs</span><span class="o">=</span><span class="s">2</span>
+<span class="na">redirect_stderr</span><span class="o">=</span><span class="s">true</span>
+<span class="na">stdout_logfile</span><span class="o">=</span><span class="s">/var/www/project/storage/logs/laravel-worker.log</span>
+<span class="na">stopwaitsecs</span><span class="o">=</span><span class="s">600</span>
+</code></pre>
+</div>
+
+<p>A few quick notes on what this does:</p>
+
+<ul>
+<li>It runs <code>queue:work</code> instead of <code>queue:listen</code>, so the worker stays in memory</li>
+<li>Two worker processes are started in parallel (<code>numprocs=2</code>)</li>
+<li>If the queue is empty, the worker sleeps for a few seconds instead of spinning</li>
+<li>Failed jobs are retried a limited number of times</li>
+<li>The worker is force-restarted every hour to avoid memory leaks</li>
+<li>If a worker crashes, Supervisor brings it back up automatically</li>
+</ul>
+
+<p>Once the file is saved, reload Supervisor’s config:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>supervisorctl<span class="w"> </span>reread
+sudo<span class="w"> </span>supervisorctl<span class="w"> </span>update
+</code></pre>
+</div>
+
+<p>Start the workers:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>supervisorctl<span class="w"> </span>start<span class="w"> </span>laravel-worker:*
+</code></pre>
+</div>
+
+<p>And check their status:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>supervisorctl<span class="w"> </span>status
+</code></pre>
+</div>
+
+<p>Whenever I deploy new code or change environment variables, I just restart them:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>supervisorctl<span class="w"> </span>restart<span class="w"> </span>laravel-worker:*
+</code></pre>
+</div>
+
+<p>Logs end up in Laravel’s <code>storage/logs</code>, which is usually the first place I look when something feels off.</p>
+
+<p>This setup has been reliable for me across multiple projects. No dashboards, no extra moving parts — just queue workers quietly doing their job in the background.</p>
+
+<p>Hope you found this useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>January 4th, 2026</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/laravel/">
+					Laravel
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/ubuntu/">
+					Ubuntu
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/supervisor/">
+					Supervisor
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/datetimekind-unspecified-can-quietly-break-your-dates">DateTimeKind.Unspecified can quietly break your dates</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Two months ago, a client raised a <strong>critical ticket</strong> where some users complained that their <em>Start Date of the Financial Year</em> had gone <strong>one day backward</strong>. This wasn’t caught during UAT while integrating their API, and I was surprised to run into this date conversion bug while I was on vacation (yes, that sucks!).</p>
+
+<p>I had a perfectly normal-looking date:</p>
+
+<div class="codehilite">
+<pre><span></span><code>2025-01-01 00:00:00.0000000
+</code></pre>
+</div>
+
+<p>Nothing fancy. But after converting it to UTC, I noticed something odd — the <strong>date changed</strong>.</p>
+
+<p>Luckily, I was able to trace where it was coming from, and after debugging in Visual Studio 2022, it turned out the culprit was <code>DateTimeKind.Unspecified</code>.</p>
+
+<p>When a <code>DateTime</code> is parsed without timezone information, .NET marks it as <code>Unspecified</code>. If you then call <code>ToUniversalTime()</code>, .NET <strong>assumes the value is local time</strong> and converts it to UTC. On a UTC+5:30 system, that means:</p>
+
+<div class="codehilite">
+<pre><span></span><code>2025-01-01 00:00 → 2024-12-31T18:30:00Z
+</code></pre>
+</div>
+
+<p>Same instant, different calendar date. Easy to miss, painful to debug.</p>
+
+<h2>The fix</h2>
+
+<p>If your date is already meant to be UTC, you need to say so explicitly:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="n">DateTime</span><span class="p">.</span><span class="n">SpecifyKind</span><span class="p">(</span><span class="n">inputDateTime</span><span class="p">,</span><span class="w"> </span><span class="n">DateTimeKind</span><span class="p">.</span><span class="n">Utc</span><span class="p">);</span>
+</code></pre>
+</div>
+
+<p>Or handle it defensively in one place:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">switch</span><span class="w"> </span><span class="p">(</span><span class="n">inputDateTime</span><span class="p">.</span><span class="n">Kind</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">DateTimeKind</span><span class="p">.</span><span class="n">Utc</span><span class="p">:</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">inputDateTime</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">DateTimeKind</span><span class="p">.</span><span class="n">Local</span><span class="p">:</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">inputDateTime</span><span class="p">.</span><span class="n">ToUniversalTime</span><span class="p">();</span>
+
+<span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">DateTimeKind</span><span class="p">.</span><span class="n">Unspecified</span><span class="p">:</span>
+<span class="w">    </span><span class="k">default</span><span class="p">:</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">DateTime</span><span class="p">.</span><span class="n">SpecifyKind</span><span class="p">(</span><span class="n">inputDateTime</span><span class="p">,</span><span class="w"> </span><span class="n">DateTimeKind</span><span class="p">.</span><span class="n">Utc</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<h2>Takeaway</h2>
+
+<p>Never leave <code>DateTimeKind</code> to chance especially if you’re working with APIs, audits, or anything date-sensitive.</p>
+
+<p>It’s one of those small details that only shows up when things go wrong — which makes it worth handling upfront.</p>
+
+<p>Hope you found this tip useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>January 3rd, 2026</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/c/">
+					C#
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/resize-images-from-a-file-list-using-imagemagick">Resize images from a file list using ImageMagick</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Today, a colleague of mine uploaded a large number of images, only to realise later that they were all uncompressed and the site was loading noticeably slower. </p>
+
+<p>His first thought was to compress them and re-upload everything again—but why do something redundant when you can handle it easily from the terminal using ImageMagick?</p>
+
+<p>Previously, I’ve written about how ImageMagick makes it easy to <a href="https://www.megacolorboy.com/til/posts/playing-around-with-imagemagick/">resize images</a> in bulk. However, sometimes you don’t want to touch every image in a directory.</p>
+
+<p>In cases like this, if you already know which images need resizing, you can list their filenames in a text file and let ImageMagick process only those.</p>
+
+<p>Assume a <code>files.txt</code> like this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>image1.jpg
+photo_02.png
+banner.jpeg
+</code></pre>
+</div>
+
+<p>You can then resize just those images while keeping the original aspect ratio intact and avoiding upscaling:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">while</span><span class="w"> </span><span class="nv">IFS</span><span class="o">=</span><span class="w"> </span><span class="nb">read</span><span class="w"> </span>-r<span class="w"> </span>file<span class="p">;</span><span class="w"> </span><span class="k">do</span>
+<span class="w">  </span><span class="o">[</span><span class="w"> </span>-f<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$file</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">]</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>mogrify<span class="w"> </span>-resize<span class="w"> </span>500x600<span class="se">\&gt;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$file</span><span class="s2">&quot;</span>
+<span class="k">done</span><span class="w"> </span>&lt;<span class="w"> </span>files.txt
+</code></pre>
+</div>
+
+<p>This works well when cleaning up large media folders or fixing legacy content where only a subset of images needs adjustment.</p>
+
+<p>Hope you found this tip useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>January 2nd, 2026</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/image-manipulation/">
+					Image Manipulation
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/writings/posts/can-ai-really-replace-software-engineers">Can AI really replace software engineers?</a></h1>
 		<p class="description">My take on the impact of AI in the near future for software engineers.</p>
 	</div>
@@ -536,465 +859,6 @@ php<span class="w"> </span>artisan<span class="w"> </span>cache:clear
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/removing-commits-from-a-branch-using-git-interactive-rebase">Removing Commits from a Branch Using Git Interactive Rebase</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>I'm working on a project that had approximately five minor incident fixes. However, I got approval from the client side to push only three of them. Luckily, my commits are atomic, so making this build was easier than I thought.</p>
-
-<p>At this moment, I decided to clone the latest branch into a temporary branch and roll back two commits for today's deployment while keeping the latest branch intact with all the fixes.</p>
-
-<p>To achieve this, I used <strong>Git interactive rebase</strong>, a powerful tool for modifying commit history.</p>
-
-<h2>Why Use Interactive Rebase?</h2>
-
-<p>Interactive rebase allows you to modify commit history, including:</p>
-
-<ul>
-<li>Removing unwanted commits</li>
-<li>Reordering commits</li>
-<li>Squashing multiple commits into one</li>
-<li>Editing commit messages</li>
-</ul>
-
-<h2>How I Did It?</h2>
-
-<p>Here’s the step-by-step process I followed:</p>
-
-<h3>1. Clone the Branch</h3>
-
-<p>Before making any changes, I cloned the branch to have a backup:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>checkout<span class="w"> </span>-b<span class="w"> </span>my-cloned-branch<span class="w"> </span>original-branch
-</code></pre>
-</div>
-
-<h3>2. Start Interactive Rebase</h3>
-
-<p>To remove specific commits, I ran:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>rebase<span class="w"> </span>-i<span class="w"> </span>HEAD~N
-</code></pre>
-</div>
-
-<p>Where <code>N</code> is the number of commits I wanted to review. This opened an editor displaying the most recent commits.</p>
-
-<h3>3. Modify the Commit List</h3>
-
-<p>The interactive rebase interface showed something like this:</p>
-
-<div class="codehilite">
-<pre><span></span><code>pick<span class="w"> </span>abc123<span class="w"> </span>Commit<span class="w"> </span>message<span class="w"> </span><span class="m">1</span>
-pick<span class="w"> </span>def456<span class="w"> </span>Commit<span class="w"> </span>message<span class="w"> </span><span class="m">2</span>
-pick<span class="w"> </span>ghi789<span class="w"> </span>Commit<span class="w"> </span>message<span class="w"> </span><span class="m">3</span>
-</code></pre>
-</div>
-
-<p>To <strong>remove</strong> a commit, I replaced <code>pick</code> with <code>drop</code>.</p>
-
-<p>To <strong>edit</strong> or <strong>squash</strong> commits, I could replace <code>pick</code> with commands like <code>edit</code> or <code>squash</code>.</p>
-
-<p>After making my changes, I saved and closed the editor.</p>
-
-<h3>4. Handle Any Conflicts (If Needed)</h3>
-
-<p>If Git encountered conflicts, it prompted me to resolve them. I fixed the files and continued the rebase:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>rebase<span class="w"> </span>--continue
-</code></pre>
-</div>
-
-<h2>Key Takeaways</h2>
-
-<ul>
-<li>Interactive rebase is powerful for cleaning up commit history.</li>
-<li>Always clone or create a backup branch before rebasing.</li>
-<li>If working with a team, communicate before modifying shared branches.</li>
-</ul>
-
-<p>This was a great learning experience, and now I feel more confident managing Git history efficiently!</p>
-
-<p>Hope you found this tip useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>February 24th, 2025</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/git/">
-					Git
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/vcs/">
-					VCS
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/recovering-my-sql-after-an-accidental-binlog-deletion">Recovering MySQL After an Accidental Binlog Deletion</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Last night, I found myself debugging a MySQL issue at an ungodly hour. The <strong>MySQL80 service refused to start</strong>, throwing a vague error:  </p>
-
-<blockquote>
-  <p><em>The MySQL80 service started and then stopped…</em>  </p>
-</blockquote>
-
-<p>Digging into <code>mysql.err</code>, I discovered the culprit—someone (not me! 😤) had <strong>accidentally deleted a binary log (<code>mysql-bin.000xxx</code>)</strong> while MySQL was still tracking it. Since MySQL relies on binlogs for replication and crash recovery, it panicked when it couldn't find the missing file.  </p>
-
-<h2>The Fix</h2>
-
-<p>To get MySQL running again, I had to:  </p>
-
-<ul>
-<li><strong>Disable binary logging</strong> (since this is a standalone server)  </li>
-<li><strong>Delete the corrupt binlog index file</strong> (<code>mysql-bin.index</code>)  </li>
-<li><strong>Purge all old binlog files</strong> that were hogging disk space  </li>
-</ul>
-
-<h2>How to Properly Disable Binary Logging in MySQL 8.0?</h2>
-
-<p>Since <strong>MySQL 8.0 enables binlogs by default</strong>, simply removing <code>log-bin=mysql-bin</code> from <code>my.ini</code> wasn’t enough. I had to:  </p>
-
-<h3>Comment out the existing binlog setting in my.ini</h3>
-
-<div class="codehilite">
-<pre><span></span><code><span class="c1"># log-bin=mysql-bin</span>
-</code></pre>
-</div>
-
-<h3>Explicitly disable binary logging</h3>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">[mysqld]</span>
-<span class="na">skip-log-bin</span>
-</code></pre>
-</div>
-
-<h3>Delete the old <code>mysql-bin.index</code> file</h3>
-
-<ul>
-<li>This file keeps track of all binary log files.  </li>
-<li>Since a referenced binlog file was deleted, MySQL would <strong>fail to start</strong> if the index still contained entries for missing files.  </li>
-<li>Deleting it ensures that MySQL doesn’t look for non-existent logs.  </li>
-</ul>
-
-<p>After restarting the service, I confirmed binlogging was off with:  </p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">SHOW</span><span class="w"> </span><span class="n">VARIABLES</span><span class="w"> </span><span class="k">LIKE</span><span class="w"> </span><span class="s1">&#39;log_bin&#39;</span><span class="p">;</span>
-</code></pre>
-</div>
-
-<p>Output:  </p>
-
-<div class="codehilite">
-<pre><span></span><code>log_bin<span class="w"> </span><span class="p">|</span><span class="w"> </span>OFF
-</code></pre>
-</div>
-
-<p>In conclusion, crisis averted, disk space reclaimed and finally got some sleep. 😴</p>
-
-<p>Hope you found this useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>February 18th, 2025</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/mysql/">
-					MySQL
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/databases/">
-					Databases
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/devops/">
-					DevOps
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/9-software-books-im-reading-this-year-to-become-a-better-engineer">9 Software Books I'm Reading This Year to Become a Better Engineer</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>As a software engineer, continuous learning is essential. The tech industry evolves rapidly, and keeping up requires a commitment to improving skills, refining best practices, and understanding the deeper principles behind great software design. This year, I’ve curated a list of nine must-read books that will help me become a better developer, architect, and problem solver. </p>
-
-<p>If you're looking to level up your software engineering skills, these books might interest you too:</p>
-
-<div class="book-list">
-    <div class="book-card">
-        <div class="book-image" style="background-image: url('https://m.media-amazon.com/images/I/41a1DYaecZL._SX342_SY445_.jpg');"></div>
-        <div class="book-info">
-            <h2>The Pragmatic Programmer</h2>
-            <p class="book-author">By Andrew Hunt & David Thomas</p>
-            <p class="book-quote">"Care about the code you write and the people who will maintain it after you."</p>
-            <p class="book-reason">A foundational book that every developer should read. It provides practical advice on coding, debugging, and automation, making you a more adaptable and efficient engineer.</p>
-        </div>
-    </div>
-
-    <div class="book-card">
-        <div class="book-image" style="background-image: url('https://m.media-amazon.com/images/I/514xvNk9rTL._SY445_SX342_.jpg');"></div>
-        <div class="book-info">
-            <h2>Designing Data-Intensive Applications</h2>
-            <p class="book-author">By Martin Kleppmann</p>
-            <p class="book-quote">"A well-designed system grows gracefully as the dataset, traffic volume, or complexity increases."</p>
-            <p class="book-reason">A must-read for backend engineers and system architects, this book explores data modeling, distributed systems, and scalability challenges.</p>
-        </div>
-    </div>
-
-    <div class="book-card">
-        <div class="book-image" style="background-image: url('https://m.media-amazon.com/images/I/41xShlnTZTL.jpg');"></div>
-        <div class="book-info">
-            <h2>Clean Code</h2>
-            <p class="book-author">By Robert C. Martin</p>
-            <p class="book-quote">"Indeed, the ratio of time spent reading versus writing is well over 10 to 1. We are constantly reading old code as part of the effort to write new code."</p>
-            <p class="book-reason">Writing clean, maintainable code is a core skill for developers. This book offers practical techniques for improving code quality.</p>
-        </div>
-    </div>
-
-    <div class="book-card">
-        <div class="book-image" style="background-image: url('https://m.media-amazon.com/images/I/51TG5T+dd7L._SY445_SX342_.jpg');"></div>
-        <div class="book-info">
-            <h2>The Mythical Man-Month</h2>
-            <p class="book-author">By Frederick P. Brooks Jr.</p>
-            <p class="book-quote">"Adding manpower to a late software project makes it later."</p>
-            <p class="book-reason">A classic in software project management, this book explains why adding more people to a late project only makes it later.</p>
-        </div>
-    </div>
-
-    <div class="book-card">
-        <div class="book-image" style="background-image: url('https://m.media-amazon.com/images/I/41JgRyJbGSL._SX342_SY445_.jpg');"></div>
-        <div class="book-info">
-            <h2>Refactoring</h2>
-            <p class="book-author">By Martin Fowler</p>
-            <p class="book-quote">"Any fool can write code that a computer can understand. Good programmers write code that humans can understand."</p>
-            <p class="book-reason">A practical guide to improving existing code without altering its functionality, making it more readable and maintainable.</p>
-        </div>
-    </div>
-
-    <div class="book-card">
-        <div class="book-image" style="background-image: url('https://m.media-amazon.com/images/I/41roGUf+cML._SY445_SX342_.jpg');"></div>
-        <div class="book-info">
-            <h2>Domain-Driven Design</h2>
-            <p class="book-author">By Eric Evans</p>
-            <p class="book-quote">"The heart of software is its ability to solve domain-related problems for users."</p>
-            <p class="book-reason">This book teaches how to align software design with business logic, making complex software systems more manageable.</p>
-        </div>
-    </div>
-
-    <div class="book-card">
-        <div class="book-image" style="background-image: url('https://m.media-amazon.com/images/I/51maZSdupsL._SY445_SX342_.jpg');"></div>
-        <div class="book-info">
-            <h2>Working Effectively with Legacy Code</h2>
-            <p class="book-author">By Michael Feathers</p>
-            <p class="book-quote">"To change software means to change behavior. Our goal is to do so safely."</p>
-            <p class="book-reason">If you’ve ever had to deal with old, complex codebases, this book provides strategies for refactoring without breaking functionality.</p>
-        </div>
-    </div>
-
-    <div class="book-card">
-        <div class="book-image" style="background-image: url('https://m.media-amazon.com/images/I/51OCgwlIsSL._SX342_SY445_.jpg');"></div>
-        <div class="book-info">
-            <h2>Why Programs Fail</h2>
-            <p class="book-author">By Andreas Zeller</p>
-            <p class="book-quote">"Every bug has a cause, and every cause has a cure."</p>
-            <p class="book-reason">A systematic approach to debugging, helping developers diagnose and fix software defects effectively.</p>
-        </div>
-    </div>
-
-    <div class="book-card">
-        <div class="book-image" style="background-image: url('https://m.media-amazon.com/images/I/71teGAqCOzL._SL1500_.jpg');"></div>
-        <div class="book-info">
-            <h2>Extreme Ownership</h2>
-            <p class="book-author">By Jocko Willink & Leif Babin</p>
-            <p class="book-quote">"Leaders must own everything in their world. There is no one else to blame."</p>
-            <p class="book-reason">Leadership and accountability are critical for engineers working in teams. This book teaches how taking full responsibility leads to success.</p>
-        </div>
-    </div>
-</div>
-
-<h2>Final Thoughts</h2>
-
-<p>These books cover a wide spectrum of skills—from writing clean code and designing scalable systems to debugging, refactoring, and leadership. By reading and applying the lessons in these books, I aim to become a better software engineer this year.</p>
-
-	</div>
-	<div class="article-footer">
-		<time>February 14th, 2025</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/self-development/">
-					Self Development
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/goals/">
-					Goals
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/software-development/">
-					Software Development
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-revert-a-git-commit-on-the-server">How to Revert a Git Commit on the Server?</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Today I learned how to revert a Git commit after pulling it on a server. Whether you've made a mistake or just need to backtrack, Git offers several ways to undo commits depending on your situation. Here's a quick guide on how to handle it.</p>
-
-<h2>If you haven't pushed the commit yet</h2>
-
-<p>If the commit hasn't been pushed to the remote repository, you can use <code>git reset</code> to undo it.</p>
-
-<h2>Soft Reset (keeps changes staged)</h2>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>reset<span class="w"> </span>--soft<span class="w"> </span>HEAD~1
-</code></pre>
-</div>
-
-<p>This moves the HEAD back by one commit but keeps your changes staged.</p>
-
-<h2>Mixed Reset (keeps changes unstaged):</h2>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>reset<span class="w"> </span>--mixed<span class="w"> </span>HEAD~1
-</code></pre>
-</div>
-
-<p>This moves the HEAD back by one commit and unstages your changes.</p>
-
-<h2>Hard Reset (discards changes):</h2>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>reset<span class="w"> </span>--hard<span class="w"> </span>HEAD~1
-</code></pre>
-</div>
-
-<p>This completely removes the last commit and discards any changes.</p>
-
-<blockquote>
-  <p><strong>Tip:</strong> Replace <code>HEAD~1</code> with <code>HEAD~2</code> to go back two commits, and so on.</p>
-</blockquote>
-
-<h2>If you've already pushed the commit</h2>
-
-<h3>Revert the commit (safe for shared repos):</h3>
-
-<p>If you've already pushed the commit and want to undo it without rewriting history, use <code>git revert</code>. This creates a new commit that undoes the changes.</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>revert<span class="w"> </span>&lt;commit_hash&gt;
-</code></pre>
-</div>
-
-<p>Find the commit hash using:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>log<span class="w"> </span>--oneline
-</code></pre>
-</div>
-
-<h3>Force Reset (i.e. if you're okay with rewriting history):</h3>
-
-<p>If you don't mind rewriting history (and no one else is working on the branch), you can force reset.</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>reset<span class="w"> </span>--hard<span class="w"> </span>&lt;commit_hash&gt;
-git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>HEAD<span class="w"> </span>--force
-</code></pre>
-</div>
-
-<div class="post-notification">
-    <h3>⚠️Warning</h3>
-    <p>This is not recommended if others are working on the same branch as it can cause conflicts.</p>
-</div>
-
-<h2>If you just pulled and want to undo</h2>
-
-<p>If you just pulled and want to undo the merge, you can reset to the previous state using <code>ORIG_HEAD</code>.</p>
-
-<h3>Undo a merge pull:</h3>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>reset<span class="w"> </span>--hard<span class="w"> </span>ORIG_HEAD
-</code></pre>
-</div>
-
-<p>This will bring your repository back to the state before the last pull.</p>
-
-<h3>Final thoughts</h3>
-
-<p>Reverting commits can seem daunting at first, but once you understand the tools Git offers, it's pretty straightforward. Always double-check before using <code>--hard</code> or <code>--force</code> to avoid accidental data loss!</p>
-
-<p>Hope this helps you get back on track!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>February 5th, 2025</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/git/">
-					Git
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/vcs/">
-					VCS
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -1055,21 +919,21 @@ git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </
 		<li>
 			<a href="/category/linux/">
 				Linux
-				<span class="count">25</span>
+				<span class="count">26</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/devops/">
 				DevOps
-				<span class="count">23</span>
+				<span class="count">24</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/laravel/">
 				Laravel
-				<span class="count">20</span>
+				<span class="count">21</span>
 			</a>
 		</li>
 		
@@ -1151,6 +1015,13 @@ git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </
 		</li>
 		
 		<li>
+			<a href="/category/c/">
+				C#
+				<span class="count">7</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/apache/">
 				Apache
 				<span class="count">6</span>
@@ -1186,13 +1057,6 @@ git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </
 		</li>
 		
 		<li>
-			<a href="/category/c/">
-				C#
-				<span class="count">5</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/vscode/">
 				VSCode
 				<span class="count">5</span>
@@ -1210,6 +1074,13 @@ git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </
 			<a href="/category/personal-challenge/">
 				Personal Challenge
 				<span class="count">5</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/ubuntu/">
+				Ubuntu
+				<span class="count">4</span>
 			</a>
 		</li>
 		
@@ -1244,13 +1115,6 @@ git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </
 		<li>
 			<a href="/category/security/">
 				Security
-				<span class="count">3</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/ubuntu/">
-				Ubuntu
 				<span class="count">3</span>
 			</a>
 		</li>
@@ -1294,6 +1158,13 @@ git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </
 			<a href="/category/general/">
 				General
 				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/image-manipulation/">
+				Image Manipulation
+				<span class="count">2</span>
 			</a>
 		</li>
 		
@@ -1413,6 +1284,20 @@ git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </
 			<a href="/category/wamp/">
 				WAMP
 				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/hangfire/">
+				Hangfire
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/supervisor/">
+				Supervisor
+				<span class="count">1</span>
 			</a>
 		</li>
 		
@@ -1559,13 +1444,6 @@ git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </
 		<li>
 			<a href="/category/csr/">
 				CSR
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/image-manipulation/">
-				Image Manipulation
 				<span class="count">1</span>
 			</a>
 		</li>

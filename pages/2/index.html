@@ -78,6 +78,465 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/removing-commits-from-a-branch-using-git-interactive-rebase">Removing Commits from a Branch Using Git Interactive Rebase</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>I'm working on a project that had approximately five minor incident fixes. However, I got approval from the client side to push only three of them. Luckily, my commits are atomic, so making this build was easier than I thought.</p>
+
+<p>At this moment, I decided to clone the latest branch into a temporary branch and roll back two commits for today's deployment while keeping the latest branch intact with all the fixes.</p>
+
+<p>To achieve this, I used <strong>Git interactive rebase</strong>, a powerful tool for modifying commit history.</p>
+
+<h2>Why Use Interactive Rebase?</h2>
+
+<p>Interactive rebase allows you to modify commit history, including:</p>
+
+<ul>
+<li>Removing unwanted commits</li>
+<li>Reordering commits</li>
+<li>Squashing multiple commits into one</li>
+<li>Editing commit messages</li>
+</ul>
+
+<h2>How I Did It?</h2>
+
+<p>Here’s the step-by-step process I followed:</p>
+
+<h3>1. Clone the Branch</h3>
+
+<p>Before making any changes, I cloned the branch to have a backup:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>checkout<span class="w"> </span>-b<span class="w"> </span>my-cloned-branch<span class="w"> </span>original-branch
+</code></pre>
+</div>
+
+<h3>2. Start Interactive Rebase</h3>
+
+<p>To remove specific commits, I ran:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>rebase<span class="w"> </span>-i<span class="w"> </span>HEAD~N
+</code></pre>
+</div>
+
+<p>Where <code>N</code> is the number of commits I wanted to review. This opened an editor displaying the most recent commits.</p>
+
+<h3>3. Modify the Commit List</h3>
+
+<p>The interactive rebase interface showed something like this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>pick<span class="w"> </span>abc123<span class="w"> </span>Commit<span class="w"> </span>message<span class="w"> </span><span class="m">1</span>
+pick<span class="w"> </span>def456<span class="w"> </span>Commit<span class="w"> </span>message<span class="w"> </span><span class="m">2</span>
+pick<span class="w"> </span>ghi789<span class="w"> </span>Commit<span class="w"> </span>message<span class="w"> </span><span class="m">3</span>
+</code></pre>
+</div>
+
+<p>To <strong>remove</strong> a commit, I replaced <code>pick</code> with <code>drop</code>.</p>
+
+<p>To <strong>edit</strong> or <strong>squash</strong> commits, I could replace <code>pick</code> with commands like <code>edit</code> or <code>squash</code>.</p>
+
+<p>After making my changes, I saved and closed the editor.</p>
+
+<h3>4. Handle Any Conflicts (If Needed)</h3>
+
+<p>If Git encountered conflicts, it prompted me to resolve them. I fixed the files and continued the rebase:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>rebase<span class="w"> </span>--continue
+</code></pre>
+</div>
+
+<h2>Key Takeaways</h2>
+
+<ul>
+<li>Interactive rebase is powerful for cleaning up commit history.</li>
+<li>Always clone or create a backup branch before rebasing.</li>
+<li>If working with a team, communicate before modifying shared branches.</li>
+</ul>
+
+<p>This was a great learning experience, and now I feel more confident managing Git history efficiently!</p>
+
+<p>Hope you found this tip useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>February 24th, 2025</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/git/">
+					Git
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/vcs/">
+					VCS
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/recovering-my-sql-after-an-accidental-binlog-deletion">Recovering MySQL After an Accidental Binlog Deletion</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Last night, I found myself debugging a MySQL issue at an ungodly hour. The <strong>MySQL80 service refused to start</strong>, throwing a vague error:  </p>
+
+<blockquote>
+  <p><em>The MySQL80 service started and then stopped…</em>  </p>
+</blockquote>
+
+<p>Digging into <code>mysql.err</code>, I discovered the culprit—someone (not me! 😤) had <strong>accidentally deleted a binary log (<code>mysql-bin.000xxx</code>)</strong> while MySQL was still tracking it. Since MySQL relies on binlogs for replication and crash recovery, it panicked when it couldn't find the missing file.  </p>
+
+<h2>The Fix</h2>
+
+<p>To get MySQL running again, I had to:  </p>
+
+<ul>
+<li><strong>Disable binary logging</strong> (since this is a standalone server)  </li>
+<li><strong>Delete the corrupt binlog index file</strong> (<code>mysql-bin.index</code>)  </li>
+<li><strong>Purge all old binlog files</strong> that were hogging disk space  </li>
+</ul>
+
+<h2>How to Properly Disable Binary Logging in MySQL 8.0?</h2>
+
+<p>Since <strong>MySQL 8.0 enables binlogs by default</strong>, simply removing <code>log-bin=mysql-bin</code> from <code>my.ini</code> wasn’t enough. I had to:  </p>
+
+<h3>Comment out the existing binlog setting in my.ini</h3>
+
+<div class="codehilite">
+<pre><span></span><code><span class="c1"># log-bin=mysql-bin</span>
+</code></pre>
+</div>
+
+<h3>Explicitly disable binary logging</h3>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">[mysqld]</span>
+<span class="na">skip-log-bin</span>
+</code></pre>
+</div>
+
+<h3>Delete the old <code>mysql-bin.index</code> file</h3>
+
+<ul>
+<li>This file keeps track of all binary log files.  </li>
+<li>Since a referenced binlog file was deleted, MySQL would <strong>fail to start</strong> if the index still contained entries for missing files.  </li>
+<li>Deleting it ensures that MySQL doesn’t look for non-existent logs.  </li>
+</ul>
+
+<p>After restarting the service, I confirmed binlogging was off with:  </p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">SHOW</span><span class="w"> </span><span class="n">VARIABLES</span><span class="w"> </span><span class="k">LIKE</span><span class="w"> </span><span class="s1">&#39;log_bin&#39;</span><span class="p">;</span>
+</code></pre>
+</div>
+
+<p>Output:  </p>
+
+<div class="codehilite">
+<pre><span></span><code>log_bin<span class="w"> </span><span class="p">|</span><span class="w"> </span>OFF
+</code></pre>
+</div>
+
+<p>In conclusion, crisis averted, disk space reclaimed and finally got some sleep. 😴</p>
+
+<p>Hope you found this useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>February 18th, 2025</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/mysql/">
+					MySQL
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/databases/">
+					Databases
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/writings/posts/9-software-books-im-reading-this-year-to-become-a-better-engineer">9 Software Books I'm Reading This Year to Become a Better Engineer</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>As a software engineer, continuous learning is essential. The tech industry evolves rapidly, and keeping up requires a commitment to improving skills, refining best practices, and understanding the deeper principles behind great software design. This year, I’ve curated a list of nine must-read books that will help me become a better developer, architect, and problem solver. </p>
+
+<p>If you're looking to level up your software engineering skills, these books might interest you too:</p>
+
+<div class="book-list">
+    <div class="book-card">
+        <div class="book-image" style="background-image: url('https://m.media-amazon.com/images/I/41a1DYaecZL._SX342_SY445_.jpg');"></div>
+        <div class="book-info">
+            <h2>The Pragmatic Programmer</h2>
+            <p class="book-author">By Andrew Hunt & David Thomas</p>
+            <p class="book-quote">"Care about the code you write and the people who will maintain it after you."</p>
+            <p class="book-reason">A foundational book that every developer should read. It provides practical advice on coding, debugging, and automation, making you a more adaptable and efficient engineer.</p>
+        </div>
+    </div>
+
+    <div class="book-card">
+        <div class="book-image" style="background-image: url('https://m.media-amazon.com/images/I/514xvNk9rTL._SY445_SX342_.jpg');"></div>
+        <div class="book-info">
+            <h2>Designing Data-Intensive Applications</h2>
+            <p class="book-author">By Martin Kleppmann</p>
+            <p class="book-quote">"A well-designed system grows gracefully as the dataset, traffic volume, or complexity increases."</p>
+            <p class="book-reason">A must-read for backend engineers and system architects, this book explores data modeling, distributed systems, and scalability challenges.</p>
+        </div>
+    </div>
+
+    <div class="book-card">
+        <div class="book-image" style="background-image: url('https://m.media-amazon.com/images/I/41xShlnTZTL.jpg');"></div>
+        <div class="book-info">
+            <h2>Clean Code</h2>
+            <p class="book-author">By Robert C. Martin</p>
+            <p class="book-quote">"Indeed, the ratio of time spent reading versus writing is well over 10 to 1. We are constantly reading old code as part of the effort to write new code."</p>
+            <p class="book-reason">Writing clean, maintainable code is a core skill for developers. This book offers practical techniques for improving code quality.</p>
+        </div>
+    </div>
+
+    <div class="book-card">
+        <div class="book-image" style="background-image: url('https://m.media-amazon.com/images/I/51TG5T+dd7L._SY445_SX342_.jpg');"></div>
+        <div class="book-info">
+            <h2>The Mythical Man-Month</h2>
+            <p class="book-author">By Frederick P. Brooks Jr.</p>
+            <p class="book-quote">"Adding manpower to a late software project makes it later."</p>
+            <p class="book-reason">A classic in software project management, this book explains why adding more people to a late project only makes it later.</p>
+        </div>
+    </div>
+
+    <div class="book-card">
+        <div class="book-image" style="background-image: url('https://m.media-amazon.com/images/I/41JgRyJbGSL._SX342_SY445_.jpg');"></div>
+        <div class="book-info">
+            <h2>Refactoring</h2>
+            <p class="book-author">By Martin Fowler</p>
+            <p class="book-quote">"Any fool can write code that a computer can understand. Good programmers write code that humans can understand."</p>
+            <p class="book-reason">A practical guide to improving existing code without altering its functionality, making it more readable and maintainable.</p>
+        </div>
+    </div>
+
+    <div class="book-card">
+        <div class="book-image" style="background-image: url('https://m.media-amazon.com/images/I/41roGUf+cML._SY445_SX342_.jpg');"></div>
+        <div class="book-info">
+            <h2>Domain-Driven Design</h2>
+            <p class="book-author">By Eric Evans</p>
+            <p class="book-quote">"The heart of software is its ability to solve domain-related problems for users."</p>
+            <p class="book-reason">This book teaches how to align software design with business logic, making complex software systems more manageable.</p>
+        </div>
+    </div>
+
+    <div class="book-card">
+        <div class="book-image" style="background-image: url('https://m.media-amazon.com/images/I/51maZSdupsL._SY445_SX342_.jpg');"></div>
+        <div class="book-info">
+            <h2>Working Effectively with Legacy Code</h2>
+            <p class="book-author">By Michael Feathers</p>
+            <p class="book-quote">"To change software means to change behavior. Our goal is to do so safely."</p>
+            <p class="book-reason">If you’ve ever had to deal with old, complex codebases, this book provides strategies for refactoring without breaking functionality.</p>
+        </div>
+    </div>
+
+    <div class="book-card">
+        <div class="book-image" style="background-image: url('https://m.media-amazon.com/images/I/51OCgwlIsSL._SX342_SY445_.jpg');"></div>
+        <div class="book-info">
+            <h2>Why Programs Fail</h2>
+            <p class="book-author">By Andreas Zeller</p>
+            <p class="book-quote">"Every bug has a cause, and every cause has a cure."</p>
+            <p class="book-reason">A systematic approach to debugging, helping developers diagnose and fix software defects effectively.</p>
+        </div>
+    </div>
+
+    <div class="book-card">
+        <div class="book-image" style="background-image: url('https://m.media-amazon.com/images/I/71teGAqCOzL._SL1500_.jpg');"></div>
+        <div class="book-info">
+            <h2>Extreme Ownership</h2>
+            <p class="book-author">By Jocko Willink & Leif Babin</p>
+            <p class="book-quote">"Leaders must own everything in their world. There is no one else to blame."</p>
+            <p class="book-reason">Leadership and accountability are critical for engineers working in teams. This book teaches how taking full responsibility leads to success.</p>
+        </div>
+    </div>
+</div>
+
+<h2>Final Thoughts</h2>
+
+<p>These books cover a wide spectrum of skills—from writing clean code and designing scalable systems to debugging, refactoring, and leadership. By reading and applying the lessons in these books, I aim to become a better software engineer this year.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>February 14th, 2025</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/self-development/">
+					Self Development
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/goals/">
+					Goals
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/software-development/">
+					Software Development
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-revert-a-git-commit-on-the-server">How to Revert a Git Commit on the Server?</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Today I learned how to revert a Git commit after pulling it on a server. Whether you've made a mistake or just need to backtrack, Git offers several ways to undo commits depending on your situation. Here's a quick guide on how to handle it.</p>
+
+<h2>If you haven't pushed the commit yet</h2>
+
+<p>If the commit hasn't been pushed to the remote repository, you can use <code>git reset</code> to undo it.</p>
+
+<h2>Soft Reset (keeps changes staged)</h2>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>reset<span class="w"> </span>--soft<span class="w"> </span>HEAD~1
+</code></pre>
+</div>
+
+<p>This moves the HEAD back by one commit but keeps your changes staged.</p>
+
+<h2>Mixed Reset (keeps changes unstaged):</h2>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>reset<span class="w"> </span>--mixed<span class="w"> </span>HEAD~1
+</code></pre>
+</div>
+
+<p>This moves the HEAD back by one commit and unstages your changes.</p>
+
+<h2>Hard Reset (discards changes):</h2>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>reset<span class="w"> </span>--hard<span class="w"> </span>HEAD~1
+</code></pre>
+</div>
+
+<p>This completely removes the last commit and discards any changes.</p>
+
+<blockquote>
+  <p><strong>Tip:</strong> Replace <code>HEAD~1</code> with <code>HEAD~2</code> to go back two commits, and so on.</p>
+</blockquote>
+
+<h2>If you've already pushed the commit</h2>
+
+<h3>Revert the commit (safe for shared repos):</h3>
+
+<p>If you've already pushed the commit and want to undo it without rewriting history, use <code>git revert</code>. This creates a new commit that undoes the changes.</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>revert<span class="w"> </span>&lt;commit_hash&gt;
+</code></pre>
+</div>
+
+<p>Find the commit hash using:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>log<span class="w"> </span>--oneline
+</code></pre>
+</div>
+
+<h3>Force Reset (i.e. if you're okay with rewriting history):</h3>
+
+<p>If you don't mind rewriting history (and no one else is working on the branch), you can force reset.</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>reset<span class="w"> </span>--hard<span class="w"> </span>&lt;commit_hash&gt;
+git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>HEAD<span class="w"> </span>--force
+</code></pre>
+</div>
+
+<div class="post-notification">
+    <h3>⚠️Warning</h3>
+    <p>This is not recommended if others are working on the same branch as it can cause conflicts.</p>
+</div>
+
+<h2>If you just pulled and want to undo</h2>
+
+<p>If you just pulled and want to undo the merge, you can reset to the previous state using <code>ORIG_HEAD</code>.</p>
+
+<h3>Undo a merge pull:</h3>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>reset<span class="w"> </span>--hard<span class="w"> </span>ORIG_HEAD
+</code></pre>
+</div>
+
+<p>This will bring your repository back to the state before the last pull.</p>
+
+<h3>Final thoughts</h3>
+
+<p>Reverting commits can seem daunting at first, but once you understand the tools Git offers, it's pretty straightforward. Always double-check before using <code>--hard</code> or <code>--force</code> to avoid accidental data loss!</p>
+
+<p>Hope this helps you get back on track!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>February 5th, 2025</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/git/">
+					Git
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/vcs/">
+					VCS
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/how-to-delete-multiple-git-branches-from-the-command-line">How to Delete Multiple Git Branches from the Command Line?</a></h1>
 		<p class="description"></p>
 	</div>
@@ -500,565 +959,6 @@
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/installing-and-configuring-elasticsearch-and-kibana-on-ubuntu">Installing and Configuring Elasticsearch and Kibana on Ubuntu</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>I've always wanted to write this article but never got the chance to do so, I had written some notes on how to set up Elasticsearch and Kibana on an Ubuntu server (20.04 or later). Whether you're building a search engine, analyzing logs, or just exploring the Elastic Stack, this guide will help you get everything up and running smoothly. </p>
-
-<p>Here's how I did it:</p>
-
-<h2>Setting up Elasticsearch</h2>
-
-<h3>Add the Elasticsearch GPG key and repository</h3>
-
-<div class="codehilite">
-<pre><span></span><code>curl<span class="w"> </span>-fsSL<span class="w"> </span>https://artifacts.elastic.co/GPG-KEY-elasticsearch<span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>gpg<span class="w"> </span>--dearmor<span class="w"> </span>-o<span class="w"> </span>/usr/share/keyrings/elastic.gpg
-<span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;deb [signed-by=/usr/share/keyrings/elastic.gpg] https://artifacts.elastic.co/packages/7.x/apt stable main&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>tee<span class="w"> </span>-a<span class="w"> </span>/etc/apt/sources.list.d/elastic-7.x.list
-</code></pre>
-</div>
-
-<h3>Install Elasticsearch</h3>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>update
-sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>elasticsearch
-</code></pre>
-</div>
-
-<h3>Configure Elasticsearch by editing /etc/elasticsearch/elasticsearch.yml</h3>
-
-<div class="codehilite">
-<pre><span></span><code><span class="nt">network.host</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">localhost</span>
-<span class="nt">http.port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">9200</span>
-<span class="nt">http.host</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0.0.0</span>
-</code></pre>
-</div>
-
-<h3>Start and enable Elasticsearch</h3>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>systemctl<span class="w"> </span>start<span class="w"> </span>elasticsearch
-sudo<span class="w"> </span>systemctl<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>elasticsearch
-</code></pre>
-</div>
-
-<h3>Set up an NGINX reverse proxy for Elasticsearch</h3>
-
-<p>Add this server block to your NGINX config (e.g., <code>/etc/nginx/sites-available/your_domain</code>):</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">server</span><span class="w"> </span><span class="p">{</span>
-<span class="w">   </span><span class="kn">listen</span><span class="w"> </span><span class="mi">8834</span><span class="p">;</span>
-
-<span class="w">   </span><span class="c1"># Uncomment for SSL</span>
-<span class="w">   </span><span class="c1"># listen 8834 ssl;</span>
-<span class="w">   </span><span class="c1"># ssl_certificate /path/to/certificate/crt.pem;</span>
-<span class="w">   </span><span class="c1"># ssl_certificate_key /path/to/key/key.pem;</span>
-<span class="w">   </span><span class="c1"># ssl_protocols TLSv1 TLSv1.1 TLSv1.2;</span>
-<span class="w">   </span><span class="c1"># ssl_prefer_server_ciphers on;</span>
-<span class="w">   </span><span class="c1"># ssl_ciphers &#39;EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH&#39;;</span>
-
-<span class="w">   </span><span class="kn">server_name</span><span class="w"> </span><span class="s">your_domain</span><span class="p">;</span>
-
-<span class="w">   </span><span class="kn">location</span><span class="w"> </span><span class="s">/</span><span class="w"> </span><span class="p">{</span>
-<span class="w">      </span><span class="kn">proxy_pass</span><span class="w"> </span><span class="s">http://localhost:9200</span><span class="p">;</span>
-<span class="w">      </span><span class="kn">proxy_http_version</span><span class="w"> </span><span class="mi">1</span><span class="s">.1</span><span class="p">;</span>
-<span class="w">      </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">Upgrade</span><span class="w"> </span><span class="nv">$http_upgrade</span><span class="p">;</span>
-<span class="w">      </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">Connection</span><span class="w"> </span><span class="s">&#39;upgrade&#39;</span><span class="p">;</span>
-<span class="w">      </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">Host</span><span class="w"> </span><span class="nv">$host</span><span class="p">;</span>
-<span class="w">      </span><span class="kn">proxy_cache_bypass</span><span class="w"> </span><span class="nv">$http_upgrade</span><span class="p">;</span>
-<span class="w">   </span><span class="p">}</span>
-<span class="p">}</span>
-</code></pre>
-</div>
-
-<p>and then test and restart NGINX service:</p>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>nginx<span class="w"> </span>-t
-sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class="w"> </span>nginx
-</code></pre>
-</div>
-
-<p>Once done, you can verify if Elasticsearch is running by visiting <code>http://yourdomain.com:8834</code> in your browser. You should see a JSON response with Elasticsearch details.</p>
-
-<h2>Setting up Kibana</h2>
-
-<h3>Install Kibana</h3>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>kibana
-</code></pre>
-</div>
-
-<h3>Configure Kibana by editing /etc/kibana/kibana.yml</h3>
-
-<div class="codehilite">
-<pre><span></span><code><span class="nt">server.port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5601</span>
-<span class="nt">server.host</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0.0.0</span>
-<span class="nt">elasticsearch.hosts</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;http://localhost:9200&quot;</span><span class="p p-Indicator">]</span>
-</code></pre>
-</div>
-
-<h3>Start and enable Kibana</h3>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>systemctl<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>kibana
-sudo<span class="w"> </span>systemctl<span class="w"> </span>start<span class="w"> </span>kibana
-</code></pre>
-</div>
-
-<h3>Create an admin user for Kibana</h3>
-
-<div class="codehilite">
-<pre><span></span><code><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;your_admin_username:`openssl passwd -apr1`&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>tee<span class="w"> </span>-a<span class="w"> </span>/etc/nginx/htpasswd.users
-</code></pre>
-</div>
-
-<p>Make sure that you enter a strong password when prompted.</p>
-
-<h3>Set up an NGINX reverse proxy for Kibana</h3>
-
-<p>Add this server block to your NGINX config:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">server</span><span class="w"> </span><span class="p">{</span>
-<span class="w">   </span><span class="kn">listen</span><span class="w"> </span><span class="mi">8833</span><span class="p">;</span>
-
-<span class="w">   </span><span class="c1"># Uncomment for SSL</span>
-<span class="w">   </span><span class="c1"># listen 8833 ssl;</span>
-<span class="w">   </span><span class="c1"># ssl_certificate /path/to/certificate/crt.pem;</span>
-<span class="w">   </span><span class="c1"># ssl_certificate_key /path/to/key/key.pem;</span>
-<span class="w">   </span><span class="c1"># ssl_protocols TLSv1 TLSv1.1 TLSv1.2;</span>
-<span class="w">   </span><span class="c1"># ssl_prefer_server_ciphers on;</span>
-<span class="w">   </span><span class="c1"># ssl_ciphers &#39;EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH&#39;;</span>
-
-<span class="w">   </span><span class="kn">server_name</span><span class="w"> </span><span class="s">your_domain</span><span class="p">;</span>
-
-<span class="w">   </span><span class="kn">auth_basic</span><span class="w"> </span><span class="s">&quot;Restricted</span><span class="w"> </span><span class="s">Access&quot;</span><span class="p">;</span>
-<span class="w">   </span><span class="kn">auth_basic_user_file</span><span class="w"> </span><span class="s">/etc/nginx/htpasswd.users</span><span class="p">;</span>
-
-<span class="w">   </span><span class="kn">location</span><span class="w"> </span><span class="s">/</span><span class="w"> </span><span class="p">{</span>
-<span class="w">      </span><span class="kn">proxy_pass</span><span class="w"> </span><span class="s">http://localhost:5601</span><span class="p">;</span>
-<span class="w">      </span><span class="kn">proxy_http_version</span><span class="w"> </span><span class="mi">1</span><span class="s">.1</span><span class="p">;</span>
-<span class="w">      </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">Upgrade</span><span class="w"> </span><span class="nv">$http_upgrade</span><span class="p">;</span>
-<span class="w">      </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">Connection</span><span class="w"> </span><span class="s">&#39;upgrade&#39;</span><span class="p">;</span>
-<span class="w">      </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">Host</span><span class="w"> </span><span class="nv">$host</span><span class="p">;</span>
-<span class="w">      </span><span class="kn">proxy_cache_bypass</span><span class="w"> </span><span class="nv">$http_upgrade</span><span class="p">;</span>
-<span class="w">   </span><span class="p">}</span>
-<span class="p">}</span>
-</code></pre>
-</div>
-
-<p>and then test and restart NGINX service:</p>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>nginx<span class="w"> </span>-t
-sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class="w"> </span>nginx
-</code></pre>
-</div>
-
-<p>Once done, you can try to access Kibana by visiting <code>http://yourdomain.com:8833</code>. You'll be prompted for the admin credentials you created earlier.</p>
-
-<h2>Wrapping Up</h2>
-
-<p>And there you go! Elasticsearch and Kibana are now up and running on your Ubuntu server, ready to help you search, analyze, and visualize your data. Whether you're diving into logs, building a search feature, or just experimenting with the Elastic Stack, this setup should give you a solid foundation.</p>
-
-<h2>References</h2>
-
-<ul>
-<li><a href="https://burnhamforensics.com/2019/02/06/how-to-install-and-configure-nginx-for-kibana/">Burnham Forensics: NGINX for Kibana</a></li>
-<li><a href="https://itnixpro.com/configure-nginx-reverse-proxy-for-kibana/">ITNixPro: NGINX Reverse Proxy for Kibana</a></li>
-<li><a href="https://www.digitalocean.com/community/tutorials/how-to-install-elasticsearch-logstash-and-kibana-elastic-stack-on-ubuntu-22-04">DigitalOcean: Elastic Stack on Ubuntu</a></li>
-</ul>
-
-<p>Hope you found this useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>January 22nd, 2025</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/elastic-search/">
-					Elastic Search
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/kibana/">
-					Kibana
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/ubuntu/">
-					Ubuntu
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-send-test-emails-via-power-shell">How to Send Test Emails via PowerShell?</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<h2>How to Send Test Emails via PowerShell</h2>
-
-<p>Whenever I wanted to send a test mail from a Windows Server, I make use of PowerShell. This makes it easier and is a quick yet efficient way to test email functionality, troubleshoot SMTP servers, or verify email delivery. </p>
-
-<p>Here’s what I usually do, including examples with and without user authentication.</p>
-
-<h2>1. Basic Command to Send a Test Email</h2>
-
-<p>The <code>Send-MailMessage</code> cmdlet in PowerShell makes it easy to send emails via an SMTP server. Here’s the basic command I used:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="nb">Send-MailMessage</span> <span class="n">-SmtpServer</span> <span class="s2">&quot;0.0.0.0&quot;</span> <span class="n">-Port</span> <span class="n">25</span> <span class="n">-From</span> <span class="s2">&quot;sample@example.com&quot;</span> <span class="n">-To</span> <span class="s2">&quot;john.doe@example.com&quot;</span> <span class="n">-Subject</span> <span class="s2">&quot;A subject&quot;</span> <span class="n">-Body</span> <span class="s2">&quot;A body&quot;</span>
-</code></pre>
-</div>
-
-<ul>
-<li><code>-SmtpServer</code>: The IP address or hostname of the SMTP server.</li>
-<li><code>-Port</code>: The SMTP port (default is 25).</li>
-<li><code>-From</code>: The sender’s email address.</li>
-<li><code>-To</code>: The recipient’s email address.</li>
-<li><code>-Subject</code>: The subject of the email.</li>
-<li><code>-Body</code>: The content of the email.</li>
-</ul>
-
-<p>This command works for SMTP servers that don’t require authentication (e.g., internal SMTP relays).</p>
-
-<h2>2. Sending Emails with User Authentication</h2>
-
-<p>If the SMTP server requires authentication, you can add the <code>-Credential</code> parameter to provide a username and password. Here’s how:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="nv">$credential</span> <span class="p">=</span> <span class="nb">Get-Credential</span>
-<span class="nb">Send-MailMessage</span> <span class="n">-SmtpServer</span> <span class="s2">&quot;smtp.example.com&quot;</span> <span class="n">-Port</span> <span class="n">587</span> <span class="n">-From</span> <span class="s2">&quot;sample@example.com&quot;</span> <span class="n">-To</span> <span class="s2">&quot;john.doe@example.com&quot;</span> <span class="n">-Subject</span> <span class="s2">&quot;A subject&quot;</span> <span class="n">-Body</span> <span class="s2">&quot;A body&quot;</span> <span class="n">-Credential</span> <span class="nv">$credential</span> <span class="n">-UseSsl</span>
-</code></pre>
-</div>
-
-<ul>
-<li><code>-Credential</code>: Prompts for a username and password. You can also create a <code>PSCredential</code> object programmatically.</li>
-<li><code>-UseSsl</code>: Enables SSL/TLS encryption, which is often required for authenticated SMTP servers (e.g., port 587).</li>
-</ul>
-
-<h3>Example with Hardcoded Credentials:</h3>
-
-<p>If you don’t want to be prompted for credentials, you can create a <code>PSCredential</code> object like this on PowerShell ISE:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="nv">$username</span> <span class="p">=</span> <span class="s2">&quot;sample@example.com&quot;</span>
-<span class="nv">$password</span> <span class="p">=</span> <span class="nb">ConvertTo-SecureString</span> <span class="s2">&quot;YourPassword&quot;</span> <span class="n">-AsPlainText</span> <span class="n">-Force</span>
-<span class="nv">$credential</span> <span class="p">=</span> <span class="nb">New-Object</span> <span class="n">System</span><span class="p">.</span><span class="n">Management</span><span class="p">.</span><span class="n">Automation</span><span class="p">.</span><span class="n">PSCredential</span> <span class="p">(</span><span class="nv">$username</span><span class="p">,</span> <span class="nv">$password</span><span class="p">)</span>
-
-<span class="nb">Send-MailMessage</span> <span class="n">-SmtpServer</span> <span class="s2">&quot;smtp.example.com&quot;</span> <span class="n">-Port</span> <span class="n">587</span> <span class="n">-From</span> <span class="s2">&quot;sample@example.com&quot;</span> <span class="n">-To</span> <span class="s2">&quot;john.doe@example.com&quot;</span> <span class="n">-Subject</span> <span class="s2">&quot;A subject&quot;</span> <span class="n">-Body</span> <span class="s2">&quot;A body&quot;</span> <span class="n">-Credential</span> <span class="nv">$credential</span> <span class="n">-UseSsl</span>
-</code></pre>
-</div>
-
-<h2>3. Adding Attachments</h2>
-
-<p>You can also attach files to your email using the <code>-Attachments</code> parameter:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="nb">Send-MailMessage</span> <span class="n">-SmtpServer</span> <span class="s2">&quot;smtp.example.com&quot;</span> <span class="n">-Port</span> <span class="n">587</span> <span class="n">-From</span> <span class="s2">&quot;sample@example.com&quot;</span> <span class="n">-To</span> <span class="s2">&quot;john.doe@example.com&quot;</span> <span class="n">-Subject</span> <span class="s2">&quot;A subject&quot;</span> <span class="n">-Body</span> <span class="s2">&quot;A body&quot;</span> <span class="n">-Attachments</span> <span class="s2">&quot;C:\path\to\file.txt&quot;</span> <span class="n">-Credential</span> <span class="nv">$credential</span> <span class="n">-UseSsl</span>
-</code></pre>
-</div>
-
-<h2>4. Troubleshooting Tips</h2>
-
-<h3>Connection Issues:</h3>
-
-<p>If the email fails to send, ensure the SMTP server is reachable and the port is open. Use <code>Test-NetConnection</code> to verify connectivity:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="nb">Test-NetConnection</span> <span class="n">-ComputerName</span> <span class="n">smtp</span><span class="p">.</span><span class="n">example</span><span class="p">.</span><span class="n">com</span> <span class="n">-Port</span> <span class="n">587</span>
-</code></pre>
-</div>
-
-<h3>Authentication Errors:</h3>
-
-<p>Double-check the username and password. If the SMTP server requires a specific authentication method (e.g., OAuth), you may need additional configuration.</p>
-
-<h3>SSL/TLS Errors:</h3>
-
-<p>Ensure the <code>-UseSsl</code> parameter is used if the SMTP server requires encryption.</p>
-
-<h2>Example Workflow:</h2>
-
-<p>Here’s a complete example with authentication and attachments:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="c"># Create credentials</span>
-<span class="nv">$username</span> <span class="p">=</span> <span class="s2">&quot;sample@example.com&quot;</span>
-<span class="nv">$password</span> <span class="p">=</span> <span class="nb">ConvertTo-SecureString</span> <span class="s2">&quot;YourPassword&quot;</span> <span class="n">-AsPlainText</span> <span class="n">-Force</span>
-<span class="nv">$credential</span> <span class="p">=</span> <span class="nb">New-Object</span> <span class="n">System</span><span class="p">.</span><span class="n">Management</span><span class="p">.</span><span class="n">Automation</span><span class="p">.</span><span class="n">PSCredential</span> <span class="p">(</span><span class="nv">$username</span><span class="p">,</span> <span class="nv">$password</span><span class="p">)</span>
-
-<span class="c"># Send email with attachment</span>
-<span class="nb">Send-MailMessage</span> <span class="n">-SmtpServer</span> <span class="s2">&quot;smtp.example.com&quot;</span> <span class="n">-Port</span> <span class="n">587</span> <span class="n">-From</span> <span class="s2">&quot;sample@example.com&quot;</span> <span class="n">-To</span> <span class="s2">&quot;john.doe@example.com&quot;</span> <span class="n">-Subject</span> <span class="s2">&quot;Test Email with Attachment&quot;</span> <span class="n">-Body</span> <span class="s2">&quot;Please find the attached file.&quot;</span> <span class="n">-Attachments</span> <span class="s2">&quot;C:\path\to\file.txt&quot;</span> <span class="n">-Credential</span> <span class="nv">$credential</span> <span class="n">-UseSsl</span>
-</code></pre>
-</div>
-
-<h2>Why do this way?</h2>
-
-<p>Using PowerShell to send test emails is a powerful way to:</p>
-
-<ul>
-<li>Test SMTP server configurations.</li>
-<li>Verify email delivery and troubleshoot issues.</li>
-<li>Automate email notifications in scripts.</li>
-</ul>
-
-<p>Whether you’re working with an internal SMTP relay or an external server requiring authentication, PowerShell’s <code>Send-MailMessage</code> cmdlet makes it easy to get the job done.</p>
-
-<p>Hope you found this useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>January 21st, 2025</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/powershell/">
-					PowerShell
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/smtp/">
-					SMTP
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/devops/">
-					DevOps
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-find-users-with-duplicate-email-addresses-in-sql">How to Find Users with Duplicate Email Addresses in SQL?</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>When managing a database with user information, ensuring data integrity is crucial. One common issue that can arise is duplicate email addresses in the <code>users</code> table. </p>
-
-<p>Let me show you how to write a simple yet powerful SQL query to identify such duplicates!</p>
-
-<h2>The Problem</h2>
-
-<p>In many applications, email addresses should be unique identifiers for users. However, duplicates can sneak into the database due to bugs, manual data imports, or other anomalies. Detecting and resolving these duplicates is essential to maintain data integrity and ensure proper functionality of user-related features, such as authentication.</p>
-
-<h2>The Solution</h2>
-
-<p>Using SQL, you can quickly find all duplicate email addresses in your <code>users</code> table by leveraging the <code>GROUP BY</code> and <code>HAVING</code> clauses.</p>
-
-<p>Here’s the query:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">email</span><span class="p">,</span><span class="w"> </span><span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">email_count</span>
-<span class="k">FROM</span><span class="w"> </span><span class="n">users</span>
-<span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">email</span>
-<span class="k">HAVING</span><span class="w"> </span><span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
-</code></pre>
-</div>
-
-<h2>How It Works:</h2>
-
-<ol>
-<li><code>GROUP BY email</code>: Groups the rows in the <code>users</code> table by the email column, so each group represents a unique email.</li>
-<li><code>COUNT(*)</code>: Counts the number of rows in each group.</li>
-<li><code>HAVING COUNT(*) &gt; 1</code>: Filters the groups to only include those where the count is greater than 1, i.e., duplicate email addresses.</li>
-</ol>
-
-<h2>Enhanced Query for User Details</h2>
-
-<p>If you want to see more details about the users who share the same email address (e.g., user IDs, names), you can use a subquery:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">u</span><span class="p">.</span><span class="o">*</span>
-<span class="k">FROM</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="n">u</span>
-<span class="k">JOIN</span><span class="w"> </span><span class="p">(</span>
-<span class="w">    </span><span class="k">SELECT</span><span class="w"> </span><span class="n">email</span>
-<span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">users</span>
-<span class="w">    </span><span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">email</span>
-<span class="w">    </span><span class="k">HAVING</span><span class="w"> </span><span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1</span>
-<span class="p">)</span><span class="w"> </span><span class="n">dup_emails</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">u</span><span class="p">.</span><span class="n">email</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dup_emails</span><span class="p">.</span><span class="n">email</span><span class="p">;</span>
-</code></pre>
-</div>
-
-<h2>Explanation</h2>
-
-<ul>
-<li>The subquery identifies all duplicate email addresses.</li>
-<li>The main query joins this result with the <code>users</code> table to retrieve detailed information about each user associated with the duplicate emails.</li>
-</ul>
-
-<h2>Final Thoughts</h2>
-
-<p>This simple query can save you a lot of time when auditing your database for duplicate entries. Whether you’re cleaning up data or debugging an issue, identifying duplicates is an important step toward ensuring a robust and reliable application.</p>
-
-<p>Hope you found this tip useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>January 20th, 2025</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/databases/">
-					Databases
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/sql/">
-					SQL
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/mysql/">
-					MySQL
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-filter-records-based-on-a_string-column-containing-numbers-with-commas-and-dots">How to Filter Records Based on a String Column Containing Numbers with Commas and Dots?</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Last month, I encountered a scenario where I needed to filter records in a database based on a "revenue" column. The challenge? The <code>revenue</code> column was stored as a string data type, and some of the values contained commas (<code>,</code>) and dots (<code>.</code>). Here’s how I tackled the problem and wrote an SQL query to filter records based on the numeric value of the <code>revenue</code> column.</p>
-
-<h2>What I faced?</h2>
-
-<p>The <code>revenue</code> column was stored as a string, and the values looked like this:</p>
-
-<ul>
-<li>"50,000,000"</li>
-<li>"75.000.000"</li>
-<li>"10000000"</li>
-</ul>
-
-<p>I needed to filter records where the revenue was greater than <strong>"50,000,000"</strong>. However, since the column was a string, I couldn’t directly compare it to a numeric value.</p>
-
-<h2>What I did?</h2>
-
-<p>To handle this, I used a combination of SQL functions:</p>
-
-<ol>
-<li><code>REPLACE</code>: To remove commas (<code>,</code>) and dots (<code>.</code>) from the string.</li>
-<li><code>CAST</code>: To convert the cleaned string into a numeric data type (<code>DECIMAL</code> in this case).</li>
-</ol>
-
-<p>Here’s the SQL query I wrote:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span>
-<span class="k">FROM</span><span class="w"> </span><span class="n">your_table</span>
-<span class="k">WHERE</span><span class="w"> </span><span class="k">CAST</span><span class="p">(</span><span class="k">REPLACE</span><span class="p">(</span><span class="n">revenue</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;,&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="nb">DECIMAL</span><span class="p">(</span><span class="mi">18</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">))</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">50000000</span><span class="p">;</span>
-</code></pre>
-</div>
-
-<p>Need a breakdown? Here you go:</p>
-
-<ol>
-<li><code>REPLACE(revenue, ',', '')</code>:
-This removes commas from the <code>revenue</code> string. For example, <strong>"50,000,000"</strong> becomes <strong>"50000000"</strong>.</li>
-<li><code>CAST(... AS DECIMAL(18, 2))</code>:
-This converts the cleaned string into a <code>DECIMAL</code> value with 18 total digits and 2 decimal places. For example, <strong>"50000000"</strong> becomes <strong>50000000.00</strong>.</li>
-<li><code>&gt; 50000000</code>:
-Finally, the query filters records where the numeric value of <code>revenue</code> is greater than <strong>50,000,000</strong>.</li>
-</ol>
-
-<h2>Handling Dots as Thousand Separators</h2>
-
-<p>If the <code>revenue</code> column uses dots (<code>.</code>) as thousand separators (e.g., <strong>"75.000.000"</strong>), you can extend the <code>REPLACE</code> function to remove dots as well:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span>
-<span class="k">FROM</span><span class="w"> </span><span class="n">your_table</span>
-<span class="k">WHERE</span><span class="w"> </span><span class="k">CAST</span><span class="p">(</span><span class="k">REPLACE</span><span class="p">(</span><span class="k">REPLACE</span><span class="p">(</span><span class="n">revenue</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;,&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">),</span><span class="w"> </span><span class="s1">&#39;.&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="nb">DECIMAL</span><span class="p">(</span><span class="mi">18</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">))</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">50000000</span><span class="p">;</span>
-</code></pre>
-</div>
-
-<p>This ensures that both commas and dots are removed before converting the string to a numeric value.</p>
-
-<h2>Why did I do this?</h2>
-
-<p>This approach is helpful when:</p>
-
-<ul>
-<li>You’re working with data stored as strings but need to perform numeric comparisons.</li>
-<li>The data contains formatting characters like commas or dots.</li>
-<li>You want to avoid manual data cleaning or preprocessing.</li>
-</ul>
-
-<p>By using SQL functions like <code>REPLACE</code> and <code>CAST</code>, you can handle these scenarios directly in your queries.</p>
-
-<p>Oh, this works for SQL and MySQL as well!</p>
-
-<p>Hope you found this article useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>January 19th, 2025</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/sql/">
-					SQL
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/mysql/">
-					MySQL
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/databases/">
-					Databases
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/data-manipulation/">
-					Data Manipulation
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -1127,21 +1027,21 @@ Finally, the query filters records where the numeric value of <code>revenue</cod
 		<li>
 			<a href="/category/linux/">
 				Linux
-				<span class="count">25</span>
+				<span class="count">26</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/devops/">
 				DevOps
-				<span class="count">23</span>
+				<span class="count">24</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/laravel/">
 				Laravel
-				<span class="count">20</span>
+				<span class="count">21</span>
 			</a>
 		</li>
 		
@@ -1223,6 +1123,13 @@ Finally, the query filters records where the numeric value of <code>revenue</cod
 		</li>
 		
 		<li>
+			<a href="/category/c/">
+				C#
+				<span class="count">7</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/apache/">
 				Apache
 				<span class="count">6</span>
@@ -1258,13 +1165,6 @@ Finally, the query filters records where the numeric value of <code>revenue</cod
 		</li>
 		
 		<li>
-			<a href="/category/c/">
-				C#
-				<span class="count">5</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/vscode/">
 				VSCode
 				<span class="count">5</span>
@@ -1282,6 +1182,13 @@ Finally, the query filters records where the numeric value of <code>revenue</cod
 			<a href="/category/personal-challenge/">
 				Personal Challenge
 				<span class="count">5</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/ubuntu/">
+				Ubuntu
+				<span class="count">4</span>
 			</a>
 		</li>
 		
@@ -1316,13 +1223,6 @@ Finally, the query filters records where the numeric value of <code>revenue</cod
 		<li>
 			<a href="/category/security/">
 				Security
-				<span class="count">3</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/ubuntu/">
-				Ubuntu
 				<span class="count">3</span>
 			</a>
 		</li>
@@ -1366,6 +1266,13 @@ Finally, the query filters records where the numeric value of <code>revenue</cod
 			<a href="/category/general/">
 				General
 				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/image-manipulation/">
+				Image Manipulation
+				<span class="count">2</span>
 			</a>
 		</li>
 		
@@ -1485,6 +1392,20 @@ Finally, the query filters records where the numeric value of <code>revenue</cod
 			<a href="/category/wamp/">
 				WAMP
 				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/hangfire/">
+				Hangfire
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/supervisor/">
+				Supervisor
+				<span class="count">1</span>
 			</a>
 		</li>
 		
@@ -1631,13 +1552,6 @@ Finally, the query filters records where the numeric value of <code>revenue</cod
 		<li>
 			<a href="/category/csr/">
 				CSR
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/image-manipulation/">
-				Image Manipulation
 				<span class="count">1</span>
 			</a>
 		</li>

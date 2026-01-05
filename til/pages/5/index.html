@@ -77,6 +77,345 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/generate-csr-with-multiple-subdomains-using-openssl">Generate CSR with multiple subdomains using OpenSSL</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>I have done this many times but I never got to write about it and I felt that I should write about it after I helped a friend of mine with this.</p>
+
+<h2>Prerequisites</h2>
+
+<p>It doesn't matter which operating system you're going to do this on as long as you have <code>openssl</code> installed in your system, you should be fine.</p>
+
+<p>All you have to do is just create a simple configuration file and give it a name like <code>multiple-domains.cnf</code>:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">[req]</span>
+<span class="na">default_bits</span><span class="w">       </span><span class="o">=</span><span class="w"> </span><span class="s">2048</span>
+<span class="na">distinguished_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">req_distinguished_name</span>
+<span class="na">req_extensions</span><span class="w">     </span><span class="o">=</span><span class="w"> </span><span class="s">req_ext</span>
+
+<span class="k">[req_distinguished_name]</span>
+<span class="na">countryName</span><span class="w">         </span><span class="o">=</span><span class="w"> </span><span class="s">[COUNTRYCODE]</span>
+<span class="na">stateOrProvinceName</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">[STATE]</span>
+<span class="na">localityName</span><span class="w">        </span><span class="o">=</span><span class="w"> </span><span class="s">[LOCALITY]</span>
+<span class="na">organizationName</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="s">[ORGANIZATION]</span>
+<span class="na">commonName</span><span class="w">          </span><span class="o">=</span><span class="w"> </span><span class="s">website.com</span>
+
+<span class="k">[req_ext]</span>
+<span class="na">subjectAltName</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">@alt_names</span>
+
+<span class="k">[alt_names]</span>
+<span class="na">DNS.1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">website.org</span>
+<span class="na">DNS.2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">wesbite.ae</span>
+<span class="na">DNS.3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">wesbite.co.uk</span>
+</code></pre>
+</div>
+
+<p>Save the file and copy-paste this into your command prompt or terminal:</p>
+
+<div class="codehilite">
+<pre><span></span><code>openssl<span class="w"> </span>req<span class="w"> </span>-out<span class="w"> </span>&lt;your-csr-name&gt;.csr<span class="w"> </span>-newkey<span class="w"> </span>rsa:2048<span class="w"> </span>-nodes<span class="w"> </span>-keyout<span class="w"> </span>&lt;your-private-key-name&gt;.key<span class="w"> </span>-config<span class="w"> </span>multiple-domains.cnf
+</code></pre>
+</div>
+
+<p>Once executed, it should be generated for you and if not, verify your configuration file for any typos.</p>
+
+<p>Hope this helps you out!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>December 31st, 2023</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/openssl/">
+					OpenSSL
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/ssl/">
+					SSL
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/csr/">
+					CSR
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/list-tables-that-dont-have-primary-keys-in-a-mysql-database">List tables that don't have primary keys in a MySQL database</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Whenever I restore a database dump on a MySQL InnoDB Cluster, most of the time, the error I face is related to missing <code>PRIMARY KEY</code> attribute because as per <a href="https://dev.mysql.com/doc/refman/8.0/en/group-replication-requirements.html">MySQL's official documentation</a>:</p>
+
+<blockquote>
+  <p>Every table that is to be replicated by the group must have a defined primary key, or primary key equivalent where the equivalent is non-null unique key.</p>
+</blockquote>
+
+<p>What I would usually do is, run a simple query to determine the list of the tables that don't the <code>PRIMARY KEY</code> attribute:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">select</span><span class="w"> </span><span class="n">tab</span><span class="p">.</span><span class="n">table_schema</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">database_name</span><span class="p">,</span>
+<span class="w">       </span><span class="n">tab</span><span class="p">.</span><span class="k">table_name</span>
+<span class="k">from</span><span class="w"> </span><span class="n">information_schema</span><span class="p">.</span><span class="k">tables</span><span class="w"> </span><span class="n">tab</span>
+<span class="k">left</span><span class="w"> </span><span class="k">join</span><span class="w"> </span><span class="n">information_schema</span><span class="p">.</span><span class="n">table_constraints</span><span class="w"> </span><span class="n">tco</span>
+<span class="w">          </span><span class="k">on</span><span class="w"> </span><span class="n">tab</span><span class="p">.</span><span class="n">table_schema</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tco</span><span class="p">.</span><span class="n">table_schema</span>
+<span class="w">          </span><span class="k">and</span><span class="w"> </span><span class="n">tab</span><span class="p">.</span><span class="k">table_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tco</span><span class="p">.</span><span class="k">table_name</span>
+<span class="w">          </span><span class="k">and</span><span class="w"> </span><span class="n">tco</span><span class="p">.</span><span class="n">constraint_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;PRIMARY KEY&#39;</span>
+<span class="k">where</span><span class="w"> </span><span class="n">tco</span><span class="p">.</span><span class="n">constraint_type</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="no">null</span>
+<span class="w">      </span><span class="k">and</span><span class="w"> </span><span class="n">tab</span><span class="p">.</span><span class="n">table_schema</span><span class="w"> </span><span class="k">not</span><span class="w"> </span><span class="k">in</span><span class="p">(</span><span class="s1">&#39;mysql&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;information_schema&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;performance_schema&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;sys&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="k">and</span><span class="w"> </span><span class="n">tab</span><span class="p">.</span><span class="n">table_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;BASE TABLE&#39;</span>
+<span class="w">      </span><span class="k">and</span><span class="w"> </span><span class="n">tab</span><span class="p">.</span><span class="n">table_schema</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;your_database_name_here&#39;</span>
+<span class="k">order</span><span class="w"> </span><span class="k">by</span><span class="w"> </span><span class="n">tab</span><span class="p">.</span><span class="n">table_schema</span><span class="p">,</span>
+<span class="w">         </span><span class="n">tab</span><span class="p">.</span><span class="k">table_name</span><span class="p">;</span>
+</code></pre>
+</div>
+
+<p>Hope you found this tip useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>February 11th, 2023</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/mysql/">
+					MySQL
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/playing-around-with-imagemagick">Playing around with ImageMagick</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>ImageMagick is not a new tool for me but I haven't really talked about how it comes in handy whenever I wanted to resize and/or compress images efficiently using the terminal instead of using some image conversion service found for free online.</p>
+
+<p>To get started, make sure you install ImageMagick on your machine. This is the command I use for Fedora Linux:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>dnf<span class="w"> </span>install<span class="w"> </span>ImageMagick
+</code></pre>
+</div>
+
+<p>For example, if you wanted to compress an image's quality to 80%, here's you can do it:</p>
+
+<div class="codehilite">
+<pre><span></span><code>convert<span class="w"> </span>-quality<span class="w"> </span><span class="m">80</span>%<span class="w"> </span>src.png<span class="w"> </span>dest.png
+</code></pre>
+</div>
+
+<p>Great! What if you want to do it for hundreds of images in a directory, then you can easily do something like this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>find<span class="w"> </span>.<span class="w"> </span>-type<span class="w"> </span>f<span class="w"> </span>-name<span class="w"> </span><span class="s1">&#39;*.png&#39;</span><span class="w"> </span>-exec<span class="w"> </span>bash<span class="w"> </span>-c<span class="w"> </span><span class="s1">&#39;convert -quality 80% &quot;$1&quot; &quot;${1%}_compressed.png&quot; &#39;</span><span class="w"> </span>bash<span class="w">  </span><span class="o">{}</span><span class="w"> </span><span class="se">\;</span>
+</code></pre>
+</div>
+
+<p>You can do the same to resize the images while keeping original aspect ratio intact:</p>
+
+<div class="codehilite">
+<pre><span></span><code>convert<span class="w"> </span>-resize<span class="w"> </span>450x450<span class="w"> </span>src.png<span class="w"> </span>dest.png
+</code></pre>
+</div>
+
+<p>And similar to the one above, you can do the same for multiple images like so:</p>
+
+<div class="codehilite">
+<pre><span></span><code>find<span class="w"> </span>.<span class="w"> </span>-type<span class="w"> </span>f<span class="w"> </span>-name<span class="w"> </span><span class="s1">&#39;*.png&#39;</span><span class="w"> </span>-exec<span class="w"> </span>bash<span class="w"> </span>-c<span class="w"> </span><span class="s1">&#39;convert -resize 450x450 &quot;$1&quot; &quot;${1%}_resized.png&quot; &#39;</span><span class="w"> </span>bash<span class="w">  </span><span class="o">{}</span><span class="w"> </span><span class="se">\;</span>
+</code></pre>
+</div>
+
+<p>I have just scraped the surface of this image manipulation tool and if you are interested to know more, read the official <a href="https://linux.die.net/man/1/imagemagick">manpage</a> on how to use it.</p>
+
+<p>Hope you found this tip useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>January 15th, 2023</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/image-manipulation/">
+					Image Manipulation
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/install-cisco-anyconnect-client-on-fedora-linux">Install Cisco Anyconnect Client on Fedora Linux</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Cisco Anyconnect Client is a SSL VPN Client with VPN functionalites that enables an organization to secure its endpoints. Although, I use it a lot at office, I have only used it on Windows 10 so far.</p>
+
+<p>One day, when I was on my vacation, I had to connect to a server remotely but this time, I tried doing it via Linux and it worked well!</p>
+
+<h2>Download Cisco AnyConnect Client for Linux</h2>
+
+<p>Fortunately, the client is available for Windows, macOS and Linux.  You can go to the <a href="https://software.cisco.com/download/home/286281283/type/282364313/release/4.10.06079">Downloads</a> page and download the tarball archive for Linux.</p>
+
+<p>After downloading, you can extract the tarball file:</p>
+
+<div class="codehilite">
+<pre><span></span><code>tar<span class="w"> </span>-xvf<span class="w"> </span>anyconnect-linux64-4.10.00093-predeploy-k9.tar.gz
+</code></pre>
+</div>
+
+<h2>Install Cisco AnyConnect Client for Linux</h2>
+
+<p>Now that the file has been extracted, you can navigate to the <code>vpn</code> directory in <code>anyconnect-linux64-*</code> directory:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nb">cd</span><span class="w"> </span>anyconnect-linux64-*/vpn/
+</code></pre>
+</div>
+
+<p>Execute the <code>vpn_install.sh</code> script:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>./vpn_install.sh
+</code></pre>
+</div>
+
+<p>Follow the instruction steps and you're ready to use it.</p>
+
+<h2>Connect to VPN via Terminal</h2>
+
+<p>The GUI version was crashing on both KDE and GNOME desktop environments. Whereas, it was a smooth experience when connecting via the Terminal.</p>
+
+<p>For easy access, you can create an alias in your <code>.bashrc</code> file:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nb">alias</span><span class="w"> </span><span class="nv">anyconnectvpn</span><span class="o">=</span><span class="s2">&quot;/opt/cisco/anyconnect/bin/vpn&quot;</span>
+</code></pre>
+</div>
+
+<p>Save and restart your terminal for the changes to take effect.</p>
+
+<p>After that, you can connect to VPN like this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>anyconnectvpn<span class="w"> </span>-s<span class="w"> </span>connect<span class="w"> </span>&lt;IP_ADDRESS&gt;
+</code></pre>
+</div>
+
+<p>Once executed, you'll be prompted to enter your credentials and if all goes fine, you should be connected.</p>
+
+<h2>Disconnect VPN via the Terminal</h2>
+
+<p>You can execute the following command to disconnect:</p>
+
+<div class="codehilite">
+<pre><span></span><code>anyconnectvpn<span class="w"> </span>-s<span class="w"> </span>disconnect<span class="w"> </span>&lt;IP_ADDRESS&gt;
+</code></pre>
+</div>
+
+<h2>Configuring your VPN connection</h2>
+
+<p>Sometimes, it can be tedious to write these commands all the time especially when you're in a rush, this can really get in your way.</p>
+
+<p>To solve that, you can easily store your credentials in a file like <code>.my_vpn_creds</code> in your home directory:</p>
+
+<div class="codehilite">
+<pre><span></span><code>y
+&lt;username&gt;
+&lt;password&gt;
+</code></pre>
+</div>
+
+<p>Save the file and create another file named <code>my_vpn_connect.sh</code>:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="ch">#!/bin/bash</span>
+
+<span class="nv">VPN_SERVER</span><span class="o">=</span><span class="s2">&quot;&lt;IP_ADDRESS&gt;&quot;</span>
+
+<span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Connecting to VPN..&quot;</span>
+/opt/cisco/anyconnect/bin/vpn<span class="w"> </span>-s<span class="w">  </span>&lt;<span class="w"> </span>~/.my_vpn_creds<span class="w"> </span>connect<span class="w"> </span><span class="si">${</span><span class="nv">VPN_SERVER</span><span class="si">}</span>
+</code></pre>
+</div>
+
+<p>Save the file and make the file executable:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>chmod<span class="w"> </span>+x<span class="w"> </span>my_vpn_connect.sh
+</code></pre>
+</div>
+
+<p>Now, you'll be connected to the VPN automatically by just executing this script:</p>
+
+<div class="codehilite">
+<pre><span></span><code>./my_vpn_connect.sh
+</code></pre>
+</div>
+
+<p>This saved me a lot of time and I hope it does the same for you as well! 🤗</p>
+
+<p>Hope you found this article useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>January 15th, 2023</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/productivity/">
+					Productivity
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/setup-a-virtual-environment-for-python-development">Setup a virtual environment for Python development</a></h1>
 		<p class="description"></p>
 	</div>
@@ -354,316 +693,6 @@ sudo<span class="w"> </span>sysctl<span class="w"> </span>-w<span class="w"> </s
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/view-list-of-services-in-linux">View list of services in Linux</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>If you wanted to see a list of services available on your Linux server/desktop, try the following command:</p>
-
-<div class="codehilite">
-<pre><span></span><code>systemctl<span class="w"> </span>list-unit-files<span class="w"> </span>--type<span class="o">=</span>service
-</code></pre>
-</div>
-
-<p>Upon executing this command, you'll be able to see a list of services along with their statuses i.e whether the service is enabled or disabled.</p>
-
-<p>This can come in handy if you want to know the status of a specific service like <code>nginx</code>:</p>
-
-<div class="codehilite">
-<pre><span></span><code>systemctl<span class="w"> </span>list-unit-files<span class="w"> </span>--type<span class="o">=</span>service<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s2">&quot;nginx&quot;</span>
-</code></pre>
-</div>
-
-<p>Hope you found this tip useful.</p>
-
-	</div>
-	<div class="article-footer">
-		<time>November 27th, 2022</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/linux/">
-					Linux
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/devops/">
-					DevOps
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/install-docker-on-fedora-3536">Install Docker on Fedora 35/36</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Recently, I started to play around with Docker and I thought of installing on my personal laptop which runs Fedora 36 workstation.</p>
-
-<p>If you have Fedora and want to know how to install it, here it is:</p>
-
-<h2>Install Docker Engine</h2>
-
-<p>First, add the official Docker repositories to your Fedora OS:</p>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>dnf<span class="w"> </span>install<span class="w"> </span>dnf-plugins-core<span class="w"> </span>-y
-sudo<span class="w"> </span>dnf<span class="w"> </span>config-manager<span class="w"> </span>--add-repo<span class="w"> </span>https://download.docker.com/linux/fedora/docker-ce.repo
-</code></pre>
-</div>
-
-<p>Then, you can run the following command to install Docker and it's dependencies:</p>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>dnf<span class="w"> </span>install<span class="w"> </span>docker-ce<span class="w"> </span>docker-ce-cli<span class="w"> </span>containerd.io
-</code></pre>
-</div>
-
-<p>During installation, you'll be prompted to import the GPG key in order to install Docker on your system. So, press <kbd>Y</kbd> to proceed with the installation.</p>
-
-<p>Next, enable and start the docker service:</p>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>systemctl<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>docker
-sudo<span class="w"> </span>systemctl<span class="w"> </span>start<span class="w"> </span>docker
-</code></pre>
-</div>
-
-<p>That's it you are done. You can try running the following command to see if it's installed properly on your system:</p>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>docker<span class="w"> </span>run<span class="w"> </span>hello-world
-</code></pre>
-</div>
-
-<p>If it works fine, you should be seeing a "Hello from Docker!" message which means that the installation appears to be working fine.</p>
-
-<p>Hope you found this tutorial useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>October 1st, 2022</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/devops/">
-					DevOps
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/linux/">
-					Linux
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/docker/">
-					Docker
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/resolve-permission-error-while-sshing-to-aws-ec2-instance-from-a-linux-machine">Resolve permission error while SSH-ing to AWS EC2 instance from a Linux machine</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>If you are someone who's trying to access a AWS EC2 instance via SSH using a private key from a linux machine, you might have or will come across this error:</p>
-
-<div class="codehilite">
-<pre><span></span><code>@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-@         WARNING: UNPROTECTED PRIVATE KEY FILE!          @
-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-Permissions 0644 for &#39;your-aws-private-key.pem&#39; are too open.
-It is recommended that your private key files are NOT accessible by others.
-This private key will be ignored.
-bad permissions: ignore key: your-aws-private-key.pem
-Permission denied (publickey).
-</code></pre>
-</div>
-
-<h2>Why am I getting this?</h2>
-
-<p>From what I have read, EC2 instances will simply not accept a private key that are publicly visible to others especially if it's somewhere stored in your Desktop or Downloads folder.</p>
-
-<p>So basically, your private key should be accessible to others.</p>
-
-<h2>Oh, how can I fix it?</h2>
-
-<p>It's pretty straightforward, you just have to make sure that the private key is <strong>read-only</strong> like this:</p>
-
-<div class="codehilite">
-<pre><span></span><code>chmod<span class="w"> </span><span class="m">400</span><span class="w"> </span>your-aws-private-key.pem
-</code></pre>
-</div>
-
-<p>After that, try connecting again and it should work fine!</p>
-
-<p>Hope you found this tip useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>September 24th, 2022</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/aws/">
-					AWS
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/devops/">
-					DevOps
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/ssh/">
-					SSH
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/install-pfx-certificate-on-a-linux-server">Install PFX certificate on a Linux server</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>I would consider this as an extended post to my <a href="https://www.megacolorboy.com/til/posts/extract-private-key-and-certificate-from-pfx-file/">previous post</a> that I had written six months ago.</p>
-
-<p>A PFX Certificate usually contains the following in PKCS#12 format:</p>
-
-<ul>
-<li>The actual certificate.</li>
-<li>The private key to the certificate.</li>
-<li>The Intermediate authority certificate that ensures the trustworthiness of the certificate.</li>
-</ul>
-
-<p>To extract all those files, here are the steps that I have documented:</p>
-
-<div class="post-notification warning">
-    <h3><i class="ph-warning-light"></i> Note</h3>
-    <p>If the .PFX file prompts you for a passphrase, please check with your project manager or client regarding this information.</p>
-</div>
-
-<h2>Extract the Encrypted Private Key</h2>
-
-<div class="codehilite">
-<pre><span></span><code>openssl<span class="w"> </span>pkcs12<span class="w"> </span>-in<span class="w"> </span>&lt;filename.pfx&gt;<span class="w"> </span>-nocerts<span class="w"> </span>-out<span class="w"> </span>encrypted.key
-</code></pre>
-</div>
-
-<h2>Extract RSA Private Key</h2>
-
-<div class="codehilite">
-<pre><span></span><code>openssl<span class="w"> </span>rsa<span class="w"> </span>-in<span class="w"> </span>encrypted.key<span class="w"> </span>-out<span class="w"> </span>private.key
-</code></pre>
-</div>
-
-<h2>Extract Certificate</h2>
-
-<div class="codehilite">
-<pre><span></span><code>openssl<span class="w"> </span>pkcs12<span class="w"> </span>-in<span class="w"> </span>&lt;filename.pfx&gt;<span class="w"> </span>-clcerts<span class="w"> </span>-nokeys<span class="w"> </span>-out<span class="w"> </span>certificate.crt
-</code></pre>
-</div>
-
-<h2>Extract Combined Chain Certificate (Optional)</h2>
-
-<div class="codehilite">
-<pre><span></span><code>openssl<span class="w"> </span>pkcs12<span class="w"> </span>-in<span class="w"> </span>&lt;filename.pfx&gt;<span class="w"> </span>-cacerts<span class="w"> </span>-nokeys<span class="w"> </span>-chain<span class="w"> </span><span class="p">|</span><span class="w"> </span>sed<span class="w"> </span>-ne<span class="w"> </span><span class="s1">&#39;/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p&#39;</span><span class="w"> </span>&gt;<span class="w"> </span>combined_chain_certificate.crt
-</code></pre>
-</div>
-
-<p>Once you are done extracting all the required files, you can add the certificates like this:</p>
-
-<h3>Apache configuration:</h3>
-
-<div class="codehilite">
-<pre><span></span><code>SSLCertificateFile<span class="w"> </span>/path/to/certificate.crt
-SSLCertificateKeyFile<span class="w"> </span>/path/to/private.key
-
-<span class="c1"># Optional, if you have it, else skip.</span>
-SSLCertificateChainFile<span class="w"> </span>/path/to/combined_chain_certificate.crt
-</code></pre>
-</div>
-
-<p>Test if it works:</p>
-
-<div class="codehilite">
-<pre><span></span><code>apachectl<span class="w"> </span>configtest
-systemctl<span class="w"> </span>restart<span class="w"> </span>httpd
-</code></pre>
-</div>
-
-<h3>Nginx configuration:</h3>
-
-<div class="codehilite">
-<pre><span></span><code><span class="c1"># If you don&#39;t have a combined chain certificate:</span>
-ssl_certificate<span class="w"> </span>/path/to/certificate.crt<span class="p">;</span>
-ssl_certificate_key<span class="w"> </span>/path/to/private.key<span class="p">;</span>
-
-<span class="c1"># If you have a combined chain certificate:</span>
-ssl_certificate<span class="w"> </span>/path/to/combined_chain_certificate.crt
-ssl_certificate_key<span class="w"> </span>/path/to/private.key<span class="p">;</span>
-</code></pre>
-</div>
-
-<p>Test if it works:</p>
-
-<div class="codehilite">
-<pre><span></span><code>nginx<span class="w"> </span>-t
-systemctl<span class="w"> </span>restart<span class="w"> </span>nginx
-</code></pre>
-</div>
-
-<p>Hope you found this tip useful.</p>
-
-	</div>
-	<div class="article-footer">
-		<time>September 24th, 2022</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/devops/">
-					DevOps
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/linux/">
-					Linux
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -703,11 +732,11 @@ systemctl<span class="w"> </span>restart<span class="w"> </span>nginx
 		
 	
 		
-			<a class="" href="/til/pages/13">...</a>
+			<a class="" href="/til/pages/14">...</a>
 		
 	
 		
-			<a class="" href="/til/pages/20">20</a>
+			<a class="" href="/til/pages/21">21</a>
 		
 	
 
@@ -734,21 +763,21 @@ systemctl<span class="w"> </span>restart<span class="w"> </span>nginx
 		<li>
 			<a href="/category/linux/">
 				Linux
-				<span class="count">25</span>
+				<span class="count">26</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/devops/">
 				DevOps
-				<span class="count">23</span>
+				<span class="count">24</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/laravel/">
 				Laravel
-				<span class="count">20</span>
+				<span class="count">21</span>
 			</a>
 		</li>
 		
@@ -830,6 +859,13 @@ systemctl<span class="w"> </span>restart<span class="w"> </span>nginx
 		</li>
 		
 		<li>
+			<a href="/category/c/">
+				C#
+				<span class="count">7</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/apache/">
 				Apache
 				<span class="count">6</span>
@@ -865,13 +901,6 @@ systemctl<span class="w"> </span>restart<span class="w"> </span>nginx
 		</li>
 		
 		<li>
-			<a href="/category/c/">
-				C#
-				<span class="count">5</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/vscode/">
 				VSCode
 				<span class="count">5</span>
@@ -889,6 +918,13 @@ systemctl<span class="w"> </span>restart<span class="w"> </span>nginx
 			<a href="/category/personal-challenge/">
 				Personal Challenge
 				<span class="count">5</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/ubuntu/">
+				Ubuntu
+				<span class="count">4</span>
 			</a>
 		</li>
 		
@@ -923,13 +959,6 @@ systemctl<span class="w"> </span>restart<span class="w"> </span>nginx
 		<li>
 			<a href="/category/security/">
 				Security
-				<span class="count">3</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/ubuntu/">
-				Ubuntu
 				<span class="count">3</span>
 			</a>
 		</li>
@@ -973,6 +1002,13 @@ systemctl<span class="w"> </span>restart<span class="w"> </span>nginx
 			<a href="/category/general/">
 				General
 				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/image-manipulation/">
+				Image Manipulation
+				<span class="count">2</span>
 			</a>
 		</li>
 		
@@ -1092,6 +1128,20 @@ systemctl<span class="w"> </span>restart<span class="w"> </span>nginx
 			<a href="/category/wamp/">
 				WAMP
 				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/hangfire/">
+				Hangfire
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/supervisor/">
+				Supervisor
+				<span class="count">1</span>
 			</a>
 		</li>
 		
@@ -1238,13 +1288,6 @@ systemctl<span class="w"> </span>restart<span class="w"> </span>nginx
 		<li>
 			<a href="/category/csr/">
 				CSR
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/image-manipulation/">
-				Image Manipulation
 				<span class="count">1</span>
 			</a>
 		</li>
