@@ -78,6 +78,299 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/ubuntu-bootloader-recovery">Ubuntu Bootloader Recovery</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>This is a guide on how to recover Ubuntu's GRUB Bootloader in the case of whenever a LVM UUID is changed or corrupted.</p>
+
+<h2>The Problem</h2>
+
+<p>The error <code>"disk not found: /xxx-xxx"</code> in <code>grub rescue&gt;</code> mode suggests GRUB can't find the device or logical volume it was previously configured to boot from. </p>
+
+<p>This usually happens when:
+* LVM volumes weren't activated during boot
+* The volume group UUID changed or became corrupted</p>
+
+<h2>The Context</h2>
+
+<p>The <code>/xxx-xxx</code> in the message is likely referring to a <strong>LVM volume by UUID</strong>, e.g.:</p>
+
+<div class="codehilite">
+<pre><span></span><code>error:<span class="w"> </span>disk<span class="w"> </span><span class="s1">&#39;lvmid/XXX-XXX-XXX&#39;</span><span class="w"> </span>not<span class="w"> </span>found
+</code></pre>
+</div>
+
+<p>This typically means GRUB is referencing a <strong>missing or renamed LVM LV or VG</strong></p>
+
+<h2>The Solution</h2>
+
+<p>Boot from a live ISO, open a terminal and follow these steps:</p>
+
+<h3>1. Check Disks and LVM State</h3>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>lsblk
+sudo<span class="w"> </span>fdisk<span class="w"> </span>-l
+</code></pre>
+</div>
+
+<p>Then:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>vgscan
+</code></pre>
+</div>
+
+<p>This activates any found LVM volume groups and logical volumes.</p>
+
+<p>Then verify with:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>lvdisplay
+</code></pre>
+</div>
+
+<h3>3. Mount the System Manually</h3>
+
+<p>Assuming your root volume is <code>/dev/mapper/your_lvm_drive</code>:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>mkdir<span class="w"> </span>/mnt/recovery
+sudo<span class="w"> </span>mount<span class="w"> </span>/dev/mapper/your_lvm_drive<span class="w"> </span>/mnt/recovery
+</code></pre>
+</div>
+
+<h3>4. Prepare for chroot</h3>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>mount<span class="w"> </span>--bind<span class="w"> </span>/dev<span class="w"> </span>/mnt/recovery/dev
+sudo<span class="w"> </span>mount<span class="w"> </span>--bind<span class="w"> </span>/proc<span class="w"> </span>/mnt/recovery/proc
+sudo<span class="w"> </span>mount<span class="w"> </span>--bind<span class="w"> </span>/sys<span class="w"> </span>/mnt/recovery/sys
+sudo<span class="w"> </span>chroot<span class="w"> </span>/mnt/recovery
+</code></pre>
+</div>
+
+<p>The <code>chroot</code> command changes the root directory for the kernel, effectively making a specified directory the new starting point for any file access within the chrooted process. </p>
+
+<h3>5. Reinstall GRUB</h3>
+
+<div class="codehilite">
+<pre><span></span><code>grub-install<span class="w"> </span>/dev/sdX<span class="w">  </span><span class="c1"># Replace sdX with the actual disk (like /dev/sda)</span>
+update-grub
+</code></pre>
+</div>
+
+<p>Exit <code>chroot</code> mode, unmount the recovery path from live-boot OS and reboot the system:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nb">exit</span>
+sudo<span class="w"> </span>umount<span class="w"> </span>-R<span class="w"> </span>/mnt/recovery
+sudo<span class="w"> </span>reboot
+</code></pre>
+</div>
+
+<p>Hope you found this article useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>June 12th, 2025</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/ubuntu/">
+					Ubuntu
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/grub/">
+					GRUB
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/eliminate-laravel-env-leakage-between-multiple-sites-on-apache-windows">Eliminate Laravel .env leakage between multiple sites on Apache (Windows)</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Today, I learned something pretty important (and frustrating until I figured it out): if you're running <strong>multiple Laravel applications</strong> on <strong>Apache (Windows)</strong> using <code>mod_php</code>, you can run into a strange bug where <strong>one site's <code>.env</code> settings override the other</strong>.</p>
+
+<p>This became painfully obvious when I noticed that <strong>one of my Laravel sites was randomly connecting to the wrong database</strong>, even though the configurations in each <code>.env</code> were different. Weird, right?</p>
+
+<p>Turns out, the culprit was <code>mod_php</code>.</p>
+
+<h2>The problem</h2>
+
+<p>I had two Laravel sites hosted on the same Windows machine with Apache. Both were running fine — until they weren’t.</p>
+
+<p>The issue? Sometimes one site would pick up the database config of the other. One minute I’d be on Site A, and then somehow its <code>.env</code> settings were coming from Site B. </p>
+
+<p>This is just total chaos and worse, this issue existed from more two years until I decided to dive into the problem.</p>
+
+<h2>The cause</h2>
+
+<p>Laravel loads <code>.env</code> values during the bootstrap process and <strong>caches them in memory</strong>. When using <code>mod_php</code>, Apache loads PHP as a module <strong>once</strong> and shares it across all sites. That means <strong>only one copy of Laravel’s environment gets loaded — and reused</strong> across both apps.</p>
+
+<p>So even if each app had its own <code>.env</code>, it didn’t matter. Apache was essentially saying:</p>
+
+<blockquote>
+  <p>“Hey, here’s PHP. I already booted Laravel with this config — just reuse it.”</p>
+</blockquote>
+
+<h2>The solution</h2>
+
+<p>After some digging, the solution is <strong>ditch <code>mod_php</code></strong> and switch to <strong>FastCGI (<code>mod_fcgid</code>)</strong>.</p>
+
+<p>With FastCGI, each site runs its own instance of PHP via <code>php-cgi.exe</code>, which <strong>boots Laravel in isolation</strong> — meaning <strong>each <code>.env</code> file is respected per site</strong>.</p>
+
+<h3>How to configure it?</h3>
+
+<p>First, you need to disable <strong><code>mod_php</code></strong> in <code>httpd.conf</code>:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="c"># LoadModule php_module &quot;C:/path/to/php/php8apache2_4.dll&quot;</span>
+<span class="c"># &lt;FilesMatch \.php$&gt;</span>
+<span class="c">#     SetHandler application/x-httpd-php</span>
+<span class="c"># &lt;/FilesMatch&gt;</span>
+<span class="c"># PHPIniDir &quot;C:/path/to/php/&quot;</span>
+</code></pre>
+</div>
+
+<p>Then install <strong><code>mod_fcgid</code></strong> from Apache Lounge and copy <code>mod_fcgid.so</code> to <code>modules/</code> directory and enable it in <code>httpd.conf</code>:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nb">LoadModule</span><span class="w"> </span>fcgid_module<span class="w"> </span>modules/mod_fcgid.so
+<span class="nb">Include</span><span class="w"> </span>conf/extra/httpd-fcgid.conf
+</code></pre>
+</div>
+
+<p>Next, you have to create/update <strong><code>httpd-fcgid.conf</code></strong>:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nt">&lt;IfModule</span><span class="w"> </span><span class="s">fcgid_module</span><span class="nt">&gt;</span>
+<span class="w">   </span><span class="nb">AddHandler</span><span class="w"> </span>fcgid-script<span class="w"> </span>.php
+<span class="w">   </span><span class="nb">FcgidInitialEnv</span><span class="w"> </span>PHPRC<span class="w"> </span><span class="s2">&quot;C:/path/to/php&quot;</span>
+<span class="w">   </span><span class="nb">FcgidWrapper</span><span class="w"> </span><span class="s2">&quot;C:/path/to/php/php-cgi.exe&quot;</span><span class="w"> </span>.php
+<span class="w">   </span><span class="nb">Options</span><span class="w"> </span>+ExecCGI
+<span class="w">   </span><span class="nb">FcgidMaxProcessesPerClass</span><span class="w"> </span><span class="m">150</span>
+<span class="w">   </span><span class="nb">FcgidMaxRequestsPerProcess</span><span class="w"> </span><span class="m">1000</span>
+<span class="w">   </span><span class="nb">FcgidProcessLifeTime</span><span class="w"> </span><span class="m">300</span>
+<span class="w">   </span><span class="nb">FcgidIOTimeout</span><span class="w"> </span><span class="m">120</span>
+<span class="w">   </span><span class="nb">FcgidPassHeader</span><span class="w"> </span>Authorization
+<span class="w">   </span><span class="nb">FcgidFixPathinfo</span><span class="w"> </span><span class="m">0</span>
+<span class="nt">&lt;/IfModule&gt;</span>
+</code></pre>
+</div>
+
+<p>And then atlast, update your virtual host:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nt">&lt;VirtualHost</span><span class="w"> </span><span class="s">*:443</span><span class="nt">&gt;</span>
+<span class="w">   </span><span class="nb">ServerName</span><span class="w"> </span>example.com
+<span class="w">   </span><span class="nb">DocumentRoot</span><span class="w"> </span><span class="s2">&quot;C:/path/to/website/public&quot;</span>
+
+<span class="w">   </span><span class="nt">&lt;Directory</span><span class="w"> </span><span class="s">&quot;C:/path/to/website/public&quot;</span><span class="nt">&gt;</span>
+<span class="w">      </span><span class="nb">Options</span><span class="w"> </span>+ExecCGI<span class="w"> </span>-Indexes<span class="w"> </span>+FollowSymLinks
+<span class="w">      </span><span class="nb">AllowOverride</span><span class="w"> </span><span class="k">All</span>
+<span class="w">      </span><span class="nb">Require</span><span class="w"> </span><span class="k">all</span><span class="w"> </span>granted
+<span class="w">      </span><span class="nb">AddHandler</span><span class="w"> </span>fcgid-script<span class="w"> </span>.php
+<span class="w">      </span><span class="nb">FCGIWrapper</span><span class="w"> </span><span class="s2">&quot;C:/path/to/php/php-cgi.exe&quot;</span><span class="w"> </span>.php
+<span class="w">   </span><span class="nt">&lt;/Directory&gt;</span>
+
+<span class="w">   </span><span class="nb">SSLEngine</span><span class="w"> </span><span class="k">on</span>
+<span class="w">   </span><span class="nb">SSLCertificateFile</span><span class="w"> </span><span class="s2">&quot;...&quot;</span>
+<span class="w">   </span><span class="nb">SSLCertificateKeyFile</span><span class="w"> </span><span class="s2">&quot;...&quot;</span>
+<span class="nt">&lt;/VirtualHost&gt;</span>
+</code></pre>
+</div>
+
+<p>Restart the nginx service and clear the laravel application cache:</p>
+
+<div class="codehilite">
+<pre><span></span><code>httpd<span class="w"> </span>-k<span class="w"> </span>restart
+php<span class="w"> </span>artisan<span class="w"> </span>config:clear
+php<span class="w"> </span>artisan<span class="w"> </span>cache:clear
+</code></pre>
+</div>
+
+<h3>Bonus: Fixing 403 Forbidden Errors</h3>
+
+<p>After switching to FastCGI, I ran into a <code>403 Forbidden</code> error on one site. That turned out to be a <strong>missing <code>Options +ExecCGI</code></strong> and <code>Require all granted</code> in the <code>&lt;Directory&gt;</code> block. Once added, everything worked perfectly.</p>
+
+<h2>Result</h2>
+
+<p>Now, each Laravel site runs completely isolated, even though they use the same <code>php-cgi.exe</code>. No more <code>.env</code> bleed. No more wrong DBs. Just clean, independent Laravel environments — as it should be.</p>
+
+<h2>Takeaways</h2>
+
+<ul>
+<li>Don’t run multiple Laravel apps on Apache with <code>mod_php</code> unless you're okay with shared config risks.</li>
+<li>Use <code>mod_fcgid</code> and <code>php-cgi.exe</code> for <strong>true isolation</strong>.</li>
+<li>Even if using the <strong>same PHP version</strong>, FastCGI will <strong>spawn separate processes</strong>, so <code>.env</code> loading stays scoped.</li>
+<li>Always check Apache error logs (<code>error.log</code>) and <code>php_sapi_name()</code> for confirmation.</li>
+</ul>
+
+<p>If you’re running Laravel on Windows with Apache — <strong>this fix is a must</strong>. </p>
+
+<p>Happy hosting and hope you found this article useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>May 13th, 2025</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/php/">
+					PHP
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/windows/">
+					Windows
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/apache/">
+					Apache
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/removing-commits-from-a-branch-using-git-interactive-rebase">Removing Commits from a Branch Using Git Interactive Rebase</a></h1>
 		<p class="description"></p>
 	</div>
@@ -751,214 +1044,6 @@ git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/a-starter-guide-to-software-version-control">A Starter Guide to Software Version Control</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Version Control Systems (VCS) are indispensable tools for modern software development. When I first started working with version control, I was overwhelmed by the terminology and the various workflows. Over time, I realized that mastering VCS isn't just about understanding commands—it's about adopting practices that make development smoother and more collaborative. In this post, I’ll share my journey, the lessons I’ve learned, and a practical approach to version control that works for teams of any size.</p>
-
-<h2>What is Version Control?</h2>
-
-<p>I remember my first experience losing hours of work because I accidentally overwrote a file. That’s when I discovered the magic of version control. It’s like having a time machine for your code! At its core, version control tracks and manages changes to your software code. Here’s why it’s essential:</p>
-
-<ul>
-<li><strong>Collaborate with ease</strong>: Gone are the days of emailing files back and forth. Multiple developers can work on the same codebase without stepping on each other’s toes.</li>
-<li><strong>Track every change</strong>: With a detailed history of changes, debugging becomes less of a nightmare.</li>
-<li><strong>Rollback anytime</strong>: If something breaks, you can revert to a stable version in seconds.</li>
-</ul>
-
-<p>Today, tools like Git, Subversion (SVN), and Mercurial are popular choices, with Git leading the pack. If you haven’t tried Git yet, you’re missing out on a developer’s best friend.</p>
-
-<h2>Key Concepts</h2>
-
-<p>Here’s a quick glossary that helped me when I was starting out:</p>
-
-<ol>
-<li><strong>Repository</strong>: Think of this as your project’s home. It stores your code and its entire version history.</li>
-<li><strong>Commit</strong>: A snapshot of your code changes. A good commit is like leaving breadcrumbs for your future self or teammates.</li>
-<li><strong>Branch</strong>: This was a game-changer for me. Branches let you work on new features or fixes without touching the main codebase.</li>
-<li><strong>Merge</strong>: When you’re ready to bring your work back into the main project, merging combines it with the existing code.</li>
-<li><strong>Tag</strong>: These are like bookmarks, marking specific points in your project’s history—perfect for releases.</li>
-</ol>
-
-<h2>Types of Branches</h2>
-
-<p>When I joined my first team project, I was introduced to a branching strategy that revolutionized the way I worked. Here’s how it breaks down:</p>
-
-<h3>1. Main Branches</h3>
-
-<ul>
-<li><strong>Main (<code>main</code> or <code>master</code>)</strong>: This is the crown jewel—the stable, production-ready branch. It’s sacred territory where only thoroughly tested code belongs.</li>
-<li><strong>Development (<code>dev</code>)</strong>: This is where the magic happens. New features and fixes are integrated and tested here before they’re ready for production.</li>
-</ul>
-
-<h3>2. Feature Branches</h3>
-
-<p>When you’re working on something new, create a feature branch. Here’s how it works:</p>
-
-<ul>
-<li><strong>Purpose</strong>: To develop a specific feature.</li>
-<li><strong>Workflow</strong>: Start from <code>dev</code>, and when you’re done, merge back into <code>dev</code>.</li>
-<li><strong>Naming Convention</strong>: <code>feature/new-login-system</code></li>
-</ul>
-
-<h3>3. Release Branches</h3>
-
-<p>Preparing for a new release? Here’s what you do:</p>
-
-<ul>
-<li><strong>Purpose</strong>: To finalize a version for production.</li>
-<li><strong>Workflow</strong>: Start from <code>dev</code>, do final testing and fixes, then merge into <code>main</code>.</li>
-<li><strong>Naming Convention</strong>: <code>release/v1.0</code></li>
-</ul>
-
-<h3>4. Hotfix Branches</h3>
-
-<p>Production bugs can’t wait. That’s where hotfix branches save the day:</p>
-
-<ul>
-<li><strong>Purpose</strong>: To fix critical issues in production.</li>
-<li><strong>Workflow</strong>: Start from <code>main</code>, fix the issue, then merge into both <code>main</code> and <code>dev</code>.</li>
-<li><strong>Naming Convention</strong>: <code>hotfix/login-bugfix</code></li>
-</ul>
-
-<h2>A Practical Workflow Example</h2>
-
-<p>Here’s a typical workflow I follow:</p>
-
-<ol>
-<li><strong>Feature Development</strong>: Let’s say I’m building a new login system. I’d create a branch called <code>feature/new-login-system</code> off <code>dev</code>. Once the feature is complete and tested, I merge it back into <code>dev</code>.</li>
-<li><strong>Preparing for Release</strong>: When it’s time to launch, I’d create a branch called <code>release/v1.0</code> from <code>dev</code>. After some final tweaks, I merge it into <code>main</code> and tag it as <code>v1.0</code>.</li>
-<li><strong>Production Hotfix</strong>: If a bug pops up in <code>v1.0</code>, I’d create a branch called <code>hotfix/login-bugfix</code> from <code>main</code>. Once fixed, I’d merge it into both <code>main</code> and <code>dev</code> and tag it as <code>v1.0.1</code>.</li>
-</ol>
-
-<h2>Best Practices</h2>
-
-<p>Here are some lessons I learned the hard way:</p>
-
-<ol>
-<li><strong>Write Clear Commit Messages</strong>: Your future self will thank you. A good message explains what changed and why.</li>
-<li><strong>Keep Commits Small</strong>: Each commit should represent a single, logical change. This makes debugging a breeze.</li>
-<li><strong>Review Before Merging</strong>: Always use pull requests or merge requests. Two heads are better than one.</li>
-<li><strong>Use Tags for Releases</strong>: Tags are lifesavers when you need to rollback or track changes.</li>
-<li><strong>Backup Your Repository</strong>: This might sound obvious, but don’t take it for granted.</li>
-</ol>
-
-<h2>Why Version Control is a Game-Changer?</h2>
-
-<p>For me, version control transformed how I approach coding. It made collaboration smoother, debugging faster, and deployments safer. Whether you’re working solo or with a team, adopting a thoughtful version control strategy is a must.</p>
-
-<h2>Final Thoughts</h2>
-
-<p>Version control is more than just a tool—it’s a mindset. By following the practices and strategies outlined here, you’ll be well on your way to mastering it. Trust me, your future self—and your teammates—will thank you.</p>
-
-	</div>
-	<div class="article-footer">
-		<time>January 24th, 2025</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/git/">
-					Git
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/vcs/">
-					VCS
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/mastering-php-storm-essential-shortcuts-and-tips-for-faster-coding">Mastering PHPStorm: Essential Shortcuts and Tips for Faster Coding</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>As a developer, you know that every second counts. PHPStorm, the powerful IDE from JetBrains, is packed with features designed to make coding faster and more efficient—but only if you know how to use them! Here are some essential keybindings and tips that can supercharge your PHPStorm experience and help you code at lightning speed. </p>
-
-<h2>Quick Access to Any Action</h2>
-
-<p>Ever found yourself lost in PHPStorm’s vast functionality, looking for a specific tool or action? Press <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>A</kbd> to bring up the <strong>Toggle Actions</strong> dialog. This is your command center for quickly finding and triggering any action, even if you don’t know the shortcut for it.</p>
-
-<h2>Locate Symbols</h2>
-
-<p>Working on a large project? <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>N</kbd> is your friend. This key combination lets you search for any symbol in your project. Whether it's a function, method, or variable, finding it with this shortcut is a breeze. </p>
-
-<h2>File Search Made Easy</h2>
-
-<p>When you need to open a file but don’t want to dig through directories, use <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>N</kbd>. This brings up the file search dialog, allowing you to open any file in your project by typing its name.</p>
-
-<h2>Searching for Classes</h2>
-
-<p>Quickly locate classes by pressing <kbd>Ctrl</kbd> + <kbd>N</kbd>. This shortcut is a must for object-oriented projects where multiple classes interact. Simply type the class name, and PHPStorm will locate it for you.</p>
-
-<h2>Rename Symbols</h2>
-
-<p>Refactoring code often involves renaming variables, functions, or classes. Press <kbd>Shift</kbd> + <kbd>F6</kbd> to <strong>Refactor/Rename</strong> any symbol. This shortcut ensures that PHPStorm updates all references to the renamed symbol, saving you from manually updating each instance.</p>
-
-<h2>Replace Text in the Current File</h2>
-
-<p>Working on a specific file and need to make some quick replacements? <kbd>Ctrl</kbd> + <kbd>R</kbd> opens the <strong>Find and Replace</strong> dialog within the current file, making edits quick and painless.</p>
-
-<h2>Project-Wide Search</h2>
-
-<p>Need to search or replace text across the entire project? Use <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>F</kbd> for a project-wide search. For project-wide find-and-replace, press <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>R</kbd>. These shortcuts are invaluable for large-scale code adjustments.</p>
-
-<h2>Select the Next Occurrence</h2>
-
-<p>Find yourself needing to select multiple occurrences of a word or phrase? <kbd>Alt</kbd> + <kbd>J</kbd> selects the next occurrence of your current selection (case-sensitive). This feature is ideal for making consistent changes across multiple lines without using traditional search-and-replace.</p>
-
-<h2>Move Lines Up or Down</h2>
-
-<p>Reordering lines of code is common in refactoring. <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>&uarr;</kbd>/<kbd>&darr;</kbd> lets you move the current line (or selection) up or down. A simple, powerful way to reorganize your code with ease.</p>
-
-<h2>Get Quick Fixes</h2>
-
-<p>If PHPStorm detects an issue or sees a possible improvement, pressing <kbd>Alt</kbd> + <kbd>Enter</kbd> provides a <strong>Quick Fix</strong> or <strong>Suggestion</strong>. It’s a fantastic way to implement suggestions quickly and clean up your code without manually combing through error messages.</p>
-
-<h2>Extract Method Shortcut</h2>
-
-<p>Refactoring code into methods is essential for clean, reusable code. Highlight the code block and press <kbd>Ctrl</kbd> + <kbd>M</kbd> + <kbd>G</kbd> to <strong>Extract Method</strong>, instantly creating a new method from the selected code. This is a must for breaking down long, complex functions into manageable pieces.</p>
-
-<h2>Bonus: Multi-Cursor Mode</h2>
-
-<p>If you’re not using PHPStorm’s multi-cursor mode, you’re missing out on some serious productivity gains! Here’s how to use it:</p>
-
-<ol>
-<li>Select a piece of code.</li>
-<li>Press <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>Insert</kbd> to activate multi-cursor mode. Now, you can place multiple cursors wherever needed, allowing you to type or edit in multiple locations simultaneously.</li>
-</ol>
-
-<h2>Final Thoughts</h2>
-
-<p>Mastering these PHPStorm shortcuts can drastically reduce your time spent on repetitive tasks, allowing you to focus on what really matters: building great software. Give these keybindings a try, and see how they can boost your productivity and help you achieve a smoother, more efficient coding workflow.</p>
-
-	</div>
-	<div class="article-footer">
-		<time>January 23rd, 2025</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/phpstorm/">
-					PHPStorm
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -986,11 +1071,11 @@ git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </
 		
 	
 		
-			<a class="" href="/pages/27">...</a>
+			<a class="" href="/pages/28">...</a>
 		
 	
 		
-			<a class="" href="/pages/31">31</a>
+			<a class="" href="/pages/32">32</a>
 		
 	
 
@@ -1041,7 +1126,7 @@ git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </
 		<li>
 			<a href="/category/laravel/">
 				Laravel
-				<span class="count">21</span>
+				<span class="count">22</span>
 			</a>
 		</li>
 		
@@ -1063,6 +1148,13 @@ git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </
 			<a href="/category/cryptography/">
 				Cryptography
 				<span class="count">12</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/productivity/">
+				Productivity
+				<span class="count">11</span>
 			</a>
 		</li>
 		
@@ -1102,13 +1194,6 @@ git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </
 		</li>
 		
 		<li>
-			<a href="/category/productivity/">
-				Productivity
-				<span class="count">10</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/vim/">
 				VIM
 				<span class="count">8</span>
@@ -1126,6 +1211,13 @@ git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </
 			<a href="/category/c/">
 				C#
 				<span class="count">7</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/personal-challenge/">
+				Personal Challenge
+				<span class="count">6</span>
 			</a>
 		</li>
 		
@@ -1158,6 +1250,13 @@ git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </
 		</li>
 		
 		<li>
+			<a href="/category/python/">
+				Python
+				<span class="count">5</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/vcs/">
 				VCS
 				<span class="count">5</span>
@@ -1174,13 +1273,6 @@ git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </
 		<li>
 			<a href="/category/blogmarks/">
 				Blogmarks
-				<span class="count">5</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/personal-challenge/">
-				Personal Challenge
 				<span class="count">5</span>
 			</a>
 		</li>
@@ -1207,6 +1299,13 @@ git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </
 		</li>
 		
 		<li>
+			<a href="/category/refactoring/">
+				Refactoring
+				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/artificial-intelligence/">
 				Artificial Intelligence
 				<span class="count">3</span>
@@ -1223,13 +1322,6 @@ git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </
 		<li>
 			<a href="/category/security/">
 				Security
-				<span class="count">3</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/python/">
-				Python
 				<span class="count">3</span>
 			</a>
 		</li>
@@ -1266,6 +1358,13 @@ git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </
 			<a href="/category/general/">
 				General
 				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/net-core/">
+				.NET Core
+				<span class="count">2</span>
 			</a>
 		</li>
 		
@@ -1307,13 +1406,6 @@ git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </
 		<li>
 			<a href="/category/clean-code/">
 				Clean Code
-				<span class="count">2</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/refactoring/">
-				Refactoring
 				<span class="count">2</span>
 			</a>
 		</li>
@@ -1392,6 +1484,13 @@ git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </
 			<a href="/category/wamp/">
 				WAMP
 				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/jetbrains/">
+				JetBrains
+				<span class="count">1</span>
 			</a>
 		</li>
 		
@@ -1496,13 +1595,6 @@ git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </
 		<li>
 			<a href="/category/centos/">
 				CentOS
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/net-core/">
-				.NET Core
 				<span class="count">1</span>
 			</a>
 		</li>

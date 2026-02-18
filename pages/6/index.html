@@ -78,6 +78,526 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/generate-csr-with-multiple-subdomains-using-openssl">Generate CSR with multiple subdomains using OpenSSL</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>I have done this many times but I never got to write about it and I felt that I should write about it after I helped a friend of mine with this.</p>
+
+<h2>Prerequisites</h2>
+
+<p>It doesn't matter which operating system you're going to do this on as long as you have <code>openssl</code> installed in your system, you should be fine.</p>
+
+<p>All you have to do is just create a simple configuration file and give it a name like <code>multiple-domains.cnf</code>:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">[req]</span>
+<span class="na">default_bits</span><span class="w">       </span><span class="o">=</span><span class="w"> </span><span class="s">2048</span>
+<span class="na">distinguished_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">req_distinguished_name</span>
+<span class="na">req_extensions</span><span class="w">     </span><span class="o">=</span><span class="w"> </span><span class="s">req_ext</span>
+
+<span class="k">[req_distinguished_name]</span>
+<span class="na">countryName</span><span class="w">         </span><span class="o">=</span><span class="w"> </span><span class="s">[COUNTRYCODE]</span>
+<span class="na">stateOrProvinceName</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">[STATE]</span>
+<span class="na">localityName</span><span class="w">        </span><span class="o">=</span><span class="w"> </span><span class="s">[LOCALITY]</span>
+<span class="na">organizationName</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="s">[ORGANIZATION]</span>
+<span class="na">commonName</span><span class="w">          </span><span class="o">=</span><span class="w"> </span><span class="s">website.com</span>
+
+<span class="k">[req_ext]</span>
+<span class="na">subjectAltName</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">@alt_names</span>
+
+<span class="k">[alt_names]</span>
+<span class="na">DNS.1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">website.org</span>
+<span class="na">DNS.2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">wesbite.ae</span>
+<span class="na">DNS.3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">wesbite.co.uk</span>
+</code></pre>
+</div>
+
+<p>Save the file and copy-paste this into your command prompt or terminal:</p>
+
+<div class="codehilite">
+<pre><span></span><code>openssl<span class="w"> </span>req<span class="w"> </span>-out<span class="w"> </span>&lt;your-csr-name&gt;.csr<span class="w"> </span>-newkey<span class="w"> </span>rsa:2048<span class="w"> </span>-nodes<span class="w"> </span>-keyout<span class="w"> </span>&lt;your-private-key-name&gt;.key<span class="w"> </span>-config<span class="w"> </span>multiple-domains.cnf
+</code></pre>
+</div>
+
+<p>Once executed, it should be generated for you and if not, verify your configuration file for any typos.</p>
+
+<p>Hope this helps you out!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>December 31st, 2023</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/openssl/">
+					OpenSSL
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/ssl/">
+					SSL
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/csr/">
+					CSR
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/writings/posts/clean-controllers-in-laravel-best-practices-for-handling-form-submissions">Clean Controllers in Laravel: Best practices for handling form submissions</a></h1>
+		<p class="description">Learn how to write clean Laravel controllers for efficient contact form handling using validation, Eloquent, Mail, and events.</p>
+	</div>
+	<div class="article-body">
+		<p>Unlike most frameworks, Laravel is an unopinionated framework and doesn't force the developer to follow a particular pattern.</p>
+
+<p>In this article, I'm going to show you how your codebase could benefit by following Laravel's best practices like separation of concerns, utilizing Laravel's in-built features like Eloquent models, Form Requests and Mail.</p>
+
+<p>To begin with, here's a dirty method that handles a simple contact form submission:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="k">use</span> <span class="nx">Illuminate\Http\Request</span><span class="p">;</span>
+<span class="k">use</span> <span class="nx">Illuminate\Support\Facades\Mail</span><span class="p">;</span>
+
+<span class="k">class</span> <span class="nc">ContactController</span> <span class="k">extends</span> <span class="nx">Controller</span>
+<span class="p">{</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">submit</span><span class="p">(</span><span class="nx">Request</span> <span class="nv">$request</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="c1">// Validate the form inputs</span>
+        <span class="nv">$request</span><span class="o">-&gt;</span><span class="na">validate</span><span class="p">([</span>
+            <span class="s1">&#39;name&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;required&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;email&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;required|email&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;message&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;required&#39;</span><span class="p">,</span>
+        <span class="p">]);</span>
+
+        <span class="c1">// Get the form data</span>
+        <span class="nv">$name</span> <span class="o">=</span> <span class="nv">$request</span><span class="o">-&gt;</span><span class="na">input</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">);</span>
+        <span class="nv">$email</span> <span class="o">=</span> <span class="nv">$request</span><span class="o">-&gt;</span><span class="na">input</span><span class="p">(</span><span class="s1">&#39;email&#39;</span><span class="p">);</span>
+        <span class="nv">$message</span> <span class="o">=</span> <span class="nv">$request</span><span class="o">-&gt;</span><span class="na">input</span><span class="p">(</span><span class="s1">&#39;message&#39;</span><span class="p">);</span>
+
+        <span class="c1">// Save the form data in the database</span>
+        <span class="nx">DB</span><span class="o">::</span><span class="na">table</span><span class="p">(</span><span class="s1">&#39;contact_forms&#39;</span><span class="p">)</span><span class="o">-&gt;</span><span class="na">insert</span><span class="p">([</span>
+            <span class="s1">&#39;name&#39;</span> <span class="o">=&gt;</span> <span class="nv">$name</span><span class="p">,</span>
+            <span class="s1">&#39;email&#39;</span> <span class="o">=&gt;</span> <span class="nv">$email</span><span class="p">,</span>
+            <span class="s1">&#39;message&#39;</span> <span class="o">=&gt;</span> <span class="nv">$message</span><span class="p">,</span>
+        <span class="p">]);</span>
+
+        <span class="c1">// Send an email to the user</span>
+        <span class="nv">$mailData</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s1">&#39;name&#39;</span> <span class="o">=&gt;</span> <span class="nv">$name</span><span class="p">,</span>
+            <span class="s1">&#39;email&#39;</span> <span class="o">=&gt;</span> <span class="nv">$email</span><span class="p">,</span>
+            <span class="s1">&#39;message&#39;</span> <span class="o">=&gt;</span> <span class="nv">$message</span><span class="p">,</span>
+        <span class="p">];</span>
+
+        <span class="nx">Mail</span><span class="o">::</span><span class="na">send</span><span class="p">(</span><span class="s1">&#39;emails.contact&#39;</span><span class="p">,</span> <span class="nv">$mailData</span><span class="p">,</span> <span class="k">function</span> <span class="p">(</span><span class="nv">$message</span><span class="p">)</span> <span class="k">use</span> <span class="p">(</span><span class="nv">$email</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nv">$message</span><span class="o">-&gt;</span><span class="na">to</span><span class="p">(</span><span class="nv">$email</span><span class="p">)</span><span class="o">-&gt;</span><span class="na">subject</span><span class="p">(</span><span class="s1">&#39;Thank you for contacting us&#39;</span><span class="p">);</span>
+        <span class="p">});</span>
+
+        <span class="c1">// Return a response to the user</span>
+        <span class="k">return</span> <span class="nx">redirect</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">back</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">with</span><span class="p">(</span><span class="s1">&#39;success&#39;</span><span class="p">,</span> <span class="s1">&#39;Thank you for contacting us! We will get back to you soon.&#39;</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<p>To most developers, this method might seem straight-forward and they might even debate with you that it's completely fine. But allow me to highlight the issues of that this method brings to the table:</p>
+
+<ol>
+<li><p><strong>Lack of separation of concerns</strong>: The controller is responsible for handling form validation, saving data to the database, and sending an email. This violates the Single Responsibility Principle.</p></li>
+<li><p><strong>Direct usage of the database query builder</strong>: Instead of utilizing Eloquent models for database interactions, the example directly uses the query builder, which can make the code less maintainable and harder to read.</p></li>
+<li><p><strong>Inline email sending</strong>: The email sending functionality is implemented inline within the controller method, making the code harder to test and reuse.</p></li>
+<li><p><strong>Lack of error handling</strong>: The example does not handle any potential errors that may occur during form validation, database insertion, or email sending.</p></li>
+</ol>
+
+<p>Now, it's time to make it cleaner.</p>
+
+<h2>Save data using Form Requests and Laravel's Eloquent ORM</h2>
+
+<p>Let's start with creating a form request that is dedicated to handling the validation logic:</p>
+
+<ol>
+<li>Quickly, open up your terminal and type the following command:</li>
+</ol>
+
+<div class="codehilite">
+<pre><span></span><code>php<span class="w"> </span>artisan<span class="w"> </span>make:request<span class="w"> </span>ContactFormRequest
+</code></pre>
+</div>
+
+<p>This command will generate a new file named <code>ContactFormRequest.php</code> in the <code>app/Http/Requests</code> directory.</p>
+
+<ol start="2">
+<li>Open the <code>ContactFormRequest.php</code> file and modify it as follows:</li>
+</ol>
+
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+
+<span class="k">namespace</span> <span class="nx">App\Http\Requests</span><span class="p">;</span>
+
+<span class="k">use</span> <span class="nx">Illuminate\Foundation\Http\FormRequest</span><span class="p">;</span>
+
+<span class="k">class</span> <span class="nc">ContactFormRequest</span> <span class="k">extends</span> <span class="nx">FormRequest</span>
+<span class="p">{</span>
+    <span class="sd">/**</span>
+<span class="sd">     * Determine if the user is authorized to make this request.</span>
+<span class="sd">     *</span>
+<span class="sd">     * @return bool</span>
+<span class="sd">     */</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">authorize</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="c1">// Set the authorization logic based on your requirements</span>
+        <span class="c1">// For example, you may check if the user is authenticated or has certain permissions.</span>
+        <span class="c1">// Return true if the user is authorized to submit the form; otherwise, return false.</span>
+        <span class="k">return</span> <span class="k">true</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="sd">/**</span>
+<span class="sd">     * Get the validation rules that apply to the request.</span>
+<span class="sd">     *</span>
+<span class="sd">     * @return array</span>
+<span class="sd">     */</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">rules</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="s1">&#39;name&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;required&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;email&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;required|email&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;message&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;required&#39;</span><span class="p">,</span>
+        <span class="p">];</span>
+    <span class="p">}</span>
+
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">messages</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="s1">&#39;name.required&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;Please enter your name&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;email.required&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;Please enter your email address&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;email.email&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;Please enter a valid email address&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;message.required&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;Write a message before submit the form&#39;</span><span class="p">,</span>
+        <span class="p">];</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<p>In the <code>rules()</code> method, you can define validation rules for each field in the form. You can adjust according to your own preferences and if you want to know more about them, <a href="https://laravel.com/docs/10.x/validation">read this documentation</a>.</p>
+
+<ol start="4">
+<li>Save the <code>ContactFormRequest.php</code> file.</li>
+</ol>
+
+<p>Great, now you have a separate class for validating your contact form and this promotes code-reusability, improves code readability and separates the validation logic from your controller.</p>
+
+<p>Now let's update the <code>submit()</code> method in the <code>ContactController.php</code> example:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="k">use</span> <span class="nx">Illuminate\Http\Request</span><span class="p">;</span>
+<span class="k">use</span> <span class="nx">Illuminate\Support\Facades\Mail</span><span class="p">;</span>
+<span class="k">use</span> <span class="nx">App\Http\Requests\ContactFormRequest</span><span class="p">;</span>
+<span class="k">use</span> <span class="nx">App\Models\ContactFormModel</span><span class="p">;</span>
+
+<span class="k">class</span> <span class="nc">ContactController</span> <span class="k">extends</span> <span class="nx">Controller</span>
+<span class="p">{</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">submit</span><span class="p">(</span><span class="nx">ContactFormRequest</span> <span class="nv">$request</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="c1">// Validate the form inputs</span>
+        <span class="c1">// All of the validated form data is accessible via this property.</span>
+        <span class="nv">$validated</span> <span class="o">=</span> <span class="nv">$request</span><span class="o">-&gt;</span><span class="na">validated</span><span class="p">();</span>
+
+        <span class="c1">// Save the submission</span>
+        <span class="nx">ContactFormModel</span><span class="o">::</span><span class="na">create</span><span class="p">(</span><span class="nv">$validated</span><span class="p">);</span>
+
+        <span class="c1">// Send an email to the user</span>
+        <span class="nv">$mailData</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s1">&#39;name&#39;</span> <span class="o">=&gt;</span> <span class="nv">$name</span><span class="p">,</span>
+            <span class="s1">&#39;email&#39;</span> <span class="o">=&gt;</span> <span class="nv">$email</span><span class="p">,</span>
+            <span class="s1">&#39;message&#39;</span> <span class="o">=&gt;</span> <span class="nv">$message</span><span class="p">,</span>
+        <span class="p">];</span>
+
+        <span class="nx">Mail</span><span class="o">::</span><span class="na">send</span><span class="p">(</span><span class="s1">&#39;emails.contact&#39;</span><span class="p">,</span> <span class="nv">$mailData</span><span class="p">,</span> <span class="k">function</span> <span class="p">(</span><span class="nv">$message</span><span class="p">)</span> <span class="k">use</span> <span class="p">(</span><span class="nv">$email</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nv">$message</span><span class="o">-&gt;</span><span class="na">to</span><span class="p">(</span><span class="nv">$email</span><span class="p">)</span><span class="o">-&gt;</span><span class="na">subject</span><span class="p">(</span><span class="s1">&#39;Thank you for contacting us&#39;</span><span class="p">);</span>
+        <span class="p">});</span>
+
+        <span class="c1">// Return a response to the user</span>
+        <span class="k">return</span> <span class="nx">redirect</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">back</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">with</span><span class="p">(</span><span class="s1">&#39;success&#39;</span><span class="p">,</span> <span class="s1">&#39;Thank you for contacting us! We will get back to you soon.&#39;</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<p>Ensure that you have an appropriate model for your <code>contact_forms</code> table like <code>ContactFormModel.php</code> and update the following like so:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="k">namespace</span> <span class="nx">App\Models</span><span class="p">;</span>
+
+<span class="k">use</span> <span class="nx">Illuminate\Database\Eloquent\Model</span><span class="p">;</span>
+
+<span class="k">class</span> <span class="nc">ContactForm</span> <span class="k">extends</span> <span class="nx">Model</span>
+<span class="p">{</span>
+    <span class="k">protected</span> <span class="nv">$table</span> <span class="o">=</span> <span class="s1">&#39;contact_forms&#39;</span><span class="p">;</span>
+
+    <span class="c1">// Define any additional model configurations, relationships, or methods.</span>
+    <span class="k">protected</span> <span class="nv">$fillable</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s1">&#39;name&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;email&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;message&#39;</span>
+    <span class="p">];</span>
+
+    <span class="k">protected</span> <span class="nv">$timestamps</span> <span class="o">=</span> <span class="k">true</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<p>This allows you to leverage Laravel's ORM in which you could benefit from easy quering, relationship management and automatic timestamps.</p>
+
+<h2>Making use of Laravel Events and Mail</h2>
+
+<ol>
+<li>Generate a new event class by writing the following artisan command:</li>
+</ol>
+
+<div class="codehilite">
+<pre><span></span><code>php<span class="w"> </span>artisan<span class="w"> </span>make:event<span class="w"> </span>ContactFormSubmitted
+</code></pre>
+</div>
+
+<p>This will generate a <code>ContactFormSubmitted</code> class in the <code>app/Events</code> directory.</p>
+
+<ol start="2">
+<li>Open up <code>ContactFormSubmitted.php</code> file and update as follows:</li>
+</ol>
+
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="k">namespace</span> <span class="nx">App\Events</span><span class="p">;</span>
+
+<span class="k">use</span> <span class="nx">App\Models\ContactForm</span><span class="p">;</span>
+<span class="k">use</span> <span class="nx">Illuminate\Foundation\Events\Dispatchable</span><span class="p">;</span>
+
+<span class="k">class</span> <span class="nc">ContactFormSubmitted</span>
+<span class="p">{</span>
+    <span class="k">use</span> <span class="nx">Dispatchable</span><span class="p">;</span>
+
+    <span class="k">public</span> <span class="nv">$contactForm</span><span class="p">;</span>
+
+    <span class="sd">/**</span>
+<span class="sd">     * Create a new event instance.</span>
+<span class="sd">     *</span>
+<span class="sd">     * @param  ContactForm  $contactForm</span>
+<span class="sd">     * @return void</span>
+<span class="sd">     */</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="fm">__construct</span><span class="p">(</span><span class="nx">ContactForm</span> <span class="nv">$contactForm</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">contactForm</span> <span class="o">=</span> <span class="nv">$contactForm</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<ol start="3">
+<li>Next, let's generate an event listener using artisan command:</li>
+</ol>
+
+<div class="codehilite">
+<pre><span></span><code>php<span class="w"> </span>artisan<span class="w"> </span>make:listener<span class="w"> </span>SendContactFormEmail<span class="w"> </span>--event<span class="o">=</span>ContactFormSubmitted
+</code></pre>
+</div>
+
+<p>This command will generate <code>SendContactFormEmail</code> event listener in the <code>app/Listeners</code> directory.</p>
+
+<ol start="4">
+<li>Open the <code>SendContactFormEmail.php</code> file and update as follows:</li>
+</ol>
+
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="k">namespace</span> <span class="nx">App\Listeners</span><span class="p">;</span>
+
+<span class="k">use</span> <span class="nx">App\Events\ContactFormSubmitted</span><span class="p">;</span>
+<span class="k">use</span> <span class="nx">Illuminate\Contracts\Queue\ShouldQueue</span><span class="p">;</span>
+<span class="k">use</span> <span class="nx">Illuminate\Queue\InteractsWithQueue</span><span class="p">;</span>
+<span class="k">use</span> <span class="nx">Illuminate\Support\Facades\Mail</span><span class="p">;</span>
+<span class="k">use</span> <span class="nx">App\Mail\ContactFormSubmitted</span> <span class="k">as</span> <span class="nx">ContactFormSubmittedMail</span><span class="p">;</span>
+
+<span class="k">class</span> <span class="nc">SendContactFormEmail</span> <span class="k">implements</span> <span class="nx">ShouldQueue</span>
+<span class="p">{</span>
+    <span class="k">use</span> <span class="nx">InteractsWithQueue</span><span class="p">;</span>
+
+    <span class="sd">/**</span>
+<span class="sd">     * Handle the event.</span>
+<span class="sd">     *</span>
+<span class="sd">     * @param  ContactFormSubmitted  $event</span>
+<span class="sd">     * @return void</span>
+<span class="sd">     */</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">handle</span><span class="p">(</span><span class="nx">ContactFormSubmitted</span> <span class="nv">$event</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="nv">$contactForm</span> <span class="o">=</span> <span class="nv">$event</span><span class="o">-&gt;</span><span class="na">contactForm</span><span class="p">;</span>
+
+        <span class="c1">// Send an email to the user</span>
+        <span class="nx">Mail</span><span class="o">::</span><span class="na">to</span><span class="p">(</span><span class="nv">$contactForm</span><span class="o">-&gt;</span><span class="na">email</span><span class="p">)</span>
+            <span class="o">-&gt;</span><span class="na">send</span><span class="p">(</span><span class="k">new</span> <span class="nx">ContactFormSubmittedMail</span><span class="p">(</span><span class="nv">$contactForm</span><span class="p">));</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<ol start="5">
+<li>Create a mailable class using the following artisan command:</li>
+</ol>
+
+<div class="codehilite">
+<pre><span></span><code>php<span class="w"> </span>artisan<span class="w"> </span>make:mail<span class="w"> </span>ContactFormSubmitted
+</code></pre>
+</div>
+
+<p>This command will generate a new <code>ContactFormSubmitted</code> mailable class in the <code>app/Mail</code> directory.</p>
+
+<p>Now, update the <code>ContactFormSubmitted.php</code> file as follows:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="k">namespace</span> <span class="nx">App\Mail</span><span class="p">;</span>
+
+<span class="k">use</span> <span class="nx">App\Models\ContactForm</span><span class="p">;</span>
+<span class="k">use</span> <span class="nx">Illuminate\Bus\Queueable</span><span class="p">;</span>
+<span class="k">use</span> <span class="nx">Illuminate\Contracts\Queue\ShouldQueue</span><span class="p">;</span>
+<span class="k">use</span> <span class="nx">Illuminate\Mail\Mailable</span><span class="p">;</span>
+<span class="k">use</span> <span class="nx">Illuminate\Queue\SerializesModels</span><span class="p">;</span>
+
+<span class="k">class</span> <span class="nc">ContactFormSubmitted</span> <span class="k">extends</span> <span class="nx">Mailable</span> <span class="k">implements</span> <span class="nx">ShouldQueue</span>
+<span class="p">{</span>
+    <span class="k">use</span> <span class="nx">Queueable</span><span class="p">,</span> <span class="nx">SerializesModels</span><span class="p">;</span>
+
+    <span class="k">public</span> <span class="nv">$contactForm</span><span class="p">;</span>
+
+    <span class="sd">/**</span>
+<span class="sd">     * Create a new message instance.</span>
+<span class="sd">     *</span>
+<span class="sd">     * @param  ContactForm  $contactForm</span>
+<span class="sd">     * @return void</span>
+<span class="sd">     */</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="fm">__construct</span><span class="p">(</span><span class="nx">ContactForm</span> <span class="nv">$contactForm</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">contactForm</span> <span class="o">=</span> <span class="nv">$contactForm</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="sd">/**</span>
+<span class="sd">     * Build the message.</span>
+<span class="sd">     *</span>
+<span class="sd">     * @return $this</span>
+<span class="sd">     */</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">build</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="k">return</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">subject</span><span class="p">(</span><span class="s1">&#39;Thank you for contacting us&#39;</span><span class="p">)</span>
+            <span class="o">-&gt;</span><span class="na">view</span><span class="p">(</span><span class="s1">&#39;emails.contact&#39;</span><span class="p">)</span>
+            <span class="o">-&gt;</span><span class="na">with</span><span class="p">(</span><span class="s1">&#39;contactForm&#39;</span><span class="p">,</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">contactForm</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<ol start="6">
+<li>Let's open up the <code>ContactController.php</code> and import the necessary classes on top:</li>
+</ol>
+
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="k">use</span> <span class="nx">App\Events\ContactFormSubmitted</span><span class="p">;</span>
+<span class="k">use</span> <span class="nx">Illuminate\Support\Facades\Mail</span><span class="p">;</span>
+</code></pre>
+</div>
+
+<ol start="7">
+<li>Lastly, update the <code>submit()</code> method as follows:</li>
+</ol>
+
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="k">use</span> <span class="nx">App\Http\Requests\ContactFormRequest</span><span class="p">;</span>
+<span class="k">use</span> <span class="nx">App\Models\ContactForm</span><span class="p">;</span>
+<span class="k">use</span> <span class="nx">App\Events\ContactFormSubmitted</span><span class="p">;</span>
+<span class="k">use</span> <span class="nx">Illuminate\Support\Facades\Mail</span><span class="p">;</span>
+<span class="k">use</span> <span class="nx">App\Mail\ContactFormSubmitted</span><span class="p">;</span>
+
+<span class="k">class</span> <span class="nc">ContactController</span> <span class="k">extends</span> <span class="nx">Controller</span>
+<span class="p">{</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">submit</span><span class="p">(</span><span class="nx">ContactFormRequest</span> <span class="nv">$request</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="c1">// Validated form data is accessible via the $validatedData property of the form request instance</span>
+        <span class="nv">$validatedData</span> <span class="o">=</span> <span class="nv">$request</span><span class="o">-&gt;</span><span class="na">validated</span><span class="p">();</span>
+
+        <span class="c1">// Save the form data in the database using Eloquent</span>
+        <span class="nv">$contactForm</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">ContactForm</span><span class="p">();</span>
+        <span class="nv">$contactForm</span><span class="o">-&gt;</span><span class="na">name</span> <span class="o">=</span> <span class="nv">$validatedData</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">];</span>
+        <span class="nv">$contactForm</span><span class="o">-&gt;</span><span class="na">email</span> <span class="o">=</span> <span class="nv">$validatedData</span><span class="p">[</span><span class="s1">&#39;email&#39;</span><span class="p">];</span>
+        <span class="nv">$contactForm</span><span class="o">-&gt;</span><span class="na">message</span> <span class="o">=</span> <span class="nv">$validatedData</span><span class="p">[</span><span class="s1">&#39;message&#39;</span><span class="p">];</span>
+        <span class="nv">$contactForm</span><span class="o">-&gt;</span><span class="na">save</span><span class="p">();</span>
+
+        <span class="c1">// Dispatch an event to handle email sending asynchronously</span>
+        <span class="nx">event</span><span class="p">(</span><span class="k">new</span> <span class="nx">ContactFormSubmitted</span><span class="p">(</span><span class="nv">$contactForm</span><span class="p">));</span>
+
+        <span class="c1">// Return a response to the user</span>
+        <span class="k">return</span> <span class="nx">redirect</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">back</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">with</span><span class="p">(</span><span class="s1">&#39;success&#39;</span><span class="p">,</span> <span class="s1">&#39;Thank you for contacting us! We will get back to you soon.&#39;</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<p>Ah! Finally, this looks much better now, doesn't it?</p>
+
+<p>By making use of Laravel's Mail method, events and listeners, we've separated the logic for sending emails from the controller. The email is now sent asynchronously using an event and listener combination. This approach improves code organization, maintainability, and scalability.</p>
+
+<p>Hope you found this article to be useful.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>June 7th, 2023</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/laravel/">
+					Laravel
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/php/">
+					PHP
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/clean-code/">
+					Clean Code
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/writings/posts/thoughts-about-chatgpt-and-the-impact-on-software-developers">Thoughts about ChatGPT and the impact on software developers</a></h1>
 		<p class="description">Will AI-powered tools replace developers in the near future?</p>
 	</div>
@@ -537,128 +1057,6 @@
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/install-teamviewer-on-fedora-linux-3637">Install TeamViewer on Fedora Linux 36/37</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>If you are using Fedora Linux or any other Linux distribution and want a short guide on how to install TeamViewer on your workstation, then this article is for you.</p>
-
-<p>Usually, I use it access remote servers or my computer at work but I myself never did it on a Linux workstation. It worked out for me, so it should work for you too!</p>
-
-<h2>1. Download TeamViewer RPM Package</h2>
-
-<p>You can find the <a href="https://www.teamviewer.com/en/download/linux/">latest release</a> on TeamViewer's official site.</p>
-
-<p>Make sure that you have install <code>wget</code> on your system to easily download it via the Terminal:</p>
-
-<div class="codehilite">
-<pre><span></span><code>wget<span class="w"> </span>https://download.teamviewer.com/download/linux/teamviewer.x86_64.rpm
-</code></pre>
-</div>
-
-<h2>2. Download minizip module</h2>
-
-<p>During installation, it failed for me as I was missing a certain <code>libminizip.so</code> module. So, I looked up online and found the module and downloaded it on my workstation:</p>
-
-<div class="codehilite">
-<pre><span></span><code>wget<span class="w"> </span>https://rpmfind.net/linux/fedora/linux/updates/36/Everything/x86_64/Packages/m/minizip-compat-1.2.11-33.fc36.x86_64.rpm
-</code></pre>
-</div>
-
-<p>Once the download is complete, you can install it:</p>
-
-<div class="codehilite">
-<pre><span></span><code>rpm<span class="w"> </span>-i<span class="w"> </span>minizip-compat-1.2.11-33.fc36.x86_64.rpm
-</code></pre>
-</div>
-
-<h2>3. Install TeamViewer</h2>
-
-<p>Now, the final step is to install the RPM package for TeamViewer:</p>
-
-<div class="codehilite">
-<pre><span></span><code>rpm<span class="w"> </span>-i<span class="w"> </span>teamviewer_15.37.3.x86_64.rpm
-</code></pre>
-</div>
-
-<p>Hope you found this short guide useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>January 1st, 2023</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/linux/">
-					Linux
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/productivity/">
-					Productivity
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/connect-to-a-remote-windows-machine-from-a-linux-machine">Connect to a Remote Windows machine from a Linux machine</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Last week, my Windows machine was down and I was struggling to connect to a remote server as I'm using Fedora Linux at home.</p>
-
-<p>I tried installing and using GNOME Connections but it crashed and didn't work well for me. I found another tool named <code>rdesktop</code> which was stable and worked well for my case.</p>
-
-<p>Installing it is as easy as typing the following command using the <code>dnf</code> package manager:</p>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>dnf<span class="w"> </span>install<span class="w"> </span>rdesktop
-</code></pre>
-</div>
-
-<p>Now, you can connect to your remote desktop machine using the following command:</p>
-
-<div class="codehilite">
-<pre><span></span><code>rdesktop<span class="w"> </span>-d<span class="w"> </span>&lt;domain&gt;<span class="w"> </span>-u<span class="w"> </span>&lt;username&gt;<span class="w"> </span>-p<span class="w"> </span>-<span class="w"> </span>&lt;ipaddress&gt;
-</code></pre>
-</div>
-
-<p>Upon execution of this command, you'll be prompted to enter the password and after that, you're all good to go!</p>
-
-<p>Hope you found this tip useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>January 1st, 2023</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/linux/">
-					Linux
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/productivity/">
-					Productivity
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -698,11 +1096,11 @@
 		
 	
 		
-			<a class="" href="/pages/23">...</a>
+			<a class="" href="/pages/24">...</a>
 		
 	
 		
-			<a class="" href="/pages/31">31</a>
+			<a class="" href="/pages/32">32</a>
 		
 	
 
@@ -753,7 +1151,7 @@
 		<li>
 			<a href="/category/laravel/">
 				Laravel
-				<span class="count">21</span>
+				<span class="count">22</span>
 			</a>
 		</li>
 		
@@ -775,6 +1173,13 @@
 			<a href="/category/cryptography/">
 				Cryptography
 				<span class="count">12</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/productivity/">
+				Productivity
+				<span class="count">11</span>
 			</a>
 		</li>
 		
@@ -814,13 +1219,6 @@
 		</li>
 		
 		<li>
-			<a href="/category/productivity/">
-				Productivity
-				<span class="count">10</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/vim/">
 				VIM
 				<span class="count">8</span>
@@ -838,6 +1236,13 @@
 			<a href="/category/c/">
 				C#
 				<span class="count">7</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/personal-challenge/">
+				Personal Challenge
+				<span class="count">6</span>
 			</a>
 		</li>
 		
@@ -870,6 +1275,13 @@
 		</li>
 		
 		<li>
+			<a href="/category/python/">
+				Python
+				<span class="count">5</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/vcs/">
 				VCS
 				<span class="count">5</span>
@@ -886,13 +1298,6 @@
 		<li>
 			<a href="/category/blogmarks/">
 				Blogmarks
-				<span class="count">5</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/personal-challenge/">
-				Personal Challenge
 				<span class="count">5</span>
 			</a>
 		</li>
@@ -919,6 +1324,13 @@
 		</li>
 		
 		<li>
+			<a href="/category/refactoring/">
+				Refactoring
+				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/artificial-intelligence/">
 				Artificial Intelligence
 				<span class="count">3</span>
@@ -935,13 +1347,6 @@
 		<li>
 			<a href="/category/security/">
 				Security
-				<span class="count">3</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/python/">
-				Python
 				<span class="count">3</span>
 			</a>
 		</li>
@@ -978,6 +1383,13 @@
 			<a href="/category/general/">
 				General
 				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/net-core/">
+				.NET Core
+				<span class="count">2</span>
 			</a>
 		</li>
 		
@@ -1019,13 +1431,6 @@
 		<li>
 			<a href="/category/clean-code/">
 				Clean Code
-				<span class="count">2</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/refactoring/">
-				Refactoring
 				<span class="count">2</span>
 			</a>
 		</li>
@@ -1104,6 +1509,13 @@
 			<a href="/category/wamp/">
 				WAMP
 				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/jetbrains/">
+				JetBrains
+				<span class="count">1</span>
 			</a>
 		</li>
 		
@@ -1208,13 +1620,6 @@
 		<li>
 			<a href="/category/centos/">
 				CentOS
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/net-core/">
-				.NET Core
 				<span class="count">1</span>
 			</a>
 		</li>

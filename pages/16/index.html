@@ -78,6 +78,148 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/create-migrations-and-seeds-from-an-existing-database">Create migrations and seeds from an existing database</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Up until now, I've written migrations and generated seeders for some Laravel projects that I have worked on but recently, I thought of seeing if there's a way to generate migrations and seeds from an existing database especially if it's a project that never had any migrations or seeds created before.</p>
+
+<p>Luckily, I found these two packages, which turned out to be quite productive:</p>
+
+<ol>
+<li><a href="https://github.com/kitloong/laravel-migrations-generator">kitloong/laravel-migrations-generator</a></li>
+<li><a href="https://github.com/orangehill/iseed">orangehill/iseed</a></li>
+</ol>
+
+<p>Execute the following commands to install the packages mentioned above:</p>
+
+<div class="codehilite">
+<pre><span></span><code>composer<span class="w"> </span>require<span class="w"> </span>--dev<span class="w"> </span><span class="s2">&quot;kitloong/laravel-migrations-generator&quot;</span>
+composer<span class="w"> </span>require<span class="w"> </span>orangehill/iseed
+</code></pre>
+</div>
+
+<h2>Generate migrations using existing database</h2>
+
+<p>You can generate your migrations for all tables like this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>php<span class="w"> </span>artisan<span class="w"> </span>migrate:generate
+</code></pre>
+</div>
+
+<p>Or, you can specify the tables you wish to generate:</p>
+
+<div class="codehilite">
+<pre><span></span><code>php<span class="w"> </span>artisan<span class="w"> </span>migrate:generate<span class="w"> </span>table1,table2,table3
+</code></pre>
+</div>
+
+<h2>Generate new seeds using existing database</h2>
+
+<p>You can generate seeds for a single table like this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>php<span class="w"> </span>artisan<span class="w"> </span>iseed<span class="w"> </span>table_name
+</code></pre>
+</div>
+
+<p>And for multiple tables, you can do this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>php<span class="w"> </span>artisan<span class="w"> </span>iseed<span class="w"> </span>table1,table2,table3
+</code></pre>
+</div>
+
+<p>Hope you find this tip useful!.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>March 12th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/laravel/">
+					Laravel
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/show-git-branch-in-your-bash-prompt-with-colors">Show Git branch in your Bash prompt (with colors)</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Do you work on a project with multiple Git branches but don't know which one you're in? Open your <code>.bashrc</code> file and add this:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nv">force_color_prompt</span><span class="o">=</span>yes
+<span class="nv">color_prompt</span><span class="o">=</span>yes
+
+parse_git_branch<span class="o">()</span><span class="w"> </span><span class="o">{</span>
+<span class="w"> </span>git<span class="w"> </span>branch<span class="w"> </span><span class="m">2</span>&gt;<span class="w"> </span>/dev/null<span class="w"> </span><span class="p">|</span><span class="w"> </span>sed<span class="w"> </span>-e<span class="w"> </span><span class="s1">&#39;/^[^*]/d&#39;</span><span class="w"> </span>-e<span class="w"> </span><span class="s1">&#39;s/* \(.*\)/(\1)/&#39;</span>
+<span class="o">}</span>
+
+<span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$color_prompt</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>yes<span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<span class="w"> </span><span class="nv">PS1</span><span class="o">=</span><span class="s1">&#39;${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[01;31m\]$(parse_git_branch)\[\033[00m\]\$ &#39;</span>
+<span class="k">else</span>
+<span class="w"> </span><span class="nv">PS1</span><span class="o">=</span><span class="s1">&#39;${debian_chroot:+($debian_chroot)}\u@\h:\w$(parse_git_branch)\$ &#39;</span>
+<span class="k">fi</span>
+
+<span class="nb">unset</span><span class="w"> </span>color_prompt<span class="w"> </span>force_color_prompt
+</code></pre>
+</div>
+
+<div class="post-notification info">
+    <h3>Updated: November 26th, 2022</h3>
+    The above script works fine for Ubuntu but doesn't work fine on other distros. Here's an alternative one that works on all distros:
+<div class="codehilite">
+<pre><span></span><code>parse_git_branch<span class="o">()</span><span class="w"> </span><span class="o">{</span>
+<span class="w">    </span>git<span class="w"> </span>branch<span class="w"> </span><span class="m">2</span>&gt;<span class="w"> </span>/dev/null<span class="w"> </span><span class="p">|</span><span class="w"> </span>sed<span class="w"> </span>-e<span class="w"> </span><span class="s1">&#39;/^[^*]/d&#39;</span><span class="w"> </span>-e<span class="w"> </span><span class="s1">&#39;s/* \(.*\)/(\1)/&#39;</span>
+<span class="o">}</span>
+
+<span class="nb">export</span><span class="w"> </span><span class="nv">PS1</span><span class="o">=</span><span class="s2">&quot;\u@\h \[\e[32m\]\w \[\e[91m\]\$(parse_git_branch)\[\e[00m\]</span>$<span class="s2"> &quot;</span>
+</code></pre>
+</div>
+
+</div>
+
+<p>Save the file and execute this command for your changes to take effect:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nb">source</span><span class="w"> </span>~/.bashrc
+</code></pre>
+</div>
+
+<p>Now, you should see your colors in your Bash prompt along with the Git branch that you're working on (<strong>Note: this will be shown if you're in a project that uses a Git repository</strong>).</p>
+
+<p>Hope this helps you out!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>March 12th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/bash/">
+					Bash
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/writings/posts/make-your-own-generative-pixel-art-in-less-than-100-lines-of-code">Make your own generative pixel art in less than 100 lines of code</a></h1>
 		<p class="description">By modifying my old random pixel generator, I was able to generate a Space Invaders-esque pixel art.</p>
 	</div>
@@ -547,118 +689,6 @@ php<span class="w"> </span>artisan<span class="w"> </span>config:cache
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/rename-a-git-branch">Rename a Git Branch</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Using branches are one of the most powerful features of Git and becomes a part of the software development process.</p>
-
-<p>Last night, I came across an issue where I created a new branch and committed my changes until the <code>git</code> tool rejected it because the branch was already created by someone else in the repository.</p>
-
-<p>Luckily, I was able to resolve this issue by renaming my branch using <code>git branch -m</code> command.</p>
-
-<p>Here's a short guide on how you can do that too!</p>
-
-<h2>1. Switch to the remote branch you want to rename</h2>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>checkout<span class="w"> </span>&lt;your_old_branch&gt;
-</code></pre>
-</div>
-
-<h2>2. Rename the current remote branch</h2>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>branch<span class="w"> </span>-m<span class="w"> </span>&lt;your_new_branch&gt;
-</code></pre>
-</div>
-
-<p>Proceed to the next step, if you've pushed your old branch to the remote repository.</p>
-
-<h2>3. Push the renamed remote branch</h2>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>-u<span class="w"> </span>&lt;your_new_branch&gt;
-</code></pre>
-</div>
-
-<h2>4. Delete the old remote branch</h2>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>--delete<span class="w"> </span>&lt;your_old_branch&gt;
-</code></pre>
-</div>
-
-<p>If you've come this far without any issues, you've successfully renamed your local and remote Git branch.</p>
-
-<p>Hope you found this useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>November 4th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/git/">
-					Git
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/import-and-export-mysql-database-via-terminal">Import and Export MySQL database via Terminal</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Sometimes, phpMyAdmin can be painful to use especially when you want to import/export a MySQL database.</p>
-
-<p>If you're not afraid of using the Terminal, try these commands to save your time:</p>
-
-<h2>Import MySQL database</h2>
-
-<div class="codehilite">
-<pre><span></span><code>mysql<span class="w"> </span>-u<span class="w"> </span>username<span class="w"> </span>-p<span class="w"> </span>database_name<span class="w"> </span>&lt;<span class="w"> </span>your_sql_file.sql
-</code></pre>
-</div>
-
-<p>Before you run this command, please make sure that you've created the <code>database_name</code> schema in your database or else, you might get an error especially if the <code>.sql</code> file doesn't have a <code>CREATE DATABASE</code> statement.</p>
-
-<h2>Export MySQL database</h2>
-
-<div class="codehilite">
-<pre><span></span><code>mysqldump<span class="w"> </span>-u<span class="w"> </span>username<span class="w"> </span>-p<span class="w"> </span>database_name<span class="w"> </span>&gt;<span class="w"> </span>your_sql_file.sql
-</code></pre>
-</div>
-
-<p>This command will export your database with the file name <code>your_sql_file.sql</code> to your current path.</p>
-
-<p>Hope this helps you out!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>November 4th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/mysql/">
-					MySQL
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -698,11 +728,11 @@ php<span class="w"> </span>artisan<span class="w"> </span>config:cache
 		
 	
 		
-			<a class="" href="/pages/13">...</a>
+			<a class="" href="/pages/14">...</a>
 		
 	
 		
-			<a class="" href="/pages/31">31</a>
+			<a class="" href="/pages/32">32</a>
 		
 	
 
@@ -753,7 +783,7 @@ php<span class="w"> </span>artisan<span class="w"> </span>config:cache
 		<li>
 			<a href="/category/laravel/">
 				Laravel
-				<span class="count">21</span>
+				<span class="count">22</span>
 			</a>
 		</li>
 		
@@ -775,6 +805,13 @@ php<span class="w"> </span>artisan<span class="w"> </span>config:cache
 			<a href="/category/cryptography/">
 				Cryptography
 				<span class="count">12</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/productivity/">
+				Productivity
+				<span class="count">11</span>
 			</a>
 		</li>
 		
@@ -814,13 +851,6 @@ php<span class="w"> </span>artisan<span class="w"> </span>config:cache
 		</li>
 		
 		<li>
-			<a href="/category/productivity/">
-				Productivity
-				<span class="count">10</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/vim/">
 				VIM
 				<span class="count">8</span>
@@ -838,6 +868,13 @@ php<span class="w"> </span>artisan<span class="w"> </span>config:cache
 			<a href="/category/c/">
 				C#
 				<span class="count">7</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/personal-challenge/">
+				Personal Challenge
+				<span class="count">6</span>
 			</a>
 		</li>
 		
@@ -870,6 +907,13 @@ php<span class="w"> </span>artisan<span class="w"> </span>config:cache
 		</li>
 		
 		<li>
+			<a href="/category/python/">
+				Python
+				<span class="count">5</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/vcs/">
 				VCS
 				<span class="count">5</span>
@@ -886,13 +930,6 @@ php<span class="w"> </span>artisan<span class="w"> </span>config:cache
 		<li>
 			<a href="/category/blogmarks/">
 				Blogmarks
-				<span class="count">5</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/personal-challenge/">
-				Personal Challenge
 				<span class="count">5</span>
 			</a>
 		</li>
@@ -919,6 +956,13 @@ php<span class="w"> </span>artisan<span class="w"> </span>config:cache
 		</li>
 		
 		<li>
+			<a href="/category/refactoring/">
+				Refactoring
+				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/artificial-intelligence/">
 				Artificial Intelligence
 				<span class="count">3</span>
@@ -935,13 +979,6 @@ php<span class="w"> </span>artisan<span class="w"> </span>config:cache
 		<li>
 			<a href="/category/security/">
 				Security
-				<span class="count">3</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/python/">
-				Python
 				<span class="count">3</span>
 			</a>
 		</li>
@@ -978,6 +1015,13 @@ php<span class="w"> </span>artisan<span class="w"> </span>config:cache
 			<a href="/category/general/">
 				General
 				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/net-core/">
+				.NET Core
+				<span class="count">2</span>
 			</a>
 		</li>
 		
@@ -1019,13 +1063,6 @@ php<span class="w"> </span>artisan<span class="w"> </span>config:cache
 		<li>
 			<a href="/category/clean-code/">
 				Clean Code
-				<span class="count">2</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/refactoring/">
-				Refactoring
 				<span class="count">2</span>
 			</a>
 		</li>
@@ -1104,6 +1141,13 @@ php<span class="w"> </span>artisan<span class="w"> </span>config:cache
 			<a href="/category/wamp/">
 				WAMP
 				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/jetbrains/">
+				JetBrains
+				<span class="count">1</span>
 			</a>
 		</li>
 		
@@ -1208,13 +1252,6 @@ php<span class="w"> </span>artisan<span class="w"> </span>config:cache
 		<li>
 			<a href="/category/centos/">
 				CentOS
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/net-core/">
-				.NET Core
 				<span class="count">1</span>
 			</a>
 		</li>
