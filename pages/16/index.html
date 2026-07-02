@@ -78,6 +78,89 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-resolve-the-filegetcontents-ssl-operation-failed-error">How to resolve the "file_get_contents(): SSL operation failed" error</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>If you're facing this error while trying to download a file from your server, it's most probably the SSL certificate that has been hosted on your server isn't correctly verified or maybe, you're using OpenSSL on a server running PHP 5.6.</p>
+
+<p>As per the <a href="http://php.net/manual/en/migration56.openssl.php">documentation</a>, there are some changes that can be made to resolve it, like the following method:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="k">public</span> <span class="k">function</span> <span class="nf">foo</span><span class="p">(</span><span class="nx">Request</span> <span class="nv">$request</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nv">$arrContextOptions</span> <span class="o">=</span> <span class="k">array</span><span class="p">(</span>
+        <span class="s2">&quot;ssl&quot;</span> <span class="o">=&gt;</span> <span class="k">array</span><span class="p">(</span>
+            <span class="s2">&quot;verify_peer&quot;</span> <span class="o">=&gt;</span> <span class="k">false</span><span class="p">,</span>
+            <span class="s2">&quot;verify_peer_name&quot;</span> <span class="o">=&gt;</span> <span class="k">false</span><span class="p">,</span>
+        <span class="p">),</span>
+    <span class="p">);</span>
+    <span class="k">return</span> <span class="nx">Response</span><span class="o">::</span><span class="na">make</span><span class="p">(</span><span class="nb">file_get_contents</span><span class="p">(</span><span class="nx">asset</span><span class="p">(</span><span class="s1">&#39;pdf/file.pdf&#39;</span><span class="p">),</span> <span class="k">false</span><span class="p">,</span> <span class="nb">stream_context_create</span><span class="p">(</span><span class="nv">$arrContextOptions</span><span class="p">)),</span> <span class="mi">200</span><span class="p">,</span> <span class="p">[</span>
+        <span class="s1">&#39;Content-Type&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;application/pdf&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;Content-Disposition&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;inline; filename=&quot;file.pdf&quot;&#39;</span><span class="p">,</span>
+    <span class="p">]);</span>
+<span class="p">}</span>
+<span class="cp">?&gt;</span>
+</code></pre>
+</div>
+
+<p>Although, I won't recommend this unless you are testing it on a <code>localhost</code> environment as it's not secure and could have significant security implications because disabling verification can permit a <a href="https://en.wikipedia.org/wiki/Man-in-the-middle_attack">Man in the Middle attack</a> to take place.</p>
+
+<p>Use it at your own risk!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>March 12th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/php/">
+					PHP
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/check-if-trait-is-being-used-in-your-class">Check if trait is being used in your class</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Want to know if a trait is being used in your current class? Try this:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="nb">in_array</span><span class="p">(</span><span class="nx">Foo</span><span class="o">::</span><span class="na">class</span><span class="p">,</span> <span class="nb">class_uses</span><span class="p">(</span><span class="nv">$this</span><span class="p">))</span>
+<span class="cp">?&gt;</span>
+</code></pre>
+</div>
+
+<p>By any chance, if the current class is inherited, please note that the <code>class_uses()</code> method will only return the list of traits used by the current class and won't include any traits of it's parent class.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>March 12th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/php/">
+					PHP
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/create-migrations-and-seeds-from-an-existing-database">Create migrations and seeds from an existing database</a></h1>
 		<p class="description"></p>
 	</div>
@@ -152,54 +235,51 @@ composer<span class="w"> </span>require<span class="w"> </span>orangehill/iseed
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/show-git-branch-in-your-bash-prompt-with-colors">Show Git branch in your Bash prompt (with colors)</a></h1>
+		<h1 class="heading"><a href="/til/posts/how-to-resolve-the-issue-of-not-receiving-emails-on-the-same-domain">How to resolve the issue of not receiving emails on the same domain?</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>Do you work on a project with multiple Git branches but don't know which one you're in? Open your <code>.bashrc</code> file and add this:</p>
+		<p>Recently, we hosted our company's redesigned website on GoDaddy, which offers cPanel to manage your website. I was dealing with an annoying email bug in which I was able to send/receive emails to any account except the ones that share the company domain.</p>
 
-<div class="codehilite">
-<pre><span></span><code><span class="nv">force_color_prompt</span><span class="o">=</span>yes
-<span class="nv">color_prompt</span><span class="o">=</span>yes
+<p>The company's current email setup makes use of Google Workspace and since we're using a Shared Hosting account, GoDaddy allows you to use their SMTP relay and prohibits the use of third-party SMTP services such as Google Workspace, Outlook, etc.</p>
 
-parse_git_branch<span class="o">()</span><span class="w"> </span><span class="o">{</span>
-<span class="w"> </span>git<span class="w"> </span>branch<span class="w"> </span><span class="m">2</span>&gt;<span class="w"> </span>/dev/null<span class="w"> </span><span class="p">|</span><span class="w"> </span>sed<span class="w"> </span>-e<span class="w"> </span><span class="s1">&#39;/^[^*]/d&#39;</span><span class="w"> </span>-e<span class="w"> </span><span class="s1">&#39;s/* \(.*\)/(\1)/&#39;</span>
-<span class="o">}</span>
+<p>After configuring it with Google's MX records in the DNS settings, I wasn't receiving any email on my own company email yet I was able to receive on other email accounts that didn't share the company's domain.</p>
 
-<span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$color_prompt</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>yes<span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
-<span class="w"> </span><span class="nv">PS1</span><span class="o">=</span><span class="s1">&#39;${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[01;31m\]$(parse_git_branch)\[\033[00m\]\$ &#39;</span>
-<span class="k">else</span>
-<span class="w"> </span><span class="nv">PS1</span><span class="o">=</span><span class="s1">&#39;${debian_chroot:+($debian_chroot)}\u@\h:\w$(parse_git_branch)\$ &#39;</span>
-<span class="k">fi</span>
+<p>I did a little R&amp;D and ran into this documentation about <a href="https://docs.cpanel.net/cpanel/email/email-routing/">email routing</a> and figured out that there could be an issue with it's configuration.</p>
 
-<span class="nb">unset</span><span class="w"> </span>color_prompt<span class="w"> </span>force_color_prompt
-</code></pre>
-</div>
+<p>Here's what I did:</p>
 
-<div class="post-notification info">
-    <h3>Updated: November 26th, 2022</h3>
-    The above script works fine for Ubuntu but doesn't work fine on other distros. Here's an alternative one that works on all distros:
-<div class="codehilite">
-<pre><span></span><code>parse_git_branch<span class="o">()</span><span class="w"> </span><span class="o">{</span>
-<span class="w">    </span>git<span class="w"> </span>branch<span class="w"> </span><span class="m">2</span>&gt;<span class="w"> </span>/dev/null<span class="w"> </span><span class="p">|</span><span class="w"> </span>sed<span class="w"> </span>-e<span class="w"> </span><span class="s1">&#39;/^[^*]/d&#39;</span><span class="w"> </span>-e<span class="w"> </span><span class="s1">&#39;s/* \(.*\)/(\1)/&#39;</span>
-<span class="o">}</span>
+<ol>
+<li>Open cPanel </li>
+<li>Search or look for <strong>Email Routing</strong></li>
+<li>Click on <strong>Email Routing</strong></li>
+<li>If your MX records are not pointing to the IP address of the hosting server, then select <strong>Remote Mail Exchanger</strong></li>
+<li>Save changes</li>
+</ol>
 
-<span class="nb">export</span><span class="w"> </span><span class="nv">PS1</span><span class="o">=</span><span class="s2">&quot;\u@\h \[\e[32m\]\w \[\e[91m\]\$(parse_git_branch)\[\e[00m\]</span>$<span class="s2"> &quot;</span>
-</code></pre>
-</div>
+<p>After following these steps, I was able to receive mails on the same domain!</p>
 
-</div>
+<h2>So what really caused the issue?</h2>
 
-<p>Save the file and execute this command for your changes to take effect:</p>
+<p>Since, we didn't have a default email address set up in cPanel, the current mode to send all unrouted emails was set to <code>:blackhole:</code>, by default. I guess, it's set up that way to prevent the server from sending/receiving spam mails from the domain.</p>
 
-<div class="codehilite">
-<pre><span></span><code><span class="nb">source</span><span class="w"> </span>~/.bashrc
-</code></pre>
-</div>
+<p>This makes sense because:</p>
 
-<p>Now, you should see your colors in your Bash prompt along with the Git branch that you're working on (<strong>Note: this will be shown if you're in a project that uses a Git repository</strong>).</p>
+<ol>
+<li>The MX records are not pointing to the current server</li>
+<li>There are no email accounts created for the domain on cPanel</li>
+<li>By setting the mode to <code>:blackhole</code>, all emails with the same domain are being discarded or rejected</li>
+</ol>
 
-<p>Hope this helps you out!</p>
+<p>Not really sure if this is what caused the issue but judging from the facts, I was able to reach to this conclusion.</p>
+
+<p>Hope you found this tip useful.</p>
+
+<h2>Reference</h2>
+
+<ul>
+<li><a href="https://stackoverflow.com/questions/1107730/cant-send-email-to-addresses-at-my-own-domain">Can't send email to addresses at my own domain</a></li>
+</ul>
 
 	</div>
 	<div class="article-footer">
@@ -207,8 +287,48 @@ parse_git_branch<span class="o">()</span><span class="w"> </span><span class="o"
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/bash/">
-					Bash
+				<a href="/category/cpanel/">
+					cPanel
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/email/">
+					Email
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/convert-string-from-snake-case-to-camel-case">Convert string from snake case to camel case</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Thought of sharing a simple regular expression that I use on VIM to convert <strong>snake_case</strong> letters to <strong>camelCase</strong> letters (see what I did there) &#x1F61C;</p>
+
+<p>Here's the pattern for you to use:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="p">:</span>s<span class="sr">/ \([a-zA-Z]\)/</span>\<span class="k">u</span>\<span class="m">1</span>/<span class="k">g</span>
+</code></pre>
+</div>
+
+<p>Hope you found this tip useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>March 12th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/vim/">
+					VIM
 				</a>
 			</li>
 			
@@ -490,40 +610,6 @@ parse_git_branch<span class="o">()</span><span class="w"> </span><span class="o"
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/resolve-the-general-error-1835-malformed-communication-packet-error">Resolve the "General error: 1835 Malformed communication packet" error</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>This happened like two days ago, when one of the client sites went down. Upon inspecting the error logs, I found this:</p>
-
-<div class="codehilite">
-<pre><span></span><code>SQLSTATE[HY000]: General error: 1835 Malformed communication packet
-</code></pre>
-</div>
-
-<p>If you got the same error as the one above, don't worry, it's not your fault. According to this <a href="https://jira.mariadb.org/browse/MDEV-24121">forum</a>, <strong>a recent MariaDB update introduced a new bug for PHP versions &lt; 7.3</strong> that uses PDO and MySQL connectors. You can easily resolve this by simply upgrading it to PHP 7.3.</p>
-
-<p>Hope this tip helps you out!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>November 7th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/php/">
-					PHP
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/find-and-remove-duplicate-lines-using-regular-expressions">Find and remove duplicate lines using Regular Expressions</a></h1>
 		<p class="description"></p>
 	</div>
@@ -570,132 +656,11 @@ The entire match becomes `line\nline` (or `line\nline\nline` etc.). Because we a
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/use-nodesass-to-minify-your-css">Use node-sass to minify your CSS</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>If you want to turn your <code>.scss</code> files to minified <code>.css</code> files but without using Webpack or Gulp, just install the <code>node-sass</code> package using <code>npm</code> package manager and then run this on your terminal:</p>
-
-<div class="codehilite">
-<pre><span></span><code>sass<span class="w"> </span>scss/style.scss<span class="w"> </span>css/style.css<span class="w"> </span>--style<span class="w"> </span>compressed
-</code></pre>
-</div>
-
-<p>And now, you can use your <code>style.css</code> file on production! &#x1F606;</p>
-
-<p>Hope you found this tip useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>November 7th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/css/">
-					CSS
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/scss/">
-					SCSS
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/create-aliased-class-constants-in-laravel">Create aliased class constants in Laravel</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>There are many ways to define constants in Laravel but I learnt a neat technique where you can define constants using an alias.</p>
-
-<p>First off, create the following directory:</p>
-
-<div class="codehilite">
-<pre><span></span><code>mkdir<span class="w"> </span>app/Constants
-</code></pre>
-</div>
-
-<p>Next, create a file named <code>MyConstants.php</code> in the <code>app/Constants</code> directory and copy-paste the following code:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="k">namespace</span> <span class="nx">App\Constants</span><span class="p">;</span>
-
-<span class="k">class</span> <span class="nc">MyConstants</span> <span class="p">{</span>
-    <span class="k">const</span> <span class="no">HELLO</span> <span class="o">=</span> <span class="s1">&#39;hello&#39;</span><span class="p">;</span>
-<span class="p">}</span>
-<span class="cp">?&gt;</span>
-</code></pre>
-</div>
-
-<p>Then, go to the <code>config/app.php</code> file and define your new alias:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="s1">&#39;aliases&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span>
-    <span class="c1">// previously defined aliases...</span>
-    <span class="s1">&#39;MyConstants&#39;</span> <span class="o">=&gt;</span> <span class="nx">App\Constants\MyConstants</span><span class="o">::</span><span class="na">class</span><span class="p">,</span>
-<span class="p">]</span>
-<span class="cp">?&gt;</span>
-</code></pre>
-</div>
-
-<p>Lastly, execute the following commands to update your app's configuration:</p>
-
-<div class="codehilite">
-<pre><span></span><code>php<span class="w"> </span>artisan<span class="w"> </span>config:clear
-composer<span class="w"> </span>dump-autoload
-php<span class="w"> </span>artisan<span class="w"> </span>config:cache
-</code></pre>
-</div>
-
-<p>After that, you can use your new constants anywhere (Controllers, Models or Blades) like this:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="k">echo</span> <span class="nx">MyConstants</span><span class="o">::</span><span class="na">HELLO</span><span class="p">;</span>
-<span class="cp">?&gt;</span>
-</code></pre>
-</div>
-
-<p>Learning this new technique helps me keep the code clean and makes it easier to trace the constants.</p>
-
-<p>Hope you find this tip useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>November 7th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/laravel/">
-					Laravel
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
 	
-		
 		<a href="/pages/15">&laquo;</a>
-			
 	
 
 	
@@ -704,7 +669,7 @@ php<span class="w"> </span>artisan<span class="w"> </span>config:cache
 		
 	
 		
-			<a class="" href="/pages/13">...</a>
+			<a class="" href="/pages/2">...</a>
 		
 	
 		
@@ -728,11 +693,11 @@ php<span class="w"> </span>artisan<span class="w"> </span>config:cache
 		
 	
 		
-			<a class="" href="/pages/14">...</a>
+			<a class="" href="/pages/19">...</a>
 		
 	
 		
-			<a class="" href="/pages/32">32</a>
+			<a class="" href="/pages/33">33</a>
 		
 	
 
@@ -769,7 +734,7 @@ php<span class="w"> </span>artisan<span class="w"> </span>config:cache
 		<li>
 			<a href="/category/linux/">
 				Linux
-				<span class="count">26</span>
+				<span class="count">28</span>
 			</a>
 		</li>
 		
@@ -956,6 +921,13 @@ php<span class="w"> </span>artisan<span class="w"> </span>config:cache
 		</li>
 		
 		<li>
+			<a href="/category/self-reflection/">
+				Self-reflection
+				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/refactoring/">
 				Refactoring
 				<span class="count">3</span>
@@ -1019,6 +991,20 @@ php<span class="w"> </span>artisan<span class="w"> </span>config:cache
 		</li>
 		
 		<li>
+			<a href="/category/thoughts/">
+				Thoughts
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/windows/">
+				Windows
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/net-core/">
 				.NET Core
 				<span class="count">2</span>
@@ -1070,13 +1056,6 @@ php<span class="w"> </span>artisan<span class="w"> </span>config:cache
 		<li>
 			<a href="/category/sql-server/">
 				SQL Server
-				<span class="count">2</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/selfreflection/">
-				Self-reflection
 				<span class="count">2</span>
 			</a>
 		</li>
@@ -1145,6 +1124,13 @@ php<span class="w"> </span>artisan<span class="w"> </span>config:cache
 		</li>
 		
 		<li>
+			<a href="/category/uefi/">
+				UEFI
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/jetbrains/">
 				JetBrains
 				<span class="count">1</span>
@@ -1166,13 +1152,6 @@ php<span class="w"> </span>artisan<span class="w"> </span>config:cache
 		</li>
 		
 		<li>
-			<a href="/category/thoughts/">
-				Thoughts
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/nginx/">
 				nginx
 				<span class="count">1</span>
@@ -1182,13 +1161,6 @@ php<span class="w"> </span>artisan<span class="w"> </span>config:cache
 		<li>
 			<a href="/category/grub/">
 				GRUB
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/windows/">
-				Windows
 				<span class="count">1</span>
 			</a>
 		</li>
@@ -1313,15 +1285,15 @@ php<span class="w"> </span>artisan<span class="w"> </span>config:cache
 		</li>
 		
 		<li>
-			<a href="/category/tech/">
-				Tech
+			<a href="/category/learning/">
+				Learning
 				<span class="count">1</span>
 			</a>
 		</li>
 		
 		<li>
-			<a href="/category/learning/">
-				Learning
+			<a href="/category/tech/">
+				Tech
 				<span class="count">1</span>
 			</a>
 		</li>

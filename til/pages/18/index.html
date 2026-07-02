@@ -77,6 +77,208 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-manually-configure-your-wifi-on-arch-linux">How to manually configure your WiFi on Arch Linux?</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Recently, I thought of playing around with Arch Linux to learn more about Linux under-the-hood and to see if it can become my new daily driver.</p>
+
+<p>As I booted from live USB, I tried connecting to my WiFi using <code>wifi-menu</code> but it never worked after selecting my network name and entering the credentials.</p>
+
+<p>So, I did a little bit of research in <a href="https://wiki.archlinux.org">ArchWiki</a> and forums and I figured a way to set it up manually using <code>netctl</code> by myself.</p>
+
+<p><code>netctl</code> is a network profile manager and it's apparently an Arch Linux project.</p>
+
+<h2>1. Select your interface</h2>
+
+<p>Before you begin to set up your WiFi connection from your computer, check if your network interface is being detected:</p>
+
+<div class="codehilite">
+<pre><span></span><code>iwconfig
+</code></pre>
+</div>
+
+<p>Since it's a WiFi connection, your interface most probably must be <code>wlan0</code>. If you see it, then set the interface up:</p>
+
+<div class="codehilite">
+<pre><span></span><code>ip<span class="w"> </span>link<span class="w"> </span><span class="nb">set</span><span class="w"> </span>wlan0<span class="w"> </span>up
+</code></pre>
+</div>
+
+<h2>2. Scan for networks</h2>
+
+<p>Now, that your interface, use it to scan for your WiFi network:</p>
+
+<div class="codehilite">
+<pre><span></span><code>iwlist<span class="w"> </span>wlan0<span class="w"> </span>scan<span class="w"> </span><span class="p">|</span><span class="w"> </span>less
+</code></pre>
+</div>
+
+<p>Once, you execute this command, you must be able to see your WiFi's SSID (or network name).</p>
+
+<p>Now, put your interface down for a while:</p>
+
+<div class="codehilite">
+<pre><span></span><code>ip<span class="w"> </span>link<span class="w"> </span><span class="nb">set</span><span class="w"> </span>wlan0<span class="w"> </span>down
+</code></pre>
+</div>
+
+<h2>3. Create a network profile</h2>
+
+<p>Alright, go to <code>/etc/netctl/examples/</code> directory and make a copy of the <code>wireless-wpa</code> file to the <code>/etc/netctl</code> directory:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nb">cd</span><span class="w"> </span>/etc/netctl/examples
+cp<span class="w"> </span>/etc/netctl/examples/wireless-wpa<span class="w"> </span>/etc/netctl/your-wifi-name
+</code></pre>
+</div>
+
+<p>Now, go back to <code>/etc/netctl/</code> directory and open the <code>your-wifi-name</code> file with your preferred text editor and edit the following only:</p>
+
+<div class="codehilite">
+<pre><span></span><code>ESSID:<span class="w"> </span>your-wifi-name
+key:<span class="w"> </span>your-wifi-password
+</code></pre>
+</div>
+
+<p>After you're done editing, save the file.</p>
+
+<h2>4. Test network profile</h2>
+
+<p>To test if your profile is working, do the following:</p>
+
+<div class="codehilite">
+<pre><span></span><code>netctl<span class="w"> </span>start<span class="w"> </span>your-wifi-name
+ping<span class="w"> </span>-c<span class="w"> </span><span class="m">3</span><span class="w"> </span>www.google.com
+</code></pre>
+</div>
+
+<p>In case, you get an error, try doing this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>ip<span class="w"> </span>link<span class="w"> </span><span class="nb">set</span><span class="w"> </span>dev<span class="w"> </span>wlan0<span class="w"> </span>down
+netctl<span class="w"> </span>start<span class="w"> </span>your-wifi-name
+ping<span class="w"> </span>-c<span class="w"> </span><span class="m">3</span><span class="w"> </span>www.google.com
+</code></pre>
+</div>
+
+<p>If you're able to ping, then it works. Else, edit your network profile and try connecting to it again.</p>
+
+<h2>5. Enable network profile</h2>
+
+<p>If you've reached this stage that means your network profile must be working fine. Just do the following to enable the network profile to run the internet throughout the setup:</p>
+
+<div class="codehilite">
+<pre><span></span><code>netctl<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>your-wifi-name
+</code></pre>
+</div>
+
+<p>Try reading more about using <a href="https://wiki.archlinux.org/index.php/Netctl">netctl</a> in Arch Linux's official wikipage.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>June 9th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/add-search-functionality-to-your-static-site">Add search functionality to your static site</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>If you have a static site or a blog generated using a static-site generator but want to add a simple search functionality? This could be of your interest.</p>
+
+<p>I'll take you through an example on how to build a simple search engine using a JSON file and AJAX requests.</p>
+
+<h2>1. Generate a JSON dump of your site</h2>
+
+<p>Although, it's not a database but it can act as an alternative to having one. Your JSON dump can contain any metadata that you wanted your users to search in your site. In my case, I thought of allowing the user to search <code>title</code> and <code>category</code>. </p>
+
+<p>Is your site generated using Python and want to create a JSON dump? <a href="til/posts/read-and-write-json-to-a-file-in-python">Read this article</a> for more information.</p>
+
+<h2>2. Build search functionality</h2>
+
+<p>I won't go through the aspects of UI design in this article as I feel that it's subjective and depends on one's preferences but let's keep it simple enough for this tutorial.</p>
+
+<p>Before you begin writing the function, place this component in your HTML template:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="p">&lt;</span><span class="nt">div</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;searchbox&quot;</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">input</span> <span class="na">id</span><span class="o">=</span><span class="s">&quot;searchinput&quot;</span> <span class="na">type</span><span class="o">=</span><span class="s">&quot;text&quot;</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">div</span> <span class="na">id</span><span class="o">=</span><span class="s">&quot;searchresults&quot;</span><span class="p">&gt;</span>
+        <span class="p">&lt;</span><span class="nt">ul</span><span class="p">&gt;&lt;/</span><span class="nt">ul</span><span class="p">&gt;</span>
+    <span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+</code></pre>
+</div>
+
+<p>Anyway, here's the function and you can place it directly on your template or in a separate <code>.js</code> file:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">_url</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;path-of-your-file.json&quot;</span><span class="p">;</span>
+
+<span class="nx">$</span><span class="p">(</span><span class="nb">document</span><span class="p">).</span><span class="nx">ready</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
+<span class="w">    </span><span class="nx">$</span><span class="p">(</span><span class="s1">&#39;#searchinput&#39;</span><span class="p">).</span><span class="nx">keyup</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">){</span>
+<span class="w">        </span><span class="kd">var</span><span class="w"> </span><span class="nx">keyword</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">$</span><span class="p">(</span><span class="k">this</span><span class="p">).</span><span class="nx">val</span><span class="p">();</span>
+<span class="w">        </span><span class="kd">var</span><span class="w"> </span><span class="nx">code</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">e</span><span class="p">.</span><span class="nx">keyCode</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="nx">e</span><span class="p">.</span><span class="nx">keyCode</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="nx">e</span><span class="p">.</span><span class="nx">which</span><span class="p">;</span>
+
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="nx">code</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mf">13</span><span class="p">){</span>
+<span class="w">            </span><span class="nx">$</span><span class="p">.</span><span class="nx">ajax</span><span class="p">({</span>
+<span class="w">                </span><span class="nx">url</span><span class="o">:</span><span class="w"> </span><span class="nx">_url</span><span class="p">,</span>
+<span class="w">                </span><span class="nx">type</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;GET&quot;</span><span class="p">,</span>
+<span class="w">                </span><span class="k">async</span><span class="o">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">            </span><span class="p">}).</span><span class="nx">done</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">){</span>
+<span class="w">                </span><span class="kd">var</span><span class="w"> </span><span class="nx">results</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="p">;</span>
+<span class="w">                </span><span class="k">if</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">articles</span><span class="p">.</span><span class="nx">length</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">0</span><span class="p">){</span>
+<span class="w">                    </span><span class="nx">$</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">articles</span><span class="p">,</span><span class="w"> </span><span class="kd">function</span><span class="p">(</span><span class="nx">key</span><span class="p">,</span><span class="w"> </span><span class="nx">value</span><span class="p">){</span>
+<span class="w">                        </span><span class="k">if</span><span class="p">(</span><span class="nx">v</span><span class="p">.</span><span class="nx">title</span><span class="p">.</span><span class="nx">search</span><span class="p">(</span><span class="nx">pattern</span><span class="p">)</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="o">-</span><span class="mf">1</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nx">v</span><span class="p">.</span><span class="nx">category</span><span class="p">.</span><span class="nx">search</span><span class="p">(</span><span class="nx">pattern</span><span class="p">)</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="o">-</span><span class="mf">1</span><span class="p">){</span>
+<span class="w">                            </span><span class="nx">results</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="sb">`&lt;li&gt;&lt;a href=&quot;</span><span class="si">${</span><span class="nx">v</span><span class="p">.</span><span class="nx">slug</span><span class="si">}</span><span class="sb">&quot;&gt;</span><span class="si">${</span><span class="nx">v</span><span class="p">.</span><span class="nx">title</span><span class="si">}</span><span class="sb">&lt;/a&gt;&lt;/li&gt;`</span><span class="p">;</span>
+<span class="w">                        </span><span class="p">}</span>
+<span class="w">                    </span><span class="p">});</span>
+<span class="w">                    </span><span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#searchresults ul&quot;</span><span class="p">).</span><span class="nx">html</span><span class="p">(</span><span class="nx">results</span><span class="p">);</span>
+<span class="w">                </span><span class="p">}</span>
+<span class="w">            </span><span class="p">});</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">});</span>
+<span class="p">});</span>
+</code></pre>
+</div>
+
+<p>That's it! Now, when you execute your script, you should be able to view your search results just like as if it were using a database.</p>
+
+<p>If you want to make it similar to mine, please feel free to inspect the code on the browser or go to my <a href="https://github.com/megacolorboy/personal-blog/blob/master/static/js/search.js">repository</a> to see how it works.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>June 6th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/javascript/">
+					JavaScript
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/read-and-write-json-to-a-file-in-python">Read and Write JSON to a file in Python</a></h1>
 		<p class="description"></p>
 	</div>
@@ -466,192 +668,11 @@
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/queues-and-stacks">Queues & Stacks</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Let's look at the differences between the two data structures:</p>
-
-<ol>
-<li><strong>Queues</strong>: First-In First-Out</li>
-<li><strong>Stacks</strong>: Last-In Last-Out</li>
-</ol>
-
-<h2>Queues</h2>
-
-<p>This follows a <strong>First-In First-Out</strong> processing order i.e. the first element added to a queue will be processed first. A queue should support two operations:</p>
-
-<ul>
-<li>Enqueue</li>
-<li>Dequeue</li>
-</ul>
-
-<h3>Enqueue</h3>
-
-<p>Adds the element to the tail of a queue. The tail position gets incremented.</p>
-
-<h3>Dequeue</h3>
-
-<p>Removes the first element of a queue i.e. the head element. Once, it's removed, the subsequent element becomes the new head element of the queue. The position of the new head element gets incremented and the previous one is assigned a negative integer like -1 or some garbage value. </p>
-
-<p><strong>Implementation of a standard queue using C++:</strong></p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">Queue</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="k">private</span><span class="o">:</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">pos</span><span class="p">;</span>
-<span class="w">        </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">data</span><span class="p">;</span>
-
-<span class="w">    </span><span class="k">public</span><span class="o">:</span>
-<span class="w">        </span><span class="n">Queue</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="n">pos</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span>
-
-<span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="n">enqueue</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="n">data</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">value</span><span class="p">);</span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span>
-
-<span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="n">dequeue</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">isEmpty</span><span class="p">()){</span>
-<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
-<span class="w">            </span><span class="p">}</span>
-<span class="w">            </span><span class="n">pos</span><span class="o">++</span><span class="p">;</span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span>
-
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">front</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="n">pos</span><span class="p">];</span>
-<span class="w">        </span><span class="p">}</span>
-
-<span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="n">isEmpty</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">pos</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="p">}</span>
-</code></pre>
-</div>
-
-<p>In terms of memory management, a standard Queue is quite inefficient and incapable of handling dynamic memory.</p>
-
-<h2>Stacks</h2>
-
-<p>This follows a <strong>Last-In First-Out</strong> processing order i.e. the last element added to a queue will be the first to be removed. Just like queues, it has two simple operations:</p>
-
-<ul>
-<li>Push</li>
-<li>Pop</li>
-</ul>
-
-<h3>Push</h3>
-
-<p>Each element is pushed towards the end of the stack. Think of it as a card deck where you stack a card on top of another card.</p>
-
-<h3>Pop</h3>
-
-<p>It removes the most recent element i.e. the newly added element from the stack.</p>
-
-<p><strong>Implementation of a stack using C++:</strong></p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">Stack</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="k">private</span><span class="o">:</span>
-<span class="w">        </span><span class="n">vector</span><span class="o">&amp;</span><span class="n">ltint</span><span class="o">&gt;</span><span class="w"> </span><span class="n">data</span><span class="p">;</span>
-<span class="w">    </span><span class="k">public</span><span class="o">:</span>
-<span class="w">        </span><span class="kt">void</span><span class="w"> </span><span class="n">push</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="n">data</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">value</span><span class="p">);</span>
-<span class="w">        </span><span class="p">}</span>
-
-<span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="n">isEmpty</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">empty</span><span class="p">();</span>
-<span class="w">        </span><span class="p">}</span>
-
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">top</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">back</span><span class="p">();</span>
-<span class="w">        </span><span class="p">}</span>
-
-<span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="n">pop</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">isEmpty</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
-<span class="w">                </span><span class="n">data</span><span class="p">.</span><span class="n">pop_back</span><span class="p">();</span>
-<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
-<span class="w">            </span><span class="p">}</span>
-<span class="w">            </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
-<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
-<span class="w">            </span><span class="p">}</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="p">}</span>
-</code></pre>
-</div>
-
-<p>Unlike queues, stacks are easier to implement and pretty efficient at managing dynamic memory.</p>
-
-<p>Oh, if you ever get to use these, don't worry about implementing them, nearly all programming languages have their own implementations of <code>stack</code> and <code>queue</code> that comes with it's own standard library.</p>
-
-	</div>
-	<div class="article-footer">
-		<time>May 30th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/algorithms/">
-					Algorithms
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/data-structures/">
-					Data Structures
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/select-all-elements-except-the-current-element">Select all elements except the current element</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>If you don't want the current element to be selected in an array of elements that belongs to same class or type, just use the <code>.not()</code> method like the example below:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="nx">$</span><span class="p">(</span><span class="s2">&quot;.btn&quot;</span><span class="p">).</span><span class="nx">click</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
-<span class="w">    </span><span class="nx">$</span><span class="p">(</span><span class="s2">&quot;.btn&quot;</span><span class="p">).</span><span class="nx">not</span><span class="p">(</span><span class="k">this</span><span class="p">).</span><span class="nx">text</span><span class="p">(</span><span class="s1">&#39;selected&#39;</span><span class="p">);</span>
-<span class="p">});</span>
-</code></pre>
-</div>
-
-<p>The above code will change the text for all buttons except the current element.</p>
-
-	</div>
-	<div class="article-footer">
-		<time>May 28th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/jquery/">
-					jQuery
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
 	
-		
 		<a href="/til/pages/17">&laquo;</a>
-			
 	
 
 	
@@ -660,7 +681,7 @@
 		
 	
 		
-			<a class="" href="/til/pages/15">...</a>
+			<a class="" href="/til/pages/2">...</a>
 		
 	
 		
@@ -687,6 +708,10 @@
 			<a class="" href="/til/pages/21">21</a>
 		
 	
+		
+			<a class="" href="/til/pages/22">22</a>
+		
+	
 
 	
 		<a href="/til/pages/19">&raquo;</a>
@@ -711,7 +736,7 @@
 		<li>
 			<a href="/category/linux/">
 				Linux
-				<span class="count">26</span>
+				<span class="count">28</span>
 			</a>
 		</li>
 		
@@ -898,6 +923,13 @@
 		</li>
 		
 		<li>
+			<a href="/category/self-reflection/">
+				Self-reflection
+				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/refactoring/">
 				Refactoring
 				<span class="count">3</span>
@@ -961,6 +993,20 @@
 		</li>
 		
 		<li>
+			<a href="/category/thoughts/">
+				Thoughts
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/windows/">
+				Windows
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/net-core/">
 				.NET Core
 				<span class="count">2</span>
@@ -1012,13 +1058,6 @@
 		<li>
 			<a href="/category/sql-server/">
 				SQL Server
-				<span class="count">2</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/selfreflection/">
-				Self-reflection
 				<span class="count">2</span>
 			</a>
 		</li>
@@ -1087,6 +1126,13 @@
 		</li>
 		
 		<li>
+			<a href="/category/uefi/">
+				UEFI
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/jetbrains/">
 				JetBrains
 				<span class="count">1</span>
@@ -1108,13 +1154,6 @@
 		</li>
 		
 		<li>
-			<a href="/category/thoughts/">
-				Thoughts
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/nginx/">
 				nginx
 				<span class="count">1</span>
@@ -1124,13 +1163,6 @@
 		<li>
 			<a href="/category/grub/">
 				GRUB
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/windows/">
-				Windows
 				<span class="count">1</span>
 			</a>
 		</li>
@@ -1255,15 +1287,15 @@
 		</li>
 		
 		<li>
-			<a href="/category/tech/">
-				Tech
+			<a href="/category/learning/">
+				Learning
 				<span class="count">1</span>
 			</a>
 		</li>
 		
 		<li>
-			<a href="/category/learning/">
-				Learning
+			<a href="/category/tech/">
+				Tech
 				<span class="count">1</span>
 			</a>
 		</li>

@@ -78,6 +78,341 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-revert-a-git-commit-on-the-server">How to Revert a Git Commit on the Server?</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Today I learned how to revert a Git commit after pulling it on a server. Whether you've made a mistake or just need to backtrack, Git offers several ways to undo commits depending on your situation. Here's a quick guide on how to handle it.</p>
+
+<h2>If you haven't pushed the commit yet</h2>
+
+<p>If the commit hasn't been pushed to the remote repository, you can use <code>git reset</code> to undo it.</p>
+
+<h2>Soft Reset (keeps changes staged)</h2>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>reset<span class="w"> </span>--soft<span class="w"> </span>HEAD~1
+</code></pre>
+</div>
+
+<p>This moves the HEAD back by one commit but keeps your changes staged.</p>
+
+<h2>Mixed Reset (keeps changes unstaged):</h2>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>reset<span class="w"> </span>--mixed<span class="w"> </span>HEAD~1
+</code></pre>
+</div>
+
+<p>This moves the HEAD back by one commit and unstages your changes.</p>
+
+<h2>Hard Reset (discards changes):</h2>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>reset<span class="w"> </span>--hard<span class="w"> </span>HEAD~1
+</code></pre>
+</div>
+
+<p>This completely removes the last commit and discards any changes.</p>
+
+<blockquote>
+  <p><strong>Tip:</strong> Replace <code>HEAD~1</code> with <code>HEAD~2</code> to go back two commits, and so on.</p>
+</blockquote>
+
+<h2>If you've already pushed the commit</h2>
+
+<h3>Revert the commit (safe for shared repos):</h3>
+
+<p>If you've already pushed the commit and want to undo it without rewriting history, use <code>git revert</code>. This creates a new commit that undoes the changes.</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>revert<span class="w"> </span>&lt;commit_hash&gt;
+</code></pre>
+</div>
+
+<p>Find the commit hash using:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>log<span class="w"> </span>--oneline
+</code></pre>
+</div>
+
+<h3>Force Reset (i.e. if you're okay with rewriting history):</h3>
+
+<p>If you don't mind rewriting history (and no one else is working on the branch), you can force reset.</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>reset<span class="w"> </span>--hard<span class="w"> </span>&lt;commit_hash&gt;
+git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>HEAD<span class="w"> </span>--force
+</code></pre>
+</div>
+
+<div class="post-notification">
+    <h3>⚠️Warning</h3>
+    <p>This is not recommended if others are working on the same branch as it can cause conflicts.</p>
+</div>
+
+<h2>If you just pulled and want to undo</h2>
+
+<p>If you just pulled and want to undo the merge, you can reset to the previous state using <code>ORIG_HEAD</code>.</p>
+
+<h3>Undo a merge pull:</h3>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>reset<span class="w"> </span>--hard<span class="w"> </span>ORIG_HEAD
+</code></pre>
+</div>
+
+<p>This will bring your repository back to the state before the last pull.</p>
+
+<h3>Final thoughts</h3>
+
+<p>Reverting commits can seem daunting at first, but once you understand the tools Git offers, it's pretty straightforward. Always double-check before using <code>--hard</code> or <code>--force</code> to avoid accidental data loss!</p>
+
+<p>Hope this helps you get back on track!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>February 5th, 2025</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/git/">
+					Git
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/vcs/">
+					VCS
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-delete-multiple-git-branches-from-the-command-line">How to Delete Multiple Git Branches from the Command Line?</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Whether you're cleaning up local branches after a feature merge or tidying up remote branches, here’s how you can do it.</p>
+
+<h2>Deleting Multiple Local Branches</h2>
+
+<p>To delete multiple local branches safely (only if they’ve been merged), use:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>branch<span class="w"> </span>-d<span class="w"> </span>branch1<span class="w"> </span>branch2<span class="w"> </span>branch3
+</code></pre>
+</div>
+
+<p>If the branches haven't been merged and you still want to delete them, force delete with:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>branch<span class="w"> </span>-D<span class="w"> </span>branch1<span class="w"> </span>branch2<span class="w"> </span>branch3
+</code></pre>
+</div>
+
+<h2>Deleting Multiple Remote Branches</h2>
+
+<p>For remote branches, you can delete them by running:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>--delete<span class="w"> </span>branch1<span class="w"> </span>branch2<span class="w"> </span>branch3
+</code></pre>
+</div>
+
+<p>Alternatively, you can use the colon <code>:</code> syntax:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>:branch1<span class="w"> </span>:branch2<span class="w"> </span>:branch3
+</code></pre>
+</div>
+
+<h2>Deleting Multiple Branches Using a Pattern</h2>
+
+<p>If you want to delete branches that follow a naming pattern (like <code>feature/</code> branches), you can use <code>grep</code> and <code>xargs</code>:</p>
+
+<h3>For local branches:</h3>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>branch<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;feature/&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>xargs<span class="w"> </span>git<span class="w"> </span>branch<span class="w"> </span>-d
+</code></pre>
+</div>
+
+<p>To force delete:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>branch<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;feature/&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>xargs<span class="w"> </span>git<span class="w"> </span>branch<span class="w"> </span>-D
+</code></pre>
+</div>
+
+<h3>For remote branches:</h3>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>branch<span class="w"> </span>-r<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;origin/feature/&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sed<span class="w"> </span><span class="s1">&#39;s/origin\///&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>xargs<span class="w"> </span>-I<span class="w"> </span><span class="o">{}</span><span class="w"> </span>git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>--delete<span class="w"> </span><span class="o">{}</span>
+</code></pre>
+</div>
+
+<h2>Final Tips</h2>
+
+<ul>
+<li><strong>List branches before deleting:</strong> Use <code>git branch</code> for local and <code>git branch -r</code> for remote branches to verify which ones you’re about to delete.</li>
+<li><strong>Be cautious with force delete (<code>-D</code>):</strong> It will remove branches even if they haven’t been merged, so make sure you won’t lose important work.</li>
+</ul>
+
+<p>Hope you found this useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>February 5th, 2025</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/git/">
+					Git
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/vcs/">
+					VCS
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/writings/posts/laravel-scopes-vs-builder-queries-which-should-you-use">Laravel Scopes vs. Builder Queries: Which Should You Use?</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>If you're building a Laravel application, you're probably spending a lot of time writing queries. And as your project grows, you'll inevitably face this question: <em>Should I use scopes or builder queries?</em> While both have their place, choosing the right tool for the job can make a world of difference. Here's my opinionated take on the matter.</p>
+
+<h2>The Case for Scopes</h2>
+
+<p><strong>Scopes</strong> are, quite simply, one of Laravel's hidden gems. They let you encapsulate common query logic within your models, making your code clean, reusable, and easy to read. Think of them as tiny, purposeful functions designed to save you time and sanity.</p>
+
+<p>Take this example:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+    <span class="c1">// In your model</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">scopeActive</span><span class="p">(</span><span class="nv">$query</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">return</span> <span class="nv">$query</span><span class="o">-&gt;</span><span class="na">where</span><span class="p">(</span><span class="s1">&#39;status&#39;</span><span class="p">,</span> <span class="s1">&#39;active&#39;</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="c1">// Usage</span>
+    <span class="nv">$activeUsers</span> <span class="o">=</span> <span class="nx">User</span><span class="o">::</span><span class="na">active</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">get</span><span class="p">();</span>
+<span class="cp">?&gt;</span>
+</code></pre>
+</div>
+
+<p>Suddenly, instead of littering your controllers with <code>where('status', 'active')</code> everywhere, you have a single, reusable method that reads like English. Scopes shine when you need commonly used filters like <code>active</code>, <code>published</code>, or <code>recent</code>. They’re easy to use, they’re consistent, and they make your code feel more intuitive.</p>
+
+<h3>Why I Prefer Scopes for Reusability</h3>
+
+<p>Here’s the thing: in any sizable Laravel app, you’ll inevitably find patterns in your queries. Rewriting the same query logic over and over? That’s a code smell. By using scopes, you centralize your query logic, reducing redundancy and improving maintainability.</p>
+
+<p>For example:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+    <span class="nv">$pubishedPosts</span> <span class="o">=</span> <span class="nx">Post</span><span class="o">::</span><span class="na">published</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">recent</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">get</span><span class="p">();</span>
+<span class="cp">?&gt;</span>
+</code></pre>
+</div>
+
+<p>This reads beautifully and keeps your codebase DRY (Don’t Repeat Yourself). If the definition of "published" or "recent" changes, you only need to update it in one place. Scopes turn repetitive query logic into single lines of magic.</p>
+
+<h2>The Case for Builder Queries</h2>
+
+<p>That said, not everything belongs in a scope. Some queries are just too specific, too complex, or too dynamic. This is where <strong>builder queries</strong> come in.</p>
+
+<p>Imagine you’re building a report that requires multiple joins, conditional logic, or dynamic filters. Scopes could become unwieldy here. Instead, a well-crafted builder query in your controller, service, or repository might make more sense:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+    <span class="nv">$users</span> <span class="o">=</span> <span class="nx">User</span><span class="o">::</span><span class="na">where</span><span class="p">(</span><span class="s1">&#39;status&#39;</span><span class="p">,</span> <span class="s1">&#39;active&#39;</span><span class="p">)</span>
+        <span class="o">-&gt;</span><span class="na">whereDate</span><span class="p">(</span><span class="s1">&#39;created_at&#39;</span><span class="p">,</span> <span class="s1">&#39;&gt;&#39;</span><span class="p">,</span> <span class="nx">now</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">subDays</span><span class="p">(</span><span class="mi">30</span><span class="p">))</span>
+        <span class="o">-&gt;</span><span class="na">orderBy</span><span class="p">(</span><span class="s1">&#39;created_at&#39;</span><span class="p">,</span> <span class="s1">&#39;desc&#39;</span><span class="p">)</span>
+        <span class="o">-&gt;</span><span class="na">get</span><span class="p">();</span>
+<span class="cp">?&gt;</span>
+</code></pre>
+</div>
+
+<p>Builder queries are perfect for:</p>
+
+<ul>
+<li>One-off operations.</li>
+<li>Highly dynamic queries.</li>
+<li>Scenarios where scopes would make your models bloated or overly complex.</li>
+</ul>
+
+<p>The flexibility of builder queries is unmatched. You can construct them on the fly, adapt them to user inputs, and handle edge cases without worrying about making your models an unreadable mess.</p>
+
+<h2>My Opinionated Take: Use Scopes as a Default, Builder Queries for the Edge Cases</h2>
+
+<p>If I had to pick a side, I’d say: lean on scopes as your default tool, and reserve builder queries for those rare cases when scopes just don’t cut it. Why?</p>
+
+<ol>
+<li><strong>Scopes enhance readability.</strong> Your queries read like sentences, and your intentions are crystal clear.</li>
+<li><strong>Scopes promote DRY principles.</strong> They’re reusable and encapsulate logic, which makes future maintenance a breeze.</li>
+<li><strong>Builder queries are powerful but can become messy.</strong> Unless you’re careful, a complex query in your controller can grow into a sprawling monstrosity. Keep your controllers lean and delegate to scopes or dedicated query classes where possible.</li>
+</ol>
+
+<h2>When Not to Use Scopes</h2>
+
+<p>There are times when using a scope might do more harm than good:</p>
+
+<ul>
+<li><strong>Too much complexity:</strong> If a scope needs multiple parameters or involves complex joins, it’s better suited as a custom query builder or a dedicated repository method.</li>
+<li><strong>Rarely used logic:</strong> Don’t clutter your models with scopes for queries that are only needed once or twice.</li>
+<li><strong>Dynamic, user-driven queries:</strong> When filters are highly variable, builder queries give you the flexibility you need.</li>
+</ul>
+
+<h2>Conclusion: Balance Is Key</h2>
+
+<p>Laravel gives you powerful tools to write queries, and both scopes and builder queries have their roles. Use scopes to simplify and centralize reusable logic, and reach for builder queries when flexibility and complexity demand it. By balancing both, you’ll keep your codebase clean, maintainable, and a joy to work with.</p>
+
+<p>So, what’s your take? Are you a scope enthusiast or a builder query champion? Either way, Laravel’s got you covered.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>January 25th, 2025</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/laravel/">
+					Laravel
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/php/">
+					PHP
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/writings/posts/a-starter-guide-to-software-version-control">A Starter Guide to Software Version Control</a></h1>
 		<p class="description"></p>
 	</div>
@@ -729,528 +1064,11 @@ sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class=
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-filter-records-based-on-a_string-column-containing-numbers-with-commas-and-dots">How to Filter Records Based on a String Column Containing Numbers with Commas and Dots?</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Last month, I encountered a scenario where I needed to filter records in a database based on a "revenue" column. The challenge? The <code>revenue</code> column was stored as a string data type, and some of the values contained commas (<code>,</code>) and dots (<code>.</code>). Here’s how I tackled the problem and wrote an SQL query to filter records based on the numeric value of the <code>revenue</code> column.</p>
-
-<h2>What I faced?</h2>
-
-<p>The <code>revenue</code> column was stored as a string, and the values looked like this:</p>
-
-<ul>
-<li>"50,000,000"</li>
-<li>"75.000.000"</li>
-<li>"10000000"</li>
-</ul>
-
-<p>I needed to filter records where the revenue was greater than <strong>"50,000,000"</strong>. However, since the column was a string, I couldn’t directly compare it to a numeric value.</p>
-
-<h2>What I did?</h2>
-
-<p>To handle this, I used a combination of SQL functions:</p>
-
-<ol>
-<li><code>REPLACE</code>: To remove commas (<code>,</code>) and dots (<code>.</code>) from the string.</li>
-<li><code>CAST</code>: To convert the cleaned string into a numeric data type (<code>DECIMAL</code> in this case).</li>
-</ol>
-
-<p>Here’s the SQL query I wrote:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span>
-<span class="k">FROM</span><span class="w"> </span><span class="n">your_table</span>
-<span class="k">WHERE</span><span class="w"> </span><span class="k">CAST</span><span class="p">(</span><span class="k">REPLACE</span><span class="p">(</span><span class="n">revenue</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;,&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="nb">DECIMAL</span><span class="p">(</span><span class="mi">18</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">))</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">50000000</span><span class="p">;</span>
-</code></pre>
-</div>
-
-<p>Need a breakdown? Here you go:</p>
-
-<ol>
-<li><code>REPLACE(revenue, ',', '')</code>:
-This removes commas from the <code>revenue</code> string. For example, <strong>"50,000,000"</strong> becomes <strong>"50000000"</strong>.</li>
-<li><code>CAST(... AS DECIMAL(18, 2))</code>:
-This converts the cleaned string into a <code>DECIMAL</code> value with 18 total digits and 2 decimal places. For example, <strong>"50000000"</strong> becomes <strong>50000000.00</strong>.</li>
-<li><code>&gt; 50000000</code>:
-Finally, the query filters records where the numeric value of <code>revenue</code> is greater than <strong>50,000,000</strong>.</li>
-</ol>
-
-<h2>Handling Dots as Thousand Separators</h2>
-
-<p>If the <code>revenue</code> column uses dots (<code>.</code>) as thousand separators (e.g., <strong>"75.000.000"</strong>), you can extend the <code>REPLACE</code> function to remove dots as well:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span>
-<span class="k">FROM</span><span class="w"> </span><span class="n">your_table</span>
-<span class="k">WHERE</span><span class="w"> </span><span class="k">CAST</span><span class="p">(</span><span class="k">REPLACE</span><span class="p">(</span><span class="k">REPLACE</span><span class="p">(</span><span class="n">revenue</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;,&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">),</span><span class="w"> </span><span class="s1">&#39;.&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="nb">DECIMAL</span><span class="p">(</span><span class="mi">18</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">))</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">50000000</span><span class="p">;</span>
-</code></pre>
-</div>
-
-<p>This ensures that both commas and dots are removed before converting the string to a numeric value.</p>
-
-<h2>Why did I do this?</h2>
-
-<p>This approach is helpful when:</p>
-
-<ul>
-<li>You’re working with data stored as strings but need to perform numeric comparisons.</li>
-<li>The data contains formatting characters like commas or dots.</li>
-<li>You want to avoid manual data cleaning or preprocessing.</li>
-</ul>
-
-<p>By using SQL functions like <code>REPLACE</code> and <code>CAST</code>, you can handle these scenarios directly in your queries.</p>
-
-<p>Oh, this works for SQL and MySQL as well!</p>
-
-<p>Hope you found this article useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>January 19th, 2025</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/sql/">
-					SQL
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/mysql/">
-					MySQL
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/databases/">
-					Databases
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/data-manipulation/">
-					Data Manipulation
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-cherry-pick-commits-from-one-git-branch-to-another">How to Cherry-Pick Commits from One Git Branch to Another?</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Although I had heard of Git's <code>cherry-pick</code> command, I never used it until a few months ago when I encountered a situation that demanded it. A client required us to work on multiple incidents and change requests (CRs), but they only wanted specific, approved updates pushed to the repository.</p>
-
-<p>This created a challenge, especially when I was simultaneously working on CRs and incidents. I needed a way to isolate and push only the approved changes while keeping the rest intact. That’s when I decided to try out Git’s <code>cherry-pick</code> command—and it worked like a charm! It made managing my codebase much easier.</p>
-
-<p>Here’s a simple walkthrough of how you can use it too:</p>
-
-<h2>The Scenario</h2>
-
-<p>I had two branches in my Git repository:</p>
-
-<ul>
-<li><strong>Branch A</strong>: The primary branch where ongoing development happens.</li>
-<li><strong>Branch B</strong>: A feature branch where I accidentally pushed updates that should partially go into <strong>Branch A</strong>.</li>
-</ul>
-
-<p>While it’s straightforward to merge changes from one branch into another, I only needed a subset of the commits from <strong>Branch B</strong> to be applied to <strong>Branch A</strong>. This is where Git’s <code>cherry-pick</code> command shines.</p>
-
-<p>Go along with me and follow it step-by-step:</p>
-
-<h2>1. Switch to the Target Branch</h2>
-
-<p>First, check out the branch where you want to apply the commits (in my case, <strong>Branch A</strong>):</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>checkout<span class="w"> </span>A
-</code></pre>
-</div>
-
-<h2>2. Find the Commits to Cherry-Pick</h2>
-
-<p>Use the <code>git log</code> command to list the commits in <strong>Branch B</strong> and identify the specific commit hashes you want to cherry-pick:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>log<span class="w"> </span>B
-</code></pre>
-</div>
-
-<p>You should see output similar to this:</p>
-
-<div class="codehilite">
-<pre><span></span><code>commit<span class="w"> </span>abc1234<span class="w"> </span><span class="o">(</span>HEAD<span class="w"> </span>-&gt;<span class="w"> </span>B<span class="o">)</span>
-Author:<span class="w"> </span>Your<span class="w"> </span>Name<span class="w"> </span>&lt;you@example.com&gt;
-Date:<span class="w">   </span>Mon<span class="w"> </span>Jan<span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="m">12</span>:00:00<span class="w"> </span><span class="m">2025</span><span class="w"> </span>+0000
-
-<span class="w">    </span>Add<span class="w"> </span>feature<span class="w"> </span>X
-
-commit<span class="w"> </span>def5678
-Author:<span class="w"> </span>Your<span class="w"> </span>Name<span class="w"> </span>&lt;you@example.com&gt;
-Date:<span class="w">   </span>Sun<span class="w"> </span>Dec<span class="w"> </span><span class="m">31</span><span class="w"> </span><span class="m">12</span>:00:00<span class="w"> </span><span class="m">2024</span><span class="w"> </span>+0000
-
-<span class="w">    </span>Fix<span class="w"> </span>bug<span class="w"> </span>Y
-</code></pre>
-</div>
-
-<p>Take note of the commit hash(es) you need. For example, let’s say you want to cherry-pick <code>abc1234</code> and <code>def5678</code>.</p>
-
-<h2>3. Cherry-Pick the Commit(s)</h2>
-
-<h3>Single Commit</h3>
-
-<p>To apply a single commit from <strong>Branch B</strong> onto <strong>Branch A</strong>, use:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>cherry-pick<span class="w"> </span>abc1234
-</code></pre>
-</div>
-
-<h3>Multiple Commits</h3>
-
-<p>To apply multiple non-contiguous commits, list their hashes:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>cherry-pick<span class="w"> </span>abc1234<span class="w"> </span>def5678
-</code></pre>
-</div>
-
-<h3>Range of Commits</h3>
-
-<p>To cherry-pick a range of contiguous commits, use the <code>^..&lt;</code> notation:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>cherry-pick<span class="w"> </span>def5678^..abc1234
-</code></pre>
-</div>
-
-<p>This includes all commits from <code>def5678</code> to <code>abc1234</code>, inclusive.</p>
-
-<h2>4. Resolve Any Conflicts</h2>
-
-<p>If there are conflicts during the cherry-picking process, Git will pause and notify you. Resolve the conflicts in your files, then mark them as resolved:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>add<span class="w"> </span>&lt;file&gt;
-</code></pre>
-</div>
-
-<p>Continue the cherry-pick process:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>cherry-pick<span class="w"> </span>--continue
-</code></pre>
-</div>
-
-<p>To abort the cherry-pick if things go wrong:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>cherry-pick<span class="w"> </span>--abort
-</code></pre>
-</div>
-
-<ol start="5">
-<li>Verify the Result</li>
-</ol>
-
-<p>Once the cherry-picking is complete, you can inspect your branch to ensure the changes were applied:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>log
-</code></pre>
-</div>
-
-<p>You should see the cherry-picked commits in <strong>Branch A</strong>.</p>
-
-<h2>When is cherry-picking useful?</h2>
-
-<p>Cherry-picking is perfect when you need specific commits from another branch without merging all its changes. This is especially helpful in scenarios like:</p>
-
-<ul>
-<li>Applying a bug fix from a feature branch to the main branch.</li>
-<li>Pulling specific updates without merging unrelated work.</li>
-</ul>
-
-<h2>Bonus Tips</h2>
-
-<ul>
-<li>Always double-check commit hashes before cherry-picking to avoid unexpected results.</li>
-<li>Use descriptive commit messages to make it easier to identify what each commit does</li>
-<li>If you find yourself cherry-picking often, consider rethinking your branch workflows to reduce the need for it.</li>
-</ul>
-
-<p>That’s it! Now you know how to cherry-pick commits in Git. It’s a small but incredibly powerful tool to keep in your Git arsenal.</p>
-
-	</div>
-	<div class="article-footer">
-		<time>January 18th, 2025</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/git/">
-					Git
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/vcs/">
-					VCS
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-check-if-smtp-is-reachable-from-my-machine-using-telnet">How to Check if SMTP is Reachable from My Machine Using Telnet?</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Recently, I learned how to test SMTP server connectivity using <code>telnet</code>. This is a handy way to verify if an SMTP server is reachable, troubleshoot email delivery issues, and manually interact with the server to diagnose problems. </p>
-
-<p>Here’s how I did it:</p>
-
-<h2>1. Ensure Telnet is Installed</h2>
-
-<p>First, I made sure <code>telnet</code> was installed on my machine. Most Linux distributions come with <code>telnet</code> pre-installed, but if it’s missing, here’s how to install it:</p>
-
-<h3>For Ubuntu/Debian:</h3>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>telnet
-</code></pre>
-</div>
-
-<h3>For CentOS/RHEL:</h3>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>yum<span class="w"> </span>install<span class="w"> </span>telnet
-</code></pre>
-</div>
-
-<h3>For Windows</h3>
-
-<p>Ironically, <code>telnet</code> is not enabled by default on Windows, but you can enable it:</p>
-
-<ol>
-<li>Open the Control Panel.</li>
-<li>Go to <strong>Programs</strong> &gt; <strong>Programs and Features</strong> &gt; <strong>Turn Windows features on or off</strong>.</li>
-<li>Check the box for <strong>Telnet Client</strong> and click <strong>OK</strong>.</li>
-<li>Once enabled, open the Command Prompt (<code>cmd</code>) to use Telnet.</li>
-</ol>
-
-<h2>2. Open a Telnet Connection to the SMTP Server</h2>
-
-<p>To connect to the SMTP server, I used the following command:</p>
-
-<div class="codehilite">
-<pre><span></span><code>telnet<span class="w"> </span>&lt;smtp_server_address&gt;<span class="w"> </span><span class="m">25</span>
-</code></pre>
-</div>
-
-<p>Replace <code>&lt;smtp_server_address&gt;</code> with the SMTP server’s hostname or IP address. For example:</p>
-
-<div class="codehilite">
-<pre><span></span><code>telnet<span class="w"> </span>smtp.example.com<span class="w"> </span><span class="m">25</span>
-</code></pre>
-</div>
-
-<p>If the connection is successful, the server responds with a <code>220</code> message, like this:</p>
-
-<div class="codehilite">
-<pre><span></span><code>220 smtp.example.com ESMTP Postfix
-</code></pre>
-</div>
-
-<p>This means the SMTP server is reachable and ready to accept commands.</p>
-
-<h2>3. Test SMTP Commands (Optional)</h2>
-
-<p>To further test the SMTP server, I manually interacted with it using basic SMTP commands:</p>
-
-<h3>Greet the Server:</h3>
-
-<p>I sent an <code>EHLO</code> command to introduce myself:</p>
-
-<div class="codehilite">
-<pre><span></span><code>EHLO example.com
-</code></pre>
-</div>
-
-<p>The server responded with a list of supported features.</p>
-
-<h3>Start an Email Transaction:</h3>
-
-<p>I specified the sender using the <code>MAIL FROM</code> command:</p>
-
-<div class="codehilite">
-<pre><span></span><code>MAIL FROM:&lt;test@example.com&gt;
-</code></pre>
-</div>
-
-<p>The server responded with <code>250 OK</code>.</p>
-
-<h3>Specify the Recipient:</h3>
-
-<p>I added the recipient using the <code>RCPT TO</code> command:</p>
-
-<div class="codehilite">
-<pre><span></span><code>RCPT TO:&lt;user@example.com&gt;
-</code></pre>
-</div>
-
-<p>The server responded with <code>250 OK</code>.</p>
-
-<h3>Enter the Email Data:</h3>
-
-<p>I typed <code>DATA</code> to start composing the email:</p>
-
-<div class="codehilite">
-<pre><span></span><code>DATA
-</code></pre>
-</div>
-
-<p>After entering the email content, I ended the message with a single <code>.</code> on a new line:</p>
-
-<div class="codehilite">
-<pre><span></span><code>Subject: Test Email
-This is a test email sent via Telnet.
-.
-</code></pre>
-</div>
-
-<p>The server responded with <code>250 OK</code>, confirming that the email was accepted.</p>
-
-<h3>Quit the Session:</h3>
-
-<p>Finally, I ended the session with the <code>QUIT</code> command:</p>
-
-<div class="codehilite">
-<pre><span></span><code>QUIT
-</code></pre>
-</div>
-
-<h2>4. Troubleshoot Connection Issues</h2>
-
-<p>If the connection fails, I might see an error like:</p>
-
-<div class="codehilite">
-<pre><span></span><code>telnet: Unable to connect to remote host: Connection refused
-</code></pre>
-</div>
-
-<p>This could mean:</p>
-
-<ul>
-<li>The SMTP server is not running.</li>
-<li>The port is blocked by a firewall.</li>
-<li>The server uses a different port (e.g., 587 for submission or 465 for SMTPS).</li>
-</ul>
-
-<p>To resolve this, I checked:</p>
-
-<ul>
-<li>If the SMTP server is running and listening on the correct port.</li>
-<li>If my firewall or network allows outbound connections to the SMTP port.</li>
-</ul>
-
-<h2>Example Workflow:</h2>
-
-<p>Here’s what a successful Telnet session looks like:</p>
-
-<div class="codehilite">
-<pre><span></span><code>$<span class="w"> </span>telnet<span class="w"> </span>smtp.example.com<span class="w"> </span><span class="m">25</span>
-Trying<span class="w"> </span><span class="m">192</span>.0.2.1...
-Connected<span class="w"> </span>to<span class="w"> </span>smtp.example.com.
-Escape<span class="w"> </span>character<span class="w"> </span>is<span class="w"> </span><span class="s1">&#39;^]&#39;</span>.
-<span class="m">220</span><span class="w"> </span>smtp.example.com<span class="w"> </span>ESMTP<span class="w"> </span>Postfix
-EHLO<span class="w"> </span>example.com
-<span class="m">250</span>-smtp.example.com
-<span class="m">250</span>-PIPELINING
-<span class="m">250</span>-SIZE<span class="w"> </span><span class="m">10240000</span>
-<span class="m">250</span>-VRFY
-<span class="m">250</span>-ETRN
-<span class="m">250</span>-STARTTLS
-<span class="m">250</span>-ENHANCEDSTATUSCODES
-<span class="m">250</span>-8BITMIME
-<span class="m">250</span><span class="w"> </span>DSN
-MAIL<span class="w"> </span>FROM:&lt;test@example.com&gt;
-<span class="m">250</span><span class="w"> </span><span class="m">2</span>.1.0<span class="w"> </span>Ok
-RCPT<span class="w"> </span>TO:&lt;user@example.com&gt;
-<span class="m">250</span><span class="w"> </span><span class="m">2</span>.1.5<span class="w"> </span>Ok
-DATA
-<span class="m">354</span><span class="w"> </span>End<span class="w"> </span>data<span class="w"> </span>with<span class="w"> </span>&lt;CR&gt;&lt;LF&gt;.&lt;CR&gt;&lt;LF&gt;
-Subject:<span class="w"> </span>Test<span class="w"> </span>Email
-This<span class="w"> </span>is<span class="w"> </span>a<span class="w"> </span><span class="nb">test</span><span class="w"> </span>email<span class="w"> </span>sent<span class="w"> </span>via<span class="w"> </span>Telnet.
-.
-<span class="m">250</span><span class="w"> </span><span class="m">2</span>.0.0<span class="w"> </span>Ok:<span class="w"> </span>queued<span class="w"> </span>as<span class="w"> </span><span class="m">12345</span>
-QUIT
-<span class="m">221</span><span class="w"> </span><span class="m">2</span>.0.0<span class="w"> </span>Bye
-Connection<span class="w"> </span>closed<span class="w"> </span>by<span class="w"> </span>foreign<span class="w"> </span>host.
-</code></pre>
-</div>
-
-<h2>Why This is Useful?</h2>
-
-<p>Using Telnet to test SMTP connectivity is a quick and effective way to:</p>
-
-<ul>
-<li>Verify if the SMTP server is reachable.</li>
-<li>Diagnose email delivery issues.</li>
-<li>Manually test SMTP commands and server responses.</li>
-</ul>
-
-<p>Hope you've found this article useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>January 17th, 2025</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/smtp/">
-					SMTP
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/telnet/">
-					Telnet
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/devops/">
-					DevOps
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
 	
-		
 		<a href="/pages/2">&laquo;</a>
-			
 	
 
 	
@@ -1275,11 +1093,11 @@ Connection<span class="w"> </span>closed<span class="w"> </span>by<span class="w
 		
 	
 		
-			<a class="" href="/pages/27">...</a>
+			<a class="" href="/pages/6">...</a>
 		
 	
 		
-			<a class="" href="/pages/32">32</a>
+			<a class="" href="/pages/33">33</a>
 		
 	
 
@@ -1316,7 +1134,7 @@ Connection<span class="w"> </span>closed<span class="w"> </span>by<span class="w
 		<li>
 			<a href="/category/linux/">
 				Linux
-				<span class="count">26</span>
+				<span class="count">28</span>
 			</a>
 		</li>
 		
@@ -1503,6 +1321,13 @@ Connection<span class="w"> </span>closed<span class="w"> </span>by<span class="w
 		</li>
 		
 		<li>
+			<a href="/category/self-reflection/">
+				Self-reflection
+				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/refactoring/">
 				Refactoring
 				<span class="count">3</span>
@@ -1566,6 +1391,20 @@ Connection<span class="w"> </span>closed<span class="w"> </span>by<span class="w
 		</li>
 		
 		<li>
+			<a href="/category/thoughts/">
+				Thoughts
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/windows/">
+				Windows
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/net-core/">
 				.NET Core
 				<span class="count">2</span>
@@ -1617,13 +1456,6 @@ Connection<span class="w"> </span>closed<span class="w"> </span>by<span class="w
 		<li>
 			<a href="/category/sql-server/">
 				SQL Server
-				<span class="count">2</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/selfreflection/">
-				Self-reflection
 				<span class="count">2</span>
 			</a>
 		</li>
@@ -1692,6 +1524,13 @@ Connection<span class="w"> </span>closed<span class="w"> </span>by<span class="w
 		</li>
 		
 		<li>
+			<a href="/category/uefi/">
+				UEFI
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/jetbrains/">
 				JetBrains
 				<span class="count">1</span>
@@ -1713,13 +1552,6 @@ Connection<span class="w"> </span>closed<span class="w"> </span>by<span class="w
 		</li>
 		
 		<li>
-			<a href="/category/thoughts/">
-				Thoughts
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/nginx/">
 				nginx
 				<span class="count">1</span>
@@ -1729,13 +1561,6 @@ Connection<span class="w"> </span>closed<span class="w"> </span>by<span class="w
 		<li>
 			<a href="/category/grub/">
 				GRUB
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/windows/">
-				Windows
 				<span class="count">1</span>
 			</a>
 		</li>
@@ -1860,15 +1685,15 @@ Connection<span class="w"> </span>closed<span class="w"> </span>by<span class="w
 		</li>
 		
 		<li>
-			<a href="/category/tech/">
-				Tech
+			<a href="/category/learning/">
+				Learning
 				<span class="count">1</span>
 			</a>
 		</li>
 		
 		<li>
-			<a href="/category/learning/">
-				Learning
+			<a href="/category/tech/">
+				Tech
 				<span class="count">1</span>
 			</a>
 		</li>

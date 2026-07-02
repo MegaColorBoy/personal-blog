@@ -77,6 +77,103 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/redirect-from-http-to-https-in-apache-virtualhosts">Redirect from HTTP to HTTPS in Apache VirtualHosts</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Here's a simple technique on how I learned to redirect a site from HTTP to HTTPS automatically using Apache's VirtualHost configuration.</p>
+
+<p>Go to your configuration file or <code>000-default.conf</code> and modify your configuration to something like this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>&lt;VirtualHost<span class="w"> </span>*:80&gt;
+<span class="w">    </span>ServerName<span class="w"> </span>your.domain.com
+<span class="w">    </span>Redirect<span class="w"> </span>permanent<span class="w"> </span>/<span class="w"> </span>https://your.domain.com/
+&lt;/VirtualHost&gt;
+
+&lt;VirtualHost<span class="w"> </span>*:443&gt;
+<span class="w">    </span>ServerName<span class="w"> </span>your.domain.com
+<span class="w">    </span>SSLEngine<span class="w"> </span>On
+<span class="w">    </span><span class="c1"># insert code here...</span>
+&lt;/VirtualHost&gt;
+</code></pre>
+</div>
+
+<p>Save the file and check if the configuration is correct before your restart the server:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>apachectl<span class="w"> </span>configtest
+</code></pre>
+</div>
+
+<p>If you get the message, <code>Syntax OK</code>, then go ahead and restart the server:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class="w"> </span>apache2
+</code></pre>
+</div>
+
+<p>Now, your visitors will be redirected from HTTP to HTTPS automatically!</p>
+
+<p>Hope you found this tip useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>July 9th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/quick-search-for-file-in-your-workspace-in-visual-studio-code">Quick Search for file in your workspace in Visual Studio Code</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Recently, started using Visual Studio Code as I'm yet figure out a way to install Sublime Text on Void Linux (using it as my current daily driver).</p>
+
+<p>I'm always used to looking for my files using keyboard shortcuts in Sublime Text and I was kind of surprised this feature isn't enabled by default in Visual Studio Code.</p>
+
+<p>Anyway, after a little digging, I found out that adding this line to your <code>settings.json</code> file would allow you to look for files in your workspace:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nt">&quot;search.useIgnoreFiles&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+</code></pre>
+</div>
+
+<p>And, now try <code>Ctrl+P</code> and you'll be able to search for your file(s) easily.</p>
+
+<p>Hope you found this tip useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>July 9th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/vscode/">
+					VSCode
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/how-to-install-composer-manually">How to install Composer manually?</a></h1>
 		<p class="description"></p>
 	</div>
@@ -325,52 +422,27 @@ Enter<span class="w"> </span>same<span class="w"> </span>passphrase<span class="
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/find-directories-created-within-a-date-range">Find directories created within a date range</a></h1>
+		<h1 class="heading"><a href="/til/posts/how-to-resolve-the-fatal-refusing-to-merge-unrelated-histories-git-error">How to resolve the "fatal: refusing to merge unrelated histories" Git error?</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>Executing these commands helps me create a sorted list of files/directories created within a specific date range:</p>
+		<p>This error shows up when two different projects are merged (i.e. they both could be the same project but unaware of each other's existence and have different commit histories).</p>
+
+<p>If you are facing this, chances are that:</p>
+
+<ol>
+<li><p>You must have cloned a project and the <code>.git</code> directory must have corrupted or got deleted and at this point, Git is unaware of the changes being made and will throw this error when you try to <em>push to</em> or <em>pull from</em> the remote repository.</p></li>
+<li><p>You created a new repository, made some changes and added the commits and then you tried to pull from the remote repository.</p></li>
+</ol>
+
+<p>Well, you can easily resolve by passing the <code>--allow-unrelated-histories</code> flag when pulling the latest updates from the remote repository:</p>
 
 <div class="codehilite">
-<pre><span></span><code>touch<span class="w"> </span>-t<span class="w"> </span><span class="m">202104100000</span><span class="w"> </span>start
-touch<span class="w"> </span>-t<span class="w"> </span><span class="m">202104150000</span><span class="w"> </span>stop
-find<span class="w"> </span>.<span class="w"> </span>-type<span class="w"> </span>d<span class="w"> </span>-maxdepth<span class="w"> </span><span class="m">1</span><span class="w"> </span>-newer<span class="w"> </span>start<span class="w"> </span><span class="se">\!</span><span class="w"> </span>-newer<span class="w"> </span>stop<span class="w"> </span><span class="p">|</span><span class="w"> </span>sort<span class="w"> </span>&gt;&gt;<span class="w"> </span>directories.txt
+<pre><span></span><code>git<span class="w"> </span>pull<span class="w"> </span>origin<span class="w"> </span>master<span class="w"> </span>--allow-unrelated-histories
 </code></pre>
 </div>
 
-<p>Someday, these commands shall come in handy, bud! &#x1F60E;</p>
-
-	</div>
-	<div class="article-footer">
-		<time>April 10th, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/unix/">
-					UNIX
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/perform-git-operations-using-path-directory">Perform Git operations using path directory</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>The <code>-C</code> flag means the path of the directory and using this flag, you can perform any Git operations outside the project's directory without having to enter the directory all the time:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>-C<span class="w"> </span>/path/to/directory<span class="w"> </span>&lt;command&gt;
-</code></pre>
-</div>
-
-<p>Hope this tip helps you out!</p>
+<p>Hope you found this useful!</p>
 
 	</div>
 	<div class="article-footer">
@@ -420,52 +492,11 @@ find<span class="w"> </span>.<span class="w"> </span>-type<span class="w"> </spa
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/fetch-selected-files-from-your-remote-repository">Fetch selected files from your remote repository</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Wanted to fetch a specific file from your Git repository except that the repository doesn't exist in your local machine?</p>
-
-<p>Try this out:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>init
-git<span class="w"> </span>remote<span class="w"> </span>add<span class="w"> </span>origin<span class="w"> </span>&lt;your_repo_link&gt;.git
-git<span class="w"> </span>fetch
-git<span class="w"> </span>checkout<span class="w"> </span>&lt;your_branch_name&gt;<span class="w"> </span>--<span class="w"> </span>&lt;/path/to/file&gt;
-</code></pre>
-</div>
-
-<p>After executing these commands, you should be able to see the selected directory/file in your project directory.</p>
-
-<p>Hope you found this useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>April 10th, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/git/">
-					Git
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
 	
-		
 		<a href="/til/pages/8">&laquo;</a>
-			
 	
 
 	
@@ -474,7 +505,7 @@ git<span class="w"> </span>checkout<span class="w"> </span>&lt;your_branch_name&
 		
 	
 		
-			<a class="" href="/til/pages/6">...</a>
+			<a class="" href="/til/pages/2">...</a>
 		
 	
 		
@@ -498,11 +529,11 @@ git<span class="w"> </span>checkout<span class="w"> </span>&lt;your_branch_name&
 		
 	
 		
-			<a class="" href="/til/pages/10">...</a>
+			<a class="" href="/til/pages/12">...</a>
 		
 	
 		
-			<a class="" href="/til/pages/21">21</a>
+			<a class="" href="/til/pages/22">22</a>
 		
 	
 
@@ -529,7 +560,7 @@ git<span class="w"> </span>checkout<span class="w"> </span>&lt;your_branch_name&
 		<li>
 			<a href="/category/linux/">
 				Linux
-				<span class="count">26</span>
+				<span class="count">28</span>
 			</a>
 		</li>
 		
@@ -716,6 +747,13 @@ git<span class="w"> </span>checkout<span class="w"> </span>&lt;your_branch_name&
 		</li>
 		
 		<li>
+			<a href="/category/self-reflection/">
+				Self-reflection
+				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/refactoring/">
 				Refactoring
 				<span class="count">3</span>
@@ -779,6 +817,20 @@ git<span class="w"> </span>checkout<span class="w"> </span>&lt;your_branch_name&
 		</li>
 		
 		<li>
+			<a href="/category/thoughts/">
+				Thoughts
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/windows/">
+				Windows
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/net-core/">
 				.NET Core
 				<span class="count">2</span>
@@ -830,13 +882,6 @@ git<span class="w"> </span>checkout<span class="w"> </span>&lt;your_branch_name&
 		<li>
 			<a href="/category/sql-server/">
 				SQL Server
-				<span class="count">2</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/selfreflection/">
-				Self-reflection
 				<span class="count">2</span>
 			</a>
 		</li>
@@ -905,6 +950,13 @@ git<span class="w"> </span>checkout<span class="w"> </span>&lt;your_branch_name&
 		</li>
 		
 		<li>
+			<a href="/category/uefi/">
+				UEFI
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/jetbrains/">
 				JetBrains
 				<span class="count">1</span>
@@ -926,13 +978,6 @@ git<span class="w"> </span>checkout<span class="w"> </span>&lt;your_branch_name&
 		</li>
 		
 		<li>
-			<a href="/category/thoughts/">
-				Thoughts
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/nginx/">
 				nginx
 				<span class="count">1</span>
@@ -942,13 +987,6 @@ git<span class="w"> </span>checkout<span class="w"> </span>&lt;your_branch_name&
 		<li>
 			<a href="/category/grub/">
 				GRUB
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/windows/">
-				Windows
 				<span class="count">1</span>
 			</a>
 		</li>
@@ -1073,15 +1111,15 @@ git<span class="w"> </span>checkout<span class="w"> </span>&lt;your_branch_name&
 		</li>
 		
 		<li>
-			<a href="/category/tech/">
-				Tech
+			<a href="/category/learning/">
+				Learning
 				<span class="count">1</span>
 			</a>
 		</li>
 		
 		<li>
-			<a href="/category/learning/">
-				Learning
+			<a href="/category/tech/">
+				Tech
 				<span class="count">1</span>
 			</a>
 		</li>

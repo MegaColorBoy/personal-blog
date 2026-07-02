@@ -77,6 +77,189 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/a-faster-way-to-apply-linux-permissions-for-large-laravel-projects-using-xargs-and-find">A Faster Way to Apply Linux Permissions for Large Laravel Projects Using xargs and find</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Today, I learned a more efficient way to apply Linux permissions to large projects by leveraging the power of <code>xargs</code> and <code>find</code>. This method is particularly useful when dealing with Laravel projects that have many files and directories, as it allows for parallel processing and excludes specific folders (like a <code>storage</code> directory) from the permission changes.</p>
+
+<p>Here’s the step-by-step process I followed:</p>
+
+<h2>1. Set Ownership of the Entire Project Folder</h2>
+
+<p>To ensure the correct ownership for the entire project, I used the <code>chown</code> command recursively:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>chown<span class="w"> </span>-R<span class="w"> </span><span class="o">[</span>username<span class="o">]</span>:<span class="o">[</span>groupname<span class="o">]</span><span class="w"> </span><span class="o">[</span>foldername<span class="o">]</span>
+</code></pre>
+</div>
+
+<p>This command sets the owner and group for all files and directories within the specified folder.</p>
+
+<h2>2. Set Permissions for the Project Folder and Its Top-Level Directories</h2>
+
+<p>Next, I applied the desired permissions to the project folder and its top-level directories using <code>chmod</code>:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>chmod<span class="w"> </span><span class="m">2775</span><span class="w"> </span><span class="o">[</span>foldername<span class="o">]</span>
+</code></pre>
+</div>
+
+<p>The <code>2775</code> permission sets the folder to allow read, write, and execute for the owner and group, and read and execute for others. The <code>2</code> enables the <strong>setgid bit</strong>, which ensures that new files and directories inherit the group of the parent folder.</p>
+
+<h2>3. Find and Change Permissions for All Directories (Except the Storage Folder) in Parallel</h2>
+
+<p>To apply permissions to all directories while excluding the <code>storage</code> folder, I combined <code>find</code>, <code>xargs</code>, and <code>chmod</code>:</p>
+
+<div class="codehilite">
+<pre><span></span><code>find<span class="w"> </span><span class="o">[</span>foldername<span class="o">]</span><span class="w"> </span>-path<span class="w"> </span><span class="o">[</span>foldername<span class="o">]</span>/storage<span class="w"> </span>-prune<span class="w"> </span>-o<span class="w"> </span>-type<span class="w"> </span>d<span class="w"> </span>-print0<span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>xargs<span class="w"> </span>-0<span class="w"> </span>-P<span class="w"> </span><span class="m">2</span><span class="w"> </span>chmod<span class="w"> </span><span class="m">2775</span>
+</code></pre>
+</div>
+
+<ul>
+<li><code>find [foldername] -path [foldername]/storage -prune -o -type d</code>: Finds all directories except the <code>storage</code> folder.</li>
+<li><code>-print0</code>: Outputs the results in a null-terminated format to handle spaces in filenames.</li>
+<li><code>xargs -0 -P 2</code>: Processes the results in parallel (2 processes at a time) for faster execution.</li>
+<li><code>chmod 2775</code>: Applies the desired permissions to the directories.</li>
+</ul>
+
+<h2>4. Find and Change Permissions for All Files (Except the Storage Folder) in Parallel</h2>
+
+<p>Similarly, I applied permissions to all files while excluding the <code>storage</code> folder:</p>
+
+<div class="codehilite">
+<pre><span></span><code>find<span class="w"> </span><span class="o">[</span>foldername<span class="o">]</span><span class="w"> </span>-path<span class="w"> </span><span class="o">[</span>foldername<span class="o">]</span>/storage<span class="w"> </span>-prune<span class="w"> </span>-o<span class="w"> </span>-type<span class="w"> </span>f<span class="w"> </span>-print0<span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>xargs<span class="w"> </span>-0<span class="w"> </span>-P<span class="w"> </span><span class="m">2</span><span class="w"> </span>chmod<span class="w"> </span><span class="m">0664</span>
+</code></pre>
+</div>
+
+<ul>
+<li><code>-type f</code>: Finds all files.</li>
+<li><code>chmod 0664</code>: Sets read and write permissions for the owner and group, and read-only for others.</li>
+</ul>
+
+<h2>5. Handle the Storage Folder Separately (If It’s Too Large)</h2>
+
+<p>For the <code>storage</code> folder, I applied permissions separately to avoid overloading the system:</p>
+
+<div class="codehilite">
+<pre><span></span><code>find<span class="w"> </span><span class="o">[</span>foldername<span class="o">]</span>/storage<span class="w"> </span>-type<span class="w"> </span>d<span class="w"> </span>-print0<span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>xargs<span class="w"> </span>-0<span class="w"> </span>-P<span class="w"> </span><span class="m">2</span><span class="w"> </span>chmod<span class="w"> </span><span class="m">2775</span>
+find<span class="w"> </span><span class="o">[</span>foldername<span class="o">]</span>/storage<span class="w"> </span>-type<span class="w"> </span>f<span class="w"> </span>-print0<span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>xargs<span class="w"> </span>-0<span class="w"> </span>-P<span class="w"> </span><span class="m">2</span><span class="w"> </span>chmod<span class="w"> </span><span class="m">0664</span>
+</code></pre>
+</div>
+
+<p>This ensures that the <code>storage</code> folder and its contents have the correct permissions without affecting the rest of the project.</p>
+
+<h2>Why This Approach?</h2>
+
+<p>Using <code>xargs</code> with <code>-P</code> allows for parallel processing, which speeds up permission changes significantly for large projects. Additionally, excluding specific folders (like <code>storage</code>) ensures that sensitive or frequently accessed directories are handled separately.</p>
+
+<p>This method has saved me a lot of time and effort when managing permissions for large projects.</p>
+
+<p>Hope you found this article useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>January 12th, 2025</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/laravel/">
+					Laravel
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/using-records-for-dtos">Using records for DTOs</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>If you're building an application or API using .NET Core in where you might have to integrate with any external services or third-party APIs, this is for you.</p>
+
+<h2>What are records?</h2>
+
+<p>It's a feature introduced since <strong>C# 9.0</strong> that allows you to create simple and immutable data types. When representing DTOs (Data Transfer Objects), it comes in handy because the syntax in concise and it's primarily used to transfer data between layers of an application such as the Core and Presentation Layer. </p>
+
+<p>Here's an example of a car using a regular <code>class</code> type:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">public</span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">Car</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">public</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="n">Manufacturer</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">get</span><span class="p">;</span><span class="w"> </span><span class="k">init</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+<span class="w">    </span><span class="k">public</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">Price</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">get</span><span class="p">;</span><span class="w"> </span><span class="k">init</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+<span class="w">    </span><span class="k">public</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="n">Color</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">get</span><span class="p">;</span><span class="w"> </span><span class="k">init</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<p>And here's a simplified version of that using <code>record</code> type:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">public</span><span class="w"> </span><span class="k">record</span><span class="w"> </span><span class="nf">Car</span><span class="p">(</span>
+<span class="w">    </span><span class="kt">string</span><span class="w"> </span><span class="n">Manufacturer</span><span class="p">,</span>
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">Price</span><span class="p">,</span>
+<span class="w">    </span><span class="kt">string</span><span class="w"> </span><span class="n">Color</span>
+<span class="p">);</span>
+</code></pre>
+</div>
+
+<p>Making use of the <code>record</code> type to manage Data Transfer Objects makes use of clean coding practicies by writing concise yet maintainable code.</p>
+
+<h2>So, no need of using classes?</h2>
+
+<p>Well, it depends because records aren't meant to replace classes for all scenarios. It's still recommended to use regular classes for complex types with complex behavior and whereas, records can be used for simple data structures.</p>
+
+<p>Hope you found this article useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>June 18th, 2024</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/net-core/">
+					.NET Core
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/c/">
+					C#
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/oop/">
+					OOP
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/using-property-pattern-matching-in-c">Using Property Pattern Matching in C#</a></h1>
 		<p class="description"></p>
 	</div>
@@ -468,200 +651,11 @@ That's fine but when working on a large project or tight deadlines, it can be qu
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/filtering-results-by-weekdays-in-sql-server">Filtering results by weekdays in SQL Server</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Ever wanted to know how many people are actively posting something on a Monday? Or maybe during the weekends?</p>
-
-<p>You can do that by using the <code>DATEPART</code> and <code>DATENAME</code> functions. Let me show you how they work.</p>
-
-<h2>Using DATEPART</h2>
-
-<p>The <code>DATEPART</code> function represents weekdays as integers from 1 (Sunday) to 7 (Saturday).</p>
-
-<p>Let's say that you wanted to filter between Monday and Friday, you can achieve something like this:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">dbo</span><span class="p">.</span><span class="n">YourTable</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">DATEPART</span><span class="p">(</span><span class="n">WEEKDAY</span><span class="p">,</span><span class="w"> </span><span class="n">YourDateColumn</span><span class="p">)</span><span class="w"> </span><span class="k">BETWEEN</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="mi">6</span><span class="p">;</span>
-</code></pre>
-</div>
-
-<p>One thing to note, in SQL Server, Sunday is the first day of the week. So, if you wanted to set the first day of the week, you can write the following statement before executing your query:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">SET</span><span class="w"> </span><span class="n">DATEFIRST</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w">  </span><span class="c1">-- Set Monday as the first day of the week</span>
-<span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">dbo</span><span class="p">.</span><span class="n">YourTable</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">DATEPART</span><span class="p">(</span><span class="n">WEEKDAY</span><span class="p">,</span><span class="w"> </span><span class="n">YourDateColumn</span><span class="p">)</span><span class="w"> </span><span class="k">BETWEEN</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="mi">5</span><span class="p">;</span>
-</code></pre>
-</div>
-
-<p>In the example above, you'll achieve the same results as the previous one.</p>
-
-<h2>Using DATENAME</h2>
-
-<p>The <code>DATENAME</code> function represents weekdays as a string from Monday to Sunday.</p>
-
-<p>Let's replicate the previous example using this function:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">dbo</span><span class="p">.</span><span class="n">YourTable</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">DATENAME</span><span class="p">(</span><span class="n">WEEKDAY</span><span class="p">,</span><span class="w"> </span><span class="n">YourDateColumn</span><span class="p">)</span><span class="w"> </span><span class="k">IN</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;Monday&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Tuesday&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Wednesday&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Thursday&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Friday&#39;</span><span class="p">);</span>
-</code></pre>
-</div>
-
-<p>If you want to know more about filtering your records effectively using these methods, you can the read the documentation:</p>
-
-<ul>
-<li><a href="https://learn.microsoft.com/en-us/sql/t-sql/functions/datename-transact-sql?view=sql-server-ver16">DATENAME (Transact-SQL)</a></li>
-<li><a href="https://learn.microsoft.com/en-us/sql/t-sql/functions/datepart-transact-sql?view=sql-server-ver16">DATEPART (Transact-SQL)</a></li>
-</ul>
-
-<p>Hope you found this tip useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>February 18th, 2024</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/sql-server/">
-					SQL Server
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/configure-xdebug-in-visual-studio-code">Configure XDebug in Visual Studio Code</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>For the past 6 months, I've been writing code in C# 11 and .NET 7 Core and of course, using the amazing Visual Studio 2022 IDE was quite an amazing experience especially when it comes to debugging your code.</p>
-
-<p>Recently, I had to switch back to classic ol' PHP and now, I wanted a similar debugging experience in Visual Studio Code.</p>
-
-<p>Using XDebug and if configured correctly, it'll be quite useful in your debugging journey instead of using <code>var_dump()</code> or <code>dd()</code> your variables everytime.</p>
-
-<h2>Prerequisites</h2>
-
-<p>The only thing you need here is Visual Studio Code and ensure that it's the latest version. I'm writing this from a Windows Machine using the latest version of WAMP Server.</p>
-
-<h2>1. Download PHP Debug</h2>
-
-<p>The official XDebug team has released an extension that could be installed in your editor. So, here you go, first <a href="https://xdebug.org/download">download it</a>.</p>
-
-<h2>2. Install XDebug</h2>
-
-<p>In the previous step, we just installed the extension for the editor but that's just an adapter used between the editor and XDebug.
-Whereas, XDebug is a PHP extension that needs to be installed on your local system.</p>
-
-<p>I'm not going to show you the installation process as this <a href="https://xdebug.org/docs/install">documentation</a> explains that well enough and you can follow it based on your operating system of choice.</p>
-
-<h2>3. PHP Configuration</h2>
-
-<p>After you're done with installing the extension, open your <code>php.ini</code> file and add the following line in this file:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="na">zend_extension</span><span class="o">=</span><span class="s">path/to/xdebug</span>
-</code></pre>
-</div>
-
-<p>Now, it's time to enable remote debugging. Depending on your XDebug version:</p>
-
-<p>For XDebug <code>v3.x.x</code>:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="na">xdebug.mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">debug</span>
-<span class="na">xdebug.start_with_request</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">yes</span>
-</code></pre>
-</div>
-
-<p>For XDebug <code>v2.x.x</code>:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="na">xdebug.remote_enable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">1</span>
-<span class="na">xdebug.remote_autostart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">1</span>
-<span class="na">xdebug.remote_port</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">9000</span>
-</code></pre>
-</div>
-
-<p>If you are looking for more specific options, please see read the <a href="https://xdebug.org/docs/remote#starting">documentation on remote debugging</a>. Please note that the default port in XDebug <code>v3.x.x</code> has been changed from <code>9000</code> to <code>9003</code>.</p>
-
-<p>Once done, restart your PHP service and check if the configuration has taken effect. You can do this by creating a simple <code>test.php</code> with a <code>phpinfo();</code> statement in there and look for your XDebug extension under the <strong>Loaded Configuration File</strong> section.</p>
-
-<h2>4. Visual Studio Code Configuration</h2>
-
-<p>In your editor, hold <kbd>CTRL</kbd> + <kbd>SHIFT</kbd> + <kbd>P</kbd> and type "Debug: Add Configuration" and it'll prompt you to select your language of preference and this case, of course, you should "PHP".</p>
-
-<p>Upon selecting, it'll automatically generate a <code>launch.json</code> file in your <code>.vscode</code> folder in your project folder.</p>
-
-<p>There'll be three different configurations in your file:</p>
-
-<ul>
-<li>Listen for XDebug: This setting will simply start listening on the specified port (by default <code>9003</code>) for XDebug.</li>
-<li>Launch currently open script: It will launch the currently opened script as a CLI, show all stdout/stderr output in the debug console and end the debug session once the script exits.</li>
-<li>Launch Built-in web server: This configuration starts the PHP built-in web server on a random port and opens the browser with the <code>serverReadyAction</code> directive.</li>
-</ul>
-
-<p>Now, to test if it works, hit <kbd>F5</kbd> and add a breakpoint in your PHP code and if it lands on your breakpoint, that means it works fine.</p>
-
-<p>Hope you found this article useful!</p>
-
-<h2>References</h2>
-
-<ul>
-<li><a href="https://marketplace.visualstudio.com/items?itemName=xdebug.php-debug">PHP Debug for VS Code</a></li>
-<li><a href="https://xdebug.org/docs/install">XDebug Installation Manual</a></li>
-</ul>
-
-	</div>
-	<div class="article-footer">
-		<time>December 31st, 2023</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/vscode/">
-					VSCode
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/php/">
-					PHP
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/xdebug/">
-					XDebug
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/development/">
-					Development
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
 	
-		
 		<a href="/til/pages/3">&laquo;</a>
-			
 	
 
 	
@@ -690,11 +684,11 @@ Whereas, XDebug is a PHP extension that needs to be installed on your local syst
 		
 	
 		
-			<a class="" href="/til/pages/15">...</a>
+			<a class="" href="/til/pages/7">...</a>
 		
 	
 		
-			<a class="" href="/til/pages/21">21</a>
+			<a class="" href="/til/pages/22">22</a>
 		
 	
 
@@ -721,7 +715,7 @@ Whereas, XDebug is a PHP extension that needs to be installed on your local syst
 		<li>
 			<a href="/category/linux/">
 				Linux
-				<span class="count">26</span>
+				<span class="count">28</span>
 			</a>
 		</li>
 		
@@ -908,6 +902,13 @@ Whereas, XDebug is a PHP extension that needs to be installed on your local syst
 		</li>
 		
 		<li>
+			<a href="/category/self-reflection/">
+				Self-reflection
+				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/refactoring/">
 				Refactoring
 				<span class="count">3</span>
@@ -971,6 +972,20 @@ Whereas, XDebug is a PHP extension that needs to be installed on your local syst
 		</li>
 		
 		<li>
+			<a href="/category/thoughts/">
+				Thoughts
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/windows/">
+				Windows
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/net-core/">
 				.NET Core
 				<span class="count">2</span>
@@ -1022,13 +1037,6 @@ Whereas, XDebug is a PHP extension that needs to be installed on your local syst
 		<li>
 			<a href="/category/sql-server/">
 				SQL Server
-				<span class="count">2</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/selfreflection/">
-				Self-reflection
 				<span class="count">2</span>
 			</a>
 		</li>
@@ -1097,6 +1105,13 @@ Whereas, XDebug is a PHP extension that needs to be installed on your local syst
 		</li>
 		
 		<li>
+			<a href="/category/uefi/">
+				UEFI
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/jetbrains/">
 				JetBrains
 				<span class="count">1</span>
@@ -1118,13 +1133,6 @@ Whereas, XDebug is a PHP extension that needs to be installed on your local syst
 		</li>
 		
 		<li>
-			<a href="/category/thoughts/">
-				Thoughts
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/nginx/">
 				nginx
 				<span class="count">1</span>
@@ -1134,13 +1142,6 @@ Whereas, XDebug is a PHP extension that needs to be installed on your local syst
 		<li>
 			<a href="/category/grub/">
 				GRUB
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/windows/">
-				Windows
 				<span class="count">1</span>
 			</a>
 		</li>
@@ -1265,15 +1266,15 @@ Whereas, XDebug is a PHP extension that needs to be installed on your local syst
 		</li>
 		
 		<li>
-			<a href="/category/tech/">
-				Tech
+			<a href="/category/learning/">
+				Learning
 				<span class="count">1</span>
 			</a>
 		</li>
 		
 		<li>
-			<a href="/category/learning/">
-				Learning
+			<a href="/category/tech/">
+				Tech
 				<span class="count">1</span>
 			</a>
 		</li>

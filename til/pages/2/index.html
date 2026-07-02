@@ -77,6 +77,276 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/eliminate-laravel-env-leakage-between-multiple-sites-on-apache-windows">Eliminate Laravel .env leakage between multiple sites on Apache (Windows)</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Today, I learned something pretty important (and frustrating until I figured it out): if you're running <strong>multiple Laravel applications</strong> on <strong>Apache (Windows)</strong> using <code>mod_php</code>, you can run into a strange bug where <strong>one site's <code>.env</code> settings override the other</strong>.</p>
+
+<p>This became painfully obvious when I noticed that <strong>one of my Laravel sites was randomly connecting to the wrong database</strong>, even though the configurations in each <code>.env</code> were different. Weird, right?</p>
+
+<p>Turns out, the culprit was <code>mod_php</code>.</p>
+
+<h2>The problem</h2>
+
+<p>I had two Laravel sites hosted on the same Windows machine with Apache. Both were running fine — until they weren’t.</p>
+
+<p>The issue? Sometimes one site would pick up the database config of the other. One minute I’d be on Site A, and then somehow its <code>.env</code> settings were coming from Site B. </p>
+
+<p>This is just total chaos and worse, this issue existed from more two years until I decided to dive into the problem.</p>
+
+<h2>The cause</h2>
+
+<p>Laravel loads <code>.env</code> values during the bootstrap process and <strong>caches them in memory</strong>. When using <code>mod_php</code>, Apache loads PHP as a module <strong>once</strong> and shares it across all sites. That means <strong>only one copy of Laravel’s environment gets loaded — and reused</strong> across both apps.</p>
+
+<p>So even if each app had its own <code>.env</code>, it didn’t matter. Apache was essentially saying:</p>
+
+<blockquote>
+  <p>“Hey, here’s PHP. I already booted Laravel with this config — just reuse it.”</p>
+</blockquote>
+
+<h2>The solution</h2>
+
+<p>After some digging, the solution is <strong>ditch <code>mod_php</code></strong> and switch to <strong>FastCGI (<code>mod_fcgid</code>)</strong>.</p>
+
+<p>With FastCGI, each site runs its own instance of PHP via <code>php-cgi.exe</code>, which <strong>boots Laravel in isolation</strong> — meaning <strong>each <code>.env</code> file is respected per site</strong>.</p>
+
+<h3>How to configure it?</h3>
+
+<p>First, you need to disable <strong><code>mod_php</code></strong> in <code>httpd.conf</code>:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="c"># LoadModule php_module &quot;C:/path/to/php/php8apache2_4.dll&quot;</span>
+<span class="c"># &lt;FilesMatch \.php$&gt;</span>
+<span class="c">#     SetHandler application/x-httpd-php</span>
+<span class="c"># &lt;/FilesMatch&gt;</span>
+<span class="c"># PHPIniDir &quot;C:/path/to/php/&quot;</span>
+</code></pre>
+</div>
+
+<p>Then install <strong><code>mod_fcgid</code></strong> from Apache Lounge and copy <code>mod_fcgid.so</code> to <code>modules/</code> directory and enable it in <code>httpd.conf</code>:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nb">LoadModule</span><span class="w"> </span>fcgid_module<span class="w"> </span>modules/mod_fcgid.so
+<span class="nb">Include</span><span class="w"> </span>conf/extra/httpd-fcgid.conf
+</code></pre>
+</div>
+
+<p>Next, you have to create/update <strong><code>httpd-fcgid.conf</code></strong>:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nt">&lt;IfModule</span><span class="w"> </span><span class="s">fcgid_module</span><span class="nt">&gt;</span>
+<span class="w">   </span><span class="nb">AddHandler</span><span class="w"> </span>fcgid-script<span class="w"> </span>.php
+<span class="w">   </span><span class="nb">FcgidInitialEnv</span><span class="w"> </span>PHPRC<span class="w"> </span><span class="s2">&quot;C:/path/to/php&quot;</span>
+<span class="w">   </span><span class="nb">FcgidWrapper</span><span class="w"> </span><span class="s2">&quot;C:/path/to/php/php-cgi.exe&quot;</span><span class="w"> </span>.php
+<span class="w">   </span><span class="nb">Options</span><span class="w"> </span>+ExecCGI
+<span class="w">   </span><span class="nb">FcgidMaxProcessesPerClass</span><span class="w"> </span><span class="m">150</span>
+<span class="w">   </span><span class="nb">FcgidMaxRequestsPerProcess</span><span class="w"> </span><span class="m">1000</span>
+<span class="w">   </span><span class="nb">FcgidProcessLifeTime</span><span class="w"> </span><span class="m">300</span>
+<span class="w">   </span><span class="nb">FcgidIOTimeout</span><span class="w"> </span><span class="m">120</span>
+<span class="w">   </span><span class="nb">FcgidPassHeader</span><span class="w"> </span>Authorization
+<span class="w">   </span><span class="nb">FcgidFixPathinfo</span><span class="w"> </span><span class="m">0</span>
+<span class="nt">&lt;/IfModule&gt;</span>
+</code></pre>
+</div>
+
+<p>And then atlast, update your virtual host:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nt">&lt;VirtualHost</span><span class="w"> </span><span class="s">*:443</span><span class="nt">&gt;</span>
+<span class="w">   </span><span class="nb">ServerName</span><span class="w"> </span>example.com
+<span class="w">   </span><span class="nb">DocumentRoot</span><span class="w"> </span><span class="s2">&quot;C:/path/to/website/public&quot;</span>
+
+<span class="w">   </span><span class="nt">&lt;Directory</span><span class="w"> </span><span class="s">&quot;C:/path/to/website/public&quot;</span><span class="nt">&gt;</span>
+<span class="w">      </span><span class="nb">Options</span><span class="w"> </span>+ExecCGI<span class="w"> </span>-Indexes<span class="w"> </span>+FollowSymLinks
+<span class="w">      </span><span class="nb">AllowOverride</span><span class="w"> </span><span class="k">All</span>
+<span class="w">      </span><span class="nb">Require</span><span class="w"> </span><span class="k">all</span><span class="w"> </span>granted
+<span class="w">      </span><span class="nb">AddHandler</span><span class="w"> </span>fcgid-script<span class="w"> </span>.php
+<span class="w">      </span><span class="nb">FCGIWrapper</span><span class="w"> </span><span class="s2">&quot;C:/path/to/php/php-cgi.exe&quot;</span><span class="w"> </span>.php
+<span class="w">   </span><span class="nt">&lt;/Directory&gt;</span>
+
+<span class="w">   </span><span class="nb">SSLEngine</span><span class="w"> </span><span class="k">on</span>
+<span class="w">   </span><span class="nb">SSLCertificateFile</span><span class="w"> </span><span class="s2">&quot;...&quot;</span>
+<span class="w">   </span><span class="nb">SSLCertificateKeyFile</span><span class="w"> </span><span class="s2">&quot;...&quot;</span>
+<span class="nt">&lt;/VirtualHost&gt;</span>
+</code></pre>
+</div>
+
+<p>Restart the nginx service and clear the laravel application cache:</p>
+
+<div class="codehilite">
+<pre><span></span><code>httpd<span class="w"> </span>-k<span class="w"> </span>restart
+php<span class="w"> </span>artisan<span class="w"> </span>config:clear
+php<span class="w"> </span>artisan<span class="w"> </span>cache:clear
+</code></pre>
+</div>
+
+<h3>Bonus: Fixing 403 Forbidden Errors</h3>
+
+<p>After switching to FastCGI, I ran into a <code>403 Forbidden</code> error on one site. That turned out to be a <strong>missing <code>Options +ExecCGI</code></strong> and <code>Require all granted</code> in the <code>&lt;Directory&gt;</code> block. Once added, everything worked perfectly.</p>
+
+<h2>Result</h2>
+
+<p>Now, each Laravel site runs completely isolated, even though they use the same <code>php-cgi.exe</code>. No more <code>.env</code> bleed. No more wrong DBs. Just clean, independent Laravel environments — as it should be.</p>
+
+<h2>Takeaways</h2>
+
+<ul>
+<li>Don’t run multiple Laravel apps on Apache with <code>mod_php</code> unless you're okay with shared config risks.</li>
+<li>Use <code>mod_fcgid</code> and <code>php-cgi.exe</code> for <strong>true isolation</strong>.</li>
+<li>Even if using the <strong>same PHP version</strong>, FastCGI will <strong>spawn separate processes</strong>, so <code>.env</code> loading stays scoped.</li>
+<li>Always check Apache error logs (<code>error.log</code>) and <code>php_sapi_name()</code> for confirmation.</li>
+</ul>
+
+<p>If you’re running Laravel on Windows with Apache — <strong>this fix is a must</strong>. </p>
+
+<p>Happy hosting and hope you found this article useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>May 13th, 2025</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/php/">
+					PHP
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/windows/">
+					Windows
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/apache/">
+					Apache
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/removing-commits-from-a-branch-using-git-interactive-rebase">Removing Commits from a Branch Using Git Interactive Rebase</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>I'm working on a project that had approximately five minor incident fixes. However, I got approval from the client side to push only three of them. Luckily, my commits are atomic, so making this build was easier than I thought.</p>
+
+<p>At this moment, I decided to clone the latest branch into a temporary branch and roll back two commits for today's deployment while keeping the latest branch intact with all the fixes.</p>
+
+<p>To achieve this, I used <strong>Git interactive rebase</strong>, a powerful tool for modifying commit history.</p>
+
+<h2>Why Use Interactive Rebase?</h2>
+
+<p>Interactive rebase allows you to modify commit history, including:</p>
+
+<ul>
+<li>Removing unwanted commits</li>
+<li>Reordering commits</li>
+<li>Squashing multiple commits into one</li>
+<li>Editing commit messages</li>
+</ul>
+
+<h2>How I Did It?</h2>
+
+<p>Here’s the step-by-step process I followed:</p>
+
+<h3>1. Clone the Branch</h3>
+
+<p>Before making any changes, I cloned the branch to have a backup:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>checkout<span class="w"> </span>-b<span class="w"> </span>my-cloned-branch<span class="w"> </span>original-branch
+</code></pre>
+</div>
+
+<h3>2. Start Interactive Rebase</h3>
+
+<p>To remove specific commits, I ran:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>rebase<span class="w"> </span>-i<span class="w"> </span>HEAD~N
+</code></pre>
+</div>
+
+<p>Where <code>N</code> is the number of commits I wanted to review. This opened an editor displaying the most recent commits.</p>
+
+<h3>3. Modify the Commit List</h3>
+
+<p>The interactive rebase interface showed something like this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>pick<span class="w"> </span>abc123<span class="w"> </span>Commit<span class="w"> </span>message<span class="w"> </span><span class="m">1</span>
+pick<span class="w"> </span>def456<span class="w"> </span>Commit<span class="w"> </span>message<span class="w"> </span><span class="m">2</span>
+pick<span class="w"> </span>ghi789<span class="w"> </span>Commit<span class="w"> </span>message<span class="w"> </span><span class="m">3</span>
+</code></pre>
+</div>
+
+<p>To <strong>remove</strong> a commit, I replaced <code>pick</code> with <code>drop</code>.</p>
+
+<p>To <strong>edit</strong> or <strong>squash</strong> commits, I could replace <code>pick</code> with commands like <code>edit</code> or <code>squash</code>.</p>
+
+<p>After making my changes, I saved and closed the editor.</p>
+
+<h3>4. Handle Any Conflicts (If Needed)</h3>
+
+<p>If Git encountered conflicts, it prompted me to resolve them. I fixed the files and continued the rebase:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>rebase<span class="w"> </span>--continue
+</code></pre>
+</div>
+
+<h2>Key Takeaways</h2>
+
+<ul>
+<li>Interactive rebase is powerful for cleaning up commit history.</li>
+<li>Always clone or create a backup branch before rebasing.</li>
+<li>If working with a team, communicate before modifying shared branches.</li>
+</ul>
+
+<p>This was a great learning experience, and now I feel more confident managing Git history efficiently!</p>
+
+<p>Hope you found this tip useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>February 24th, 2025</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/git/">
+					Git
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/vcs/">
+					VCS
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/recovering-my-sql-after-an-accidental-binlog-deletion">Recovering MySQL After an Accidental Binlog Deletion</a></h1>
 		<p class="description"></p>
 	</div>
@@ -821,220 +1091,11 @@ sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class=
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-find-users-with-duplicate-email-addresses-in-sql">How to Find Users with Duplicate Email Addresses in SQL?</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>When managing a database with user information, ensuring data integrity is crucial. One common issue that can arise is duplicate email addresses in the <code>users</code> table. </p>
-
-<p>Let me show you how to write a simple yet powerful SQL query to identify such duplicates!</p>
-
-<h2>The Problem</h2>
-
-<p>In many applications, email addresses should be unique identifiers for users. However, duplicates can sneak into the database due to bugs, manual data imports, or other anomalies. Detecting and resolving these duplicates is essential to maintain data integrity and ensure proper functionality of user-related features, such as authentication.</p>
-
-<h2>The Solution</h2>
-
-<p>Using SQL, you can quickly find all duplicate email addresses in your <code>users</code> table by leveraging the <code>GROUP BY</code> and <code>HAVING</code> clauses.</p>
-
-<p>Here’s the query:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">email</span><span class="p">,</span><span class="w"> </span><span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">email_count</span>
-<span class="k">FROM</span><span class="w"> </span><span class="n">users</span>
-<span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">email</span>
-<span class="k">HAVING</span><span class="w"> </span><span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
-</code></pre>
-</div>
-
-<h2>How It Works:</h2>
-
-<ol>
-<li><code>GROUP BY email</code>: Groups the rows in the <code>users</code> table by the email column, so each group represents a unique email.</li>
-<li><code>COUNT(*)</code>: Counts the number of rows in each group.</li>
-<li><code>HAVING COUNT(*) &gt; 1</code>: Filters the groups to only include those where the count is greater than 1, i.e., duplicate email addresses.</li>
-</ol>
-
-<h2>Enhanced Query for User Details</h2>
-
-<p>If you want to see more details about the users who share the same email address (e.g., user IDs, names), you can use a subquery:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">u</span><span class="p">.</span><span class="o">*</span>
-<span class="k">FROM</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="n">u</span>
-<span class="k">JOIN</span><span class="w"> </span><span class="p">(</span>
-<span class="w">    </span><span class="k">SELECT</span><span class="w"> </span><span class="n">email</span>
-<span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">users</span>
-<span class="w">    </span><span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">email</span>
-<span class="w">    </span><span class="k">HAVING</span><span class="w"> </span><span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1</span>
-<span class="p">)</span><span class="w"> </span><span class="n">dup_emails</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">u</span><span class="p">.</span><span class="n">email</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dup_emails</span><span class="p">.</span><span class="n">email</span><span class="p">;</span>
-</code></pre>
-</div>
-
-<h2>Explanation</h2>
-
-<ul>
-<li>The subquery identifies all duplicate email addresses.</li>
-<li>The main query joins this result with the <code>users</code> table to retrieve detailed information about each user associated with the duplicate emails.</li>
-</ul>
-
-<h2>Final Thoughts</h2>
-
-<p>This simple query can save you a lot of time when auditing your database for duplicate entries. Whether you’re cleaning up data or debugging an issue, identifying duplicates is an important step toward ensuring a robust and reliable application.</p>
-
-<p>Hope you found this tip useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>January 20th, 2025</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/databases/">
-					Databases
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/sql/">
-					SQL
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/mysql/">
-					MySQL
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-filter-records-based-on-a_string-column-containing-numbers-with-commas-and-dots">How to Filter Records Based on a String Column Containing Numbers with Commas and Dots?</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Last month, I encountered a scenario where I needed to filter records in a database based on a "revenue" column. The challenge? The <code>revenue</code> column was stored as a string data type, and some of the values contained commas (<code>,</code>) and dots (<code>.</code>). Here’s how I tackled the problem and wrote an SQL query to filter records based on the numeric value of the <code>revenue</code> column.</p>
-
-<h2>What I faced?</h2>
-
-<p>The <code>revenue</code> column was stored as a string, and the values looked like this:</p>
-
-<ul>
-<li>"50,000,000"</li>
-<li>"75.000.000"</li>
-<li>"10000000"</li>
-</ul>
-
-<p>I needed to filter records where the revenue was greater than <strong>"50,000,000"</strong>. However, since the column was a string, I couldn’t directly compare it to a numeric value.</p>
-
-<h2>What I did?</h2>
-
-<p>To handle this, I used a combination of SQL functions:</p>
-
-<ol>
-<li><code>REPLACE</code>: To remove commas (<code>,</code>) and dots (<code>.</code>) from the string.</li>
-<li><code>CAST</code>: To convert the cleaned string into a numeric data type (<code>DECIMAL</code> in this case).</li>
-</ol>
-
-<p>Here’s the SQL query I wrote:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span>
-<span class="k">FROM</span><span class="w"> </span><span class="n">your_table</span>
-<span class="k">WHERE</span><span class="w"> </span><span class="k">CAST</span><span class="p">(</span><span class="k">REPLACE</span><span class="p">(</span><span class="n">revenue</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;,&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="nb">DECIMAL</span><span class="p">(</span><span class="mi">18</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">))</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">50000000</span><span class="p">;</span>
-</code></pre>
-</div>
-
-<p>Need a breakdown? Here you go:</p>
-
-<ol>
-<li><code>REPLACE(revenue, ',', '')</code>:
-This removes commas from the <code>revenue</code> string. For example, <strong>"50,000,000"</strong> becomes <strong>"50000000"</strong>.</li>
-<li><code>CAST(... AS DECIMAL(18, 2))</code>:
-This converts the cleaned string into a <code>DECIMAL</code> value with 18 total digits and 2 decimal places. For example, <strong>"50000000"</strong> becomes <strong>50000000.00</strong>.</li>
-<li><code>&gt; 50000000</code>:
-Finally, the query filters records where the numeric value of <code>revenue</code> is greater than <strong>50,000,000</strong>.</li>
-</ol>
-
-<h2>Handling Dots as Thousand Separators</h2>
-
-<p>If the <code>revenue</code> column uses dots (<code>.</code>) as thousand separators (e.g., <strong>"75.000.000"</strong>), you can extend the <code>REPLACE</code> function to remove dots as well:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span>
-<span class="k">FROM</span><span class="w"> </span><span class="n">your_table</span>
-<span class="k">WHERE</span><span class="w"> </span><span class="k">CAST</span><span class="p">(</span><span class="k">REPLACE</span><span class="p">(</span><span class="k">REPLACE</span><span class="p">(</span><span class="n">revenue</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;,&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">),</span><span class="w"> </span><span class="s1">&#39;.&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="nb">DECIMAL</span><span class="p">(</span><span class="mi">18</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">))</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">50000000</span><span class="p">;</span>
-</code></pre>
-</div>
-
-<p>This ensures that both commas and dots are removed before converting the string to a numeric value.</p>
-
-<h2>Why did I do this?</h2>
-
-<p>This approach is helpful when:</p>
-
-<ul>
-<li>You’re working with data stored as strings but need to perform numeric comparisons.</li>
-<li>The data contains formatting characters like commas or dots.</li>
-<li>You want to avoid manual data cleaning or preprocessing.</li>
-</ul>
-
-<p>By using SQL functions like <code>REPLACE</code> and <code>CAST</code>, you can handle these scenarios directly in your queries.</p>
-
-<p>Oh, this works for SQL and MySQL as well!</p>
-
-<p>Hope you found this article useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>January 19th, 2025</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/sql/">
-					SQL
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/mysql/">
-					MySQL
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/databases/">
-					Databases
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/data-manipulation/">
-					Data Manipulation
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
 	
-		
 		<a href="/til/">&laquo;</a>
-			
 	
 
 	
@@ -1055,11 +1116,11 @@ Finally, the query filters records where the numeric value of <code>revenue</cod
 		
 	
 		
-			<a class="" href="/til/pages/17">...</a>
+			<a class="" href="/til/pages/5">...</a>
 		
 	
 		
-			<a class="" href="/til/pages/21">21</a>
+			<a class="" href="/til/pages/22">22</a>
 		
 	
 
@@ -1086,7 +1147,7 @@ Finally, the query filters records where the numeric value of <code>revenue</cod
 		<li>
 			<a href="/category/linux/">
 				Linux
-				<span class="count">26</span>
+				<span class="count">28</span>
 			</a>
 		</li>
 		
@@ -1273,6 +1334,13 @@ Finally, the query filters records where the numeric value of <code>revenue</cod
 		</li>
 		
 		<li>
+			<a href="/category/self-reflection/">
+				Self-reflection
+				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/refactoring/">
 				Refactoring
 				<span class="count">3</span>
@@ -1336,6 +1404,20 @@ Finally, the query filters records where the numeric value of <code>revenue</cod
 		</li>
 		
 		<li>
+			<a href="/category/thoughts/">
+				Thoughts
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/windows/">
+				Windows
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/net-core/">
 				.NET Core
 				<span class="count">2</span>
@@ -1387,13 +1469,6 @@ Finally, the query filters records where the numeric value of <code>revenue</cod
 		<li>
 			<a href="/category/sql-server/">
 				SQL Server
-				<span class="count">2</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/selfreflection/">
-				Self-reflection
 				<span class="count">2</span>
 			</a>
 		</li>
@@ -1462,6 +1537,13 @@ Finally, the query filters records where the numeric value of <code>revenue</cod
 		</li>
 		
 		<li>
+			<a href="/category/uefi/">
+				UEFI
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/jetbrains/">
 				JetBrains
 				<span class="count">1</span>
@@ -1483,13 +1565,6 @@ Finally, the query filters records where the numeric value of <code>revenue</cod
 		</li>
 		
 		<li>
-			<a href="/category/thoughts/">
-				Thoughts
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/nginx/">
 				nginx
 				<span class="count">1</span>
@@ -1499,13 +1574,6 @@ Finally, the query filters records where the numeric value of <code>revenue</cod
 		<li>
 			<a href="/category/grub/">
 				GRUB
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/windows/">
-				Windows
 				<span class="count">1</span>
 			</a>
 		</li>
@@ -1630,15 +1698,15 @@ Finally, the query filters records where the numeric value of <code>revenue</cod
 		</li>
 		
 		<li>
-			<a href="/category/tech/">
-				Tech
+			<a href="/category/learning/">
+				Learning
 				<span class="count">1</span>
 			</a>
 		</li>
 		
 		<li>
-			<a href="/category/learning/">
-				Learning
+			<a href="/category/tech/">
+				Tech
 				<span class="count">1</span>
 			</a>
 		</li>

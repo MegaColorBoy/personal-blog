@@ -77,211 +77,6 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/find-directories-older-than-a-specific-date-and-sorted-by-size">Find directories older than a specific date and sorted by size</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Wanted to see which directories were created on an older date along with their sizes? Try this:</p>
-
-<div class="codehilite">
-<pre><span></span><code>find<span class="w"> </span>.<span class="w"> </span>-type<span class="w"> </span>d<span class="w"> </span>-maxdepth<span class="w"> </span><span class="m">1</span><span class="w"> </span>!<span class="w"> </span>-newermt<span class="w"> </span><span class="s2">&quot;2021-04-10&quot;</span><span class="w"> </span>-exec<span class="w"> </span>du<span class="w"> </span>-sh<span class="w"> </span><span class="o">{}</span><span class="w"> </span><span class="se">\;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sort<span class="w"> </span>-h<span class="w"> </span>&gt;&gt;<span class="w"> </span>oldprojectsizes.txt
-</code></pre>
-</div>
-
-<p>Hope you found this tip useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>April 10th, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/unix/">
-					UNIX
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-change-the-character-encoding-of-a-file-via-terminal">How to change the character encoding of a file via Terminal?</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Sometimes, I face character encoding issues while making minor edits via a SFTP console connected to a Linux server. I found a quick hack to change the file encoding using <code>vim</code> on the command line.</p>
-
-<p>In this example, I'm changing the encoding of the file to <code>unix</code>:</p>
-
-<div class="codehilite">
-<pre><span></span><code>vim<span class="w"> </span><span class="nv">$filename</span><span class="w"> </span>+<span class="s2">&quot;set ff=unix&quot;</span><span class="w"> </span>+wq
-</code></pre>
-</div>
-
-<p>Hope you found this helpful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>April 10th, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/unix/">
-					UNIX
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-perform-mysqldump-without-a-password-prompt">How to perform mysqldump without a password prompt?</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>If you're performing a mass database backup using <code>mysqldump</code>, you'll pretty much find it annoying to type in the password every single time.</p>
-
-<p>To get rid of it, open <code>/etc/mysql/my.cnf</code> configuration file and add your database credentials:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="err">[</span><span class="n">mysqldump</span><span class="err">]</span>
-<span class="k">user</span><span class="o">=</span><span class="s2">&quot;your_username&quot;</span>
-<span class="k">password</span><span class="o">=</span><span class="s2">&quot;your_password&quot;</span>
-</code></pre>
-</div>
-
-<p>Once done, save the <code>my.cnf</code> configuration file and now, you can try exporting your database without a hassle like this:</p>
-
-<div class="codehilite">
-<pre><span></span><code>mysqldump<span class="w"> </span>-u<span class="w"> </span>your_username<span class="w"> </span>database_name<span class="w"> </span>&gt;<span class="w"> </span>database.sql
-</code></pre>
-</div>
-
-<p>Hope this trick helps you out!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>April 10th, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/unix/">
-					UNIX
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-recover-from-an-errorneous-forced-git-commit">How to recover from an errorneous forced git commit?</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>If you're the type of person who types <code>git push -f origin master</code>, please don't do that as it might overwrite your entire branch. I'm saying this because I did this once and I thought I lost all the files.</p>
-
-<p>Luckily, I was a bit relieved as <code>git</code> is a VCS (Version Control Software), which means the files are most likely not <strong>deleted</strong>. This is when I came across <code>git reflog</code> command.</p>
-
-<p>According to the <a href="https://git-scm.com/docs/git-reflog">Git manual</a>, this is what it does:</p>
-
-<blockquote>
-  <p>Reference logs, or "reflogs", record when the tips of branches and other references were updated in the local repository.</p>
-</blockquote>
-
-<p>This is a life-saver especially if you wanted to return back to the previous point in time. Here's how I recovered my files back again:</p>
-
-<ol>
-<li>Type <code>git reflog show remotes/origin/master</code></li>
-<li>Find and make note of the previous commit hash.</li>
-<li>Create a new branch with using the previous commit hash like this: <code>git branch &lt;new_branch_name&gt; &lt;previous_commit_hash&gt;</code></li>
-<li>Then finally, push the files to the new branch: <code>git add . &amp;&amp; git commit -m "pushing recovered files" &amp;&amp; git push origin &lt;new_branch_name&gt;</code></li>
-<li>Checkout to the newly created branch: <code>git checkout &lt;new_branch_name&gt;</code></li>
-<li>Delete the corrupted branch and replace it with the newly created branch that contains your restored files.</li>
-</ol>
-
-<p>If I didn't discover this, I don't really know what I would have done to recover those files.</p>
-
-<h2>References</h2>
-
-<ul>
-<li><a href="https://git-scm.com/docs/git-reflog">Git reflog documentation</a></li>
-<li><a href="https://stackoverflow.com/questions/3973994/how-can-i-recover-from-an-erronous-git-push-f-origin-master">How can I recover from an erronous git push -f origin master?</a></li>
-</ul>
-
-<p>Hope this helps you out!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>April 10th, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/git/">
-					Git
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-resolve-the-fatal-refusing-to-merge-unrelated-histories-git-error">How to resolve the "fatal: refusing to merge unrelated histories" Git error?</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>This error shows up when two different projects are merged (i.e. they both could be the same project but unaware of each other's existence and have different commit histories).</p>
-
-<p>If you are facing this, chances are that:</p>
-
-<ol>
-<li><p>You must have cloned a project and the <code>.git</code> directory must have corrupted or got deleted and at this point, Git is unaware of the changes being made and will throw this error when you try to <em>push to</em> or <em>pull from</em> the remote repository.</p></li>
-<li><p>You created a new repository, made some changes and added the commits and then you tried to pull from the remote repository.</p></li>
-</ol>
-
-<p>Well, you can easily resolve by passing the <code>--allow-unrelated-histories</code> flag when pulling the latest updates from the remote repository:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>pull<span class="w"> </span>origin<span class="w"> </span>master<span class="w"> </span>--allow-unrelated-histories
-</code></pre>
-</div>
-
-<p>Hope you found this useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>April 10th, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/git/">
-					Git
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/zip-all-files-that-are-modified-on-a-specific-date">Zip all files that are modified on a specific date</a></h1>
 		<p class="description"></p>
 	</div>
@@ -347,6 +142,38 @@ find<span class="w"> </span>.<span class="w"> </span>-maxdepth<span class="w"> <
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/find-directories-older-than-a-specific-date-and-sorted-by-size">Find directories older than a specific date and sorted by size</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Wanted to see which directories were created on an older date along with their sizes? Try this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>find<span class="w"> </span>.<span class="w"> </span>-type<span class="w"> </span>d<span class="w"> </span>-maxdepth<span class="w"> </span><span class="m">1</span><span class="w"> </span>!<span class="w"> </span>-newermt<span class="w"> </span><span class="s2">&quot;2021-04-10&quot;</span><span class="w"> </span>-exec<span class="w"> </span>du<span class="w"> </span>-sh<span class="w"> </span><span class="o">{}</span><span class="w"> </span><span class="se">\;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sort<span class="w"> </span>-h<span class="w"> </span>&gt;&gt;<span class="w"> </span>oldprojectsizes.txt
+</code></pre>
+</div>
+
+<p>Hope you found this tip useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>April 10th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/unix/">
+					UNIX
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/get-a-list-of-directories-with-their-sizes-in-the-current-directory">Get a list of directories with their sizes in the current directory</a></h1>
 		<p class="description"></p>
 	</div>
@@ -375,6 +202,38 @@ find<span class="w"> </span>.<span class="w"> </span>-maxdepth<span class="w"> <
 			<li>
 				<a href="/category/unix/">
 					UNIX
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/perform-git-operations-using-path-directory">Perform Git operations using path directory</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>The <code>-C</code> flag means the path of the directory and using this flag, you can perform any Git operations outside the project's directory without having to enter the directory all the time:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>-C<span class="w"> </span>/path/to/directory<span class="w"> </span>&lt;command&gt;
+</code></pre>
+</div>
+
+<p>Hope this tip helps you out!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>April 10th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/git/">
+					Git
 				</a>
 			</li>
 			
@@ -417,13 +276,122 @@ find<span class="w"> </span>.<span class="w"> </span>-maxdepth<span class="w"> <
 </div>
 
 				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-change-the-character-encoding-of-a-file-via-terminal">How to change the character encoding of a file via Terminal?</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Sometimes, I face character encoding issues while making minor edits via a SFTP console connected to a Linux server. I found a quick hack to change the file encoding using <code>vim</code> on the command line.</p>
+
+<p>In this example, I'm changing the encoding of the file to <code>unix</code>:</p>
+
+<div class="codehilite">
+<pre><span></span><code>vim<span class="w"> </span><span class="nv">$filename</span><span class="w"> </span>+<span class="s2">&quot;set ff=unix&quot;</span><span class="w"> </span>+wq
+</code></pre>
+</div>
+
+<p>Hope you found this helpful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>April 10th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/unix/">
+					UNIX
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/find-directories-created-within-a-date-range">Find directories created within a date range</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Executing these commands helps me create a sorted list of files/directories created within a specific date range:</p>
+
+<div class="codehilite">
+<pre><span></span><code>touch<span class="w"> </span>-t<span class="w"> </span><span class="m">202104100000</span><span class="w"> </span>start
+touch<span class="w"> </span>-t<span class="w"> </span><span class="m">202104150000</span><span class="w"> </span>stop
+find<span class="w"> </span>.<span class="w"> </span>-type<span class="w"> </span>d<span class="w"> </span>-maxdepth<span class="w"> </span><span class="m">1</span><span class="w"> </span>-newer<span class="w"> </span>start<span class="w"> </span><span class="se">\!</span><span class="w"> </span>-newer<span class="w"> </span>stop<span class="w"> </span><span class="p">|</span><span class="w"> </span>sort<span class="w"> </span>&gt;&gt;<span class="w"> </span>directories.txt
+</code></pre>
+</div>
+
+<p>Someday, these commands shall come in handy, bud! &#x1F60E;</p>
+
+	</div>
+	<div class="article-footer">
+		<time>April 10th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/unix/">
+					UNIX
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-perform-mysqldump-without-a-password-prompt">How to perform mysqldump without a password prompt?</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>If you're performing a mass database backup using <code>mysqldump</code>, you'll pretty much find it annoying to type in the password every single time.</p>
+
+<p>To get rid of it, open <code>/etc/mysql/my.cnf</code> configuration file and add your database credentials:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="err">[</span><span class="n">mysqldump</span><span class="err">]</span>
+<span class="k">user</span><span class="o">=</span><span class="s2">&quot;your_username&quot;</span>
+<span class="k">password</span><span class="o">=</span><span class="s2">&quot;your_password&quot;</span>
+</code></pre>
+</div>
+
+<p>Once done, save the <code>my.cnf</code> configuration file and now, you can try exporting your database without a hassle like this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>mysqldump<span class="w"> </span>-u<span class="w"> </span>your_username<span class="w"> </span>database_name<span class="w"> </span>&gt;<span class="w"> </span>database.sql
+</code></pre>
+</div>
+
+<p>Hope this trick helps you out!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>April 10th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/unix/">
+					UNIX
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
 			</div>
 			
 <div class="pagination">
 	
-		
 		<a href="/til/pages/9">&laquo;</a>
-			
 	
 
 	
@@ -432,7 +400,7 @@ find<span class="w"> </span>.<span class="w"> </span>-maxdepth<span class="w"> <
 		
 	
 		
-			<a class="" href="/til/pages/7">...</a>
+			<a class="" href="/til/pages/2">...</a>
 		
 	
 		
@@ -456,11 +424,11 @@ find<span class="w"> </span>.<span class="w"> </span>-maxdepth<span class="w"> <
 		
 	
 		
-			<a class="" href="/til/pages/9">...</a>
+			<a class="" href="/til/pages/13">...</a>
 		
 	
 		
-			<a class="" href="/til/pages/21">21</a>
+			<a class="" href="/til/pages/22">22</a>
 		
 	
 
@@ -487,7 +455,7 @@ find<span class="w"> </span>.<span class="w"> </span>-maxdepth<span class="w"> <
 		<li>
 			<a href="/category/linux/">
 				Linux
-				<span class="count">26</span>
+				<span class="count">28</span>
 			</a>
 		</li>
 		
@@ -674,6 +642,13 @@ find<span class="w"> </span>.<span class="w"> </span>-maxdepth<span class="w"> <
 		</li>
 		
 		<li>
+			<a href="/category/self-reflection/">
+				Self-reflection
+				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/refactoring/">
 				Refactoring
 				<span class="count">3</span>
@@ -737,6 +712,20 @@ find<span class="w"> </span>.<span class="w"> </span>-maxdepth<span class="w"> <
 		</li>
 		
 		<li>
+			<a href="/category/thoughts/">
+				Thoughts
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/windows/">
+				Windows
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/net-core/">
 				.NET Core
 				<span class="count">2</span>
@@ -788,13 +777,6 @@ find<span class="w"> </span>.<span class="w"> </span>-maxdepth<span class="w"> <
 		<li>
 			<a href="/category/sql-server/">
 				SQL Server
-				<span class="count">2</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/selfreflection/">
-				Self-reflection
 				<span class="count">2</span>
 			</a>
 		</li>
@@ -863,6 +845,13 @@ find<span class="w"> </span>.<span class="w"> </span>-maxdepth<span class="w"> <
 		</li>
 		
 		<li>
+			<a href="/category/uefi/">
+				UEFI
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/jetbrains/">
 				JetBrains
 				<span class="count">1</span>
@@ -884,13 +873,6 @@ find<span class="w"> </span>.<span class="w"> </span>-maxdepth<span class="w"> <
 		</li>
 		
 		<li>
-			<a href="/category/thoughts/">
-				Thoughts
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/nginx/">
 				nginx
 				<span class="count">1</span>
@@ -900,13 +882,6 @@ find<span class="w"> </span>.<span class="w"> </span>-maxdepth<span class="w"> <
 		<li>
 			<a href="/category/grub/">
 				GRUB
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/windows/">
-				Windows
 				<span class="count">1</span>
 			</a>
 		</li>
@@ -1031,15 +1006,15 @@ find<span class="w"> </span>.<span class="w"> </span>-maxdepth<span class="w"> <
 		</li>
 		
 		<li>
-			<a href="/category/tech/">
-				Tech
+			<a href="/category/learning/">
+				Learning
 				<span class="count">1</span>
 			</a>
 		</li>
 		
 		<li>
-			<a href="/category/learning/">
-				Learning
+			<a href="/category/tech/">
+				Tech
 				<span class="count">1</span>
 			</a>
 		</li>

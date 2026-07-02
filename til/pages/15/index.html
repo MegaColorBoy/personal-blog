@@ -77,6 +77,156 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/enable-httpsssl-on-wamp-server">Enable HTTPS/SSL on WAMP Server</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Building a website with HTTPS/SSL in mind can help resolve a lot of problems when you're going to deploy it on production server.</p>
+
+<p>So, here's a small tutorial on how to enable HTTPS mode and install SSL certificate on your local WAMP Server.</p>
+
+<p><strong>Note: This tutorial assumes that you have a Windows PC and have installed WAMP Server 3.2.0 in your local system, if not, <a href="https://www.wampserver.com/en/">download it from here</a>.</strong></p>
+
+<h2>Download OpenSSL</h2>
+
+<p>Based on your system's architecture, you can download either a 32 or 64-bit installer. You can find the latest version of OpenSSL from here. While installing, please make sure all the options selected are default.</p>
+
+<h2>Generate SSL Key and Certificate</h2>
+
+<p>Open your terminal or command-line prompt and navigate to the following folder:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nb">cd</span><span class="w"> </span><span class="s2">&quot;C:\Program Files\OpenSSL-Win64\bin&quot;</span>
+</code></pre>
+</div>
+
+<p>Next, you need to create a private key. While generating a private key, you'll have to enter a passphrase, it can be anything but make sure that you can remember it for the next step &#x1F602;.</p>
+
+<p>Execute the following command:</p>
+
+<div class="codehilite">
+<pre><span></span><code>openssl<span class="w"> </span>genrsa<span class="w"> </span>-aes256<span class="w"> </span>-out<span class="w"> </span>private.key<span class="w"> </span><span class="m">2048</span>
+</code></pre>
+</div>
+
+<p>Good, now let's generate our certificate and in this step, you'll be prompted with several questions. You can fill as per your wish or just hit "Enter" to leave it as default. The only thing that matters is <strong>Common Name</strong> and this should named as <code>localhost</code></p>
+
+<p>Execute the following command:</p>
+
+<div class="codehilite">
+<pre><span></span><code>openssl<span class="w"> </span>req<span class="w"> </span>-new<span class="w"> </span>-x509<span class="w"> </span>-nodes<span class="w"> </span>-sha1<span class="w"> </span>-key<span class="w"> </span>private.key<span class="w"> </span>-out<span class="w"> </span>certificate.crt<span class="w"> </span>-days<span class="w"> </span><span class="m">36500</span>
+</code></pre>
+</div>
+
+<h2>Move the certificate and key to Apache's directory</h2>
+
+<p>Create a folder named <code>keys</code> and move both <code>private.key</code> and <code>certificate.crt</code> to this directory: <code>C:\wamp64\bin\apache\apache2.4.41\conf</code>.</p>
+
+<h2>Modify your httpd.conf file</h2>
+
+<p>You have to uncomment 3 lines from <code>C:/wamp64/bin/apache/apache2.4.41/conf/httpd.conf</code>:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nb">LoadModule</span><span class="w"> </span>ssl_module<span class="w"> </span>modules/mod_ssl.so
+<span class="nb">Include</span><span class="w"> </span>conf/extra/httpd-ssl.conf
+<span class="nb">LoadModule</span><span class="w"> </span>socache_shmcb_module<span class="w"> </span>modules/mod_socache_shmcb.so
+</code></pre>
+</div>
+
+<h2>Modify your httpd-ssl.conf file</h2>
+
+<p>Go to <code>C:/wamp64/bin/apache/apache2.4.41/conf/extra/httpd-ssl.conf</code> and modify the following parameters:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nb">DocumentRoot</span><span class="w"> </span><span class="s2">&quot;c:/wamp64/www&quot;</span>
+<span class="nb">ServerName</span><span class="w"> </span>localhost:443
+<span class="nb">ServerAdmin</span><span class="w"> </span>admin@youremail.com
+<span class="nb">ErrorLog</span><span class="w"> </span><span class="s2">&quot;${SRVROOT}/logs/error.log&quot;</span>
+<span class="nb">TransferLog</span><span class="w"> </span><span class="s2">&quot;${SRVROOT}/logs/access.log&quot;</span>
+<span class="nb">SSLSessionCache</span><span class="w"> </span><span class="s2">&quot;shmcb:${SRVROOT}/logs/ssl_scache(512000)&quot;</span>
+<span class="nb">SSLCertificateFile</span><span class="w"> </span><span class="s2">&quot;${SRVROOT}/conf/keys/certificate.crt&quot;</span>
+<span class="nb">SSLCertificateKeyFile</span><span class="w"> </span><span class="s2">&quot;${SRVROOT}/conf/keys/private.key&quot;</span>
+<span class="nb">CustomLog</span><span class="w"> </span><span class="s2">&quot;${SRVROOT}/logs/ssl_request.log&quot;</span>
+</code></pre>
+</div>
+
+<p><code>DocumentRoot</code> is the location of where your website files are located. <code>ServerName</code> can be anything but preferable to use <code>localhost</code>.</p>
+
+<h2>Restart your WAMP Server</h2>
+
+<p>Just restart your WAMP Server for the changes to take effect. If the WAMP icon turns green, you're good else, an typo or syntax error must have occurred.</p>
+
+<p>Hope you found this tutorial useful! &#x1F600;</p>
+
+	</div>
+	<div class="article-footer">
+		<time>September 13th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/apache/">
+					Apache
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/wamp/">
+					WAMP
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/prevent-loading-webpage-from-backforward-cache">Prevent loading a webpage from Back-Forward cache</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>I'm working on an eCommerce project and I encountered a really weird problem, whenever I saved items into my cart and proceed to the checkout page and then go back to previous page, my cart isn't updated until I refresh the page.</p>
+
+<p>Honestly, I thought this was a bug until I came around to learn about <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Firefox/Releases/1.5/Using_Firefox_1.5_caching">Back-Forward Caching</a> a.k.a <strong>bfcache</strong>, which allows the user to navigate between pages faster. That's a good thing, though!</p>
+
+<p>But that didn't help resolve my issue, so I thought of going around with a tiny hack:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nb">window</span><span class="p">.</span><span class="nx">onpageshow</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">event</span><span class="p">.</span><span class="nx">persisted</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="p">.</span><span class="nx">reload</span><span class="p">()</span><span class="w"> </span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">};</span>
+</code></pre>
+</div>
+
+<p>The code above will look any persistence of the <code>onpageshow</code> event. Initially, it's set to <code>false</code> and if the page is loaded from <strong>bfcache</strong>, it'll set to <code>true</code>.</p>
+
+<p>I wouldn't really consider this as a solution as it only worked on Safari instead of Chrome or Firefox.</p>
+
+<p>But hey, it gets the job done! &#x1F602;</p>
+
+	</div>
+	<div class="article-footer">
+		<time>August 30th, 2020</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/javascript/">
+					JavaScript
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/refresh-browser-window-without-query-parameters">Refresh browser window without query parameters</a></h1>
 		<p class="description"></p>
 	</div>
@@ -208,28 +358,24 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/extract-unique-characters-from-a-string">Extract unique characters from a string</a></h1>
+		<h1 class="heading"><a href="/til/posts/increase-memory-limit-in-php">Increase memory limit in PHP</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>I thought of getting back into competitive programming again and 
-started practicing my python coding-chops on <a href="https://www.codewars.com">Codewars</a>.</p>
+		<p>Last month, I was building a web application that collected a lot of data via form submissions. I wrote a method to export attachments and form data by zipping them all together. </p>
 
-<p>Here's a neat trick on how to extract unique characters from a string:</p>
+<p>It worked for a smaller archives but as the records grew larger, I got a fatal error which said that I've exhausted the PHP's memory limit.</p>
+
+<p>So, I found an easy way to increase the memory limit to 1024MB (1GB) like this:</p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">OrderedDict</span>
-
-<span class="n">word</span> <span class="o">=</span> <span class="s2">&quot;HelloWorld&quot;</span>
-<span class="n">uniq</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">OrderedDict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">word</span><span class="p">)</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="n">uniq</span><span class="p">)</span> <span class="c1"># prints HeloWrd</span>
+<pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="nb">ini_set</span><span class="p">(</span><span class="s1">&#39;memory_limit&#39;</span><span class="p">,</span> <span class="s1">&#39;1024M&#39;</span><span class="p">);</span>
+<span class="cp">?&gt;</span>
 </code></pre>
 </div>
 
-<p>Using <code>OrderedDict</code> allows you to preserve the order in which the keys are inserted as a normal <code>dict</code> doesn't track the order.</p>
-
-<p>Hope you found this useful!</p>
+<p>Before you write this stub in your script, make sure you have enough resources in your system or else, it'll go splat!</p>
 
 	</div>
 	<div class="article-footer">
@@ -237,8 +383,8 @@ started practicing my python coding-chops on <a href="https://www.codewars.com">
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/python/">
-					Python
+				<a href="/category/php/">
+					PHP
 				</a>
 			</li>
 			
@@ -292,24 +438,28 @@ started practicing my python coding-chops on <a href="https://www.codewars.com">
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/increase-memory-limit-in-php">Increase memory limit in PHP</a></h1>
+		<h1 class="heading"><a href="/til/posts/extract-unique-characters-from-a-string">Extract unique characters from a string</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>Last month, I was building a web application that collected a lot of data via form submissions. I wrote a method to export attachments and form data by zipping them all together. </p>
+		<p>I thought of getting back into competitive programming again and 
+started practicing my python coding-chops on <a href="https://www.codewars.com">Codewars</a>.</p>
 
-<p>It worked for a smaller archives but as the records grew larger, I got a fatal error which said that I've exhausted the PHP's memory limit.</p>
-
-<p>So, I found an easy way to increase the memory limit to 1024MB (1GB) like this:</p>
+<p>Here's a neat trick on how to extract unique characters from a string:</p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="nb">ini_set</span><span class="p">(</span><span class="s1">&#39;memory_limit&#39;</span><span class="p">,</span> <span class="s1">&#39;1024M&#39;</span><span class="p">);</span>
-<span class="cp">?&gt;</span>
+<pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">OrderedDict</span>
+
+<span class="n">word</span> <span class="o">=</span> <span class="s2">&quot;HelloWorld&quot;</span>
+<span class="n">uniq</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">OrderedDict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">word</span><span class="p">)</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">uniq</span><span class="p">)</span> <span class="c1"># prints HeloWrd</span>
 </code></pre>
 </div>
 
-<p>Before you write this stub in your script, make sure you have enough resources in your system or else, it'll go splat!</p>
+<p>Using <code>OrderedDict</code> allows you to preserve the order in which the keys are inserted as a normal <code>dict</code> doesn't track the order.</p>
+
+<p>Hope you found this useful!</p>
 
 	</div>
 	<div class="article-footer">
@@ -317,8 +467,8 @@ started practicing my python coding-chops on <a href="https://www.codewars.com">
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/php/">
-					PHP
+				<a href="/category/python/">
+					Python
 				</a>
 			</li>
 			
@@ -434,118 +584,11 @@ sudo<span class="w"> </span>mv<span class="w"> </span>go<span class="w"> </span>
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-delete-files-inside-a-zip-file">How to delete files inside a zip file?</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Ever compressed your project directory but forgot to delete that useless file or folder and turns out the compresed file is larger than it's supposed to be? </p>
-
-<p>Here's a quick solution you can try:</p>
-
-<p>If you want to delete a file inside a <code>.zip</code> file, try this:</p>
-
-<div class="codehilite">
-<pre><span></span><code>zip<span class="w"> </span>--delete<span class="w"> </span>file.zip<span class="w"> </span><span class="s2">&quot;file.ext&quot;</span>
-</code></pre>
-</div>
-
-<p>And if you want to delete a folder, try this:</p>
-
-<div class="codehilite">
-<pre><span></span><code>zip<span class="w"> </span>--delete<span class="w"> </span>file.zip<span class="w"> </span><span class="s2">&quot;folder/*&quot;</span>
-</code></pre>
-</div>
-
-<p>Hope this helps you out!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>July 21st, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/terminal/">
-					Terminal
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/find-the-difference-between-two-arrays">Find the difference between two arrays</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Finding the difference between two sets i.e. Set A and Set B is basically returning a new set that contains values of Set A that don't exist in Set B or vice-versa.</p>
-
-<p>Here's an example:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="mf">1</span><span class="p">,</span><span class="mf">2</span><span class="p">,</span><span class="mf">3</span><span class="p">,</span><span class="mf">4</span><span class="p">,</span><span class="mf">5</span><span class="p">];</span>
-<span class="kd">var</span><span class="w"> </span><span class="nx">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="mf">1</span><span class="p">,</span><span class="mf">1</span><span class="p">,</span><span class="mf">2</span><span class="p">,</span><span class="mf">3</span><span class="p">,</span><span class="mf">4</span><span class="p">];</span>
-</code></pre>
-</div>
-
-<p>I wrote a shorter implementation using JavaScript's <code>.filter()</code> method:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="kd">function</span><span class="w"> </span><span class="nx">array_diff</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span><span class="nx">b</span><span class="p">){</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">a</span><span class="p">.</span><span class="nx">filter</span><span class="p">(</span><span class="nx">i</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">b</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="o">-</span><span class="mf">1</span><span class="p">);</span>
-<span class="p">}</span><span class="w">    </span>
-</code></pre>
-</div>
-
-<p>Once you execute this method, you'll get the following as a result:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">array_diff</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span><span class="nx">b</span><span class="p">);</span>
-<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">c</span><span class="p">)</span><span class="w"> </span><span class="c1">// returns [5]</span>
-</code></pre>
-</div>
-
-<h2>BONUS: What does the .filter() method do?</h2>
-
-<p>This method returns a new array with elements that pass the conditions provided by a callback function.</p>
-
-<p>If the conditions aren't passed, you'll receive an empty array.</p>
-
-<p>In this article, <code>(i =&gt; b.indexOf(i) === -1)</code> is considered as the callback function in which the <code>i</code> refers to the index of the current element of array A and is then used as a parameter to check if the element doesn't exist in array B.</p>
-
-<p>The neat thing about this method is that it doesn't mutate on the array that it's being called from.</p>
-
-<p>Read more about <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter">Array.prototype.filter()</a> on Mozilla's developer documentation.</p>
-
-	</div>
-	<div class="article-footer">
-		<time>July 18th, 2020</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/javascript/">
-					JavaScript
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
 	
-		
 		<a href="/til/pages/14">&laquo;</a>
-			
 	
 
 	
@@ -554,7 +597,7 @@ sudo<span class="w"> </span>mv<span class="w"> </span>go<span class="w"> </span>
 		
 	
 		
-			<a class="" href="/til/pages/12">...</a>
+			<a class="" href="/til/pages/2">...</a>
 		
 	
 		
@@ -578,11 +621,11 @@ sudo<span class="w"> </span>mv<span class="w"> </span>go<span class="w"> </span>
 		
 	
 		
-			<a class="" href="/til/pages/4">...</a>
+			<a class="" href="/til/pages/18">...</a>
 		
 	
 		
-			<a class="" href="/til/pages/21">21</a>
+			<a class="" href="/til/pages/22">22</a>
 		
 	
 
@@ -609,7 +652,7 @@ sudo<span class="w"> </span>mv<span class="w"> </span>go<span class="w"> </span>
 		<li>
 			<a href="/category/linux/">
 				Linux
-				<span class="count">26</span>
+				<span class="count">28</span>
 			</a>
 		</li>
 		
@@ -796,6 +839,13 @@ sudo<span class="w"> </span>mv<span class="w"> </span>go<span class="w"> </span>
 		</li>
 		
 		<li>
+			<a href="/category/self-reflection/">
+				Self-reflection
+				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/refactoring/">
 				Refactoring
 				<span class="count">3</span>
@@ -859,6 +909,20 @@ sudo<span class="w"> </span>mv<span class="w"> </span>go<span class="w"> </span>
 		</li>
 		
 		<li>
+			<a href="/category/thoughts/">
+				Thoughts
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/windows/">
+				Windows
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/net-core/">
 				.NET Core
 				<span class="count">2</span>
@@ -910,13 +974,6 @@ sudo<span class="w"> </span>mv<span class="w"> </span>go<span class="w"> </span>
 		<li>
 			<a href="/category/sql-server/">
 				SQL Server
-				<span class="count">2</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/selfreflection/">
-				Self-reflection
 				<span class="count">2</span>
 			</a>
 		</li>
@@ -985,6 +1042,13 @@ sudo<span class="w"> </span>mv<span class="w"> </span>go<span class="w"> </span>
 		</li>
 		
 		<li>
+			<a href="/category/uefi/">
+				UEFI
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/jetbrains/">
 				JetBrains
 				<span class="count">1</span>
@@ -1006,13 +1070,6 @@ sudo<span class="w"> </span>mv<span class="w"> </span>go<span class="w"> </span>
 		</li>
 		
 		<li>
-			<a href="/category/thoughts/">
-				Thoughts
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/nginx/">
 				nginx
 				<span class="count">1</span>
@@ -1022,13 +1079,6 @@ sudo<span class="w"> </span>mv<span class="w"> </span>go<span class="w"> </span>
 		<li>
 			<a href="/category/grub/">
 				GRUB
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/windows/">
-				Windows
 				<span class="count">1</span>
 			</a>
 		</li>
@@ -1153,15 +1203,15 @@ sudo<span class="w"> </span>mv<span class="w"> </span>go<span class="w"> </span>
 		</li>
 		
 		<li>
-			<a href="/category/tech/">
-				Tech
+			<a href="/category/learning/">
+				Learning
 				<span class="count">1</span>
 			</a>
 		</li>
 		
 		<li>
-			<a href="/category/learning/">
-				Learning
+			<a href="/category/tech/">
+				Tech
 				<span class="count">1</span>
 			</a>
 		</li>
