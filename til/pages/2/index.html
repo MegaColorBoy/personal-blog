@@ -77,145 +77,468 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/eliminate-laravel-env-leakage-between-multiple-sites-on-apache-windows">Eliminate Laravel .env leakage between multiple sites on Apache (Windows)</a></h1>
+		<h1 class="heading"><a href="/til/posts/connect-to-mysql-using-a-kubernetes-debug-container">Connect to MySQL using a Kubernetes debug container</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>Today, I learned something pretty important (and frustrating until I figured it out): if you're running <strong>multiple Laravel applications</strong> on <strong>Apache (Windows)</strong> using <code>mod_php</code>, you can run into a strange bug where <strong>one site's <code>.env</code> settings override the other</strong>.</p>
+		<p>What if you wanted to connect to a database server from an application's pod, but the application image didn't include a MySQL client?</p>
 
-<p>This became painfully obvious when I noticed that <strong>one of my Laravel sites was randomly connecting to the wrong database</strong>, even though the configurations in each <code>.env</code> were different. Weird, right?</p>
-
-<p>Turns out, the culprit was <code>mod_php</code>.</p>
-
-<h2>The problem</h2>
-
-<p>I had two Laravel sites hosted on the same Windows machine with Apache. Both were running fine — until they weren’t.</p>
-
-<p>The issue? Sometimes one site would pick up the database config of the other. One minute I’d be on Site A, and then somehow its <code>.env</code> settings were coming from Site B. </p>
-
-<p>This is just total chaos and worse, this issue existed from more two years until I decided to dive into the problem.</p>
-
-<h2>The cause</h2>
-
-<p>Laravel loads <code>.env</code> values during the bootstrap process and <strong>caches them in memory</strong>. When using <code>mod_php</code>, Apache loads PHP as a module <strong>once</strong> and shares it across all sites. That means <strong>only one copy of Laravel’s environment gets loaded — and reused</strong> across both apps.</p>
-
-<p>So even if each app had its own <code>.env</code>, it didn’t matter. Apache was essentially saying:</p>
-
-<blockquote>
-  <p>“Hey, here’s PHP. I already booted Laravel with this config — just reuse it.”</p>
-</blockquote>
-
-<h2>The solution</h2>
-
-<p>After some digging, the solution is <strong>ditch <code>mod_php</code></strong> and switch to <strong>FastCGI (<code>mod_fcgid</code>)</strong>.</p>
-
-<p>With FastCGI, each site runs its own instance of PHP via <code>php-cgi.exe</code>, which <strong>boots Laravel in isolation</strong> — meaning <strong>each <code>.env</code> file is respected per site</strong>.</p>
-
-<h3>How to configure it?</h3>
-
-<p>First, you need to disable <strong><code>mod_php</code></strong> in <code>httpd.conf</code>:</p>
+<p>You can add an ephemeral container with the client and run it directly. Here's a quick way to do it:</p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="c"># LoadModule php_module &quot;C:/path/to/php/php8apache2_4.dll&quot;</span>
-<span class="c"># &lt;FilesMatch \.php$&gt;</span>
-<span class="c">#     SetHandler application/x-httpd-php</span>
-<span class="c"># &lt;/FilesMatch&gt;</span>
-<span class="c"># PHPIniDir &quot;C:/path/to/php/&quot;</span>
+<pre><span></span><code>kubectl<span class="w"> </span>debug<span class="w"> </span>-it<span class="w"> </span>web-7c9d6f8b5d-k2m4p<span class="w"> </span>-n<span class="w"> </span>staging<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--image<span class="o">=</span>mysql:8.4<span class="w"> </span>--<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>mysql<span class="w"> </span>--host<span class="o">=</span>mysql.staging.svc.cluster.local<span class="w"> </span>--port<span class="o">=</span><span class="m">3306</span><span class="w"> </span>--user<span class="o">=</span>app_reader<span class="w"> </span>--password
 </code></pre>
 </div>
 
-<p>Then install <strong><code>mod_fcgid</code></strong> from Apache Lounge and copy <code>mod_fcgid.so</code> to <code>modules/</code> directory and enable it in <code>httpd.conf</code>:</p>
+<p>Replace the pod, namespace, database hostname, and username with your own values. This example uses the MySQL image to run its client; it doesn't start a database server.</p>
+
+<p>The client prompts you for a password. Once connected, you can run a small query:</p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="nb">LoadModule</span><span class="w"> </span>fcgid_module<span class="w"> </span>modules/mod_fcgid.so
-<span class="nb">Include</span><span class="w"> </span>conf/extra/httpd-fcgid.conf
+<pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="k">CURRENT_USER</span><span class="p">(),</span><span class="w"> </span><span class="k">DATABASE</span><span class="p">();</span>
 </code></pre>
 </div>
 
-<p>Next, you have to create/update <strong><code>httpd-fcgid.conf</code></strong>:</p>
+<p>For example:</p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="nt">&lt;IfModule</span><span class="w"> </span><span class="s">fcgid_module</span><span class="nt">&gt;</span>
-<span class="w">   </span><span class="nb">AddHandler</span><span class="w"> </span>fcgid-script<span class="w"> </span>.php
-<span class="w">   </span><span class="nb">FcgidInitialEnv</span><span class="w"> </span>PHPRC<span class="w"> </span><span class="s2">&quot;C:/path/to/php&quot;</span>
-<span class="w">   </span><span class="nb">FcgidWrapper</span><span class="w"> </span><span class="s2">&quot;C:/path/to/php/php-cgi.exe&quot;</span><span class="w"> </span>.php
-<span class="w">   </span><span class="nb">Options</span><span class="w"> </span>+ExecCGI
-<span class="w">   </span><span class="nb">FcgidMaxProcessesPerClass</span><span class="w"> </span><span class="m">150</span>
-<span class="w">   </span><span class="nb">FcgidMaxRequestsPerProcess</span><span class="w"> </span><span class="m">1000</span>
-<span class="w">   </span><span class="nb">FcgidProcessLifeTime</span><span class="w"> </span><span class="m">300</span>
-<span class="w">   </span><span class="nb">FcgidIOTimeout</span><span class="w"> </span><span class="m">120</span>
-<span class="w">   </span><span class="nb">FcgidPassHeader</span><span class="w"> </span>Authorization
-<span class="w">   </span><span class="nb">FcgidFixPathinfo</span><span class="w"> </span><span class="m">0</span>
-<span class="nt">&lt;/IfModule&gt;</span>
+<pre><span></span><code>+----------------+------------+
+| CURRENT_USER() | DATABASE() |
++----------------+------------+
+| app_reader@%   | NULL       |
++----------------+------------+
+1 row in set (0.00 sec)
 </code></pre>
 </div>
 
-<p>And then atlast, update your virtual host:</p>
+<p>Here, <code>NULL</code> means no default database has been selected. To select one and list its tables:</p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="nt">&lt;VirtualHost</span><span class="w"> </span><span class="s">*:443</span><span class="nt">&gt;</span>
-<span class="w">   </span><span class="nb">ServerName</span><span class="w"> </span>example.com
-<span class="w">   </span><span class="nb">DocumentRoot</span><span class="w"> </span><span class="s2">&quot;C:/path/to/website/public&quot;</span>
-
-<span class="w">   </span><span class="nt">&lt;Directory</span><span class="w"> </span><span class="s">&quot;C:/path/to/website/public&quot;</span><span class="nt">&gt;</span>
-<span class="w">      </span><span class="nb">Options</span><span class="w"> </span>+ExecCGI<span class="w"> </span>-Indexes<span class="w"> </span>+FollowSymLinks
-<span class="w">      </span><span class="nb">AllowOverride</span><span class="w"> </span><span class="k">All</span>
-<span class="w">      </span><span class="nb">Require</span><span class="w"> </span><span class="k">all</span><span class="w"> </span>granted
-<span class="w">      </span><span class="nb">AddHandler</span><span class="w"> </span>fcgid-script<span class="w"> </span>.php
-<span class="w">      </span><span class="nb">FCGIWrapper</span><span class="w"> </span><span class="s2">&quot;C:/path/to/php/php-cgi.exe&quot;</span><span class="w"> </span>.php
-<span class="w">   </span><span class="nt">&lt;/Directory&gt;</span>
-
-<span class="w">   </span><span class="nb">SSLEngine</span><span class="w"> </span><span class="k">on</span>
-<span class="w">   </span><span class="nb">SSLCertificateFile</span><span class="w"> </span><span class="s2">&quot;...&quot;</span>
-<span class="w">   </span><span class="nb">SSLCertificateKeyFile</span><span class="w"> </span><span class="s2">&quot;...&quot;</span>
-<span class="nt">&lt;/VirtualHost&gt;</span>
+<pre><span></span><code><span class="n">USE</span><span class="w"> </span><span class="n">app_db</span><span class="p">;</span>
+<span class="k">SHOW</span><span class="w"> </span><span class="n">TABLES</span><span class="p">;</span>
 </code></pre>
 </div>
 
-<p>Restart the nginx service and clear the laravel application cache:</p>
+<p>The debug container shares the pod's network, but it doesn't automatically inherit the application's environment variables, credentials, or mounted certificates. Supply the connection settings yourself, including your database's required TLS options.</p>
 
-<div class="codehilite">
-<pre><span></span><code>httpd<span class="w"> </span>-k<span class="w"> </span>restart
-php<span class="w"> </span>artisan<span class="w"> </span>config:clear
-php<span class="w"> </span>artisan<span class="w"> </span>cache:clear
-</code></pre>
-</div>
+<p>A successful connection verifies this client's network access and authentication. Your application may still have a different configuration.</p>
 
-<h3>Bonus: Fixing 403 Forbidden Errors</h3>
+<p>Type <code>exit</code> to leave the MySQL client. The ephemeral container stops, although its record remains attached to the pod. You also need permission to add debug containers; see the <a href="https://kubernetes.io/docs/tasks/debug/debug-application/debug-running-pod/#debugging-with-an-ephemeral-debug-container">Kubernetes debugging guide</a>.</p>
 
-<p>After switching to FastCGI, I ran into a <code>403 Forbidden</code> error on one site. That turned out to be a <strong>missing <code>Options +ExecCGI</code></strong> and <code>Require all granted</code> in the <code>&lt;Directory&gt;</code> block. Once added, everything worked perfectly.</p>
-
-<h2>Result</h2>
-
-<p>Now, each Laravel site runs completely isolated, even though they use the same <code>php-cgi.exe</code>. No more <code>.env</code> bleed. No more wrong DBs. Just clean, independent Laravel environments — as it should be.</p>
-
-<h2>Takeaways</h2>
-
-<ul>
-<li>Don’t run multiple Laravel apps on Apache with <code>mod_php</code> unless you're okay with shared config risks.</li>
-<li>Use <code>mod_fcgid</code> and <code>php-cgi.exe</code> for <strong>true isolation</strong>.</li>
-<li>Even if using the <strong>same PHP version</strong>, FastCGI will <strong>spawn separate processes</strong>, so <code>.env</code> loading stays scoped.</li>
-<li>Always check Apache error logs (<code>error.log</code>) and <code>php_sapi_name()</code> for confirmation.</li>
-</ul>
-
-<p>If you’re running Laravel on Windows with Apache — <strong>this fix is a must</strong>. </p>
-
-<p>Happy hosting and hope you found this article useful!</p>
+<p>Hope you found this tip useful!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>May 13th, 2025</time>
+		<time>September 5th, 2026</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/php/">
-					PHP
+				<a href="/category/kubernetes/">
+					Kubernetes
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/mysql/">
+					MySQL
 				</a>
 			</li>
 			
 			<li>
 				<a href="/category/devops/">
 					DevOps
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/debug-pod-networking-with-ephemeral-containers">Debug pod networking with ephemeral containers</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Ever needed to check whether your application pod could reach a database or an HTTP endpoint, only to find that it didn't have <code>curl</code>, <code>telnet</code>, or any other useful tools installed?</p>
+
+<p>Your first instinct might be to install the missing packages inside the application container. But there's a handy alternative: an ephemeral debug container.</p>
+
+<p>This adds a separate container to the existing pod, sharing its network namespace. You can investigate connectivity without adding packages to the application's image. It still uses resources in the pod, so it isn't completely without impact.</p>
+
+<p>I found an image called <a href="https://github.com/nicolaka/netshoot">Netshoot</a> that includes tools such as <code>curl</code>, <code>dig</code>, and <code>nc</code>. Here's how you can open a debugging shell:</p>
+
+<div class="codehilite">
+<pre><span></span><code>kubectl<span class="w"> </span>debug<span class="w"> </span>-it<span class="w"> </span>web-7c9d6f8b5d-k2m4p<span class="w"> </span>-n<span class="w"> </span>staging<span class="w"> </span>--image<span class="o">=</span>nicolaka/netshoot<span class="w"> </span>--<span class="w"> </span>/bin/bash
+</code></pre>
+</div>
+
+<p>Replace the pod name and namespace with your own. Your cluster must allow ephemeral containers and the chosen image.</p>
+
+<p>After startup messages, an illustrative shell prompt might look like this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>web-7c9d6f8b5d-k2m4p:~#
+</code></pre>
+</div>
+
+<p>Inside that shell, try resolving a database service or checking an HTTP endpoint:</p>
+
+<div class="codehilite">
+<pre><span></span><code>dig<span class="w"> </span>+short<span class="w"> </span>mysql.staging.svc.cluster.local
+curl<span class="w"> </span>-I<span class="w"> </span>--connect-timeout<span class="w"> </span><span class="m">5</span><span class="w"> </span>--max-time<span class="w"> </span><span class="m">10</span><span class="w"> </span>https://example.com
+</code></pre>
+</div>
+
+<p>An example DNS response would be:</p>
+
+<div class="codehilite">
+<pre><span></span><code>10.96.42.18
+</code></pre>
+</div>
+
+<p>Use your own service hostname; this example assumes the cluster's DNS domain is <code>cluster.local</code>.</p>
+
+<p>If you also need to inspect another container's processes, add <code>--target=app</code> to the debug command, replacing <code>app</code> with that container's name. This depends on runtime support and isn't needed just to share the pod's network.</p>
+
+<p>When you're done, type <code>exit</code>. The debug container stops, but its entry remains in the pod until the pod is removed. It isn't a regular sidecar, and it doesn't automatically restart. The <a href="https://kubernetes.io/docs/concepts/workloads/pods/ephemeral-containers/">ephemeral container documentation</a> explains these lifecycle restrictions.</p>
+
+<p>Pretty cool, huh?</p>
+
+	</div>
+	<div class="article-footer">
+		<time>September 4th, 2026</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/kubernetes/">
+					Kubernetes
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/networking/">
+					Networking
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/copy-files-to-and-from-kubernetes-pods">Copy files to and from Kubernetes pods</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Every now and then, I need to copy files into an application pod. One use case for me is moving uploaded assets while migrating an application from staging to production.</p>
+
+<p>For this, you can use <code>kubectl cp</code>. The remote path uses a namespace and pod name, so there's no SSH username or server address involved.</p>
+
+<p>Here's an example of copying a local file into a container:</p>
+
+<div class="codehilite">
+<pre><span></span><code>kubectl<span class="w"> </span>cp<span class="w"> </span>./logo.png<span class="w"> </span>staging/web-7c9d6f8b5d-k2m4p:/var/www/html/public/logo.png<span class="w"> </span>-c<span class="w"> </span>app
+</code></pre>
+</div>
+
+<p>Replace <code>staging</code>, the pod name, <code>app</code>, and the paths with your own values. The destination directory must exist and be writable by the container's user.</p>
+
+<p>You can also do the reverse and copy a file into your current directory:</p>
+
+<div class="codehilite">
+<pre><span></span><code>kubectl<span class="w"> </span>cp<span class="w"> </span>staging/web-7c9d6f8b5d-k2m4p:/var/www/html/public/logo.png<span class="w"> </span>./logo.png<span class="w"> </span>-c<span class="w"> </span>app
+</code></pre>
+</div>
+
+<p>For a directory of uploaded assets, I would copy it locally first, then into the destination pod:</p>
+
+<div class="codehilite">
+<pre><span></span><code>kubectl<span class="w"> </span>cp<span class="w"> </span>staging/web-7c9d6f8b5d-k2m4p:/var/www/html/public/uploads<span class="w"> </span>./uploads<span class="w"> </span>-c<span class="w"> </span>app
+kubectl<span class="w"> </span>cp<span class="w"> </span>./uploads<span class="w"> </span>production/web-5f7c8d9b6-m3q8r:/var/www/html/public/<span class="w"> </span>-c<span class="w"> </span>app
+</code></pre>
+</div>
+
+<p>Use a fresh local destination and check the target directory before copying, as existing files can be overwritten.</p>
+
+<p>One detail that's easy to miss: <code>kubectl cp</code> needs <code>tar</code> inside the container. Without it, the copy fails. The <a href="https://kubernetes.io/docs/reference/kubectl/generated/kubectl_cp/">kubectl cp reference</a> also covers cases that need a more explicit tar-based copy.</p>
+
+<p>Also, think about where these files will live. Files written into a container's writable layer won't survive its replacement. For uploaded assets that need to persist, use the application's persistent volume or shared storage, and coordinate the copy if uploads are still changing.</p>
+
+<p>Hope you found this useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>September 2nd, 2026</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/kubernetes/">
+					Kubernetes
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/find-a-kubernetes-pod-and-open-a-shell-inside-it">Find a Kubernetes pod and open a shell inside it</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>At my new job as a Senior DevOps engineer, I have learnt a lot in a short amount of time. One of the first things I got comfortable with was finding an application's pod and opening a shell inside its container.</p>
+
+<p>This is quite useful when you want to check file permissions or explore what is actually running inside your application container.</p>
+
+<p>First, get the pods in your namespace:</p>
+
+<div class="codehilite">
+<pre><span></span><code>kubectl<span class="w"> </span>get<span class="w"> </span>pods<span class="w"> </span>-n<span class="w"> </span>staging
+</code></pre>
+</div>
+
+<p>For example, you might see:</p>
+
+<div class="codehilite">
+<pre><span></span><code>NAME                   READY   STATUS    RESTARTS   AGE
+web-7c9d6f8b5d-k2m4p    1/1     Running   0          2h
+worker-6b8f4d7c9-x5n2q  1/1     Running   0          2h
+</code></pre>
+</div>
+
+<p>Here, <code>staging</code> is an example namespace. Replace it and the pod names with your own throughout this post. Also, make sure <code>kubectl</code> is connected to the intended cluster.</p>
+
+<p>Once you have the pod name, open a shell:</p>
+
+<div class="codehilite">
+<pre><span></span><code>kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-it<span class="w"> </span>web-7c9d6f8b5d-k2m4p<span class="w"> </span>-n<span class="w"> </span>staging<span class="w"> </span>--<span class="w"> </span>/bin/sh
+</code></pre>
+</div>
+
+<p>The <code>-i</code> flag keeps standard input open, and <code>-t</code> allocates a terminal. The <code>--</code> separates kubectl's options from the command you want to run inside the container.</p>
+
+<p>If the pod has multiple containers, choose one explicitly:</p>
+
+<div class="codehilite">
+<pre><span></span><code>kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-it<span class="w"> </span>web-7c9d6f8b5d-k2m4p<span class="w"> </span>-n<span class="w"> </span>staging<span class="w"> </span>-c<span class="w"> </span>app<span class="w"> </span>--<span class="w"> </span>/bin/sh
+</code></pre>
+</div>
+
+<p>The shell depends on the image. <code>/bin/sh</code> is common, while <code>/bin/bash</code> only works if Bash is installed. Some minimal images have no shell at all; in that case, a <a href="https://kubernetes.io/docs/tasks/debug/debug-application/debug-running-pod/#debugging-with-an-ephemeral-debug-container">debug container</a> can help.</p>
+
+<p>Type <code>exit</code> when you're done. This closes your shell session; it doesn't stop the application.</p>
+
+<p>Hope you found this tip useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>September 1st, 2026</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/kubernetes/">
+					Kubernetes
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/enable-password-asterisks-for-sudo-on-fedora">Enable password asterisks for sudo on Fedora</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>After switching from Linux Mint to Fedora, one small difference I noticed was the password prompt behavior in the terminal. On Mint, <code>sudo</code> showed asterisks while typing the password. On Fedora, it stayed blank.</p>
+
+<p>Some people prefer the blank prompt, but I like having visual feedback when typing, especially if I am not fully sure whether I missed a key.</p>
+
+<p>If you want the same behavior on Fedora, you can enable <code>sudo</code> password feedback with a small <code>sudoers</code> change.</p>
+
+<p>This note applies to <code>sudo</code> prompts in the terminal, not graphical login screens.</p>
+
+<h2>1. Open the <code>sudoers</code> file safely</h2>
+
+<p>Do not edit <code>/etc/sudoers</code> directly with a normal text editor. Use <code>visudo</code> so syntax errors are caught before the file is saved:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>visudo
+</code></pre>
+</div>
+
+<h2>2. Enable password feedback</h2>
+
+<p>Add this line:</p>
+
+<div class="codehilite">
+<pre><span></span><code>Defaults<span class="w"> </span>pwfeedback
+</code></pre>
+</div>
+
+<p>If you already have other <code>Defaults</code> lines such as <code>Defaults env_reset</code>, leave them as they are. Just add <code>Defaults pwfeedback</code> as a separate line.</p>
+
+<h2>3. Save and test</h2>
+
+<p>Save the file and exit the editor. Then run a <code>sudo</code> command again, for example:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>-k
+sudo<span class="w"> </span><span class="nb">true</span>
+</code></pre>
+</div>
+
+<p>When prompted for your password, you should now see asterisks as you type. This setting makes password length visible on screen. If that matters in your environment, leave the default behavior in place.</p>
+
+<p>Hope you found this article useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>May 14th, 2026</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/clean-removal-of-linux-from-a-windows-dual-boot-machine">Clean removal of Linux from a Windows dual-boot machine</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Recently, I purchased a ThinkPad X1 Carbon Gen 13 to replace my old Dell XPS 13 9360. It came with Windows 11, and instead of wiping it, I decided to set up a dual-boot system with Linux. I still need Windows for .NET development, but I use Linux most of the time.</p>
+
+<p>I eventually settled on Fedora, but I tried several distributions and desktop environments before getting there. Each time I removed Linux, I needed to clean up the old partitions and boot entries properly so they would not interfere with the next installation.</p>
+
+<p>If you are doing the same kind of distro-hopping on a UEFI system, this is the cleanup process that worked for me.</p>
+
+<p>This note covers UEFI systems only.</p>
+
+<p>If you want to remove Linux from a Windows dual-boot setup, there are two things to clean up:</p>
+
+<ol>
+<li>Delete the Linux partitions.</li>
+<li>Remove the Linux bootloader files and firmware entries.</li>
+</ol>
+
+<p>Before making changes, make sure Windows is working normally and back up anything you want to keep from your Linux installation.</p>
+
+<h2>1. Delete the Linux partitions</h2>
+
+<p>Open Windows Disk Management and identify the partitions that belong to Linux. These are usually the Linux root partition, swap partition, and optionally a separate <code>/home</code> partition.</p>
+
+<p>Do not delete:</p>
+
+<ul>
+<li>The Windows partition</li>
+<li>The EFI System Partition</li>
+<li>The Windows recovery partition</li>
+</ul>
+
+<p>Delete only the Linux partitions, then either leave the space unallocated or extend your Windows partition into it.</p>
+
+<h2>2. Remove Linux bootloader files from the EFI partition</h2>
+
+<p>Open Command Prompt as Administrator and assign a drive letter to the EFI System Partition:</p>
+
+<div class="codehilite">
+<pre><span></span><code>diskpart
+list<span class="w"> </span>vol
+<span class="k">select</span><span class="w"> </span>vol<span class="w"> </span>&lt;EFI<span class="w"> </span>volume<span class="w"> </span>number&gt;
+assign<span class="w"> </span><span class="nv">letter</span><span class="o">=</span>S
+<span class="nb">exit</span>
+</code></pre>
+</div>
+
+<p>Then remove the Linux bootloader directories from the EFI partition:</p>
+
+<div class="codehilite">
+<pre><span></span><code>S:
+<span class="nb">cd</span><span class="w"> </span>EFI
+dir
+rmdir<span class="w"> </span>/s<span class="w"> </span>/q<span class="w"> </span>&lt;linux-folder&gt;
+</code></pre>
+</div>
+
+<p>Only delete the directory that matches your Linux installation. Common names include <code>fedora</code>, <code>ubuntu</code>, <code>debian</code>, and similar distro-specific folders.</p>
+
+<p>Do not delete <code>Microsoft</code>.</p>
+
+<h2>3. Remove stale UEFI firmware boot entries</h2>
+
+<p>List the firmware boot entries:</p>
+
+<div class="codehilite">
+<pre><span></span><code>bcdedit<span class="w"> </span>/enum<span class="w"> </span>firmware
+</code></pre>
+</div>
+
+<p>Look for entries that reference your removed Linux installation, such as descriptions containing <code>Fedora</code>, <code>ubuntu</code>, <code>GRUB</code>, or a path that points to the distro's EFI loader.</p>
+
+<p>Delete only the matching Linux entry:</p>
+
+<div class="codehilite">
+<pre><span></span><code>bcdedit<span class="w"> </span>/delete<span class="w"> </span><span class="o">{</span>xxxx-xxxx-xxxx-xxxx<span class="o">}</span>
+</code></pre>
+</div>
+
+<p>Replace <code>{xxxx-xxxx-xxxx-xxxx}</code> with the actual identifier from the previous command.</p>
+
+<h2>4. Reboot and verify</h2>
+
+<p>Reboot the machine and confirm that the Linux boot entry is gone from the firmware boot menu and that Windows starts normally.</p>
+
+<p>Hope you found this article useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>May 13th, 2026</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
 				</a>
 			</li>
 			
@@ -226,8 +549,8 @@ php<span class="w"> </span>artisan<span class="w"> </span>cache:clear
 			</li>
 			
 			<li>
-				<a href="/category/apache/">
-					Apache
+				<a href="/category/uefi/">
+					UEFI
 				</a>
 			</li>
 			
@@ -239,103 +562,57 @@ php<span class="w"> </span>artisan<span class="w"> </span>cache:clear
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/removing-commits-from-a-branch-using-git-interactive-rebase">Removing Commits from a Branch Using Git Interactive Rebase</a></h1>
+		<h1 class="heading"><a href="/til/posts/why-hangfire-recurring-jobs-should-always-have-stable-ids">Why Hangfire recurring jobs should always have stable IDs?</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>I'm working on a project that had approximately five minor incident fixes. However, I got approval from the client side to push only three of them. Luckily, my commits are atomic, so making this build was easier than I thought.</p>
+		<p>Recently, I learned that <strong>not giving explicit IDs to Hangfire recurring jobs can silently create duplicates</strong>.</p>
 
-<p>At this moment, I decided to clone the latest branch into a temporary branch and roll back two commits for today's deployment while keeping the latest branch intact with all the fixes.</p>
+<p>When you call <code>RecurringJob.AddOrUpdate(...)</code> without a pre-defined ID, Hangfire auto-generates one based on the method expression. That sounds fine—until you deploy across multiple nodes or refactor your code.</p>
 
-<p>To achieve this, I used <strong>Git interactive rebase</strong>, a powerful tool for modifying commit history.</p>
+<p>In such cases, Hangfire may generate a <em>new derived ID</em>, while the old recurring job continues running in the background. The result? <strong>Duplicate jobs executing on schedule</strong>, often goes unnoticed.</p>
 
-<h2>Why Use Interactive Rebase?</h2>
+<h2>Simple fix</h2>
 
-<p>Interactive rebase allows you to modify commit history, including:</p>
-
-<ul>
-<li>Removing unwanted commits</li>
-<li>Reordering commits</li>
-<li>Squashing multiple commits into one</li>
-<li>Editing commit messages</li>
-</ul>
-
-<h2>How I Did It?</h2>
-
-<p>Here’s the step-by-step process I followed:</p>
-
-<h3>1. Clone the Branch</h3>
-
-<p>Before making any changes, I cloned the branch to have a backup:</p>
+<p>Make sure that you always pass a clear, human-readable ID:</p>
 
 <div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>checkout<span class="w"> </span>-b<span class="w"> </span>my-cloned-branch<span class="w"> </span>original-branch
+<pre><span></span><code><span class="n">RecurringJob</span><span class="p">.</span><span class="n">AddOrUpdate</span><span class="o">&lt;</span><span class="n">ICustomBackgroundServiceManager</span><span class="o">&gt;</span><span class="p">(</span>
+<span class="w">    </span><span class="s">&quot;payments:reconcile-3h&quot;</span><span class="p">,</span><span class="w"> </span><span class="c1">// Human-readable ID</span>
+<span class="w">    </span><span class="n">s</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">ResendPaymentReportToVendorHourly</span><span class="p">(),</span>
+<span class="w">    </span><span class="n">Cron</span><span class="p">.</span><span class="n">Hourly</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="p">);</span>
 </code></pre>
 </div>
 
-<h3>2. Start Interactive Rebase</h3>
-
-<p>To remove specific commits, I ran:</p>
+<p>Next, ensure that overlaps are impossible in a multi-node setup by adding this attribute to your job method:</p>
 
 <div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>rebase<span class="w"> </span>-i<span class="w"> </span>HEAD~N
+<pre><span></span><code><span class="na">[DisableConcurrentExecution(timeoutInSeconds: 3600)]</span>
+<span class="k">public</span><span class="w"> </span><span class="n">Task</span><span class="w"> </span><span class="nf">ResendPaymentReportToVendorHourly</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="cm">/* ... */</span><span class="w"> </span><span class="p">}</span>
 </code></pre>
 </div>
 
-<p>Where <code>N</code> is the number of commits I wanted to review. This opened an editor displaying the most recent commits.</p>
+<p>This uses a <strong>distributed lock</strong> backed by Hangfire storage—so even with multiple nodes, only one execution runs at a time. If you’re wondering whether this locks the job for the full hour: <strong>it doesn’t</strong>. The timeout exists for crash-safety, not throttling.</p>
 
-<h3>3. Modify the Commit List</h3>
-
-<p>The interactive rebase interface showed something like this:</p>
-
-<div class="codehilite">
-<pre><span></span><code>pick<span class="w"> </span>abc123<span class="w"> </span>Commit<span class="w"> </span>message<span class="w"> </span><span class="m">1</span>
-pick<span class="w"> </span>def456<span class="w"> </span>Commit<span class="w"> </span>message<span class="w"> </span><span class="m">2</span>
-pick<span class="w"> </span>ghi789<span class="w"> </span>Commit<span class="w"> </span>message<span class="w"> </span><span class="m">3</span>
-</code></pre>
-</div>
-
-<p>To <strong>remove</strong> a commit, I replaced <code>pick</code> with <code>drop</code>.</p>
-
-<p>To <strong>edit</strong> or <strong>squash</strong> commits, I could replace <code>pick</code> with commands like <code>edit</code> or <code>squash</code>.</p>
-
-<p>After making my changes, I saved and closed the editor.</p>
-
-<h3>4. Handle Any Conflicts (If Needed)</h3>
-
-<p>If Git encountered conflicts, it prompted me to resolve them. I fixed the files and continued the rebase:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>rebase<span class="w"> </span>--continue
-</code></pre>
-</div>
-
-<h2>Key Takeaways</h2>
-
-<ul>
-<li>Interactive rebase is powerful for cleaning up commit history.</li>
-<li>Always clone or create a backup branch before rebasing.</li>
-<li>If working with a team, communicate before modifying shared branches.</li>
-</ul>
-
-<p>This was a great learning experience, and now I feel more confident managing Git history efficiently!</p>
+<p>After doing this, recurring jobs become much easier to reason about, identify, pause, or delete in a multi-node environment.</p>
 
 <p>Hope you found this tip useful!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>February 24th, 2025</time>
+		<time>January 5th, 2026</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/git/">
-					Git
+				<a href="/category/c/">
+					C#
 				</a>
 			</li>
 			
 			<li>
-				<a href="/category/vcs/">
-					VCS
+				<a href="/category/hangfire/">
+					Hangfire
 				</a>
 			</li>
 			
@@ -347,590 +624,99 @@ pick<span class="w"> </span>ghi789<span class="w"> </span>Commit<span class="w">
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/recovering-my-sql-after-an-accidental-binlog-deletion">Recovering MySQL After an Accidental Binlog Deletion</a></h1>
+		<h1 class="heading"><a href="/til/posts/running-laravel-queues-with-supervisor-on-ubuntu">Running Laravel queues with Supervisor on Ubuntu</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>Last night, I found myself debugging a MySQL issue at an ungodly hour. The <strong>MySQL80 service refused to start</strong>, throwing a vague error:  </p>
+		<p>Laravel queues aren’t new to me, but I realized I’d never really written down how I usually set them up on a fresh Ubuntu server.</p>
 
-<blockquote>
-  <p><em>The MySQL80 service started and then stopped…</em>  </p>
-</blockquote>
+<p>Whenever I need queue workers to run continuously — and survive restarts or crashes — I almost always reach for <strong>Supervisor</strong>. It’s simple, boring, and gets the job done.</p>
 
-<p>Digging into <code>mysql.err</code>, I discovered the culprit—someone (not me! 😤) had <strong>accidentally deleted a binary log (<code>mysql-bin.000xxx</code>)</strong> while MySQL was still tracking it. Since MySQL relies on binlogs for replication and crash recovery, it panicked when it couldn't find the missing file.  </p>
-
-<h2>The Fix</h2>
-
-<p>To get MySQL running again, I had to:  </p>
-
-<ul>
-<li><strong>Disable binary logging</strong> (since this is a standalone server)  </li>
-<li><strong>Delete the corrupt binlog index file</strong> (<code>mysql-bin.index</code>)  </li>
-<li><strong>Purge all old binlog files</strong> that were hogging disk space  </li>
-</ul>
-
-<h2>How to Properly Disable Binary Logging in MySQL 8.0?</h2>
-
-<p>Since <strong>MySQL 8.0 enables binlogs by default</strong>, simply removing <code>log-bin=mysql-bin</code> from <code>my.ini</code> wasn’t enough. I had to:  </p>
-
-<h3>Comment out the existing binlog setting in my.ini</h3>
-
-<div class="codehilite">
-<pre><span></span><code><span class="c1"># log-bin=mysql-bin</span>
-</code></pre>
-</div>
-
-<h3>Explicitly disable binary logging</h3>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">[mysqld]</span>
-<span class="na">skip-log-bin</span>
-</code></pre>
-</div>
-
-<h3>Delete the old <code>mysql-bin.index</code> file</h3>
-
-<ul>
-<li>This file keeps track of all binary log files.  </li>
-<li>Since a referenced binlog file was deleted, MySQL would <strong>fail to start</strong> if the index still contained entries for missing files.  </li>
-<li>Deleting it ensures that MySQL doesn’t look for non-existent logs.  </li>
-</ul>
-
-<p>After restarting the service, I confirmed binlogging was off with:  </p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">SHOW</span><span class="w"> </span><span class="n">VARIABLES</span><span class="w"> </span><span class="k">LIKE</span><span class="w"> </span><span class="s1">&#39;log_bin&#39;</span><span class="p">;</span>
-</code></pre>
-</div>
-
-<p>Output:  </p>
-
-<div class="codehilite">
-<pre><span></span><code>log_bin<span class="w"> </span><span class="p">|</span><span class="w"> </span>OFF
-</code></pre>
-</div>
-
-<p>In conclusion, crisis averted, disk space reclaimed and finally got some sleep. 😴</p>
-
-<p>Hope you found this useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>February 18th, 2025</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/mysql/">
-					MySQL
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/databases/">
-					Databases
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/devops/">
-					DevOps
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-revert-a-git-commit-on-the-server">How to Revert a Git Commit on the Server?</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Today I learned how to revert a Git commit after pulling it on a server. Whether you've made a mistake or just need to backtrack, Git offers several ways to undo commits depending on your situation. Here's a quick guide on how to handle it.</p>
-
-<h2>If you haven't pushed the commit yet</h2>
-
-<p>If the commit hasn't been pushed to the remote repository, you can use <code>git reset</code> to undo it.</p>
-
-<h2>Soft Reset (keeps changes staged)</h2>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>reset<span class="w"> </span>--soft<span class="w"> </span>HEAD~1
-</code></pre>
-</div>
-
-<p>This moves the HEAD back by one commit but keeps your changes staged.</p>
-
-<h2>Mixed Reset (keeps changes unstaged):</h2>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>reset<span class="w"> </span>--mixed<span class="w"> </span>HEAD~1
-</code></pre>
-</div>
-
-<p>This moves the HEAD back by one commit and unstages your changes.</p>
-
-<h2>Hard Reset (discards changes):</h2>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>reset<span class="w"> </span>--hard<span class="w"> </span>HEAD~1
-</code></pre>
-</div>
-
-<p>This completely removes the last commit and discards any changes.</p>
-
-<blockquote>
-  <p><strong>Tip:</strong> Replace <code>HEAD~1</code> with <code>HEAD~2</code> to go back two commits, and so on.</p>
-</blockquote>
-
-<h2>If you've already pushed the commit</h2>
-
-<h3>Revert the commit (safe for shared repos):</h3>
-
-<p>If you've already pushed the commit and want to undo it without rewriting history, use <code>git revert</code>. This creates a new commit that undoes the changes.</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>revert<span class="w"> </span>&lt;commit_hash&gt;
-</code></pre>
-</div>
-
-<p>Find the commit hash using:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>log<span class="w"> </span>--oneline
-</code></pre>
-</div>
-
-<h3>Force Reset (i.e. if you're okay with rewriting history):</h3>
-
-<p>If you don't mind rewriting history (and no one else is working on the branch), you can force reset.</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>reset<span class="w"> </span>--hard<span class="w"> </span>&lt;commit_hash&gt;
-git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>HEAD<span class="w"> </span>--force
-</code></pre>
-</div>
-
-<div class="post-notification">
-    <h3>⚠️Warning</h3>
-    <p>This is not recommended if others are working on the same branch as it can cause conflicts.</p>
-</div>
-
-<h2>If you just pulled and want to undo</h2>
-
-<p>If you just pulled and want to undo the merge, you can reset to the previous state using <code>ORIG_HEAD</code>.</p>
-
-<h3>Undo a merge pull:</h3>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>reset<span class="w"> </span>--hard<span class="w"> </span>ORIG_HEAD
-</code></pre>
-</div>
-
-<p>This will bring your repository back to the state before the last pull.</p>
-
-<h3>Final thoughts</h3>
-
-<p>Reverting commits can seem daunting at first, but once you understand the tools Git offers, it's pretty straightforward. Always double-check before using <code>--hard</code> or <code>--force</code> to avoid accidental data loss!</p>
-
-<p>Hope this helps you get back on track!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>February 5th, 2025</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/git/">
-					Git
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/vcs/">
-					VCS
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-delete-multiple-git-branches-from-the-command-line">How to Delete Multiple Git Branches from the Command Line?</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Whether you're cleaning up local branches after a feature merge or tidying up remote branches, here’s how you can do it.</p>
-
-<h2>Deleting Multiple Local Branches</h2>
-
-<p>To delete multiple local branches safely (only if they’ve been merged), use:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>branch<span class="w"> </span>-d<span class="w"> </span>branch1<span class="w"> </span>branch2<span class="w"> </span>branch3
-</code></pre>
-</div>
-
-<p>If the branches haven't been merged and you still want to delete them, force delete with:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>branch<span class="w"> </span>-D<span class="w"> </span>branch1<span class="w"> </span>branch2<span class="w"> </span>branch3
-</code></pre>
-</div>
-
-<h2>Deleting Multiple Remote Branches</h2>
-
-<p>For remote branches, you can delete them by running:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>--delete<span class="w"> </span>branch1<span class="w"> </span>branch2<span class="w"> </span>branch3
-</code></pre>
-</div>
-
-<p>Alternatively, you can use the colon <code>:</code> syntax:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>:branch1<span class="w"> </span>:branch2<span class="w"> </span>:branch3
-</code></pre>
-</div>
-
-<h2>Deleting Multiple Branches Using a Pattern</h2>
-
-<p>If you want to delete branches that follow a naming pattern (like <code>feature/</code> branches), you can use <code>grep</code> and <code>xargs</code>:</p>
-
-<h3>For local branches:</h3>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>branch<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;feature/&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>xargs<span class="w"> </span>git<span class="w"> </span>branch<span class="w"> </span>-d
-</code></pre>
-</div>
-
-<p>To force delete:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>branch<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;feature/&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>xargs<span class="w"> </span>git<span class="w"> </span>branch<span class="w"> </span>-D
-</code></pre>
-</div>
-
-<h3>For remote branches:</h3>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>branch<span class="w"> </span>-r<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;origin/feature/&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sed<span class="w"> </span><span class="s1">&#39;s/origin\///&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>xargs<span class="w"> </span>-I<span class="w"> </span><span class="o">{}</span><span class="w"> </span>git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>--delete<span class="w"> </span><span class="o">{}</span>
-</code></pre>
-</div>
-
-<h2>Final Tips</h2>
-
-<ul>
-<li><strong>List branches before deleting:</strong> Use <code>git branch</code> for local and <code>git branch -r</code> for remote branches to verify which ones you’re about to delete.</li>
-<li><strong>Be cautious with force delete (<code>-D</code>):</strong> It will remove branches even if they haven’t been merged, so make sure you won’t lose important work.</li>
-</ul>
-
-<p>Hope you found this useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>February 5th, 2025</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/git/">
-					Git
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/vcs/">
-					VCS
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/mastering-php-storm-essential-shortcuts-and-tips-for-faster-coding">Mastering PHPStorm: Essential Shortcuts and Tips for Faster Coding</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>As a developer, you know that every second counts. PHPStorm, the powerful IDE from JetBrains, is packed with features designed to make coding faster and more efficient—but only if you know how to use them! Here are some essential keybindings and tips that can supercharge your PHPStorm experience and help you code at lightning speed. </p>
-
-<h2>Quick Access to Any Action</h2>
-
-<p>Ever found yourself lost in PHPStorm’s vast functionality, looking for a specific tool or action? Press <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>A</kbd> to bring up the <strong>Toggle Actions</strong> dialog. This is your command center for quickly finding and triggering any action, even if you don’t know the shortcut for it.</p>
-
-<h2>Locate Symbols</h2>
-
-<p>Working on a large project? <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>N</kbd> is your friend. This key combination lets you search for any symbol in your project. Whether it's a function, method, or variable, finding it with this shortcut is a breeze. </p>
-
-<h2>File Search Made Easy</h2>
-
-<p>When you need to open a file but don’t want to dig through directories, use <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>N</kbd>. This brings up the file search dialog, allowing you to open any file in your project by typing its name.</p>
-
-<h2>Searching for Classes</h2>
-
-<p>Quickly locate classes by pressing <kbd>Ctrl</kbd> + <kbd>N</kbd>. This shortcut is a must for object-oriented projects where multiple classes interact. Simply type the class name, and PHPStorm will locate it for you.</p>
-
-<h2>Rename Symbols</h2>
-
-<p>Refactoring code often involves renaming variables, functions, or classes. Press <kbd>Shift</kbd> + <kbd>F6</kbd> to <strong>Refactor/Rename</strong> any symbol. This shortcut ensures that PHPStorm updates all references to the renamed symbol, saving you from manually updating each instance.</p>
-
-<h2>Replace Text in the Current File</h2>
-
-<p>Working on a specific file and need to make some quick replacements? <kbd>Ctrl</kbd> + <kbd>R</kbd> opens the <strong>Find and Replace</strong> dialog within the current file, making edits quick and painless.</p>
-
-<h2>Project-Wide Search</h2>
-
-<p>Need to search or replace text across the entire project? Use <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>F</kbd> for a project-wide search. For project-wide find-and-replace, press <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>R</kbd>. These shortcuts are invaluable for large-scale code adjustments.</p>
-
-<h2>Select the Next Occurrence</h2>
-
-<p>Find yourself needing to select multiple occurrences of a word or phrase? <kbd>Alt</kbd> + <kbd>J</kbd> selects the next occurrence of your current selection (case-sensitive). This feature is ideal for making consistent changes across multiple lines without using traditional search-and-replace.</p>
-
-<h2>Move Lines Up or Down</h2>
-
-<p>Reordering lines of code is common in refactoring. <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>&uarr;</kbd>/<kbd>&darr;</kbd> lets you move the current line (or selection) up or down. A simple, powerful way to reorganize your code with ease.</p>
-
-<h2>Get Quick Fixes</h2>
-
-<p>If PHPStorm detects an issue or sees a possible improvement, pressing <kbd>Alt</kbd> + <kbd>Enter</kbd> provides a <strong>Quick Fix</strong> or <strong>Suggestion</strong>. It’s a fantastic way to implement suggestions quickly and clean up your code without manually combing through error messages.</p>
-
-<h2>Extract Method Shortcut</h2>
-
-<p>Refactoring code into methods is essential for clean, reusable code. Highlight the code block and press <kbd>Ctrl</kbd> + <kbd>M</kbd> + <kbd>G</kbd> to <strong>Extract Method</strong>, instantly creating a new method from the selected code. This is a must for breaking down long, complex functions into manageable pieces.</p>
-
-<h2>Bonus: Multi-Cursor Mode</h2>
-
-<p>If you’re not using PHPStorm’s multi-cursor mode, you’re missing out on some serious productivity gains! Here’s how to use it:</p>
-
-<ol>
-<li>Select a piece of code.</li>
-<li>Press <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>Insert</kbd> to activate multi-cursor mode. Now, you can place multiple cursors wherever needed, allowing you to type or edit in multiple locations simultaneously.</li>
-</ol>
-
-<h2>Final Thoughts</h2>
-
-<p>Mastering these PHPStorm shortcuts can drastically reduce your time spent on repetitive tasks, allowing you to focus on what really matters: building great software. Give these keybindings a try, and see how they can boost your productivity and help you achieve a smoother, more efficient coding workflow.</p>
-
-	</div>
-	<div class="article-footer">
-		<time>January 23rd, 2025</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/phpstorm/">
-					PHPStorm
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/installing-and-configuring-elasticsearch-and-kibana-on-ubuntu">Installing and Configuring Elasticsearch and Kibana on Ubuntu</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>I've always wanted to write this article but never got the chance to do so, I had written some notes on how to set up Elasticsearch and Kibana on an Ubuntu server (20.04 or later). Whether you're building a search engine, analyzing logs, or just exploring the Elastic Stack, this guide will help you get everything up and running smoothly. </p>
-
-<p>Here's how I did it:</p>
-
-<h2>Setting up Elasticsearch</h2>
-
-<h3>Add the Elasticsearch GPG key and repository</h3>
-
-<div class="codehilite">
-<pre><span></span><code>curl<span class="w"> </span>-fsSL<span class="w"> </span>https://artifacts.elastic.co/GPG-KEY-elasticsearch<span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>gpg<span class="w"> </span>--dearmor<span class="w"> </span>-o<span class="w"> </span>/usr/share/keyrings/elastic.gpg
-<span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;deb [signed-by=/usr/share/keyrings/elastic.gpg] https://artifacts.elastic.co/packages/7.x/apt stable main&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>tee<span class="w"> </span>-a<span class="w"> </span>/etc/apt/sources.list.d/elastic-7.x.list
-</code></pre>
-</div>
-
-<h3>Install Elasticsearch</h3>
+<p>First, install it on your server:</p>
 
 <div class="codehilite">
 <pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>update
-sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>elasticsearch
+sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>supervisor
 </code></pre>
 </div>
 
-<h3>Configure Elasticsearch by editing /etc/elasticsearch/elasticsearch.yml</h3>
+<p>Then create a small config file for the queue worker:</p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="nt">network.host</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">localhost</span>
-<span class="nt">http.port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">9200</span>
-<span class="nt">http.host</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0.0.0</span>
+<pre><span></span><code>sudo<span class="w"> </span>vim<span class="w"> </span>/etc/supervisor/conf.d/laravel-worker.conf
 </code></pre>
 </div>
 
-<h3>Start and enable Elasticsearch</h3>
+<p>This is the setup I generally start with:</p>
 
 <div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>systemctl<span class="w"> </span>start<span class="w"> </span>elasticsearch
-sudo<span class="w"> </span>systemctl<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>elasticsearch
+<pre><span></span><code><span class="k">[program:laravel-worker]</span>
+<span class="na">process_name</span><span class="o">=</span><span class="s">%(program_name)s_%(process_num)02d</span>
+<span class="na">command</span><span class="o">=</span><span class="s">php /var/www/project/artisan queue:work --sleep=3 --tries=3 --max-time=3600</span>
+<span class="na">autostart</span><span class="o">=</span><span class="s">true</span>
+<span class="na">autorestart</span><span class="o">=</span><span class="s">true</span>
+<span class="na">user</span><span class="o">=</span><span class="s">www-data</span>
+<span class="na">numprocs</span><span class="o">=</span><span class="s">2</span>
+<span class="na">redirect_stderr</span><span class="o">=</span><span class="s">true</span>
+<span class="na">stdout_logfile</span><span class="o">=</span><span class="s">/var/www/project/storage/logs/laravel-worker.log</span>
+<span class="na">stopwaitsecs</span><span class="o">=</span><span class="s">600</span>
 </code></pre>
 </div>
 
-<h3>Set up an NGINX reverse proxy for Elasticsearch</h3>
-
-<p>Add this server block to your NGINX config (e.g., <code>/etc/nginx/sites-available/your_domain</code>):</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">server</span><span class="w"> </span><span class="p">{</span>
-<span class="w">   </span><span class="kn">listen</span><span class="w"> </span><span class="mi">8834</span><span class="p">;</span>
-
-<span class="w">   </span><span class="c1"># Uncomment for SSL</span>
-<span class="w">   </span><span class="c1"># listen 8834 ssl;</span>
-<span class="w">   </span><span class="c1"># ssl_certificate /path/to/certificate/crt.pem;</span>
-<span class="w">   </span><span class="c1"># ssl_certificate_key /path/to/key/key.pem;</span>
-<span class="w">   </span><span class="c1"># ssl_protocols TLSv1 TLSv1.1 TLSv1.2;</span>
-<span class="w">   </span><span class="c1"># ssl_prefer_server_ciphers on;</span>
-<span class="w">   </span><span class="c1"># ssl_ciphers &#39;EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH&#39;;</span>
-
-<span class="w">   </span><span class="kn">server_name</span><span class="w"> </span><span class="s">your_domain</span><span class="p">;</span>
-
-<span class="w">   </span><span class="kn">location</span><span class="w"> </span><span class="s">/</span><span class="w"> </span><span class="p">{</span>
-<span class="w">      </span><span class="kn">proxy_pass</span><span class="w"> </span><span class="s">http://localhost:9200</span><span class="p">;</span>
-<span class="w">      </span><span class="kn">proxy_http_version</span><span class="w"> </span><span class="mi">1</span><span class="s">.1</span><span class="p">;</span>
-<span class="w">      </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">Upgrade</span><span class="w"> </span><span class="nv">$http_upgrade</span><span class="p">;</span>
-<span class="w">      </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">Connection</span><span class="w"> </span><span class="s">&#39;upgrade&#39;</span><span class="p">;</span>
-<span class="w">      </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">Host</span><span class="w"> </span><span class="nv">$host</span><span class="p">;</span>
-<span class="w">      </span><span class="kn">proxy_cache_bypass</span><span class="w"> </span><span class="nv">$http_upgrade</span><span class="p">;</span>
-<span class="w">   </span><span class="p">}</span>
-<span class="p">}</span>
-</code></pre>
-</div>
-
-<p>and then test and restart NGINX service:</p>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>nginx<span class="w"> </span>-t
-sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class="w"> </span>nginx
-</code></pre>
-</div>
-
-<p>Once done, you can verify if Elasticsearch is running by visiting <code>http://yourdomain.com:8834</code> in your browser. You should see a JSON response with Elasticsearch details.</p>
-
-<h2>Setting up Kibana</h2>
-
-<h3>Install Kibana</h3>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>kibana
-</code></pre>
-</div>
-
-<h3>Configure Kibana by editing /etc/kibana/kibana.yml</h3>
-
-<div class="codehilite">
-<pre><span></span><code><span class="nt">server.port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5601</span>
-<span class="nt">server.host</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0.0.0</span>
-<span class="nt">elasticsearch.hosts</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;http://localhost:9200&quot;</span><span class="p p-Indicator">]</span>
-</code></pre>
-</div>
-
-<h3>Start and enable Kibana</h3>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>systemctl<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>kibana
-sudo<span class="w"> </span>systemctl<span class="w"> </span>start<span class="w"> </span>kibana
-</code></pre>
-</div>
-
-<h3>Create an admin user for Kibana</h3>
-
-<div class="codehilite">
-<pre><span></span><code><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;your_admin_username:`openssl passwd -apr1`&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>tee<span class="w"> </span>-a<span class="w"> </span>/etc/nginx/htpasswd.users
-</code></pre>
-</div>
-
-<p>Make sure that you enter a strong password when prompted.</p>
-
-<h3>Set up an NGINX reverse proxy for Kibana</h3>
-
-<p>Add this server block to your NGINX config:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">server</span><span class="w"> </span><span class="p">{</span>
-<span class="w">   </span><span class="kn">listen</span><span class="w"> </span><span class="mi">8833</span><span class="p">;</span>
-
-<span class="w">   </span><span class="c1"># Uncomment for SSL</span>
-<span class="w">   </span><span class="c1"># listen 8833 ssl;</span>
-<span class="w">   </span><span class="c1"># ssl_certificate /path/to/certificate/crt.pem;</span>
-<span class="w">   </span><span class="c1"># ssl_certificate_key /path/to/key/key.pem;</span>
-<span class="w">   </span><span class="c1"># ssl_protocols TLSv1 TLSv1.1 TLSv1.2;</span>
-<span class="w">   </span><span class="c1"># ssl_prefer_server_ciphers on;</span>
-<span class="w">   </span><span class="c1"># ssl_ciphers &#39;EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH&#39;;</span>
-
-<span class="w">   </span><span class="kn">server_name</span><span class="w"> </span><span class="s">your_domain</span><span class="p">;</span>
-
-<span class="w">   </span><span class="kn">auth_basic</span><span class="w"> </span><span class="s">&quot;Restricted</span><span class="w"> </span><span class="s">Access&quot;</span><span class="p">;</span>
-<span class="w">   </span><span class="kn">auth_basic_user_file</span><span class="w"> </span><span class="s">/etc/nginx/htpasswd.users</span><span class="p">;</span>
-
-<span class="w">   </span><span class="kn">location</span><span class="w"> </span><span class="s">/</span><span class="w"> </span><span class="p">{</span>
-<span class="w">      </span><span class="kn">proxy_pass</span><span class="w"> </span><span class="s">http://localhost:5601</span><span class="p">;</span>
-<span class="w">      </span><span class="kn">proxy_http_version</span><span class="w"> </span><span class="mi">1</span><span class="s">.1</span><span class="p">;</span>
-<span class="w">      </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">Upgrade</span><span class="w"> </span><span class="nv">$http_upgrade</span><span class="p">;</span>
-<span class="w">      </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">Connection</span><span class="w"> </span><span class="s">&#39;upgrade&#39;</span><span class="p">;</span>
-<span class="w">      </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">Host</span><span class="w"> </span><span class="nv">$host</span><span class="p">;</span>
-<span class="w">      </span><span class="kn">proxy_cache_bypass</span><span class="w"> </span><span class="nv">$http_upgrade</span><span class="p">;</span>
-<span class="w">   </span><span class="p">}</span>
-<span class="p">}</span>
-</code></pre>
-</div>
-
-<p>and then test and restart NGINX service:</p>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>nginx<span class="w"> </span>-t
-sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class="w"> </span>nginx
-</code></pre>
-</div>
-
-<p>Once done, you can try to access Kibana by visiting <code>http://yourdomain.com:8833</code>. You'll be prompted for the admin credentials you created earlier.</p>
-
-<h2>Wrapping Up</h2>
-
-<p>And there you go! Elasticsearch and Kibana are now up and running on your Ubuntu server, ready to help you search, analyze, and visualize your data. Whether you're diving into logs, building a search feature, or just experimenting with the Elastic Stack, this setup should give you a solid foundation.</p>
-
-<h2>References</h2>
+<p>A few quick notes on what this does:</p>
 
 <ul>
-<li><a href="https://burnhamforensics.com/2019/02/06/how-to-install-and-configure-nginx-for-kibana/">Burnham Forensics: NGINX for Kibana</a></li>
-<li><a href="https://itnixpro.com/configure-nginx-reverse-proxy-for-kibana/">ITNixPro: NGINX Reverse Proxy for Kibana</a></li>
-<li><a href="https://www.digitalocean.com/community/tutorials/how-to-install-elasticsearch-logstash-and-kibana-elastic-stack-on-ubuntu-22-04">DigitalOcean: Elastic Stack on Ubuntu</a></li>
+<li>It runs <code>queue:work</code> instead of <code>queue:listen</code>, so the worker stays in memory</li>
+<li>Two worker processes are started in parallel (<code>numprocs=2</code>)</li>
+<li>If the queue is empty, the worker sleeps for a few seconds instead of spinning</li>
+<li>Failed jobs are retried a limited number of times</li>
+<li>The worker is force-restarted every hour to avoid memory leaks</li>
+<li>If a worker crashes, Supervisor brings it back up automatically</li>
 </ul>
+
+<p>Once the file is saved, reload Supervisor’s config:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>supervisorctl<span class="w"> </span>reread
+sudo<span class="w"> </span>supervisorctl<span class="w"> </span>update
+</code></pre>
+</div>
+
+<p>Start the workers:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>supervisorctl<span class="w"> </span>start<span class="w"> </span>laravel-worker:*
+</code></pre>
+</div>
+
+<p>And check their status:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>supervisorctl<span class="w"> </span>status
+</code></pre>
+</div>
+
+<p>Whenever I deploy new code or change environment variables, I just restart them:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>supervisorctl<span class="w"> </span>restart<span class="w"> </span>laravel-worker:*
+</code></pre>
+</div>
+
+<p>Logs end up in Laravel’s <code>storage/logs</code>, which is usually the first place I look when something feels off.</p>
+
+<p>This setup has been reliable for me across multiple projects. No dashboards, no extra moving parts — just queue workers quietly doing their job in the background.</p>
 
 <p>Hope you found this useful!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>January 22nd, 2025</time>
+		<time>January 4th, 2026</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/elastic-search/">
-					Elastic Search
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/kibana/">
-					Kibana
+				<a href="/category/laravel/">
+					Laravel
 				</a>
 			</li>
 			
@@ -940,149 +726,15 @@ sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class=
 				</a>
 			</li>
 			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-send-test-emails-via-power-shell">How to Send Test Emails via PowerShell?</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<h2>How to Send Test Emails via PowerShell</h2>
-
-<p>Whenever I wanted to send a test mail from a Windows Server, I make use of PowerShell. This makes it easier and is a quick yet efficient way to test email functionality, troubleshoot SMTP servers, or verify email delivery. </p>
-
-<p>Here’s what I usually do, including examples with and without user authentication.</p>
-
-<h2>1. Basic Command to Send a Test Email</h2>
-
-<p>The <code>Send-MailMessage</code> cmdlet in PowerShell makes it easy to send emails via an SMTP server. Here’s the basic command I used:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="nb">Send-MailMessage</span> <span class="n">-SmtpServer</span> <span class="s2">&quot;0.0.0.0&quot;</span> <span class="n">-Port</span> <span class="n">25</span> <span class="n">-From</span> <span class="s2">&quot;sample@example.com&quot;</span> <span class="n">-To</span> <span class="s2">&quot;john.doe@example.com&quot;</span> <span class="n">-Subject</span> <span class="s2">&quot;A subject&quot;</span> <span class="n">-Body</span> <span class="s2">&quot;A body&quot;</span>
-</code></pre>
-</div>
-
-<ul>
-<li><code>-SmtpServer</code>: The IP address or hostname of the SMTP server.</li>
-<li><code>-Port</code>: The SMTP port (default is 25).</li>
-<li><code>-From</code>: The sender’s email address.</li>
-<li><code>-To</code>: The recipient’s email address.</li>
-<li><code>-Subject</code>: The subject of the email.</li>
-<li><code>-Body</code>: The content of the email.</li>
-</ul>
-
-<p>This command works for SMTP servers that don’t require authentication (e.g., internal SMTP relays).</p>
-
-<h2>2. Sending Emails with User Authentication</h2>
-
-<p>If the SMTP server requires authentication, you can add the <code>-Credential</code> parameter to provide a username and password. Here’s how:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="nv">$credential</span> <span class="p">=</span> <span class="nb">Get-Credential</span>
-<span class="nb">Send-MailMessage</span> <span class="n">-SmtpServer</span> <span class="s2">&quot;smtp.example.com&quot;</span> <span class="n">-Port</span> <span class="n">587</span> <span class="n">-From</span> <span class="s2">&quot;sample@example.com&quot;</span> <span class="n">-To</span> <span class="s2">&quot;john.doe@example.com&quot;</span> <span class="n">-Subject</span> <span class="s2">&quot;A subject&quot;</span> <span class="n">-Body</span> <span class="s2">&quot;A body&quot;</span> <span class="n">-Credential</span> <span class="nv">$credential</span> <span class="n">-UseSsl</span>
-</code></pre>
-</div>
-
-<ul>
-<li><code>-Credential</code>: Prompts for a username and password. You can also create a <code>PSCredential</code> object programmatically.</li>
-<li><code>-UseSsl</code>: Enables SSL/TLS encryption, which is often required for authenticated SMTP servers (e.g., port 587).</li>
-</ul>
-
-<h3>Example with Hardcoded Credentials:</h3>
-
-<p>If you don’t want to be prompted for credentials, you can create a <code>PSCredential</code> object like this on PowerShell ISE:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="nv">$username</span> <span class="p">=</span> <span class="s2">&quot;sample@example.com&quot;</span>
-<span class="nv">$password</span> <span class="p">=</span> <span class="nb">ConvertTo-SecureString</span> <span class="s2">&quot;YourPassword&quot;</span> <span class="n">-AsPlainText</span> <span class="n">-Force</span>
-<span class="nv">$credential</span> <span class="p">=</span> <span class="nb">New-Object</span> <span class="n">System</span><span class="p">.</span><span class="n">Management</span><span class="p">.</span><span class="n">Automation</span><span class="p">.</span><span class="n">PSCredential</span> <span class="p">(</span><span class="nv">$username</span><span class="p">,</span> <span class="nv">$password</span><span class="p">)</span>
-
-<span class="nb">Send-MailMessage</span> <span class="n">-SmtpServer</span> <span class="s2">&quot;smtp.example.com&quot;</span> <span class="n">-Port</span> <span class="n">587</span> <span class="n">-From</span> <span class="s2">&quot;sample@example.com&quot;</span> <span class="n">-To</span> <span class="s2">&quot;john.doe@example.com&quot;</span> <span class="n">-Subject</span> <span class="s2">&quot;A subject&quot;</span> <span class="n">-Body</span> <span class="s2">&quot;A body&quot;</span> <span class="n">-Credential</span> <span class="nv">$credential</span> <span class="n">-UseSsl</span>
-</code></pre>
-</div>
-
-<h2>3. Adding Attachments</h2>
-
-<p>You can also attach files to your email using the <code>-Attachments</code> parameter:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="nb">Send-MailMessage</span> <span class="n">-SmtpServer</span> <span class="s2">&quot;smtp.example.com&quot;</span> <span class="n">-Port</span> <span class="n">587</span> <span class="n">-From</span> <span class="s2">&quot;sample@example.com&quot;</span> <span class="n">-To</span> <span class="s2">&quot;john.doe@example.com&quot;</span> <span class="n">-Subject</span> <span class="s2">&quot;A subject&quot;</span> <span class="n">-Body</span> <span class="s2">&quot;A body&quot;</span> <span class="n">-Attachments</span> <span class="s2">&quot;C:\path\to\file.txt&quot;</span> <span class="n">-Credential</span> <span class="nv">$credential</span> <span class="n">-UseSsl</span>
-</code></pre>
-</div>
-
-<h2>4. Troubleshooting Tips</h2>
-
-<h3>Connection Issues:</h3>
-
-<p>If the email fails to send, ensure the SMTP server is reachable and the port is open. Use <code>Test-NetConnection</code> to verify connectivity:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="nb">Test-NetConnection</span> <span class="n">-ComputerName</span> <span class="n">smtp</span><span class="p">.</span><span class="n">example</span><span class="p">.</span><span class="n">com</span> <span class="n">-Port</span> <span class="n">587</span>
-</code></pre>
-</div>
-
-<h3>Authentication Errors:</h3>
-
-<p>Double-check the username and password. If the SMTP server requires a specific authentication method (e.g., OAuth), you may need additional configuration.</p>
-
-<h3>SSL/TLS Errors:</h3>
-
-<p>Ensure the <code>-UseSsl</code> parameter is used if the SMTP server requires encryption.</p>
-
-<h2>Example Workflow:</h2>
-
-<p>Here’s a complete example with authentication and attachments:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="c"># Create credentials</span>
-<span class="nv">$username</span> <span class="p">=</span> <span class="s2">&quot;sample@example.com&quot;</span>
-<span class="nv">$password</span> <span class="p">=</span> <span class="nb">ConvertTo-SecureString</span> <span class="s2">&quot;YourPassword&quot;</span> <span class="n">-AsPlainText</span> <span class="n">-Force</span>
-<span class="nv">$credential</span> <span class="p">=</span> <span class="nb">New-Object</span> <span class="n">System</span><span class="p">.</span><span class="n">Management</span><span class="p">.</span><span class="n">Automation</span><span class="p">.</span><span class="n">PSCredential</span> <span class="p">(</span><span class="nv">$username</span><span class="p">,</span> <span class="nv">$password</span><span class="p">)</span>
-
-<span class="c"># Send email with attachment</span>
-<span class="nb">Send-MailMessage</span> <span class="n">-SmtpServer</span> <span class="s2">&quot;smtp.example.com&quot;</span> <span class="n">-Port</span> <span class="n">587</span> <span class="n">-From</span> <span class="s2">&quot;sample@example.com&quot;</span> <span class="n">-To</span> <span class="s2">&quot;john.doe@example.com&quot;</span> <span class="n">-Subject</span> <span class="s2">&quot;Test Email with Attachment&quot;</span> <span class="n">-Body</span> <span class="s2">&quot;Please find the attached file.&quot;</span> <span class="n">-Attachments</span> <span class="s2">&quot;C:\path\to\file.txt&quot;</span> <span class="n">-Credential</span> <span class="nv">$credential</span> <span class="n">-UseSsl</span>
-</code></pre>
-</div>
-
-<h2>Why do this way?</h2>
-
-<p>Using PowerShell to send test emails is a powerful way to:</p>
-
-<ul>
-<li>Test SMTP server configurations.</li>
-<li>Verify email delivery and troubleshoot issues.</li>
-<li>Automate email notifications in scripts.</li>
-</ul>
-
-<p>Whether you’re working with an internal SMTP relay or an external server requiring authentication, PowerShell’s <code>Send-MailMessage</code> cmdlet makes it easy to get the job done.</p>
-
-<p>Hope you found this useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>January 21st, 2025</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/powershell/">
-					PowerShell
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/smtp/">
-					SMTP
-				</a>
-			</li>
-			
 			<li>
 				<a href="/category/devops/">
 					DevOps
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/supervisor/">
+					Supervisor
 				</a>
 			</li>
 			
@@ -1120,7 +772,7 @@ sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class=
 		
 	
 		
-			<a class="" href="/til/pages/22">22</a>
+			<a class="" href="/til/pages/23">23</a>
 		
 	
 
@@ -1145,16 +797,16 @@ sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class=
 	<ul class="tags">
 		
 		<li>
-			<a href="/category/linux/">
-				Linux
-				<span class="count">28</span>
+			<a href="/category/devops/">
+				DevOps
+				<span class="count">36</span>
 			</a>
 		</li>
 		
 		<li>
-			<a href="/category/devops/">
-				DevOps
-				<span class="count">24</span>
+			<a href="/category/linux/">
+				Linux
+				<span class="count">30</span>
 			</a>
 		</li>
 		
@@ -1183,6 +835,13 @@ sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class=
 			<a href="/category/cryptography/">
 				Cryptography
 				<span class="count">12</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/mysql/">
+				MySQL
+				<span class="count">11</span>
 			</a>
 		</li>
 		
@@ -1222,9 +881,9 @@ sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class=
 		</li>
 		
 		<li>
-			<a href="/category/mysql/">
-				MySQL
-				<span class="count">10</span>
+			<a href="/category/kubernetes/">
+				Kubernetes
+				<span class="count">9</span>
 			</a>
 		</li>
 		
@@ -1334,6 +993,27 @@ sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class=
 		</li>
 		
 		<li>
+			<a href="/category/curl/">
+				curl
+				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/networking/">
+				Networking
+				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/smtp/">
+				SMTP
+				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/self-reflection/">
 				Self-reflection
 				<span class="count">3</span>
@@ -1404,6 +1084,13 @@ sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class=
 		</li>
 		
 		<li>
+			<a href="/category/troubleshooting/">
+				Troubleshooting
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/thoughts/">
 				Thoughts
 				<span class="count">2</span>
@@ -1434,13 +1121,6 @@ sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class=
 		<li>
 			<a href="/category/powershell/">
 				PowerShell
-				<span class="count">2</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/smtp/">
-				SMTP
 				<span class="count">2</span>
 			</a>
 		</li>
@@ -1533,6 +1213,20 @@ sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class=
 			<a href="/category/wamp/">
 				WAMP
 				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/http/">
+				HTTP
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/nodejs/">
+				Node.js
+				<span class="count">1</span>
 			</a>
 		</li>
 		
@@ -1644,13 +1338,6 @@ sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class=
 		<li>
 			<a href="/category/oop/">
 				OOP
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/troubleshooting/">
-				Troubleshooting
 				<span class="count">1</span>
 			</a>
 		</li>

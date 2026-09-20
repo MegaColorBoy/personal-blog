@@ -78,54 +78,78 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/resize-images-from-a-file-list-using-imagemagick">Resize images from a file list using ImageMagick</a></h1>
+		<h1 class="heading"><a href="/til/posts/connect-to-mysql-using-a-kubernetes-debug-container">Connect to MySQL using a Kubernetes debug container</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>Today, a colleague of mine uploaded a large number of images, only to realise later that they were all uncompressed and the site was loading noticeably slower. </p>
+		<p>What if you wanted to connect to a database server from an application's pod, but the application image didn't include a MySQL client?</p>
 
-<p>His first thought was to compress them and re-upload everything again—but why do something redundant when you can handle it easily from the terminal using ImageMagick?</p>
-
-<p>Previously, I’ve written about how ImageMagick makes it easy to <a href="https://www.megacolorboy.com/til/posts/playing-around-with-imagemagick/">resize images</a> in bulk. However, sometimes you don’t want to touch every image in a directory.</p>
-
-<p>In cases like this, if you already know which images need resizing, you can list their filenames in a text file and let ImageMagick process only those.</p>
-
-<p>Assume a <code>files.txt</code> like this:</p>
+<p>You can add an ephemeral container with the client and run it directly. Here's a quick way to do it:</p>
 
 <div class="codehilite">
-<pre><span></span><code>image1.jpg
-photo_02.png
-banner.jpeg
+<pre><span></span><code>kubectl<span class="w"> </span>debug<span class="w"> </span>-it<span class="w"> </span>web-7c9d6f8b5d-k2m4p<span class="w"> </span>-n<span class="w"> </span>staging<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--image<span class="o">=</span>mysql:8.4<span class="w"> </span>--<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>mysql<span class="w"> </span>--host<span class="o">=</span>mysql.staging.svc.cluster.local<span class="w"> </span>--port<span class="o">=</span><span class="m">3306</span><span class="w"> </span>--user<span class="o">=</span>app_reader<span class="w"> </span>--password
 </code></pre>
 </div>
 
-<p>You can then resize just those images while keeping the original aspect ratio intact and avoiding upscaling:</p>
+<p>Replace the pod, namespace, database hostname, and username with your own values. This example uses the MySQL image to run its client; it doesn't start a database server.</p>
+
+<p>The client prompts you for a password. Once connected, you can run a small query:</p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="k">while</span><span class="w"> </span><span class="nv">IFS</span><span class="o">=</span><span class="w"> </span><span class="nb">read</span><span class="w"> </span>-r<span class="w"> </span>file<span class="p">;</span><span class="w"> </span><span class="k">do</span>
-<span class="w">  </span><span class="o">[</span><span class="w"> </span>-f<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$file</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">]</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>mogrify<span class="w"> </span>-resize<span class="w"> </span>500x600<span class="se">\&gt;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$file</span><span class="s2">&quot;</span>
-<span class="k">done</span><span class="w"> </span>&lt;<span class="w"> </span>files.txt
+<pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="k">CURRENT_USER</span><span class="p">(),</span><span class="w"> </span><span class="k">DATABASE</span><span class="p">();</span>
 </code></pre>
 </div>
 
-<p>This works well when cleaning up large media folders or fixing legacy content where only a subset of images needs adjustment.</p>
+<p>For example:</p>
+
+<div class="codehilite">
+<pre><span></span><code>+----------------+------------+
+| CURRENT_USER() | DATABASE() |
++----------------+------------+
+| app_reader@%   | NULL       |
++----------------+------------+
+1 row in set (0.00 sec)
+</code></pre>
+</div>
+
+<p>Here, <code>NULL</code> means no default database has been selected. To select one and list its tables:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="n">USE</span><span class="w"> </span><span class="n">app_db</span><span class="p">;</span>
+<span class="k">SHOW</span><span class="w"> </span><span class="n">TABLES</span><span class="p">;</span>
+</code></pre>
+</div>
+
+<p>The debug container shares the pod's network, but it doesn't automatically inherit the application's environment variables, credentials, or mounted certificates. Supply the connection settings yourself, including your database's required TLS options.</p>
+
+<p>A successful connection verifies this client's network access and authentication. Your application may still have a different configuration.</p>
+
+<p>Type <code>exit</code> to leave the MySQL client. The ephemeral container stops, although its record remains attached to the pod. You also need permission to add debug containers; see the <a href="https://kubernetes.io/docs/tasks/debug/debug-application/debug-running-pod/#debugging-with-an-ephemeral-debug-container">Kubernetes debugging guide</a>.</p>
 
 <p>Hope you found this tip useful!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>January 2nd, 2026</time>
+		<time>September 5th, 2026</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/image-manipulation/">
-					Image Manipulation
+				<a href="/category/kubernetes/">
+					Kubernetes
 				</a>
 			</li>
 			
 			<li>
-				<a href="/category/linux/">
-					Linux
+				<a href="/category/mysql/">
+					MySQL
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
 				</a>
 			</li>
 			
@@ -137,85 +161,310 @@ banner.jpeg
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/can-ai-really-replace-software-engineers">Can AI really replace software engineers?</a></h1>
-		<p class="description">My take on the impact of AI in the near future for software engineers.</p>
+		<h1 class="heading"><a href="/til/posts/debug-pod-networking-with-ephemeral-containers">Debug pod networking with ephemeral containers</a></h1>
+		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>I’ve spoken about <a href="https://www.megacolorboy.com/writings/posts/thoughts-about-chatgpt-and-the-impact-on-software-developers/">this topic</a> on this blog two years ago. But with how dramatically the AI landscape has changed—especially with the advent of more advanced models—I think it’s worth revisiting.</p>
+		<p>Ever needed to check whether your application pod could reach a database or an HTTP endpoint, only to find that it didn't have <code>curl</code>, <code>telnet</code>, or any other useful tools installed?</p>
 
-<p>Think about it: if companies like OpenAI, Anthropic, or Microsoft truly believed that AI could replace software engineers, why would they still aggressively hunt for top engineering talent in Silicon Valley or spend billions acquiring startups?</p>
+<p>Your first instinct might be to install the missing packages inside the application container. But there's a handy alternative: an ephemeral debug container.</p>
 
-<h2>Task or Responsibility?</h2>
+<p>This adds a separate container to the existing pod, sharing its network namespace. You can investigate connectivity without adding packages to the application's image. It still uses resources in the pod, so it isn't completely without impact.</p>
 
-<p>Here’s how I see it in this AI era: <strong>AI can replace many programming tasks, but not the role or responsibility itself.</strong></p>
+<p>I found an image called <a href="https://github.com/nicolaka/netshoot">Netshoot</a> that includes tools such as <code>curl</code>, <code>dig</code>, and <code>nc</code>. Here's how you can open a debugging shell:</p>
 
-<p>Programming is only one part of the job. If you step back and think about what you actually do, you’ll realize there’s a lot more involved than just writing code in your favorite editor.</p>
+<div class="codehilite">
+<pre><span></span><code>kubectl<span class="w"> </span>debug<span class="w"> </span>-it<span class="w"> </span>web-7c9d6f8b5d-k2m4p<span class="w"> </span>-n<span class="w"> </span>staging<span class="w"> </span>--image<span class="o">=</span>nicolaka/netshoot<span class="w"> </span>--<span class="w"> </span>/bin/bash
+</code></pre>
+</div>
 
-<p>This is where many people go wrong—by conflating a task with the role. It’s similar to saying calculators replaced mathematicians or accountants. Yes, calculators automated arithmetic, but they also enabled people to focus on more complex problems. Arithmetic was never the job; understanding the principles behind it was.</p>
+<p>Replace the pod name and namespace with your own. Your cluster must allow ephemeral containers and the chosen image.</p>
 
-<p>AI works the same way. It makes execution faster, but it doesn’t replace understanding.</p>
+<p>After startup messages, an illustrative shell prompt might look like this:</p>
 
-<h2>What AI can’t do?</h2>
+<div class="codehilite">
+<pre><span></span><code>web-7c9d6f8b5d-k2m4p:~#
+</code></pre>
+</div>
 
-<p>Think about what you actually do in a typical week.</p>
+<p>Inside that shell, try resolving a database service or checking an HTTP endpoint:</p>
 
-<p>You sit in closed rooms with project managers and clients who describe vague or unintelligible problems. You’re the one who decodes what they <em>actually</em> need. You look at the codebase and:</p>
+<div class="codehilite">
+<pre><span></span><code>dig<span class="w"> </span>+short<span class="w"> </span>mysql.staging.svc.cluster.local
+curl<span class="w"> </span>-I<span class="w"> </span>--connect-timeout<span class="w"> </span><span class="m">5</span><span class="w"> </span>--max-time<span class="w"> </span><span class="m">10</span><span class="w"> </span>https://example.com
+</code></pre>
+</div>
 
-<ul>
-<li>Figure out which parts need to change and which must remain untouched</li>
-<li>Push back on feature requests that might introduce long-term technical debt</li>
-<li>Review a colleague’s code before it reaches production</li>
-<li>Decide whether something is ready to go live or needs more testing</li>
-</ul>
+<p>An example DNS response would be:</p>
 
-<p>There are many more responsibilities like this—and none of them are programming.</p>
+<div class="codehilite">
+<pre><span></span><code>10.96.42.18
+</code></pre>
+</div>
 
-<p>It’s just your job.</p>
+<p>Use your own service hostname; this example assumes the cluster's DNS domain is <code>cluster.local</code>.</p>
 
-<h2>Raising concerns</h2>
+<p>If you also need to inspect another container's processes, add <code>--target=app</code> to the debug command, replacing <code>app</code> with that container's name. This depends on runtime support and isn't needed just to share the pod's network.</p>
 
-<p>This post isn’t meant to turn a blind eye to what’s happening in the industry.</p>
+<p>When you're done, type <code>exit</code>. The debug container stops, but its entry remains in the pod until the pod is removed. It isn't a regular sidecar, and it doesn't automatically restart. The <a href="https://kubernetes.io/docs/concepts/workloads/pods/ephemeral-containers/">ephemeral container documentation</a> explains these lifecycle restrictions.</p>
 
-<p>We’ve seen massive layoffs across large corporations and companies reducing headcount. Will this happen again? Absolutely. But in most cases, these are cost-cutting measures wrapped in a different narrative, with AI often used as a convenient justification.</p>
-
-<p>So who stays, and who’s at risk?</p>
-
-<p>Engineers who understand that their role goes far beyond writing code—those who bring context, judgment, and clarity to ambiguous problems—are far more likely to remain valuable. On the other hand, those who rely solely on producing output without understanding <em>why</em> they’re producing it are the most vulnerable.</p>
-
-<h2>A stronger feedback loop</h2>
-
-<p>Will junior engineers be replaced? That’s something I plan to address in a separate post.</p>
-
-<p>But one thing worth discussing is this: if AI handles a large part of code generation, can juniors still build judgment? I think they can—because AI significantly shortens the feedback loop.</p>
-
-<p>Having spent over a decade in this industry, I remember the days of endlessly browsing Stack Overflow and flipping through programming books for answers. What once took hours or days now takes seconds. It may <em>feel</em> like skipping steps, but in reality, you’re just learning faster.</p>
-
-<p>Consider this: you were hired before the AI wave because your company saw value in what you brought to the table. Now, with AI tooling, you’re significantly more productive. You ship faster, handle more complex scenarios, and deliver better outcomes.</p>
-
-<p>It wouldn’t make much sense for a company to let you go simply because you’ve become more efficient at your job.</p>
-
-<h2>Staying ahead</h2>
-
-<p>If you’re already thinking about how to adapt, here’s where you can start:</p>
-
-<ul>
-<li><strong>Use AI tools</strong>: Whether it’s Claude, ChatGPT, Cursor, or something else—figure out what works for you and what doesn’t</li>
-<li><strong>Strengthen your actual role</strong>: Focus on understanding requirements, trade-offs, and communication with stakeholders</li>
-<li><strong>Learn systems end-to-end</strong>: The more you understand how a system works as a whole, the harder you are to replace</li>
-<li><strong>Document your work</strong>: Keep track of how you solve problems—it pays off later in your career</li>
-<li><strong>Stay open to learning</strong>: Being defensive or closed-minded will only slow you down. Embrace the tools and move forward</li>
-</ul>
-
-<h2>Conclusion</h2>
-
-<p>This field is changing rapidly. Tasks that once took days can now be completed in seconds. Some skills are becoming less relevant, while others are more important than ever.</p>
-
-<p>If there’s one thing to take away from this, it’s this: <strong>your value was never in writing code</strong>. It’s in knowing <em>what</em> to build, <em>why</em> to build it, <em>when</em> to ship, and <em>when to push back</em>. It’s about solving the right problems—problems that actually help people.</p>
+<p>Pretty cool, huh?</p>
 
 	</div>
 	<div class="article-footer">
-		<time>December 24th, 2025</time>
+		<time>September 4th, 2026</time>
 		<ul class="tags">
+			
+			<li>
+				<a href="/category/kubernetes/">
+					Kubernetes
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/networking/">
+					Networking
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/copy-files-to-and-from-kubernetes-pods">Copy files to and from Kubernetes pods</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Every now and then, I need to copy files into an application pod. One use case for me is moving uploaded assets while migrating an application from staging to production.</p>
+
+<p>For this, you can use <code>kubectl cp</code>. The remote path uses a namespace and pod name, so there's no SSH username or server address involved.</p>
+
+<p>Here's an example of copying a local file into a container:</p>
+
+<div class="codehilite">
+<pre><span></span><code>kubectl<span class="w"> </span>cp<span class="w"> </span>./logo.png<span class="w"> </span>staging/web-7c9d6f8b5d-k2m4p:/var/www/html/public/logo.png<span class="w"> </span>-c<span class="w"> </span>app
+</code></pre>
+</div>
+
+<p>Replace <code>staging</code>, the pod name, <code>app</code>, and the paths with your own values. The destination directory must exist and be writable by the container's user.</p>
+
+<p>You can also do the reverse and copy a file into your current directory:</p>
+
+<div class="codehilite">
+<pre><span></span><code>kubectl<span class="w"> </span>cp<span class="w"> </span>staging/web-7c9d6f8b5d-k2m4p:/var/www/html/public/logo.png<span class="w"> </span>./logo.png<span class="w"> </span>-c<span class="w"> </span>app
+</code></pre>
+</div>
+
+<p>For a directory of uploaded assets, I would copy it locally first, then into the destination pod:</p>
+
+<div class="codehilite">
+<pre><span></span><code>kubectl<span class="w"> </span>cp<span class="w"> </span>staging/web-7c9d6f8b5d-k2m4p:/var/www/html/public/uploads<span class="w"> </span>./uploads<span class="w"> </span>-c<span class="w"> </span>app
+kubectl<span class="w"> </span>cp<span class="w"> </span>./uploads<span class="w"> </span>production/web-5f7c8d9b6-m3q8r:/var/www/html/public/<span class="w"> </span>-c<span class="w"> </span>app
+</code></pre>
+</div>
+
+<p>Use a fresh local destination and check the target directory before copying, as existing files can be overwritten.</p>
+
+<p>One detail that's easy to miss: <code>kubectl cp</code> needs <code>tar</code> inside the container. Without it, the copy fails. The <a href="https://kubernetes.io/docs/reference/kubectl/generated/kubectl_cp/">kubectl cp reference</a> also covers cases that need a more explicit tar-based copy.</p>
+
+<p>Also, think about where these files will live. Files written into a container's writable layer won't survive its replacement. For uploaded assets that need to persist, use the application's persistent volume or shared storage, and coordinate the copy if uploads are still changing.</p>
+
+<p>Hope you found this useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>September 2nd, 2026</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/kubernetes/">
+					Kubernetes
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/find-a-kubernetes-pod-and-open-a-shell-inside-it">Find a Kubernetes pod and open a shell inside it</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>At my new job as a Senior DevOps engineer, I have learnt a lot in a short amount of time. One of the first things I got comfortable with was finding an application's pod and opening a shell inside its container.</p>
+
+<p>This is quite useful when you want to check file permissions or explore what is actually running inside your application container.</p>
+
+<p>First, get the pods in your namespace:</p>
+
+<div class="codehilite">
+<pre><span></span><code>kubectl<span class="w"> </span>get<span class="w"> </span>pods<span class="w"> </span>-n<span class="w"> </span>staging
+</code></pre>
+</div>
+
+<p>For example, you might see:</p>
+
+<div class="codehilite">
+<pre><span></span><code>NAME                   READY   STATUS    RESTARTS   AGE
+web-7c9d6f8b5d-k2m4p    1/1     Running   0          2h
+worker-6b8f4d7c9-x5n2q  1/1     Running   0          2h
+</code></pre>
+</div>
+
+<p>Here, <code>staging</code> is an example namespace. Replace it and the pod names with your own throughout this post. Also, make sure <code>kubectl</code> is connected to the intended cluster.</p>
+
+<p>Once you have the pod name, open a shell:</p>
+
+<div class="codehilite">
+<pre><span></span><code>kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-it<span class="w"> </span>web-7c9d6f8b5d-k2m4p<span class="w"> </span>-n<span class="w"> </span>staging<span class="w"> </span>--<span class="w"> </span>/bin/sh
+</code></pre>
+</div>
+
+<p>The <code>-i</code> flag keeps standard input open, and <code>-t</code> allocates a terminal. The <code>--</code> separates kubectl's options from the command you want to run inside the container.</p>
+
+<p>If the pod has multiple containers, choose one explicitly:</p>
+
+<div class="codehilite">
+<pre><span></span><code>kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-it<span class="w"> </span>web-7c9d6f8b5d-k2m4p<span class="w"> </span>-n<span class="w"> </span>staging<span class="w"> </span>-c<span class="w"> </span>app<span class="w"> </span>--<span class="w"> </span>/bin/sh
+</code></pre>
+</div>
+
+<p>The shell depends on the image. <code>/bin/sh</code> is common, while <code>/bin/bash</code> only works if Bash is installed. Some minimal images have no shell at all; in that case, a <a href="https://kubernetes.io/docs/tasks/debug/debug-application/debug-running-pod/#debugging-with-an-ephemeral-debug-container">debug container</a> can help.</p>
+
+<p>Type <code>exit</code> when you're done. This closes your shell session; it doesn't stop the application.</p>
+
+<p>Hope you found this tip useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>September 1st, 2026</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/kubernetes/">
+					Kubernetes
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/writings/posts/things-i-learned-as-a-senior-engineer">Things I Learned as a Senior Engineer</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>I've spent the last 10 years working as a professional programmer and these are some of the lessons I have learned along the way.</p>
+
+<h2>Career Growth</h2>
+
+<ul>
+<li>If you want to grow in your career, don't stay in your comfort zone for too long. Changing companies can expose you to new environments, new challenges, new people, and new ways of thinking.</li>
+<li>It's good to be smart, but if you ever become the smartest person in the room, it may be time to look for another opportunity.</li>
+<li>Work with smart engineers. They will make you a better programmer.</li>
+<li>Work with smart non-technical people too. They will make you a better engineer.</li>
+<li>Make good money, but save it too.</li>
+<li>Time is finite, so spend it carefully. Play with your wife and kids, talk to your friends, watch a good movie, read a book, work out, pray, or take a long walk. Work is not everything.</li>
+</ul>
+
+<h2>Engineering Fundamentals</h2>
+
+<ul>
+<li>It doesn't matter what tech stack is popular right now. Get good at the fundamentals and the rest will follow.</li>
+<li>When I was a junior engineer, I cared about knowing the next big thing. These days, I care more about understanding the basics deeply.</li>
+<li>Learn databases, especially SQL. It is one of those skills that will save you in many situations.</li>
+<li>Invest in networking, databases, system design, data engineering, computer science concepts, and distributed systems.</li>
+<li>Want to understand operating systems better? Learn Linux and use it as your everyday OS. You will need that knowledge more than you think.</li>
+<li>Tech keeps changing, so keep yourself updated through good sources like <a href="https://news.ycombinator.com">Hacker News</a>.</li>
+<li>Adapt to current tech trends, but don't blindly chase everything. Sometimes you need exposure to different parts of the software development cycle.</li>
+</ul>
+
+<h2>Code And Craft</h2>
+
+<ul>
+<li>The best code is often the code you don't have to write. Remove complexity before adding more code.</li>
+<li>A good engineer knows best practices. A great engineer knows when to break them.</li>
+<li>Don't worry about writing bad code sometimes. Everyone does it. Myself included.</li>
+<li>The older I get, the more I appreciate strongly typed languages. At the very least, I try to bring some of that discipline into dynamic languages too.</li>
+<li>Version your code. If you don't know how to use version control, learn it. If you choose not to, stop and fix that first.</li>
+<li>Document what you do. I learned this the hard way. Good documentation, shared with the team, can save you from unnecessary calls, interruptions, and spoiled vacations.</li>
+<li>I've never been a strict TDD person, but these days I try to write more tests. Good tests are useful when they protect behavior that matters.</li>
+<li>I'm not a security expert, but I know enough to take security seriously. Security is not a joke.</li>
+<li>Don't rely too much on Claude, ChatGPT, or any other AI model. They are useful tools, but they should not replace your own thinking.</li>
+</ul>
+
+<h2>People And Teams</h2>
+
+<ul>
+<li>I have made good, lifelong relationships at companies I have worked with. I try to keep work relationships professional, but we are human, and sometimes real friendships happen.</li>
+<li>Stay away from office politics. Don't insert yourself into other people's business. It will save you from a lot of trouble.</li>
+<li>Be honest and transparent with your line manager and management. You can decide how much to share, but being authentic usually goes a long way.</li>
+<li>A good manager shares many qualities with a good engineer: clarity, consistency, judgment, and the ability to unblock people.</li>
+<li>Be kind and helpful to your team whenever you get the chance. It goes a long way, and sometimes someone will help you when you are stuck too.</li>
+<li>Work with like-minded people, especially in software engineering. It makes the work better.</li>
+<li>Don't judge engineers only by title or years of experience. Watch how they debug, read unfamiliar code, and reason through trade-offs.</li>
+</ul>
+
+<h2>Work Environment</h2>
+
+<ul>
+<li>It is okay to deal with emergencies and late-night operations occasionally. If it becomes normal and starts harming your mental health, stop and find something that works better for you.</li>
+<li>I am not a fan of working from home full-time. I prefer keeping work separate from home because it keeps things organized for me.</li>
+<li>Don't work on bad hardware if you can avoid it. Every developer deserves good tools.</li>
+<li>Full-stack developers deserve more respect. They are expected to understand frontend, backend, databases, networking, browsers, caching, mobile behavior, and more.</li>
+<li>Keep healthy boundaries at work. No one needs access to your full personal life or your most private self.</li>
+</ul>
+
+<h2>Life Outside Work</h2>
+
+<ul>
+<li>If you have time, work on side projects. Tinker, build things you care about, and stay curious.</li>
+<li>I got into tech and programming because it was my hobby. Sometimes your work can be the same as your hobby, and sometimes work can ruin the hobby for you. Learn new hobbies whenever you can.</li>
+<li>Mental health is important. If you are constantly working late nights and committing to unreasonable timelines, pu
+sh back. If that does not work, find something better for you.</li>
+</ul>
+
+<p>That's the list for now. I will probably disagree with parts of it in a few years, and that is part of the job too.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>May 16th, 2026</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/self-reflection/">
+					Self-reflection
+				</a>
+			</li>
 			
 			<li>
 				<a href="/category/thoughts/">
@@ -223,18 +472,6 @@ banner.jpeg
 				</a>
 			</li>
 			
-			<li>
-				<a href="/category/artificial-intelligence/">
-					Artificial Intelligence
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/software-development/">
-					Software Development
-				</a>
-			</li>
-			
 		</ul>
 	</div>
 </div>
@@ -243,178 +480,56 @@ banner.jpeg
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/block-browser-features-with-permissions-policy-in-nginx">Block browser features with permissions policy in Nginx</a></h1>
+		<h1 class="heading"><a href="/til/posts/enable-password-asterisks-for-sudo-on-fedora">Enable password asterisks for sudo on Fedora</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>Recently, I learned that you can explicitly disable browser features like <strong>camera, microphone, and geolocation</strong> using the <code>Permissions-Policy</code> HTTP response header.</p>
+		<p>After switching from Linux Mint to Fedora, one small difference I noticed was the password prompt behavior in the terminal. On Mint, <code>sudo</code> showed asterisks while typing the password. On Fedora, it stayed blank.</p>
 
-<p>Using a single line in nginx, it does the job:</p>
+<p>Some people prefer the blank prompt, but I like having visual feedback when typing, especially if I am not fully sure whether I missed a key.</p>
+
+<p>If you want the same behavior on Fedora, you can enable <code>sudo</code> password feedback with a small <code>sudoers</code> change.</p>
+
+<p>This note applies to <code>sudo</code> prompts in the terminal, not graphical login screens.</p>
+
+<h2>1. Open the <code>sudoers</code> file safely</h2>
+
+<p>Do not edit <code>/etc/sudoers</code> directly with a normal text editor. Use <code>visudo</code> so syntax errors are caught before the file is saved:</p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="k">add_header</span><span class="w"> </span><span class="s">Permissions-Policy</span><span class="w"> </span><span class="s">&quot;camera=(),</span><span class="w"> </span><span class="s">microphone=(),</span><span class="w"> </span><span class="s">geolocation=()&quot;</span><span class="w"> </span><span class="s">always</span><span class="p">;</span>
+<pre><span></span><code>sudo<span class="w"> </span>visudo
 </code></pre>
 </div>
 
-<h2>What this does?</h2>
+<h2>2. Enable password feedback</h2>
 
-<ul>
-<li>Disables camera access</li>
-<li>Disables microphone access</li>
-<li>Disables geolocation access</li>
-<li>Applies to all origins</li>
-<li>The browser won’t even prompt the user for permission</li>
-</ul>
-
-<p>The empty <code>()</code> means <strong>no origins are allowed</strong> to use these features.</p>
-
-<h2>Why this is useful?</h2>
-
-<ul>
-<li>Improves security and privacy</li>
-<li>Prevents misuse by third-party scripts</li>
-<li>Good default for content sites, admin panels, and APIs</li>
-</ul>
-
-<p>The <code>always</code> flag ensures the header is sent even on error responses (404, 500, etc.).</p>
-
-<p>Hope you found this tip useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>December 23rd, 2025</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/nginx/">
-					nginx
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/security/">
-					Security
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/ubuntu-bootloader-recovery">Ubuntu Bootloader Recovery</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>This is a guide on how to recover Ubuntu's GRUB Bootloader in the case of whenever a LVM UUID is changed or corrupted.</p>
-
-<h2>The Problem</h2>
-
-<p>The error <code>"disk not found: /xxx-xxx"</code> in <code>grub rescue&gt;</code> mode suggests GRUB can't find the device or logical volume it was previously configured to boot from. </p>
-
-<p>This usually happens when:
-* LVM volumes weren't activated during boot
-* The volume group UUID changed or became corrupted</p>
-
-<h2>The Context</h2>
-
-<p>The <code>/xxx-xxx</code> in the message is likely referring to a <strong>LVM volume by UUID</strong>, e.g.:</p>
+<p>Add this line:</p>
 
 <div class="codehilite">
-<pre><span></span><code>error:<span class="w"> </span>disk<span class="w"> </span><span class="s1">&#39;lvmid/XXX-XXX-XXX&#39;</span><span class="w"> </span>not<span class="w"> </span>found
+<pre><span></span><code>Defaults<span class="w"> </span>pwfeedback
 </code></pre>
 </div>
 
-<p>This typically means GRUB is referencing a <strong>missing or renamed LVM LV or VG</strong></p>
+<p>If you already have other <code>Defaults</code> lines such as <code>Defaults env_reset</code>, leave them as they are. Just add <code>Defaults pwfeedback</code> as a separate line.</p>
 
-<h2>The Solution</h2>
+<h2>3. Save and test</h2>
 
-<p>Boot from a live ISO, open a terminal and follow these steps:</p>
-
-<h3>1. Check Disks and LVM State</h3>
+<p>Save the file and exit the editor. Then run a <code>sudo</code> command again, for example:</p>
 
 <div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>lsblk
-sudo<span class="w"> </span>fdisk<span class="w"> </span>-l
+<pre><span></span><code>sudo<span class="w"> </span>-k
+sudo<span class="w"> </span><span class="nb">true</span>
 </code></pre>
 </div>
 
-<p>Then:</p>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>vgscan
-</code></pre>
-</div>
-
-<p>This activates any found LVM volume groups and logical volumes.</p>
-
-<p>Then verify with:</p>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>lvdisplay
-</code></pre>
-</div>
-
-<h3>3. Mount the System Manually</h3>
-
-<p>Assuming your root volume is <code>/dev/mapper/your_lvm_drive</code>:</p>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>mkdir<span class="w"> </span>/mnt/recovery
-sudo<span class="w"> </span>mount<span class="w"> </span>/dev/mapper/your_lvm_drive<span class="w"> </span>/mnt/recovery
-</code></pre>
-</div>
-
-<h3>4. Prepare for chroot</h3>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>mount<span class="w"> </span>--bind<span class="w"> </span>/dev<span class="w"> </span>/mnt/recovery/dev
-sudo<span class="w"> </span>mount<span class="w"> </span>--bind<span class="w"> </span>/proc<span class="w"> </span>/mnt/recovery/proc
-sudo<span class="w"> </span>mount<span class="w"> </span>--bind<span class="w"> </span>/sys<span class="w"> </span>/mnt/recovery/sys
-sudo<span class="w"> </span>chroot<span class="w"> </span>/mnt/recovery
-</code></pre>
-</div>
-
-<p>The <code>chroot</code> command changes the root directory for the kernel, effectively making a specified directory the new starting point for any file access within the chrooted process. </p>
-
-<h3>5. Reinstall GRUB</h3>
-
-<div class="codehilite">
-<pre><span></span><code>grub-install<span class="w"> </span>/dev/sdX<span class="w">  </span><span class="c1"># Replace sdX with the actual disk (like /dev/sda)</span>
-update-grub
-</code></pre>
-</div>
-
-<p>Exit <code>chroot</code> mode, unmount the recovery path from live-boot OS and reboot the system:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="nb">exit</span>
-sudo<span class="w"> </span>umount<span class="w"> </span>-R<span class="w"> </span>/mnt/recovery
-sudo<span class="w"> </span>reboot
-</code></pre>
-</div>
+<p>When prompted for your password, you should now see asterisks as you type. This setting makes password length visible on screen. If that matters in your environment, leave the default behavior in place.</p>
 
 <p>Hope you found this article useful!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>June 12th, 2025</time>
+		<time>May 14th, 2026</time>
 		<ul class="tags">
-			
-			<li>
-				<a href="/category/ubuntu/">
-					Ubuntu
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/devops/">
-					DevOps
-				</a>
-			</li>
 			
 			<li>
 				<a href="/category/linux/">
@@ -422,12 +537,6 @@ sudo<span class="w"> </span>reboot
 				</a>
 			</li>
 			
-			<li>
-				<a href="/category/grub/">
-					GRUB
-				</a>
-			</li>
-			
 		</ul>
 	</div>
 </div>
@@ -436,145 +545,102 @@ sudo<span class="w"> </span>reboot
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/eliminate-laravel-env-leakage-between-multiple-sites-on-apache-windows">Eliminate Laravel .env leakage between multiple sites on Apache (Windows)</a></h1>
+		<h1 class="heading"><a href="/til/posts/clean-removal-of-linux-from-a-windows-dual-boot-machine">Clean removal of Linux from a Windows dual-boot machine</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>Today, I learned something pretty important (and frustrating until I figured it out): if you're running <strong>multiple Laravel applications</strong> on <strong>Apache (Windows)</strong> using <code>mod_php</code>, you can run into a strange bug where <strong>one site's <code>.env</code> settings override the other</strong>.</p>
+		<p>Recently, I purchased a ThinkPad X1 Carbon Gen 13 to replace my old Dell XPS 13 9360. It came with Windows 11, and instead of wiping it, I decided to set up a dual-boot system with Linux. I still need Windows for .NET development, but I use Linux most of the time.</p>
 
-<p>This became painfully obvious when I noticed that <strong>one of my Laravel sites was randomly connecting to the wrong database</strong>, even though the configurations in each <code>.env</code> were different. Weird, right?</p>
+<p>I eventually settled on Fedora, but I tried several distributions and desktop environments before getting there. Each time I removed Linux, I needed to clean up the old partitions and boot entries properly so they would not interfere with the next installation.</p>
 
-<p>Turns out, the culprit was <code>mod_php</code>.</p>
+<p>If you are doing the same kind of distro-hopping on a UEFI system, this is the cleanup process that worked for me.</p>
 
-<h2>The problem</h2>
+<p>This note covers UEFI systems only.</p>
 
-<p>I had two Laravel sites hosted on the same Windows machine with Apache. Both were running fine — until they weren’t.</p>
+<p>If you want to remove Linux from a Windows dual-boot setup, there are two things to clean up:</p>
 
-<p>The issue? Sometimes one site would pick up the database config of the other. One minute I’d be on Site A, and then somehow its <code>.env</code> settings were coming from Site B. </p>
+<ol>
+<li>Delete the Linux partitions.</li>
+<li>Remove the Linux bootloader files and firmware entries.</li>
+</ol>
 
-<p>This is just total chaos and worse, this issue existed from more two years until I decided to dive into the problem.</p>
+<p>Before making changes, make sure Windows is working normally and back up anything you want to keep from your Linux installation.</p>
 
-<h2>The cause</h2>
+<h2>1. Delete the Linux partitions</h2>
 
-<p>Laravel loads <code>.env</code> values during the bootstrap process and <strong>caches them in memory</strong>. When using <code>mod_php</code>, Apache loads PHP as a module <strong>once</strong> and shares it across all sites. That means <strong>only one copy of Laravel’s environment gets loaded — and reused</strong> across both apps.</p>
+<p>Open Windows Disk Management and identify the partitions that belong to Linux. These are usually the Linux root partition, swap partition, and optionally a separate <code>/home</code> partition.</p>
 
-<p>So even if each app had its own <code>.env</code>, it didn’t matter. Apache was essentially saying:</p>
-
-<blockquote>
-  <p>“Hey, here’s PHP. I already booted Laravel with this config — just reuse it.”</p>
-</blockquote>
-
-<h2>The solution</h2>
-
-<p>After some digging, the solution is <strong>ditch <code>mod_php</code></strong> and switch to <strong>FastCGI (<code>mod_fcgid</code>)</strong>.</p>
-
-<p>With FastCGI, each site runs its own instance of PHP via <code>php-cgi.exe</code>, which <strong>boots Laravel in isolation</strong> — meaning <strong>each <code>.env</code> file is respected per site</strong>.</p>
-
-<h3>How to configure it?</h3>
-
-<p>First, you need to disable <strong><code>mod_php</code></strong> in <code>httpd.conf</code>:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="c"># LoadModule php_module &quot;C:/path/to/php/php8apache2_4.dll&quot;</span>
-<span class="c"># &lt;FilesMatch \.php$&gt;</span>
-<span class="c">#     SetHandler application/x-httpd-php</span>
-<span class="c"># &lt;/FilesMatch&gt;</span>
-<span class="c"># PHPIniDir &quot;C:/path/to/php/&quot;</span>
-</code></pre>
-</div>
-
-<p>Then install <strong><code>mod_fcgid</code></strong> from Apache Lounge and copy <code>mod_fcgid.so</code> to <code>modules/</code> directory and enable it in <code>httpd.conf</code>:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="nb">LoadModule</span><span class="w"> </span>fcgid_module<span class="w"> </span>modules/mod_fcgid.so
-<span class="nb">Include</span><span class="w"> </span>conf/extra/httpd-fcgid.conf
-</code></pre>
-</div>
-
-<p>Next, you have to create/update <strong><code>httpd-fcgid.conf</code></strong>:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="nt">&lt;IfModule</span><span class="w"> </span><span class="s">fcgid_module</span><span class="nt">&gt;</span>
-<span class="w">   </span><span class="nb">AddHandler</span><span class="w"> </span>fcgid-script<span class="w"> </span>.php
-<span class="w">   </span><span class="nb">FcgidInitialEnv</span><span class="w"> </span>PHPRC<span class="w"> </span><span class="s2">&quot;C:/path/to/php&quot;</span>
-<span class="w">   </span><span class="nb">FcgidWrapper</span><span class="w"> </span><span class="s2">&quot;C:/path/to/php/php-cgi.exe&quot;</span><span class="w"> </span>.php
-<span class="w">   </span><span class="nb">Options</span><span class="w"> </span>+ExecCGI
-<span class="w">   </span><span class="nb">FcgidMaxProcessesPerClass</span><span class="w"> </span><span class="m">150</span>
-<span class="w">   </span><span class="nb">FcgidMaxRequestsPerProcess</span><span class="w"> </span><span class="m">1000</span>
-<span class="w">   </span><span class="nb">FcgidProcessLifeTime</span><span class="w"> </span><span class="m">300</span>
-<span class="w">   </span><span class="nb">FcgidIOTimeout</span><span class="w"> </span><span class="m">120</span>
-<span class="w">   </span><span class="nb">FcgidPassHeader</span><span class="w"> </span>Authorization
-<span class="w">   </span><span class="nb">FcgidFixPathinfo</span><span class="w"> </span><span class="m">0</span>
-<span class="nt">&lt;/IfModule&gt;</span>
-</code></pre>
-</div>
-
-<p>And then atlast, update your virtual host:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="nt">&lt;VirtualHost</span><span class="w"> </span><span class="s">*:443</span><span class="nt">&gt;</span>
-<span class="w">   </span><span class="nb">ServerName</span><span class="w"> </span>example.com
-<span class="w">   </span><span class="nb">DocumentRoot</span><span class="w"> </span><span class="s2">&quot;C:/path/to/website/public&quot;</span>
-
-<span class="w">   </span><span class="nt">&lt;Directory</span><span class="w"> </span><span class="s">&quot;C:/path/to/website/public&quot;</span><span class="nt">&gt;</span>
-<span class="w">      </span><span class="nb">Options</span><span class="w"> </span>+ExecCGI<span class="w"> </span>-Indexes<span class="w"> </span>+FollowSymLinks
-<span class="w">      </span><span class="nb">AllowOverride</span><span class="w"> </span><span class="k">All</span>
-<span class="w">      </span><span class="nb">Require</span><span class="w"> </span><span class="k">all</span><span class="w"> </span>granted
-<span class="w">      </span><span class="nb">AddHandler</span><span class="w"> </span>fcgid-script<span class="w"> </span>.php
-<span class="w">      </span><span class="nb">FCGIWrapper</span><span class="w"> </span><span class="s2">&quot;C:/path/to/php/php-cgi.exe&quot;</span><span class="w"> </span>.php
-<span class="w">   </span><span class="nt">&lt;/Directory&gt;</span>
-
-<span class="w">   </span><span class="nb">SSLEngine</span><span class="w"> </span><span class="k">on</span>
-<span class="w">   </span><span class="nb">SSLCertificateFile</span><span class="w"> </span><span class="s2">&quot;...&quot;</span>
-<span class="w">   </span><span class="nb">SSLCertificateKeyFile</span><span class="w"> </span><span class="s2">&quot;...&quot;</span>
-<span class="nt">&lt;/VirtualHost&gt;</span>
-</code></pre>
-</div>
-
-<p>Restart the nginx service and clear the laravel application cache:</p>
-
-<div class="codehilite">
-<pre><span></span><code>httpd<span class="w"> </span>-k<span class="w"> </span>restart
-php<span class="w"> </span>artisan<span class="w"> </span>config:clear
-php<span class="w"> </span>artisan<span class="w"> </span>cache:clear
-</code></pre>
-</div>
-
-<h3>Bonus: Fixing 403 Forbidden Errors</h3>
-
-<p>After switching to FastCGI, I ran into a <code>403 Forbidden</code> error on one site. That turned out to be a <strong>missing <code>Options +ExecCGI</code></strong> and <code>Require all granted</code> in the <code>&lt;Directory&gt;</code> block. Once added, everything worked perfectly.</p>
-
-<h2>Result</h2>
-
-<p>Now, each Laravel site runs completely isolated, even though they use the same <code>php-cgi.exe</code>. No more <code>.env</code> bleed. No more wrong DBs. Just clean, independent Laravel environments — as it should be.</p>
-
-<h2>Takeaways</h2>
+<p>Do not delete:</p>
 
 <ul>
-<li>Don’t run multiple Laravel apps on Apache with <code>mod_php</code> unless you're okay with shared config risks.</li>
-<li>Use <code>mod_fcgid</code> and <code>php-cgi.exe</code> for <strong>true isolation</strong>.</li>
-<li>Even if using the <strong>same PHP version</strong>, FastCGI will <strong>spawn separate processes</strong>, so <code>.env</code> loading stays scoped.</li>
-<li>Always check Apache error logs (<code>error.log</code>) and <code>php_sapi_name()</code> for confirmation.</li>
+<li>The Windows partition</li>
+<li>The EFI System Partition</li>
+<li>The Windows recovery partition</li>
 </ul>
 
-<p>If you’re running Laravel on Windows with Apache — <strong>this fix is a must</strong>. </p>
+<p>Delete only the Linux partitions, then either leave the space unallocated or extend your Windows partition into it.</p>
 
-<p>Happy hosting and hope you found this article useful!</p>
+<h2>2. Remove Linux bootloader files from the EFI partition</h2>
+
+<p>Open Command Prompt as Administrator and assign a drive letter to the EFI System Partition:</p>
+
+<div class="codehilite">
+<pre><span></span><code>diskpart
+list<span class="w"> </span>vol
+<span class="k">select</span><span class="w"> </span>vol<span class="w"> </span>&lt;EFI<span class="w"> </span>volume<span class="w"> </span>number&gt;
+assign<span class="w"> </span><span class="nv">letter</span><span class="o">=</span>S
+<span class="nb">exit</span>
+</code></pre>
+</div>
+
+<p>Then remove the Linux bootloader directories from the EFI partition:</p>
+
+<div class="codehilite">
+<pre><span></span><code>S:
+<span class="nb">cd</span><span class="w"> </span>EFI
+dir
+rmdir<span class="w"> </span>/s<span class="w"> </span>/q<span class="w"> </span>&lt;linux-folder&gt;
+</code></pre>
+</div>
+
+<p>Only delete the directory that matches your Linux installation. Common names include <code>fedora</code>, <code>ubuntu</code>, <code>debian</code>, and similar distro-specific folders.</p>
+
+<p>Do not delete <code>Microsoft</code>.</p>
+
+<h2>3. Remove stale UEFI firmware boot entries</h2>
+
+<p>List the firmware boot entries:</p>
+
+<div class="codehilite">
+<pre><span></span><code>bcdedit<span class="w"> </span>/enum<span class="w"> </span>firmware
+</code></pre>
+</div>
+
+<p>Look for entries that reference your removed Linux installation, such as descriptions containing <code>Fedora</code>, <code>ubuntu</code>, <code>GRUB</code>, or a path that points to the distro's EFI loader.</p>
+
+<p>Delete only the matching Linux entry:</p>
+
+<div class="codehilite">
+<pre><span></span><code>bcdedit<span class="w"> </span>/delete<span class="w"> </span><span class="o">{</span>xxxx-xxxx-xxxx-xxxx<span class="o">}</span>
+</code></pre>
+</div>
+
+<p>Replace <code>{xxxx-xxxx-xxxx-xxxx}</code> with the actual identifier from the previous command.</p>
+
+<h2>4. Reboot and verify</h2>
+
+<p>Reboot the machine and confirm that the Linux boot entry is gone from the firmware boot menu and that Windows starts normally.</p>
+
+<p>Hope you found this article useful!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>May 13th, 2025</time>
+		<time>May 13th, 2026</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/php/">
-					PHP
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/devops/">
-					DevOps
+				<a href="/category/linux/">
+					Linux
 				</a>
 			</li>
 			
@@ -585,8 +651,8 @@ php<span class="w"> </span>artisan<span class="w"> </span>cache:clear
 			</li>
 			
 			<li>
-				<a href="/category/apache/">
-					Apache
+				<a href="/category/uefi/">
+					UEFI
 				</a>
 			</li>
 			
@@ -598,336 +664,95 @@ php<span class="w"> </span>artisan<span class="w"> </span>cache:clear
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/removing-commits-from-a-branch-using-git-interactive-rebase">Removing Commits from a Branch Using Git Interactive Rebase</a></h1>
+		<h1 class="heading"><a href="/writings/posts/rewriting-my-ssg-again-the-right-way">Rewriting my SSG again — The right way</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>I'm working on a project that had approximately five minor incident fixes. However, I got approval from the client side to push only three of them. Luckily, my commits are atomic, so making this build was easier than I thought.</p>
+		<p>Around eight years ago, I wrote my own static site generator in Python. It was very simple. No frameworks, no strong structure — just scripts that generated pages for my blog.</p>
 
-<p>At this moment, I decided to clone the latest branch into a temporary branch and roll back two commits for today's deployment while keeping the latest branch intact with all the fixes.</p>
+<p>It worked, so I kept using it.</p>
 
-<p>To achieve this, I used <strong>Git interactive rebase</strong>, a powerful tool for modifying commit history.</p>
+<p>There were no proper validations. No structured exception handling. Almost no separation of concerns. I didn’t follow standard practices. At that time, it was just a hobby project, and I only cared that it produced HTML files correctly.</p>
 
-<h2>Why Use Interactive Rebase?</h2>
+<p>And it did.</p>
 
-<p>Interactive rebase allows you to modify commit history, including:</p>
+<p>To be honest, I was too lazy to rewrite it and it was "stable" enough, so I ignored the technical debt.</p>
 
-<ul>
-<li>Removing unwanted commits</li>
-<li>Reordering commits</li>
-<li>Squashing multiple commits into one</li>
-<li>Editing commit messages</li>
-</ul>
+<h2>Contrasting differences</h2>
 
-<h2>How I Did It?</h2>
+<p>Over the years, I’ve worked on much larger and more structured systems — enterprise APIs, background services, integrations, layered architectures. I’ve learned to care about validation, clean boundaries, proper error handling, and maintainability.</p>
 
-<p>Here’s the step-by-step process I followed:</p>
+<p>Now when I open my old SSG code, I can clearly see the difference.</p>
 
-<h3>1. Clone the Branch</h3>
+<p>It reflects how I used to think about code.</p>
 
-<p>Before making any changes, I cloned the branch to have a backup:</p>
+<p>It’s not terrible. It’s just basic. It lacks discipline.</p>
 
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>checkout<span class="w"> </span>-b<span class="w"> </span>my-cloned-branch<span class="w"> </span>original-branch
-</code></pre>
-</div>
+<p>There’s no validation layer. No clear contracts. Some modules handle too many responsibilities. Dependencies are outdated. Type hints are either missing or inconsistent.</p>
 
-<h3>2. Start Interactive Rebase</h3>
+<p>The real issue is that it works — but extending it doesn’t feel comfortable.</p>
 
-<p>To remove specific commits, I ran:</p>
+<h2>Why I decided to rewrite it?</h2>
 
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>rebase<span class="w"> </span>-i<span class="w"> </span>HEAD~N
-</code></pre>
-</div>
+<p>This rewrite is not about fixing bugs. There are no critical issues. It’s just that single god-like python class is really bugging me.</p>
 
-<p>Where <code>N</code> is the number of commits I wanted to review. This opened an editor displaying the most recent commits.</p>
-
-<h3>3. Modify the Commit List</h3>
-
-<p>The interactive rebase interface showed something like this:</p>
-
-<div class="codehilite">
-<pre><span></span><code>pick<span class="w"> </span>abc123<span class="w"> </span>Commit<span class="w"> </span>message<span class="w"> </span><span class="m">1</span>
-pick<span class="w"> </span>def456<span class="w"> </span>Commit<span class="w"> </span>message<span class="w"> </span><span class="m">2</span>
-pick<span class="w"> </span>ghi789<span class="w"> </span>Commit<span class="w"> </span>message<span class="w"> </span><span class="m">3</span>
-</code></pre>
-</div>
-
-<p>To <strong>remove</strong> a commit, I replaced <code>pick</code> with <code>drop</code>.</p>
-
-<p>To <strong>edit</strong> or <strong>squash</strong> commits, I could replace <code>pick</code> with commands like <code>edit</code> or <code>squash</code>.</p>
-
-<p>After making my changes, I saved and closed the editor.</p>
-
-<h3>4. Handle Any Conflicts (If Needed)</h3>
-
-<p>If Git encountered conflicts, it prompted me to resolve them. I fixed the files and continued the rebase:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>rebase<span class="w"> </span>--continue
-</code></pre>
-</div>
-
-<h2>Key Takeaways</h2>
+<p>I want to:</p>
 
 <ul>
-<li>Interactive rebase is powerful for cleaning up commit history.</li>
-<li>Always clone or create a backup branch before rebasing.</li>
-<li>If working with a team, communicate before modifying shared branches.</li>
+<li>Add proper validation</li>
+<li>Introduce structured exception handling</li>
+<li>Strengthen type hints</li>
+<li>Upgrade dependencies</li>
+<li>Separate responsibilities clearly</li>
+<li>Make it easier to extend in the future</li>
 </ul>
 
-<p>This was a great learning experience, and now I feel more confident managing Git history efficiently!</p>
+<p>I also want to refresh my blog properly. If I’m going to continue building on top of this tool, it should be something I trust and feel comfortable maintaining.</p>
 
-<p>Hope you found this tip useful!</p>
+<p>Right now, adding a new feature feels like touching something fragile. After refactoring, I want it to feel stable and predictable.</p>
+
+<h2>Time for some justice!</h2>
+
+<p>This time, I’m approaching it like a real project, even though it’s still personal.</p>
+
+<p>Clear module boundaries. Explicit data models. Proper validation. Clean CLI entry points. Better organization overall.</p>
+
+<p>I’ll be using PyCharm heavily during this process. When renaming models, reorganizing modules, or tightening type contracts, I want safe refactoring and immediate feedback. Strong inspections and accurate <strong>find usages</strong> will help a lot when reshaping older code.</p>
+
+<p>Tooling becomes more important during refactoring than during initial development.</p>
+
+<p>I’m not trying to over-engineer it. I’m just trying to build it properly — based on what I’ve learned over the years.</p>
+
+<h2>Conclusion</h2>
+
+<p>Sometimes old code is not a mistake. It’s just a snapshot of your earlier experience.</p>
+
+<p>Rewriting this SSG is simply updating it to match how I think today.</p>
+
+<p>Over the next few days, I’ll be cleaning it up and rebuilding it with better structure. Not because it failed — but because I’ve improved.</p>
+
+<p>Hope you liked reading this article!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>February 24th, 2025</time>
+		<time>February 15th, 2026</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/git/">
-					Git
+				<a href="/category/refactoring/">
+					Refactoring
 				</a>
 			</li>
 			
 			<li>
-				<a href="/category/vcs/">
-					VCS
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/recovering-my-sql-after-an-accidental-binlog-deletion">Recovering MySQL After an Accidental Binlog Deletion</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Last night, I found myself debugging a MySQL issue at an ungodly hour. The <strong>MySQL80 service refused to start</strong>, throwing a vague error:  </p>
-
-<blockquote>
-  <p><em>The MySQL80 service started and then stopped…</em>  </p>
-</blockquote>
-
-<p>Digging into <code>mysql.err</code>, I discovered the culprit—someone (not me! 😤) had <strong>accidentally deleted a binary log (<code>mysql-bin.000xxx</code>)</strong> while MySQL was still tracking it. Since MySQL relies on binlogs for replication and crash recovery, it panicked when it couldn't find the missing file.  </p>
-
-<h2>The Fix</h2>
-
-<p>To get MySQL running again, I had to:  </p>
-
-<ul>
-<li><strong>Disable binary logging</strong> (since this is a standalone server)  </li>
-<li><strong>Delete the corrupt binlog index file</strong> (<code>mysql-bin.index</code>)  </li>
-<li><strong>Purge all old binlog files</strong> that were hogging disk space  </li>
-</ul>
-
-<h2>How to Properly Disable Binary Logging in MySQL 8.0?</h2>
-
-<p>Since <strong>MySQL 8.0 enables binlogs by default</strong>, simply removing <code>log-bin=mysql-bin</code> from <code>my.ini</code> wasn’t enough. I had to:  </p>
-
-<h3>Comment out the existing binlog setting in my.ini</h3>
-
-<div class="codehilite">
-<pre><span></span><code><span class="c1"># log-bin=mysql-bin</span>
-</code></pre>
-</div>
-
-<h3>Explicitly disable binary logging</h3>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">[mysqld]</span>
-<span class="na">skip-log-bin</span>
-</code></pre>
-</div>
-
-<h3>Delete the old <code>mysql-bin.index</code> file</h3>
-
-<ul>
-<li>This file keeps track of all binary log files.  </li>
-<li>Since a referenced binlog file was deleted, MySQL would <strong>fail to start</strong> if the index still contained entries for missing files.  </li>
-<li>Deleting it ensures that MySQL doesn’t look for non-existent logs.  </li>
-</ul>
-
-<p>After restarting the service, I confirmed binlogging was off with:  </p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">SHOW</span><span class="w"> </span><span class="n">VARIABLES</span><span class="w"> </span><span class="k">LIKE</span><span class="w"> </span><span class="s1">&#39;log_bin&#39;</span><span class="p">;</span>
-</code></pre>
-</div>
-
-<p>Output:  </p>
-
-<div class="codehilite">
-<pre><span></span><code>log_bin<span class="w"> </span><span class="p">|</span><span class="w"> </span>OFF
-</code></pre>
-</div>
-
-<p>In conclusion, crisis averted, disk space reclaimed and finally got some sleep. 😴</p>
-
-<p>Hope you found this useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>February 18th, 2025</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/mysql/">
-					MySQL
+				<a href="/category/personal-challenge/">
+					Personal Challenge
 				</a>
 			</li>
 			
 			<li>
-				<a href="/category/databases/">
-					Databases
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/devops/">
-					DevOps
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/writings/posts/9-software-books-im-reading-this-year-to-become-a-better-engineer">9 Software Books I'm Reading This Year to Become a Better Engineer</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>As a software engineer, continuous learning is essential. The tech industry evolves rapidly, and keeping up requires a commitment to improving skills, refining best practices, and understanding the deeper principles behind great software design. This year, I’ve curated a list of nine must-read books that will help me become a better developer, architect, and problem solver. </p>
-
-<p>If you're looking to level up your software engineering skills, these books might interest you too:</p>
-
-<div class="book-list">
-    <div class="book-card">
-        <div class="book-image" style="background-image: url('https://m.media-amazon.com/images/I/41a1DYaecZL._SX342_SY445_.jpg');"></div>
-        <div class="book-info">
-            <h2>The Pragmatic Programmer</h2>
-            <p class="book-author">By Andrew Hunt & David Thomas</p>
-            <p class="book-quote">"Care about the code you write and the people who will maintain it after you."</p>
-            <p class="book-reason">A foundational book that every developer should read. It provides practical advice on coding, debugging, and automation, making you a more adaptable and efficient engineer.</p>
-        </div>
-    </div>
-
-    <div class="book-card">
-        <div class="book-image" style="background-image: url('https://m.media-amazon.com/images/I/514xvNk9rTL._SY445_SX342_.jpg');"></div>
-        <div class="book-info">
-            <h2>Designing Data-Intensive Applications</h2>
-            <p class="book-author">By Martin Kleppmann</p>
-            <p class="book-quote">"A well-designed system grows gracefully as the dataset, traffic volume, or complexity increases."</p>
-            <p class="book-reason">A must-read for backend engineers and system architects, this book explores data modeling, distributed systems, and scalability challenges.</p>
-        </div>
-    </div>
-
-    <div class="book-card">
-        <div class="book-image" style="background-image: url('https://m.media-amazon.com/images/I/41xShlnTZTL.jpg');"></div>
-        <div class="book-info">
-            <h2>Clean Code</h2>
-            <p class="book-author">By Robert C. Martin</p>
-            <p class="book-quote">"Indeed, the ratio of time spent reading versus writing is well over 10 to 1. We are constantly reading old code as part of the effort to write new code."</p>
-            <p class="book-reason">Writing clean, maintainable code is a core skill for developers. This book offers practical techniques for improving code quality.</p>
-        </div>
-    </div>
-
-    <div class="book-card">
-        <div class="book-image" style="background-image: url('https://m.media-amazon.com/images/I/51TG5T+dd7L._SY445_SX342_.jpg');"></div>
-        <div class="book-info">
-            <h2>The Mythical Man-Month</h2>
-            <p class="book-author">By Frederick P. Brooks Jr.</p>
-            <p class="book-quote">"Adding manpower to a late software project makes it later."</p>
-            <p class="book-reason">A classic in software project management, this book explains why adding more people to a late project only makes it later.</p>
-        </div>
-    </div>
-
-    <div class="book-card">
-        <div class="book-image" style="background-image: url('https://m.media-amazon.com/images/I/41JgRyJbGSL._SX342_SY445_.jpg');"></div>
-        <div class="book-info">
-            <h2>Refactoring</h2>
-            <p class="book-author">By Martin Fowler</p>
-            <p class="book-quote">"Any fool can write code that a computer can understand. Good programmers write code that humans can understand."</p>
-            <p class="book-reason">A practical guide to improving existing code without altering its functionality, making it more readable and maintainable.</p>
-        </div>
-    </div>
-
-    <div class="book-card">
-        <div class="book-image" style="background-image: url('https://m.media-amazon.com/images/I/41roGUf+cML._SY445_SX342_.jpg');"></div>
-        <div class="book-info">
-            <h2>Domain-Driven Design</h2>
-            <p class="book-author">By Eric Evans</p>
-            <p class="book-quote">"The heart of software is its ability to solve domain-related problems for users."</p>
-            <p class="book-reason">This book teaches how to align software design with business logic, making complex software systems more manageable.</p>
-        </div>
-    </div>
-
-    <div class="book-card">
-        <div class="book-image" style="background-image: url('https://m.media-amazon.com/images/I/51maZSdupsL._SY445_SX342_.jpg');"></div>
-        <div class="book-info">
-            <h2>Working Effectively with Legacy Code</h2>
-            <p class="book-author">By Michael Feathers</p>
-            <p class="book-quote">"To change software means to change behavior. Our goal is to do so safely."</p>
-            <p class="book-reason">If you’ve ever had to deal with old, complex codebases, this book provides strategies for refactoring without breaking functionality.</p>
-        </div>
-    </div>
-
-    <div class="book-card">
-        <div class="book-image" style="background-image: url('https://m.media-amazon.com/images/I/51OCgwlIsSL._SX342_SY445_.jpg');"></div>
-        <div class="book-info">
-            <h2>Why Programs Fail</h2>
-            <p class="book-author">By Andreas Zeller</p>
-            <p class="book-quote">"Every bug has a cause, and every cause has a cure."</p>
-            <p class="book-reason">A systematic approach to debugging, helping developers diagnose and fix software defects effectively.</p>
-        </div>
-    </div>
-
-    <div class="book-card">
-        <div class="book-image" style="background-image: url('https://m.media-amazon.com/images/I/71teGAqCOzL._SL1500_.jpg');"></div>
-        <div class="book-info">
-            <h2>Extreme Ownership</h2>
-            <p class="book-author">By Jocko Willink & Leif Babin</p>
-            <p class="book-quote">"Leaders must own everything in their world. There is no one else to blame."</p>
-            <p class="book-reason">Leadership and accountability are critical for engineers working in teams. This book teaches how taking full responsibility leads to success.</p>
-        </div>
-    </div>
-</div>
-
-<h2>Final Thoughts</h2>
-
-<p>These books cover a wide spectrum of skills—from writing clean code and designing scalable systems to debugging, refactoring, and leadership. By reading and applying the lessons in these books, I aim to become a better software engineer this year.</p>
-
-	</div>
-	<div class="article-footer">
-		<time>February 14th, 2025</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/self-development/">
-					Self Development
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/goals/">
-					Goals
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/software-development/">
-					Software Development
+				<a href="/category/python/">
+					Python
 				</a>
 			</li>
 			
@@ -965,7 +790,7 @@ pick<span class="w"> </span>ghi789<span class="w"> </span>Commit<span class="w">
 		
 	
 		
-			<a class="" href="/pages/33">33</a>
+			<a class="" href="/pages/34">34</a>
 		
 	
 
@@ -1000,16 +825,16 @@ pick<span class="w"> </span>ghi789<span class="w"> </span>Commit<span class="w">
 	<ul class="tags">
 		
 		<li>
-			<a href="/category/linux/">
-				Linux
-				<span class="count">28</span>
+			<a href="/category/devops/">
+				DevOps
+				<span class="count">36</span>
 			</a>
 		</li>
 		
 		<li>
-			<a href="/category/devops/">
-				DevOps
-				<span class="count">24</span>
+			<a href="/category/linux/">
+				Linux
+				<span class="count">30</span>
 			</a>
 		</li>
 		
@@ -1038,6 +863,13 @@ pick<span class="w"> </span>ghi789<span class="w"> </span>Commit<span class="w">
 			<a href="/category/cryptography/">
 				Cryptography
 				<span class="count">12</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/mysql/">
+				MySQL
+				<span class="count">11</span>
 			</a>
 		</li>
 		
@@ -1077,9 +909,9 @@ pick<span class="w"> </span>ghi789<span class="w"> </span>Commit<span class="w">
 		</li>
 		
 		<li>
-			<a href="/category/mysql/">
-				MySQL
-				<span class="count">10</span>
+			<a href="/category/kubernetes/">
+				Kubernetes
+				<span class="count">9</span>
 			</a>
 		</li>
 		
@@ -1189,6 +1021,27 @@ pick<span class="w"> </span>ghi789<span class="w"> </span>Commit<span class="w">
 		</li>
 		
 		<li>
+			<a href="/category/curl/">
+				curl
+				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/networking/">
+				Networking
+				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/smtp/">
+				SMTP
+				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/self-reflection/">
 				Self-reflection
 				<span class="count">3</span>
@@ -1259,6 +1112,13 @@ pick<span class="w"> </span>ghi789<span class="w"> </span>Commit<span class="w">
 		</li>
 		
 		<li>
+			<a href="/category/troubleshooting/">
+				Troubleshooting
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/thoughts/">
 				Thoughts
 				<span class="count">2</span>
@@ -1289,13 +1149,6 @@ pick<span class="w"> </span>ghi789<span class="w"> </span>Commit<span class="w">
 		<li>
 			<a href="/category/powershell/">
 				PowerShell
-				<span class="count">2</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/smtp/">
-				SMTP
 				<span class="count">2</span>
 			</a>
 		</li>
@@ -1388,6 +1241,20 @@ pick<span class="w"> </span>ghi789<span class="w"> </span>Commit<span class="w">
 			<a href="/category/wamp/">
 				WAMP
 				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/http/">
+				HTTP
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/nodejs/">
+				Node.js
+				<span class="count">1</span>
 			</a>
 		</li>
 		
@@ -1499,13 +1366,6 @@ pick<span class="w"> </span>ghi789<span class="w"> </span>Commit<span class="w">
 		<li>
 			<a href="/category/oop/">
 				OOP
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/troubleshooting/">
-				Troubleshooting
 				<span class="count">1</span>
 			</a>
 		</li>

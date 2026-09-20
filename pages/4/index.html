@@ -78,108 +78,157 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-filter-records-based-on-a_string-column-containing-numbers-with-commas-and-dots">How to Filter Records Based on a String Column Containing Numbers with Commas and Dots?</a></h1>
+		<h1 class="heading"><a href="/til/posts/eliminate-laravel-env-leakage-between-multiple-sites-on-apache-windows">Eliminate Laravel .env leakage between multiple sites on Apache (Windows)</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>Last month, I encountered a scenario where I needed to filter records in a database based on a "revenue" column. The challenge? The <code>revenue</code> column was stored as a string data type, and some of the values contained commas (<code>,</code>) and dots (<code>.</code>). Here’s how I tackled the problem and wrote an SQL query to filter records based on the numeric value of the <code>revenue</code> column.</p>
+		<p>Today, I learned something pretty important (and frustrating until I figured it out): if you're running <strong>multiple Laravel applications</strong> on <strong>Apache (Windows)</strong> using <code>mod_php</code>, you can run into a strange bug where <strong>one site's <code>.env</code> settings override the other</strong>.</p>
 
-<h2>What I faced?</h2>
+<p>This became painfully obvious when I noticed that <strong>one of my Laravel sites was randomly connecting to the wrong database</strong>, even though the configurations in each <code>.env</code> were different. Weird, right?</p>
 
-<p>The <code>revenue</code> column was stored as a string, and the values looked like this:</p>
+<p>Turns out, the culprit was <code>mod_php</code>.</p>
 
-<ul>
-<li>"50,000,000"</li>
-<li>"75.000.000"</li>
-<li>"10000000"</li>
-</ul>
+<h2>The problem</h2>
 
-<p>I needed to filter records where the revenue was greater than <strong>"50,000,000"</strong>. However, since the column was a string, I couldn’t directly compare it to a numeric value.</p>
+<p>I had two Laravel sites hosted on the same Windows machine with Apache. Both were running fine — until they weren’t.</p>
 
-<h2>What I did?</h2>
+<p>The issue? Sometimes one site would pick up the database config of the other. One minute I’d be on Site A, and then somehow its <code>.env</code> settings were coming from Site B. </p>
 
-<p>To handle this, I used a combination of SQL functions:</p>
+<p>This is just total chaos and worse, this issue existed from more two years until I decided to dive into the problem.</p>
 
-<ol>
-<li><code>REPLACE</code>: To remove commas (<code>,</code>) and dots (<code>.</code>) from the string.</li>
-<li><code>CAST</code>: To convert the cleaned string into a numeric data type (<code>DECIMAL</code> in this case).</li>
-</ol>
+<h2>The cause</h2>
 
-<p>Here’s the SQL query I wrote:</p>
+<p>Laravel loads <code>.env</code> values during the bootstrap process and <strong>caches them in memory</strong>. When using <code>mod_php</code>, Apache loads PHP as a module <strong>once</strong> and shares it across all sites. That means <strong>only one copy of Laravel’s environment gets loaded — and reused</strong> across both apps.</p>
+
+<p>So even if each app had its own <code>.env</code>, it didn’t matter. Apache was essentially saying:</p>
+
+<blockquote>
+  <p>“Hey, here’s PHP. I already booted Laravel with this config — just reuse it.”</p>
+</blockquote>
+
+<h2>The solution</h2>
+
+<p>After some digging, the solution is <strong>ditch <code>mod_php</code></strong> and switch to <strong>FastCGI (<code>mod_fcgid</code>)</strong>.</p>
+
+<p>With FastCGI, each site runs its own instance of PHP via <code>php-cgi.exe</code>, which <strong>boots Laravel in isolation</strong> — meaning <strong>each <code>.env</code> file is respected per site</strong>.</p>
+
+<h3>How to configure it?</h3>
+
+<p>First, you need to disable <strong><code>mod_php</code></strong> in <code>httpd.conf</code>:</p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span>
-<span class="k">FROM</span><span class="w"> </span><span class="n">your_table</span>
-<span class="k">WHERE</span><span class="w"> </span><span class="k">CAST</span><span class="p">(</span><span class="k">REPLACE</span><span class="p">(</span><span class="n">revenue</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;,&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="nb">DECIMAL</span><span class="p">(</span><span class="mi">18</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">))</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">50000000</span><span class="p">;</span>
+<pre><span></span><code><span class="c"># LoadModule php_module &quot;C:/path/to/php/php8apache2_4.dll&quot;</span>
+<span class="c"># &lt;FilesMatch \.php$&gt;</span>
+<span class="c">#     SetHandler application/x-httpd-php</span>
+<span class="c"># &lt;/FilesMatch&gt;</span>
+<span class="c"># PHPIniDir &quot;C:/path/to/php/&quot;</span>
 </code></pre>
 </div>
 
-<p>Need a breakdown? Here you go:</p>
-
-<ol>
-<li><code>REPLACE(revenue, ',', '')</code>:
-This removes commas from the <code>revenue</code> string. For example, <strong>"50,000,000"</strong> becomes <strong>"50000000"</strong>.</li>
-<li><code>CAST(... AS DECIMAL(18, 2))</code>:
-This converts the cleaned string into a <code>DECIMAL</code> value with 18 total digits and 2 decimal places. For example, <strong>"50000000"</strong> becomes <strong>50000000.00</strong>.</li>
-<li><code>&gt; 50000000</code>:
-Finally, the query filters records where the numeric value of <code>revenue</code> is greater than <strong>50,000,000</strong>.</li>
-</ol>
-
-<h2>Handling Dots as Thousand Separators</h2>
-
-<p>If the <code>revenue</code> column uses dots (<code>.</code>) as thousand separators (e.g., <strong>"75.000.000"</strong>), you can extend the <code>REPLACE</code> function to remove dots as well:</p>
+<p>Then install <strong><code>mod_fcgid</code></strong> from Apache Lounge and copy <code>mod_fcgid.so</code> to <code>modules/</code> directory and enable it in <code>httpd.conf</code>:</p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span>
-<span class="k">FROM</span><span class="w"> </span><span class="n">your_table</span>
-<span class="k">WHERE</span><span class="w"> </span><span class="k">CAST</span><span class="p">(</span><span class="k">REPLACE</span><span class="p">(</span><span class="k">REPLACE</span><span class="p">(</span><span class="n">revenue</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;,&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">),</span><span class="w"> </span><span class="s1">&#39;.&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="nb">DECIMAL</span><span class="p">(</span><span class="mi">18</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">))</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">50000000</span><span class="p">;</span>
+<pre><span></span><code><span class="nb">LoadModule</span><span class="w"> </span>fcgid_module<span class="w"> </span>modules/mod_fcgid.so
+<span class="nb">Include</span><span class="w"> </span>conf/extra/httpd-fcgid.conf
 </code></pre>
 </div>
 
-<p>This ensures that both commas and dots are removed before converting the string to a numeric value.</p>
+<p>Next, you have to create/update <strong><code>httpd-fcgid.conf</code></strong>:</p>
 
-<h2>Why did I do this?</h2>
+<div class="codehilite">
+<pre><span></span><code><span class="nt">&lt;IfModule</span><span class="w"> </span><span class="s">fcgid_module</span><span class="nt">&gt;</span>
+<span class="w">   </span><span class="nb">AddHandler</span><span class="w"> </span>fcgid-script<span class="w"> </span>.php
+<span class="w">   </span><span class="nb">FcgidInitialEnv</span><span class="w"> </span>PHPRC<span class="w"> </span><span class="s2">&quot;C:/path/to/php&quot;</span>
+<span class="w">   </span><span class="nb">FcgidWrapper</span><span class="w"> </span><span class="s2">&quot;C:/path/to/php/php-cgi.exe&quot;</span><span class="w"> </span>.php
+<span class="w">   </span><span class="nb">Options</span><span class="w"> </span>+ExecCGI
+<span class="w">   </span><span class="nb">FcgidMaxProcessesPerClass</span><span class="w"> </span><span class="m">150</span>
+<span class="w">   </span><span class="nb">FcgidMaxRequestsPerProcess</span><span class="w"> </span><span class="m">1000</span>
+<span class="w">   </span><span class="nb">FcgidProcessLifeTime</span><span class="w"> </span><span class="m">300</span>
+<span class="w">   </span><span class="nb">FcgidIOTimeout</span><span class="w"> </span><span class="m">120</span>
+<span class="w">   </span><span class="nb">FcgidPassHeader</span><span class="w"> </span>Authorization
+<span class="w">   </span><span class="nb">FcgidFixPathinfo</span><span class="w"> </span><span class="m">0</span>
+<span class="nt">&lt;/IfModule&gt;</span>
+</code></pre>
+</div>
 
-<p>This approach is helpful when:</p>
+<p>And then atlast, update your virtual host:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nt">&lt;VirtualHost</span><span class="w"> </span><span class="s">*:443</span><span class="nt">&gt;</span>
+<span class="w">   </span><span class="nb">ServerName</span><span class="w"> </span>example.com
+<span class="w">   </span><span class="nb">DocumentRoot</span><span class="w"> </span><span class="s2">&quot;C:/path/to/website/public&quot;</span>
+
+<span class="w">   </span><span class="nt">&lt;Directory</span><span class="w"> </span><span class="s">&quot;C:/path/to/website/public&quot;</span><span class="nt">&gt;</span>
+<span class="w">      </span><span class="nb">Options</span><span class="w"> </span>+ExecCGI<span class="w"> </span>-Indexes<span class="w"> </span>+FollowSymLinks
+<span class="w">      </span><span class="nb">AllowOverride</span><span class="w"> </span><span class="k">All</span>
+<span class="w">      </span><span class="nb">Require</span><span class="w"> </span><span class="k">all</span><span class="w"> </span>granted
+<span class="w">      </span><span class="nb">AddHandler</span><span class="w"> </span>fcgid-script<span class="w"> </span>.php
+<span class="w">      </span><span class="nb">FCGIWrapper</span><span class="w"> </span><span class="s2">&quot;C:/path/to/php/php-cgi.exe&quot;</span><span class="w"> </span>.php
+<span class="w">   </span><span class="nt">&lt;/Directory&gt;</span>
+
+<span class="w">   </span><span class="nb">SSLEngine</span><span class="w"> </span><span class="k">on</span>
+<span class="w">   </span><span class="nb">SSLCertificateFile</span><span class="w"> </span><span class="s2">&quot;...&quot;</span>
+<span class="w">   </span><span class="nb">SSLCertificateKeyFile</span><span class="w"> </span><span class="s2">&quot;...&quot;</span>
+<span class="nt">&lt;/VirtualHost&gt;</span>
+</code></pre>
+</div>
+
+<p>Restart the nginx service and clear the laravel application cache:</p>
+
+<div class="codehilite">
+<pre><span></span><code>httpd<span class="w"> </span>-k<span class="w"> </span>restart
+php<span class="w"> </span>artisan<span class="w"> </span>config:clear
+php<span class="w"> </span>artisan<span class="w"> </span>cache:clear
+</code></pre>
+</div>
+
+<h3>Bonus: Fixing 403 Forbidden Errors</h3>
+
+<p>After switching to FastCGI, I ran into a <code>403 Forbidden</code> error on one site. That turned out to be a <strong>missing <code>Options +ExecCGI</code></strong> and <code>Require all granted</code> in the <code>&lt;Directory&gt;</code> block. Once added, everything worked perfectly.</p>
+
+<h2>Result</h2>
+
+<p>Now, each Laravel site runs completely isolated, even though they use the same <code>php-cgi.exe</code>. No more <code>.env</code> bleed. No more wrong DBs. Just clean, independent Laravel environments — as it should be.</p>
+
+<h2>Takeaways</h2>
 
 <ul>
-<li>You’re working with data stored as strings but need to perform numeric comparisons.</li>
-<li>The data contains formatting characters like commas or dots.</li>
-<li>You want to avoid manual data cleaning or preprocessing.</li>
+<li>Don’t run multiple Laravel apps on Apache with <code>mod_php</code> unless you're okay with shared config risks.</li>
+<li>Use <code>mod_fcgid</code> and <code>php-cgi.exe</code> for <strong>true isolation</strong>.</li>
+<li>Even if using the <strong>same PHP version</strong>, FastCGI will <strong>spawn separate processes</strong>, so <code>.env</code> loading stays scoped.</li>
+<li>Always check Apache error logs (<code>error.log</code>) and <code>php_sapi_name()</code> for confirmation.</li>
 </ul>
 
-<p>By using SQL functions like <code>REPLACE</code> and <code>CAST</code>, you can handle these scenarios directly in your queries.</p>
+<p>If you’re running Laravel on Windows with Apache — <strong>this fix is a must</strong>. </p>
 
-<p>Oh, this works for SQL and MySQL as well!</p>
-
-<p>Hope you found this article useful!</p>
+<p>Happy hosting and hope you found this article useful!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>January 19th, 2025</time>
+		<time>May 13th, 2025</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/sql/">
-					SQL
+				<a href="/category/php/">
+					PHP
 				</a>
 			</li>
 			
 			<li>
-				<a href="/category/mysql/">
-					MySQL
+				<a href="/category/devops/">
+					DevOps
 				</a>
 			</li>
 			
 			<li>
-				<a href="/category/databases/">
-					Databases
+				<a href="/category/windows/">
+					Windows
 				</a>
 			</li>
 			
 			<li>
-				<a href="/category/data-manipulation/">
-					Data Manipulation
+				<a href="/category/apache/">
+					Apache
 				</a>
 			</li>
 			
@@ -191,155 +240,92 @@ Finally, the query filters records where the numeric value of <code>revenue</cod
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-cherry-pick-commits-from-one-git-branch-to-another">How to Cherry-Pick Commits from One Git Branch to Another?</a></h1>
+		<h1 class="heading"><a href="/til/posts/removing-commits-from-a-branch-using-git-interactive-rebase">Removing Commits from a Branch Using Git Interactive Rebase</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>Although I had heard of Git's <code>cherry-pick</code> command, I never used it until a few months ago when I encountered a situation that demanded it. A client required us to work on multiple incidents and change requests (CRs), but they only wanted specific, approved updates pushed to the repository.</p>
+		<p>I'm working on a project that had approximately five minor incident fixes. However, I got approval from the client side to push only three of them. Luckily, my commits are atomic, so making this build was easier than I thought.</p>
 
-<p>This created a challenge, especially when I was simultaneously working on CRs and incidents. I needed a way to isolate and push only the approved changes while keeping the rest intact. That’s when I decided to try out Git’s <code>cherry-pick</code> command—and it worked like a charm! It made managing my codebase much easier.</p>
+<p>At this moment, I decided to clone the latest branch into a temporary branch and roll back two commits for today's deployment while keeping the latest branch intact with all the fixes.</p>
 
-<p>Here’s a simple walkthrough of how you can use it too:</p>
+<p>To achieve this, I used <strong>Git interactive rebase</strong>, a powerful tool for modifying commit history.</p>
 
-<h2>The Scenario</h2>
+<h2>Why Use Interactive Rebase?</h2>
 
-<p>I had two branches in my Git repository:</p>
-
-<ul>
-<li><strong>Branch A</strong>: The primary branch where ongoing development happens.</li>
-<li><strong>Branch B</strong>: A feature branch where I accidentally pushed updates that should partially go into <strong>Branch A</strong>.</li>
-</ul>
-
-<p>While it’s straightforward to merge changes from one branch into another, I only needed a subset of the commits from <strong>Branch B</strong> to be applied to <strong>Branch A</strong>. This is where Git’s <code>cherry-pick</code> command shines.</p>
-
-<p>Go along with me and follow it step-by-step:</p>
-
-<h2>1. Switch to the Target Branch</h2>
-
-<p>First, check out the branch where you want to apply the commits (in my case, <strong>Branch A</strong>):</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>checkout<span class="w"> </span>A
-</code></pre>
-</div>
-
-<h2>2. Find the Commits to Cherry-Pick</h2>
-
-<p>Use the <code>git log</code> command to list the commits in <strong>Branch B</strong> and identify the specific commit hashes you want to cherry-pick:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>log<span class="w"> </span>B
-</code></pre>
-</div>
-
-<p>You should see output similar to this:</p>
-
-<div class="codehilite">
-<pre><span></span><code>commit<span class="w"> </span>abc1234<span class="w"> </span><span class="o">(</span>HEAD<span class="w"> </span>-&gt;<span class="w"> </span>B<span class="o">)</span>
-Author:<span class="w"> </span>Your<span class="w"> </span>Name<span class="w"> </span>&lt;you@example.com&gt;
-Date:<span class="w">   </span>Mon<span class="w"> </span>Jan<span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="m">12</span>:00:00<span class="w"> </span><span class="m">2025</span><span class="w"> </span>+0000
-
-<span class="w">    </span>Add<span class="w"> </span>feature<span class="w"> </span>X
-
-commit<span class="w"> </span>def5678
-Author:<span class="w"> </span>Your<span class="w"> </span>Name<span class="w"> </span>&lt;you@example.com&gt;
-Date:<span class="w">   </span>Sun<span class="w"> </span>Dec<span class="w"> </span><span class="m">31</span><span class="w"> </span><span class="m">12</span>:00:00<span class="w"> </span><span class="m">2024</span><span class="w"> </span>+0000
-
-<span class="w">    </span>Fix<span class="w"> </span>bug<span class="w"> </span>Y
-</code></pre>
-</div>
-
-<p>Take note of the commit hash(es) you need. For example, let’s say you want to cherry-pick <code>abc1234</code> and <code>def5678</code>.</p>
-
-<h2>3. Cherry-Pick the Commit(s)</h2>
-
-<h3>Single Commit</h3>
-
-<p>To apply a single commit from <strong>Branch B</strong> onto <strong>Branch A</strong>, use:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>cherry-pick<span class="w"> </span>abc1234
-</code></pre>
-</div>
-
-<h3>Multiple Commits</h3>
-
-<p>To apply multiple non-contiguous commits, list their hashes:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>cherry-pick<span class="w"> </span>abc1234<span class="w"> </span>def5678
-</code></pre>
-</div>
-
-<h3>Range of Commits</h3>
-
-<p>To cherry-pick a range of contiguous commits, use the <code>^..&lt;</code> notation:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>cherry-pick<span class="w"> </span>def5678^..abc1234
-</code></pre>
-</div>
-
-<p>This includes all commits from <code>def5678</code> to <code>abc1234</code>, inclusive.</p>
-
-<h2>4. Resolve Any Conflicts</h2>
-
-<p>If there are conflicts during the cherry-picking process, Git will pause and notify you. Resolve the conflicts in your files, then mark them as resolved:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>add<span class="w"> </span>&lt;file&gt;
-</code></pre>
-</div>
-
-<p>Continue the cherry-pick process:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>cherry-pick<span class="w"> </span>--continue
-</code></pre>
-</div>
-
-<p>To abort the cherry-pick if things go wrong:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>cherry-pick<span class="w"> </span>--abort
-</code></pre>
-</div>
-
-<ol start="5">
-<li>Verify the Result</li>
-</ol>
-
-<p>Once the cherry-picking is complete, you can inspect your branch to ensure the changes were applied:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>log
-</code></pre>
-</div>
-
-<p>You should see the cherry-picked commits in <strong>Branch A</strong>.</p>
-
-<h2>When is cherry-picking useful?</h2>
-
-<p>Cherry-picking is perfect when you need specific commits from another branch without merging all its changes. This is especially helpful in scenarios like:</p>
+<p>Interactive rebase allows you to modify commit history, including:</p>
 
 <ul>
-<li>Applying a bug fix from a feature branch to the main branch.</li>
-<li>Pulling specific updates without merging unrelated work.</li>
+<li>Removing unwanted commits</li>
+<li>Reordering commits</li>
+<li>Squashing multiple commits into one</li>
+<li>Editing commit messages</li>
 </ul>
 
-<h2>Bonus Tips</h2>
+<h2>How I Did It?</h2>
+
+<p>Here’s the step-by-step process I followed:</p>
+
+<h3>1. Clone the Branch</h3>
+
+<p>Before making any changes, I cloned the branch to have a backup:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>checkout<span class="w"> </span>-b<span class="w"> </span>my-cloned-branch<span class="w"> </span>original-branch
+</code></pre>
+</div>
+
+<h3>2. Start Interactive Rebase</h3>
+
+<p>To remove specific commits, I ran:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>rebase<span class="w"> </span>-i<span class="w"> </span>HEAD~N
+</code></pre>
+</div>
+
+<p>Where <code>N</code> is the number of commits I wanted to review. This opened an editor displaying the most recent commits.</p>
+
+<h3>3. Modify the Commit List</h3>
+
+<p>The interactive rebase interface showed something like this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>pick<span class="w"> </span>abc123<span class="w"> </span>Commit<span class="w"> </span>message<span class="w"> </span><span class="m">1</span>
+pick<span class="w"> </span>def456<span class="w"> </span>Commit<span class="w"> </span>message<span class="w"> </span><span class="m">2</span>
+pick<span class="w"> </span>ghi789<span class="w"> </span>Commit<span class="w"> </span>message<span class="w"> </span><span class="m">3</span>
+</code></pre>
+</div>
+
+<p>To <strong>remove</strong> a commit, I replaced <code>pick</code> with <code>drop</code>.</p>
+
+<p>To <strong>edit</strong> or <strong>squash</strong> commits, I could replace <code>pick</code> with commands like <code>edit</code> or <code>squash</code>.</p>
+
+<p>After making my changes, I saved and closed the editor.</p>
+
+<h3>4. Handle Any Conflicts (If Needed)</h3>
+
+<p>If Git encountered conflicts, it prompted me to resolve them. I fixed the files and continued the rebase:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>rebase<span class="w"> </span>--continue
+</code></pre>
+</div>
+
+<h2>Key Takeaways</h2>
 
 <ul>
-<li>Always double-check commit hashes before cherry-picking to avoid unexpected results.</li>
-<li>Use descriptive commit messages to make it easier to identify what each commit does</li>
-<li>If you find yourself cherry-picking often, consider rethinking your branch workflows to reduce the need for it.</li>
+<li>Interactive rebase is powerful for cleaning up commit history.</li>
+<li>Always clone or create a backup branch before rebasing.</li>
+<li>If working with a team, communicate before modifying shared branches.</li>
 </ul>
 
-<p>That’s it! Now you know how to cherry-pick commits in Git. It’s a small but incredibly powerful tool to keep in your Git arsenal.</p>
+<p>This was a great learning experience, and now I feel more confident managing Git history efficiently!</p>
+
+<p>Hope you found this tip useful!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>January 18th, 2025</time>
+		<time>February 24th, 2025</time>
 		<ul class="tags">
 			
 			<li>
@@ -362,587 +348,87 @@ Date:<span class="w">   </span>Sun<span class="w"> </span>Dec<span class="w"> </
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-check-if-smtp-is-reachable-from-my-machine-using-telnet">How to Check if SMTP is Reachable from My Machine Using Telnet?</a></h1>
+		<h1 class="heading"><a href="/til/posts/recovering-my-sql-after-an-accidental-binlog-deletion">Recovering MySQL After an Accidental Binlog Deletion</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>Recently, I learned how to test SMTP server connectivity using <code>telnet</code>. This is a handy way to verify if an SMTP server is reachable, troubleshoot email delivery issues, and manually interact with the server to diagnose problems. </p>
+		<p>Last night, I found myself debugging a MySQL issue at an ungodly hour. The <strong>MySQL80 service refused to start</strong>, throwing a vague error:  </p>
 
-<p>Here’s how I did it:</p>
+<blockquote>
+  <p><em>The MySQL80 service started and then stopped…</em>  </p>
+</blockquote>
 
-<h2>1. Ensure Telnet is Installed</h2>
+<p>Digging into <code>mysql.err</code>, I discovered the culprit—someone (not me! 😤) had <strong>accidentally deleted a binary log (<code>mysql-bin.000xxx</code>)</strong> while MySQL was still tracking it. Since MySQL relies on binlogs for replication and crash recovery, it panicked when it couldn't find the missing file.  </p>
 
-<p>First, I made sure <code>telnet</code> was installed on my machine. Most Linux distributions come with <code>telnet</code> pre-installed, but if it’s missing, here’s how to install it:</p>
+<h2>The Fix</h2>
 
-<h3>For Ubuntu/Debian:</h3>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>telnet
-</code></pre>
-</div>
-
-<h3>For CentOS/RHEL:</h3>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>yum<span class="w"> </span>install<span class="w"> </span>telnet
-</code></pre>
-</div>
-
-<h3>For Windows</h3>
-
-<p>Ironically, <code>telnet</code> is not enabled by default on Windows, but you can enable it:</p>
-
-<ol>
-<li>Open the Control Panel.</li>
-<li>Go to <strong>Programs</strong> &gt; <strong>Programs and Features</strong> &gt; <strong>Turn Windows features on or off</strong>.</li>
-<li>Check the box for <strong>Telnet Client</strong> and click <strong>OK</strong>.</li>
-<li>Once enabled, open the Command Prompt (<code>cmd</code>) to use Telnet.</li>
-</ol>
-
-<h2>2. Open a Telnet Connection to the SMTP Server</h2>
-
-<p>To connect to the SMTP server, I used the following command:</p>
-
-<div class="codehilite">
-<pre><span></span><code>telnet<span class="w"> </span>&lt;smtp_server_address&gt;<span class="w"> </span><span class="m">25</span>
-</code></pre>
-</div>
-
-<p>Replace <code>&lt;smtp_server_address&gt;</code> with the SMTP server’s hostname or IP address. For example:</p>
-
-<div class="codehilite">
-<pre><span></span><code>telnet<span class="w"> </span>smtp.example.com<span class="w"> </span><span class="m">25</span>
-</code></pre>
-</div>
-
-<p>If the connection is successful, the server responds with a <code>220</code> message, like this:</p>
-
-<div class="codehilite">
-<pre><span></span><code>220 smtp.example.com ESMTP Postfix
-</code></pre>
-</div>
-
-<p>This means the SMTP server is reachable and ready to accept commands.</p>
-
-<h2>3. Test SMTP Commands (Optional)</h2>
-
-<p>To further test the SMTP server, I manually interacted with it using basic SMTP commands:</p>
-
-<h3>Greet the Server:</h3>
-
-<p>I sent an <code>EHLO</code> command to introduce myself:</p>
-
-<div class="codehilite">
-<pre><span></span><code>EHLO example.com
-</code></pre>
-</div>
-
-<p>The server responded with a list of supported features.</p>
-
-<h3>Start an Email Transaction:</h3>
-
-<p>I specified the sender using the <code>MAIL FROM</code> command:</p>
-
-<div class="codehilite">
-<pre><span></span><code>MAIL FROM:&lt;test@example.com&gt;
-</code></pre>
-</div>
-
-<p>The server responded with <code>250 OK</code>.</p>
-
-<h3>Specify the Recipient:</h3>
-
-<p>I added the recipient using the <code>RCPT TO</code> command:</p>
-
-<div class="codehilite">
-<pre><span></span><code>RCPT TO:&lt;user@example.com&gt;
-</code></pre>
-</div>
-
-<p>The server responded with <code>250 OK</code>.</p>
-
-<h3>Enter the Email Data:</h3>
-
-<p>I typed <code>DATA</code> to start composing the email:</p>
-
-<div class="codehilite">
-<pre><span></span><code>DATA
-</code></pre>
-</div>
-
-<p>After entering the email content, I ended the message with a single <code>.</code> on a new line:</p>
-
-<div class="codehilite">
-<pre><span></span><code>Subject: Test Email
-This is a test email sent via Telnet.
-.
-</code></pre>
-</div>
-
-<p>The server responded with <code>250 OK</code>, confirming that the email was accepted.</p>
-
-<h3>Quit the Session:</h3>
-
-<p>Finally, I ended the session with the <code>QUIT</code> command:</p>
-
-<div class="codehilite">
-<pre><span></span><code>QUIT
-</code></pre>
-</div>
-
-<h2>4. Troubleshoot Connection Issues</h2>
-
-<p>If the connection fails, I might see an error like:</p>
-
-<div class="codehilite">
-<pre><span></span><code>telnet: Unable to connect to remote host: Connection refused
-</code></pre>
-</div>
-
-<p>This could mean:</p>
+<p>To get MySQL running again, I had to:  </p>
 
 <ul>
-<li>The SMTP server is not running.</li>
-<li>The port is blocked by a firewall.</li>
-<li>The server uses a different port (e.g., 587 for submission or 465 for SMTPS).</li>
+<li><strong>Disable binary logging</strong> (since this is a standalone server)  </li>
+<li><strong>Delete the corrupt binlog index file</strong> (<code>mysql-bin.index</code>)  </li>
+<li><strong>Purge all old binlog files</strong> that were hogging disk space  </li>
 </ul>
 
-<p>To resolve this, I checked:</p>
+<h2>How to Properly Disable Binary Logging in MySQL 8.0?</h2>
 
-<ul>
-<li>If the SMTP server is running and listening on the correct port.</li>
-<li>If my firewall or network allows outbound connections to the SMTP port.</li>
-</ul>
+<p>Since <strong>MySQL 8.0 enables binlogs by default</strong>, simply removing <code>log-bin=mysql-bin</code> from <code>my.ini</code> wasn’t enough. I had to:  </p>
 
-<h2>Example Workflow:</h2>
-
-<p>Here’s what a successful Telnet session looks like:</p>
+<h3>Comment out the existing binlog setting in my.ini</h3>
 
 <div class="codehilite">
-<pre><span></span><code>$<span class="w"> </span>telnet<span class="w"> </span>smtp.example.com<span class="w"> </span><span class="m">25</span>
-Trying<span class="w"> </span><span class="m">192</span>.0.2.1...
-Connected<span class="w"> </span>to<span class="w"> </span>smtp.example.com.
-Escape<span class="w"> </span>character<span class="w"> </span>is<span class="w"> </span><span class="s1">&#39;^]&#39;</span>.
-<span class="m">220</span><span class="w"> </span>smtp.example.com<span class="w"> </span>ESMTP<span class="w"> </span>Postfix
-EHLO<span class="w"> </span>example.com
-<span class="m">250</span>-smtp.example.com
-<span class="m">250</span>-PIPELINING
-<span class="m">250</span>-SIZE<span class="w"> </span><span class="m">10240000</span>
-<span class="m">250</span>-VRFY
-<span class="m">250</span>-ETRN
-<span class="m">250</span>-STARTTLS
-<span class="m">250</span>-ENHANCEDSTATUSCODES
-<span class="m">250</span>-8BITMIME
-<span class="m">250</span><span class="w"> </span>DSN
-MAIL<span class="w"> </span>FROM:&lt;test@example.com&gt;
-<span class="m">250</span><span class="w"> </span><span class="m">2</span>.1.0<span class="w"> </span>Ok
-RCPT<span class="w"> </span>TO:&lt;user@example.com&gt;
-<span class="m">250</span><span class="w"> </span><span class="m">2</span>.1.5<span class="w"> </span>Ok
-DATA
-<span class="m">354</span><span class="w"> </span>End<span class="w"> </span>data<span class="w"> </span>with<span class="w"> </span>&lt;CR&gt;&lt;LF&gt;.&lt;CR&gt;&lt;LF&gt;
-Subject:<span class="w"> </span>Test<span class="w"> </span>Email
-This<span class="w"> </span>is<span class="w"> </span>a<span class="w"> </span><span class="nb">test</span><span class="w"> </span>email<span class="w"> </span>sent<span class="w"> </span>via<span class="w"> </span>Telnet.
-.
-<span class="m">250</span><span class="w"> </span><span class="m">2</span>.0.0<span class="w"> </span>Ok:<span class="w"> </span>queued<span class="w"> </span>as<span class="w"> </span><span class="m">12345</span>
-QUIT
-<span class="m">221</span><span class="w"> </span><span class="m">2</span>.0.0<span class="w"> </span>Bye
-Connection<span class="w"> </span>closed<span class="w"> </span>by<span class="w"> </span>foreign<span class="w"> </span>host.
+<pre><span></span><code><span class="c1"># log-bin=mysql-bin</span>
 </code></pre>
 </div>
 
-<h2>Why This is Useful?</h2>
-
-<p>Using Telnet to test SMTP connectivity is a quick and effective way to:</p>
-
-<ul>
-<li>Verify if the SMTP server is reachable.</li>
-<li>Diagnose email delivery issues.</li>
-<li>Manually test SMTP commands and server responses.</li>
-</ul>
-
-<p>Hope you've found this article useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>January 17th, 2025</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/smtp/">
-					SMTP
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/telnet/">
-					Telnet
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/devops/">
-					DevOps
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-change-the-modification-date-of-a-folder-using-power-shell">How to Change the Modification Date of a Folder Using PowerShell?</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Recently, I had an interesting experience with a client who can be a bit nosy—and occasionally bossy too. They have a strict policy of deploying updates during off-peak hours on Fridays. </p>
-
-<p>Like most developers, I’m not a fan of deploying on Fridays 😡.</p>
-
-<p>To navigate this, I deploy the updates on the server earlier in the week (without their knowledge) and place them in a separate directory until we receive the green light to switch the website to the new directory via server settings.</p>
-
-<p>If you’re wondering why I use a separate directory, it’s to ensure I have a quick rollback option if needed. Oh, and did I mention they’ve blocked <code>git</code> on the production server? So, no version control system (VCS) for us.</p>
-
-<p>Anyway, once I deployed earlier than planned and realized they might check the deployment timestamps. To stay ahead, I wrote a quick PowerShell script to tweak the folder timestamps.</p>
-
-<h2>Steps to Change Folder Modification Date</h2>
-
-<h3>Open PowerShell as Administrator</h3>
-
-<ul>
-<li>Search for <strong>"PowerShell"</strong> in the Start menu.</li>
-<li>Right-click on it and select <strong>Run as Administrator</strong>.</li>
-</ul>
-
-<h3>Run the Command</h3>
-
-<p>Use the following command to set the modification date for a folder:</p>
+<h3>Explicitly disable binary logging</h3>
 
 <div class="codehilite">
-<pre><span></span><code><span class="nv">$path</span> <span class="p">=</span> <span class="s2">&quot;C:\Path\To\Your\Folder&quot;</span>
-<span class="nv">$date</span> <span class="p">=</span> <span class="nb">Get-Date</span> <span class="s2">&quot;2025-01-01 10:00:00&quot;</span>
-<span class="p">(</span><span class="nb">Get-Item</span> <span class="nv">$path</span><span class="p">).</span><span class="n">LastWriteTime</span> <span class="p">=</span> <span class="nv">$date</span>
+<pre><span></span><code><span class="k">[mysqld]</span>
+<span class="na">skip-log-bin</span>
 </code></pre>
 </div>
 
+<h3>Delete the old <code>mysql-bin.index</code> file</h3>
+
 <ul>
-<li>Replace <code>C:\Path\To\Your\Folder</code> with the full path of the folder.</li>
-<li>Replace <code>2025-01-01 10:00:00</code> with the desired date and time in the format <code>yyyy-MM-dd HH:mm:ss</code>.</li>
+<li>This file keeps track of all binary log files.  </li>
+<li>Since a referenced binlog file was deleted, MySQL would <strong>fail to start</strong> if the index still contained entries for missing files.  </li>
+<li>Deleting it ensures that MySQL doesn’t look for non-existent logs.  </li>
 </ul>
 
-<h3>Verify the Change</h3>
-
-<p>To confirm the modification date has been updated, use:</p>
+<p>After restarting the service, I confirmed binlogging was off with:  </p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="p">(</span><span class="nb">Get-Item</span> <span class="nv">$path</span><span class="p">).</span><span class="n">LastWriteTime</span>
+<pre><span></span><code><span class="k">SHOW</span><span class="w"> </span><span class="n">VARIABLES</span><span class="w"> </span><span class="k">LIKE</span><span class="w"> </span><span class="s1">&#39;log_bin&#39;</span><span class="p">;</span>
 </code></pre>
 </div>
 
-<h2>Other Timestamps You Can Modify</h2>
-
-<p>PowerShell allows you to adjust other timestamps as well:</p>
-
-<h3>Creation Date:</h3>
+<p>Output:  </p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="p">(</span><span class="nb">Get-Item</span> <span class="nv">$path</span><span class="p">).</span><span class="n">CreationTime</span> <span class="p">=</span> <span class="nv">$date</span>
+<pre><span></span><code>log_bin<span class="w"> </span><span class="p">|</span><span class="w"> </span>OFF
 </code></pre>
 </div>
 
-<h3>Accessed Date:</h3>
-
-<div class="codehilite">
-<pre><span></span><code><span class="p">(</span><span class="nb">Get-Item</span> <span class="nv">$path</span><span class="p">).</span><span class="n">LastAccessTime</span> <span class="p">=</span> <span class="nv">$date</span>
-</code></pre>
-</div>
-
-<h2>Why This is Useful?</h2>
-
-<p>This method is great for:</p>
-
-<ul>
-<li>Organizing folders with custom timestamps.</li>
-<li>Simulating specific scenarios for testing.</li>
-<li>Avoiding the hassle of installing third-party tools.</li>
-</ul>
-
-<p>Situations like this has made me realize that the flexibility of PowerShell makes it the perfect tool for quick tasks. It’s amazing how a simple command can give you full control over folder metadata!</p>
-
-<p>Hope you found this useful (and keep your tracks clear!)</p>
-
-	</div>
-	<div class="article-footer">
-		<time>January 16th, 2025</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/powershell/">
-					PowerShell
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/devops/">
-					DevOps
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/fixing-a-core-clr-load-error-in-iis-with-self-contained-deployment">Fixing a CoreCLR Load Error in IIS with Self-Contained Deployment</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Today I learned how to resolve a tricky issue I encountered while hosting an ASP.NET Core application in IIS. The error was:</p>
-
-<div class="codehilite">
-<pre><span></span><code>Application &#39;/LM/W3SVC/2/ROOT&#39; with physical root &#39;C:\inetpub\wwwroot\xxx_dev4&#39; failed to load coreclr.
-</code></pre>
-</div>
-
-<h2>Diagnosing the Issue</h2>
-
-<p>This error pointed to a failure in loading the .NET Core Common Language Runtime (CoreCLR). It’s a common problem when the server is missing the correct version of the .NET runtime required by the application. After some investigation, I found these potential causes:</p>
-
-<ul>
-<li>The .NET Core Hosting Bundle wasn’t installed on the server.</li>
-<li>The required .NET runtime version wasn’t present.</li>
-<li>The application pool in IIS was misconfigured.</li>
-<li>There were potential permission issues for the application folder.</li>
-</ul>
-
-<h2>The Self-Contained Solution</h2>
-
-<p>To avoid dependency on the server’s runtime installation, I decided to try publishing the application as Self-Contained from Visual Studio 2022. This method bundles the .NET runtime and all dependencies with the application, ensuring it runs regardless of the server’s configuration.</p>
-
-<h2>Steps to Publish as Self-Contained</h2>
-
-<p>Here’s how I published my app as Self-Contained in Visual Studio 2022:</p>
-
-<ol>
-<li>Right-click on the project in Solution Explorer and choose Publish.</li>
-<li>In the Pick a publish target dialog, I selected Folder.</li>
-<li>Clicked Next and Finish to confirm the target.</li>
-<li>Opened the Settings in the Publish tab.
-<ul>
-<li>Changed Deployment Mode to Self-Contained.</li>
-<li>Selected the appropriate Target Runtime for my server (e.g., win-x64).</li>
-</ul></li>
-<li>Saved the settings and clicked Publish.</li>
-</ol>
-
-<p>The published output included all the necessary files, including the .NET runtime, making the app ready to deploy to IIS without relying on the server’s runtime installation.</p>
-
-<h2>Results</h2>
-
-<p>After deploying the self-contained package to IIS, the application ran successfully! The CoreCLR error was resolved because the app now used the bundled runtime instead of depending on the server’s configuration.</p>
-
-<h2>Key Takeaways</h2>
-
-<ul>
-<li>Self-Contained Deployment is a lifesaver when hosting environments lack the required .NET runtime.</li>
-<li>It’s a great way to ensure version isolation, as the app always runs with the specific runtime version it was built with.</li>
-<li>The tradeoff is a larger deployment package and manual updates for runtime patches.</li>
-</ul>
-
-<h2>Conclusion</h2>
-
-<p>Publishing as Self-Contained eliminated the CoreCLR dependency on the server and saved me a lot of time. If you’re deploying .NET Core apps to environments where you don’t control the runtime installation, Self-Contained is the way to go!</p>
+<p>In conclusion, crisis averted, disk space reclaimed and finally got some sleep. 😴</p>
 
 <p>Hope you found this useful!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>January 15th, 2025</time>
+		<time>February 18th, 2025</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/net/">
-					.NET
+				<a href="/category/mysql/">
+					MySQL
 				</a>
 			</li>
 			
 			<li>
-				<a href="/category/iis/">
-					IIS
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/centralizing-storage-for-multiple-websites-by-mounting-a-shared-windows-network-drive-on-cent-os-using-cifs">Centralizing Storage for Multiple Websites by Mounting a Shared Windows Network Drive on CentOS Using CIFS</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Running more than 45 websites on a CentOS server can be a challenge, especially when it comes to managing storage. In my case, these websites are hosted across two different servers, and each site has its own storage folder for images and uploads.</p>
-
-<p>To streamline this, I came up with a solution: centralizing all storage uploads in one place by hosting a shared Windows network drive and mounting it on the CentOS servers. </p>
-
-<p>This way, all websites can access the same centralized storage, making management much easier.</p>
-
-<p>Here’s how I did it, step by step:</p>
-
-<h4>Step 1: Install cifs-utils</h4>
-
-<p>First, you need to install the <code>cifs-utils</code> package, which provides the necessary tools to mount CIFS shares.</p>
-
-<div class="codehilite">
-<pre><span></span><code>yum<span class="w"> </span>install<span class="w"> </span>cifs-utils
-</code></pre>
-</div>
-
-<h4>Step 2: Create a Service Account</h4>
-
-<p>Next, I created a service account on the CentOS server. This account will be used to access the shared drive. I named it <code>svc_library_core</code> and assigned it a UID of 5000. You can choose any name and UID that isn’t already in use.</p>
-
-<div class="codehilite">
-<pre><span></span><code>useradd<span class="w"> </span>-u<span class="w"> </span><span class="m">5000</span><span class="w"> </span>svc_library_core
-</code></pre>
-</div>
-
-<h4>Step 3: Create a Group for the Share</h4>
-
-<p>I also created a group on the CentOS server that will map to the shared drive. This group will contain all the Linux accounts that need access to the share. I named the group <code>share_library_core</code> and gave it a GID of 6000.</p>
-
-<div class="codehilite">
-<pre><span></span><code>groupadd<span class="w"> </span>-g<span class="w"> </span><span class="m">6000</span><span class="w"> </span>share_library_core
-</code></pre>
-</div>
-
-<h4>Step 4: Add Users to the Group</h4>
-
-<p>After creating the group, I added the necessary users to it. For example, if you want the <code>apache</code> user to have access to the share, you can add it like this:</p>
-
-<div class="codehilite">
-<pre><span></span><code>usermod<span class="w"> </span>-G<span class="w"> </span>share_library_core<span class="w"> </span>-a<span class="w"> </span>apache
-</code></pre>
-</div>
-
-<h4>Step 5: Prepare Credentials</h4>
-
-<p>To mount the drive, you’ll need to provide the credentials for the Windows share. You can either pass them directly using the <code>-o</code> option or save them in a file. I opted to save them in a file for security reasons.</p>
-
-<p>Switch to the root user and create a file to store the credentials:</p>
-
-<div class="codehilite">
-<pre><span></span><code>su<span class="w"> </span>-<span class="w"> </span>root
-touch<span class="w"> </span>/root/creds_smb_library_core
-chmod<span class="w"> </span><span class="m">0600</span><span class="w"> </span>/root/creds_smb_library_core
-vi<span class="w"> </span>/root/creds_smb_library_core
-</code></pre>
-</div>
-
-<p>Add the following lines to the file, replacing the placeholders with your actual Windows or Active Directory username and password:</p>
-
-<div class="codehilite">
-<pre><span></span><code>username=YourWindowsUsername
-password=YourWindowsPassword
-</code></pre>
-</div>
-
-<h4>Step 6: Mount the Drive</h4>
-
-<p>Now, you’re ready to mount the shared drive. Use the following command, replacing the placeholders with your actual values:</p>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>mount<span class="w"> </span>-t<span class="w"> </span>cifs<span class="w"> </span>//&lt;destination_ip&gt;/path/to/directory<span class="w"> </span>/test-directory<span class="w"> </span>-o<span class="w"> </span><span class="nv">credentials</span><span class="o">=</span>/root/creds_smb_library_core,uid<span class="o">=</span><span class="m">5000</span>,gid<span class="o">=</span><span class="m">6000</span>,iocharset<span class="o">=</span>utf8,file_mode<span class="o">=</span><span class="m">0774</span>,dir_mode<span class="o">=</span><span class="m">0775</span>
-</code></pre>
-</div>
-
-<ul>
-<li><code>//&lt;destination_ip&gt;/path/to/directory</code> is the path to the shared drive on the Windows server.</li>
-<li><code>/test-directory</code> is the local directory where you want to mount the drive.</li>
-<li><code>credentials=/root/creds_smb_library_core</code> points to the file containing your credentials.</li>
-<li><code>uid=5000</code> and <code>gid=6000</code> map the mounted drive to the service account and group you created earlier.</li>
-<li><code>iocharset=utf8</code> ensures proper character encoding.</li>
-<li><code>file_mode=0774</code> and <code>dir_mode=0775</code> set the file and directory permissions.</li>
-</ul>
-
-<h4>Step 7: Unmounting the Drive</h4>
-
-<p>If you need to unmount the drive later, you can do so with the following command:</p>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>umount<span class="w"> </span>/test-directory
-</code></pre>
-</div>
-
-<h3>Bonus: Automount Script for Server Reboots</h3>
-
-<p>One challenge I faced was ensuring that the shared drives were automatically remounted in case the servers went down or were rebooted. To handle this, I wrote a simple script that mounts the drives on startup.</p>
-
-<h4>Create the Script</h4>
-
-<p>Create a new script file, for example, <code>/usr/local/bin/mount_shares.sh</code>:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="ch">#!/bin/bash</span>
-mount<span class="w"> </span>-t<span class="w"> </span>cifs<span class="w"> </span>//&lt;destination_ip&gt;/path/to/directory<span class="w"> </span>/test-directory<span class="w"> </span>-o<span class="w"> </span><span class="nv">credentials</span><span class="o">=</span>/root/creds_smb_library_core,uid<span class="o">=</span><span class="m">5000</span>,gid<span class="o">=</span><span class="m">6000</span>,iocharset<span class="o">=</span>utf8,file_mode<span class="o">=</span><span class="m">0774</span>,dir_mode<span class="o">=</span><span class="m">0775</span>
-</code></pre>
-</div>
-
-<p>Make sure to replace the placeholders with your actual values.</p>
-
-<h4>Make the Script Executable</h4>
-
-<p>Set the executable permission on the script:</p>
-
-<div class="codehilite">
-<pre><span></span><code>chmod<span class="w"> </span>+x<span class="w"> </span>/usr/local/bin/mount_shares.sh
-</code></pre>
-</div>
-
-<h4>Add the Script to Startup</h4>
-
-<p>To ensure the script runs on startup, add it to the <code>/etc/rc.local</code> file:</p>
-
-<div class="codehilite">
-<pre><span></span><code>/usr/local/bin/mount_shares.sh
-</code></pre>
-</div>
-
-<p>Make sure <code>/etc/rc.local</code> is executable:</p>
-
-<div class="codehilite">
-<pre><span></span><code>chmod<span class="w"> </span>+x<span class="w"> </span>/etc/rc.local
-</code></pre>
-</div>
-
-<h4>Test the Script</h4>
-
-<p>Reboot your server and verify that the shared drives are automatically mounted.</p>
-
-<p>And that’s it! </p>
-
-<p>You’ve successfully mounted a shared Windows network drive on CentOS using CIFS and ensured it remounts automatically on server reboots. </p>
-
-<p>This setup has made managing storage for multiple websites much more efficient and centralized.</p>
-
-<p>Hope you found this article useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>January 14th, 2025</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/centos/">
-					CentOS
+				<a href="/category/databases/">
+					Databases
 				</a>
 			</li>
 			
@@ -952,9 +438,138 @@ mount<span class="w"> </span>-t<span class="w"> </span>cifs<span class="w"> </sp
 				</a>
 			</li>
 			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/writings/posts/9-software-books-im-reading-this-year-to-become-a-better-engineer">9 Software Books I'm Reading This Year to Become a Better Engineer</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>As a software engineer, continuous learning is essential. The tech industry evolves rapidly, and keeping up requires a commitment to improving skills, refining best practices, and understanding the deeper principles behind great software design. This year, I’ve curated a list of nine must-read books that will help me become a better developer, architect, and problem solver. </p>
+
+<p>If you're looking to level up your software engineering skills, these books might interest you too:</p>
+
+<div class="book-list">
+    <div class="book-card">
+        <div class="book-image" style="background-image: url('https://m.media-amazon.com/images/I/41a1DYaecZL._SX342_SY445_.jpg');"></div>
+        <div class="book-info">
+            <h2>The Pragmatic Programmer</h2>
+            <p class="book-author">By Andrew Hunt & David Thomas</p>
+            <p class="book-quote">"Care about the code you write and the people who will maintain it after you."</p>
+            <p class="book-reason">A foundational book that every developer should read. It provides practical advice on coding, debugging, and automation, making you a more adaptable and efficient engineer.</p>
+        </div>
+    </div>
+
+    <div class="book-card">
+        <div class="book-image" style="background-image: url('https://m.media-amazon.com/images/I/514xvNk9rTL._SY445_SX342_.jpg');"></div>
+        <div class="book-info">
+            <h2>Designing Data-Intensive Applications</h2>
+            <p class="book-author">By Martin Kleppmann</p>
+            <p class="book-quote">"A well-designed system grows gracefully as the dataset, traffic volume, or complexity increases."</p>
+            <p class="book-reason">A must-read for backend engineers and system architects, this book explores data modeling, distributed systems, and scalability challenges.</p>
+        </div>
+    </div>
+
+    <div class="book-card">
+        <div class="book-image" style="background-image: url('https://m.media-amazon.com/images/I/41xShlnTZTL.jpg');"></div>
+        <div class="book-info">
+            <h2>Clean Code</h2>
+            <p class="book-author">By Robert C. Martin</p>
+            <p class="book-quote">"Indeed, the ratio of time spent reading versus writing is well over 10 to 1. We are constantly reading old code as part of the effort to write new code."</p>
+            <p class="book-reason">Writing clean, maintainable code is a core skill for developers. This book offers practical techniques for improving code quality.</p>
+        </div>
+    </div>
+
+    <div class="book-card">
+        <div class="book-image" style="background-image: url('https://m.media-amazon.com/images/I/51TG5T+dd7L._SY445_SX342_.jpg');"></div>
+        <div class="book-info">
+            <h2>The Mythical Man-Month</h2>
+            <p class="book-author">By Frederick P. Brooks Jr.</p>
+            <p class="book-quote">"Adding manpower to a late software project makes it later."</p>
+            <p class="book-reason">A classic in software project management, this book explains why adding more people to a late project only makes it later.</p>
+        </div>
+    </div>
+
+    <div class="book-card">
+        <div class="book-image" style="background-image: url('https://m.media-amazon.com/images/I/41JgRyJbGSL._SX342_SY445_.jpg');"></div>
+        <div class="book-info">
+            <h2>Refactoring</h2>
+            <p class="book-author">By Martin Fowler</p>
+            <p class="book-quote">"Any fool can write code that a computer can understand. Good programmers write code that humans can understand."</p>
+            <p class="book-reason">A practical guide to improving existing code without altering its functionality, making it more readable and maintainable.</p>
+        </div>
+    </div>
+
+    <div class="book-card">
+        <div class="book-image" style="background-image: url('https://m.media-amazon.com/images/I/41roGUf+cML._SY445_SX342_.jpg');"></div>
+        <div class="book-info">
+            <h2>Domain-Driven Design</h2>
+            <p class="book-author">By Eric Evans</p>
+            <p class="book-quote">"The heart of software is its ability to solve domain-related problems for users."</p>
+            <p class="book-reason">This book teaches how to align software design with business logic, making complex software systems more manageable.</p>
+        </div>
+    </div>
+
+    <div class="book-card">
+        <div class="book-image" style="background-image: url('https://m.media-amazon.com/images/I/51maZSdupsL._SY445_SX342_.jpg');"></div>
+        <div class="book-info">
+            <h2>Working Effectively with Legacy Code</h2>
+            <p class="book-author">By Michael Feathers</p>
+            <p class="book-quote">"To change software means to change behavior. Our goal is to do so safely."</p>
+            <p class="book-reason">If you’ve ever had to deal with old, complex codebases, this book provides strategies for refactoring without breaking functionality.</p>
+        </div>
+    </div>
+
+    <div class="book-card">
+        <div class="book-image" style="background-image: url('https://m.media-amazon.com/images/I/51OCgwlIsSL._SX342_SY445_.jpg');"></div>
+        <div class="book-info">
+            <h2>Why Programs Fail</h2>
+            <p class="book-author">By Andreas Zeller</p>
+            <p class="book-quote">"Every bug has a cause, and every cause has a cure."</p>
+            <p class="book-reason">A systematic approach to debugging, helping developers diagnose and fix software defects effectively.</p>
+        </div>
+    </div>
+
+    <div class="book-card">
+        <div class="book-image" style="background-image: url('https://m.media-amazon.com/images/I/71teGAqCOzL._SL1500_.jpg');"></div>
+        <div class="book-info">
+            <h2>Extreme Ownership</h2>
+            <p class="book-author">By Jocko Willink & Leif Babin</p>
+            <p class="book-quote">"Leaders must own everything in their world. There is no one else to blame."</p>
+            <p class="book-reason">Leadership and accountability are critical for engineers working in teams. This book teaches how taking full responsibility leads to success.</p>
+        </div>
+    </div>
+</div>
+
+<h2>Final Thoughts</h2>
+
+<p>These books cover a wide spectrum of skills—from writing clean code and designing scalable systems to debugging, refactoring, and leadership. By reading and applying the lessons in these books, I aim to become a better software engineer this year.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>February 14th, 2025</time>
+		<ul class="tags">
+			
 			<li>
-				<a href="/category/linux/">
-					Linux
+				<a href="/category/self-development/">
+					Self Development
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/goals/">
+					Goals
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/software-development/">
+					Software Development
 				</a>
 			</li>
 			
@@ -966,91 +581,113 @@ mount<span class="w"> </span>-t<span class="w"> </span>cifs<span class="w"> </sp
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/adding-timezones-to-date-time-strings-in-c-sharp">Adding Timezones to DateTime Strings in C#</a></h1>
+		<h1 class="heading"><a href="/til/posts/how-to-revert-a-git-commit-on-the-server">How to Revert a Git Commit on the Server?</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>Whether you're dealing with UTC, local times, or specific timezone offsets, there's a simple way to format your <code>DateTime</code> objects properly.</p>
+		<p>Today I learned how to revert a Git commit after pulling it on a server. Whether you've made a mistake or just need to backtrack, Git offers several ways to undo commits depending on your situation. Here's a quick guide on how to handle it.</p>
 
-<p>Here’s the rundown:</p>
+<h2>If you haven't pushed the commit yet</h2>
 
-<h2>1. Using DateTimeOffset for Timezone-Aware DateTimes</h2>
+<p>If the commit hasn't been pushed to the remote repository, you can use <code>git reset</code> to undo it.</p>
 
-<p><code>DateTimeOffset</code> is my go-to for working with date and time when I need to include the timezone. It represents both the date, time, and the offset from UTC.</p>
-
-<h3>Example: Adding UTC or Specific Timezones</h3>
+<h2>Soft Reset (keeps changes staged)</h2>
 
 <div class="codehilite">
-<pre><span></span><code><span class="n">DateTime</span><span class="w"> </span><span class="n">utcDateTime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DateTime</span><span class="p">.</span><span class="n">UtcNow</span><span class="p">;</span>
-<span class="n">DateTimeOffset</span><span class="w"> </span><span class="n">utcWithOffset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">DateTimeOffset</span><span class="p">(</span><span class="n">utcDateTime</span><span class="p">,</span><span class="w"> </span><span class="n">TimeSpan</span><span class="p">.</span><span class="n">Zero</span><span class="p">);</span><span class="w"> </span><span class="c1">// UTC timezone</span>
-
-<span class="c1">// For a specific timezone, like Eastern Standard Time (UTC-05:00)</span>
-<span class="n">TimeZoneInfo</span><span class="w"> </span><span class="n">easternZone</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">TimeZoneInfo</span><span class="p">.</span><span class="n">FindSystemTimeZoneById</span><span class="p">(</span><span class="s">&quot;Eastern Standard Time&quot;</span><span class="p">);</span>
-<span class="n">DateTimeOffset</span><span class="w"> </span><span class="n">easternTime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">TimeZoneInfo</span><span class="p">.</span><span class="n">ConvertTime</span><span class="p">(</span><span class="n">utcDateTime</span><span class="p">,</span><span class="w"> </span><span class="n">easternZone</span><span class="p">);</span>
-
-<span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="n">utcWithOffset</span><span class="p">.</span><span class="n">ToString</span><span class="p">(</span><span class="s">&quot;o&quot;</span><span class="p">));</span><span class="w"> </span><span class="c1">// 2025-01-23T12:00:00.000+00:00</span>
-<span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="n">easternTime</span><span class="p">.</span><span class="n">ToString</span><span class="p">(</span><span class="s">&quot;o&quot;</span><span class="p">));</span><span class="w">  </span><span class="c1">// 2025-01-23T07:00:00.000-05:00</span>
+<pre><span></span><code>git<span class="w"> </span>reset<span class="w"> </span>--soft<span class="w"> </span>HEAD~1
 </code></pre>
 </div>
 
-<p>The <code>"o"</code> format is particularly handy because it outputs the ISO 8601 standard, which is great for APIs or data exchange.</p>
+<p>This moves the HEAD back by one commit but keeps your changes staged.</p>
 
-<h2>2. Appending Timezones to Strings Manually</h2>
-
-<p>Sometimes, all you need is a <code>DateTime</code> string with a simple timezone indicator (like <code>+00:00</code> for UTC). Here's how I did that:</p>
+<h2>Mixed Reset (keeps changes unstaged):</h2>
 
 <div class="codehilite">
-<pre><span></span><code><span class="n">DateTime</span><span class="w"> </span><span class="n">dateTime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DateTime</span><span class="p">.</span><span class="n">Now</span><span class="p">;</span>
-<span class="kt">string</span><span class="w"> </span><span class="n">formattedDate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dateTime</span><span class="p">.</span><span class="n">ToString</span><span class="p">(</span><span class="s">&quot;yyyy-MM-ddTHH:mm:ss.fff&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s">&quot;Z&quot;</span><span class="p">;</span><span class="w"> </span><span class="c1">// Z = UTC</span>
-<span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="n">formattedDate</span><span class="p">);</span><span class="w"> </span><span class="c1">// Outputs: 2025-01-23T12:00:00.000Z</span>
+<pre><span></span><code>git<span class="w"> </span>reset<span class="w"> </span>--mixed<span class="w"> </span>HEAD~1
 </code></pre>
 </div>
 
-<p>For more precision, you can include the actual offset:</p>
+<p>This moves the HEAD back by one commit and unstages your changes.</p>
+
+<h2>Hard Reset (discards changes):</h2>
 
 <div class="codehilite">
-<pre><span></span><code><span class="kt">string</span><span class="w"> </span><span class="n">formattedDateWithOffset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dateTime</span><span class="p">.</span><span class="n">ToString</span><span class="p">(</span><span class="s">&quot;yyyy-MM-ddTHH:mm:ss.fffzzz&quot;</span><span class="p">);</span>
-<span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="n">formattedDateWithOffset</span><span class="p">);</span><span class="w"> </span><span class="c1">// Outputs: 2025-01-23T07:00:00.000-05:00</span>
+<pre><span></span><code>git<span class="w"> </span>reset<span class="w"> </span>--hard<span class="w"> </span>HEAD~1
 </code></pre>
 </div>
 
-<h2>3. Custom Format Specifiers for Timezones</h2>
+<p>This completely removes the last commit and discards any changes.</p>
 
-<p>Need a custom date string with the timezone? The <code>"zzz"</code> specifier has you covered:</p>
+<blockquote>
+  <p><strong>Tip:</strong> Replace <code>HEAD~1</code> with <code>HEAD~2</code> to go back two commits, and so on.</p>
+</blockquote>
+
+<h2>If you've already pushed the commit</h2>
+
+<h3>Revert the commit (safe for shared repos):</h3>
+
+<p>If you've already pushed the commit and want to undo it without rewriting history, use <code>git revert</code>. This creates a new commit that undoes the changes.</p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="n">DateTime</span><span class="w"> </span><span class="n">now</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DateTime</span><span class="p">.</span><span class="n">Now</span><span class="p">;</span>
-<span class="kt">string</span><span class="w"> </span><span class="n">dateTimeWithTimeZone</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">now</span><span class="p">.</span><span class="n">ToString</span><span class="p">(</span><span class="s">&quot;yyyy-MM-ddTHH:mm:ss.fff zzz&quot;</span><span class="p">);</span>
-<span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="n">dateTimeWithTimeZone</span><span class="p">);</span><span class="w"> </span><span class="c1">// Outputs: 2025-01-23T07:00:00.000 -05:00</span>
+<pre><span></span><code>git<span class="w"> </span>revert<span class="w"> </span>&lt;commit_hash&gt;
 </code></pre>
 </div>
 
-<h2>Why you should do this?</h2>
+<p>Find the commit hash using:</p>
 
-<ul>
-<li>It’s straightforward to ensure your timestamps are timezone-aware.</li>
-<li>You can easily adjust for specific timezones or stick with UTC for consistency.</li>
-<li>The formatting options (<code>"o"</code>, <code>"zzz"</code>, etc.) give you flexibility to match the needs of APIs, logs, or user-facing systems.</li>
-</ul>
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>log<span class="w"> </span>--oneline
+</code></pre>
+</div>
 
-<p>If you've ever struggled with timezone handling in C#, give these approaches a shot. Timestamps are tricky, but with these tools in your belt, you'll nail it every time!</p>
+<h3>Force Reset (i.e. if you're okay with rewriting history):</h3>
 
-<p>Hope you found this article useful!</p>
+<p>If you don't mind rewriting history (and no one else is working on the branch), you can force reset.</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>reset<span class="w"> </span>--hard<span class="w"> </span>&lt;commit_hash&gt;
+git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>HEAD<span class="w"> </span>--force
+</code></pre>
+</div>
+
+<div class="post-notification">
+    <h3>⚠️Warning</h3>
+    <p>This is not recommended if others are working on the same branch as it can cause conflicts.</p>
+</div>
+
+<h2>If you just pulled and want to undo</h2>
+
+<p>If you just pulled and want to undo the merge, you can reset to the previous state using <code>ORIG_HEAD</code>.</p>
+
+<h3>Undo a merge pull:</h3>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>reset<span class="w"> </span>--hard<span class="w"> </span>ORIG_HEAD
+</code></pre>
+</div>
+
+<p>This will bring your repository back to the state before the last pull.</p>
+
+<h3>Final thoughts</h3>
+
+<p>Reverting commits can seem daunting at first, but once you understand the tools Git offers, it's pretty straightforward. Always double-check before using <code>--hard</code> or <code>--force</code> to avoid accidental data loss!</p>
+
+<p>Hope this helps you get back on track!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>January 13th, 2025</time>
+		<time>February 5th, 2025</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/net/">
-					.NET
+				<a href="/category/git/">
+					Git
 				</a>
 			</li>
 			
 			<li>
-				<a href="/category/c/">
-					C#
+				<a href="/category/vcs/">
+					VCS
 				</a>
 			</li>
 			
@@ -1062,106 +699,338 @@ mount<span class="w"> </span>-t<span class="w"> </span>cifs<span class="w"> </sp
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/a-faster-way-to-apply-linux-permissions-for-large-laravel-projects-using-xargs-and-find">A Faster Way to Apply Linux Permissions for Large Laravel Projects Using xargs and find</a></h1>
+		<h1 class="heading"><a href="/til/posts/how-to-delete-multiple-git-branches-from-the-command-line">How to Delete Multiple Git Branches from the Command Line?</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>Today, I learned a more efficient way to apply Linux permissions to large projects by leveraging the power of <code>xargs</code> and <code>find</code>. This method is particularly useful when dealing with Laravel projects that have many files and directories, as it allows for parallel processing and excludes specific folders (like a <code>storage</code> directory) from the permission changes.</p>
+		<p>Whether you're cleaning up local branches after a feature merge or tidying up remote branches, here’s how you can do it.</p>
 
-<p>Here’s the step-by-step process I followed:</p>
+<h2>Deleting Multiple Local Branches</h2>
 
-<h2>1. Set Ownership of the Entire Project Folder</h2>
-
-<p>To ensure the correct ownership for the entire project, I used the <code>chown</code> command recursively:</p>
+<p>To delete multiple local branches safely (only if they’ve been merged), use:</p>
 
 <div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>chown<span class="w"> </span>-R<span class="w"> </span><span class="o">[</span>username<span class="o">]</span>:<span class="o">[</span>groupname<span class="o">]</span><span class="w"> </span><span class="o">[</span>foldername<span class="o">]</span>
+<pre><span></span><code>git<span class="w"> </span>branch<span class="w"> </span>-d<span class="w"> </span>branch1<span class="w"> </span>branch2<span class="w"> </span>branch3
 </code></pre>
 </div>
 
-<p>This command sets the owner and group for all files and directories within the specified folder.</p>
-
-<h2>2. Set Permissions for the Project Folder and Its Top-Level Directories</h2>
-
-<p>Next, I applied the desired permissions to the project folder and its top-level directories using <code>chmod</code>:</p>
+<p>If the branches haven't been merged and you still want to delete them, force delete with:</p>
 
 <div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>chmod<span class="w"> </span><span class="m">2775</span><span class="w"> </span><span class="o">[</span>foldername<span class="o">]</span>
+<pre><span></span><code>git<span class="w"> </span>branch<span class="w"> </span>-D<span class="w"> </span>branch1<span class="w"> </span>branch2<span class="w"> </span>branch3
 </code></pre>
 </div>
 
-<p>The <code>2775</code> permission sets the folder to allow read, write, and execute for the owner and group, and read and execute for others. The <code>2</code> enables the <strong>setgid bit</strong>, which ensures that new files and directories inherit the group of the parent folder.</p>
+<h2>Deleting Multiple Remote Branches</h2>
 
-<h2>3. Find and Change Permissions for All Directories (Except the Storage Folder) in Parallel</h2>
-
-<p>To apply permissions to all directories while excluding the <code>storage</code> folder, I combined <code>find</code>, <code>xargs</code>, and <code>chmod</code>:</p>
+<p>For remote branches, you can delete them by running:</p>
 
 <div class="codehilite">
-<pre><span></span><code>find<span class="w"> </span><span class="o">[</span>foldername<span class="o">]</span><span class="w"> </span>-path<span class="w"> </span><span class="o">[</span>foldername<span class="o">]</span>/storage<span class="w"> </span>-prune<span class="w"> </span>-o<span class="w"> </span>-type<span class="w"> </span>d<span class="w"> </span>-print0<span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>xargs<span class="w"> </span>-0<span class="w"> </span>-P<span class="w"> </span><span class="m">2</span><span class="w"> </span>chmod<span class="w"> </span><span class="m">2775</span>
+<pre><span></span><code>git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>--delete<span class="w"> </span>branch1<span class="w"> </span>branch2<span class="w"> </span>branch3
 </code></pre>
 </div>
+
+<p>Alternatively, you can use the colon <code>:</code> syntax:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>:branch1<span class="w"> </span>:branch2<span class="w"> </span>:branch3
+</code></pre>
+</div>
+
+<h2>Deleting Multiple Branches Using a Pattern</h2>
+
+<p>If you want to delete branches that follow a naming pattern (like <code>feature/</code> branches), you can use <code>grep</code> and <code>xargs</code>:</p>
+
+<h3>For local branches:</h3>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>branch<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;feature/&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>xargs<span class="w"> </span>git<span class="w"> </span>branch<span class="w"> </span>-d
+</code></pre>
+</div>
+
+<p>To force delete:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>branch<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;feature/&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>xargs<span class="w"> </span>git<span class="w"> </span>branch<span class="w"> </span>-D
+</code></pre>
+</div>
+
+<h3>For remote branches:</h3>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>branch<span class="w"> </span>-r<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;origin/feature/&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sed<span class="w"> </span><span class="s1">&#39;s/origin\///&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>xargs<span class="w"> </span>-I<span class="w"> </span><span class="o">{}</span><span class="w"> </span>git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>--delete<span class="w"> </span><span class="o">{}</span>
+</code></pre>
+</div>
+
+<h2>Final Tips</h2>
 
 <ul>
-<li><code>find [foldername] -path [foldername]/storage -prune -o -type d</code>: Finds all directories except the <code>storage</code> folder.</li>
-<li><code>-print0</code>: Outputs the results in a null-terminated format to handle spaces in filenames.</li>
-<li><code>xargs -0 -P 2</code>: Processes the results in parallel (2 processes at a time) for faster execution.</li>
-<li><code>chmod 2775</code>: Applies the desired permissions to the directories.</li>
+<li><strong>List branches before deleting:</strong> Use <code>git branch</code> for local and <code>git branch -r</code> for remote branches to verify which ones you’re about to delete.</li>
+<li><strong>Be cautious with force delete (<code>-D</code>):</strong> It will remove branches even if they haven’t been merged, so make sure you won’t lose important work.</li>
 </ul>
 
-<h2>4. Find and Change Permissions for All Files (Except the Storage Folder) in Parallel</h2>
-
-<p>Similarly, I applied permissions to all files while excluding the <code>storage</code> folder:</p>
-
-<div class="codehilite">
-<pre><span></span><code>find<span class="w"> </span><span class="o">[</span>foldername<span class="o">]</span><span class="w"> </span>-path<span class="w"> </span><span class="o">[</span>foldername<span class="o">]</span>/storage<span class="w"> </span>-prune<span class="w"> </span>-o<span class="w"> </span>-type<span class="w"> </span>f<span class="w"> </span>-print0<span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>xargs<span class="w"> </span>-0<span class="w"> </span>-P<span class="w"> </span><span class="m">2</span><span class="w"> </span>chmod<span class="w"> </span><span class="m">0664</span>
-</code></pre>
-</div>
-
-<ul>
-<li><code>-type f</code>: Finds all files.</li>
-<li><code>chmod 0664</code>: Sets read and write permissions for the owner and group, and read-only for others.</li>
-</ul>
-
-<h2>5. Handle the Storage Folder Separately (If It’s Too Large)</h2>
-
-<p>For the <code>storage</code> folder, I applied permissions separately to avoid overloading the system:</p>
-
-<div class="codehilite">
-<pre><span></span><code>find<span class="w"> </span><span class="o">[</span>foldername<span class="o">]</span>/storage<span class="w"> </span>-type<span class="w"> </span>d<span class="w"> </span>-print0<span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>xargs<span class="w"> </span>-0<span class="w"> </span>-P<span class="w"> </span><span class="m">2</span><span class="w"> </span>chmod<span class="w"> </span><span class="m">2775</span>
-find<span class="w"> </span><span class="o">[</span>foldername<span class="o">]</span>/storage<span class="w"> </span>-type<span class="w"> </span>f<span class="w"> </span>-print0<span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>xargs<span class="w"> </span>-0<span class="w"> </span>-P<span class="w"> </span><span class="m">2</span><span class="w"> </span>chmod<span class="w"> </span><span class="m">0664</span>
-</code></pre>
-</div>
-
-<p>This ensures that the <code>storage</code> folder and its contents have the correct permissions without affecting the rest of the project.</p>
-
-<h2>Why This Approach?</h2>
-
-<p>Using <code>xargs</code> with <code>-P</code> allows for parallel processing, which speeds up permission changes significantly for large projects. Additionally, excluding specific folders (like <code>storage</code>) ensures that sensitive or frequently accessed directories are handled separately.</p>
-
-<p>This method has saved me a lot of time and effort when managing permissions for large projects.</p>
-
-<p>Hope you found this article useful!</p>
+<p>Hope you found this useful!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>January 12th, 2025</time>
+		<time>February 5th, 2025</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/linux/">
-					Linux
+				<a href="/category/git/">
+					Git
 				</a>
 			</li>
 			
 			<li>
-				<a href="/category/devops/">
-					DevOps
+				<a href="/category/vcs/">
+					VCS
 				</a>
 			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/writings/posts/laravel-scopes-vs-builder-queries-which-should-you-use">Laravel Scopes vs. Builder Queries: Which Should You Use?</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>If you're building a Laravel application, you're probably spending a lot of time writing queries. And as your project grows, you'll inevitably face this question: <em>Should I use scopes or builder queries?</em> While both have their place, choosing the right tool for the job can make a world of difference. Here's my opinionated take on the matter.</p>
+
+<h2>The Case for Scopes</h2>
+
+<p><strong>Scopes</strong> are, quite simply, one of Laravel's hidden gems. They let you encapsulate common query logic within your models, making your code clean, reusable, and easy to read. Think of them as tiny, purposeful functions designed to save you time and sanity.</p>
+
+<p>Take this example:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+    <span class="c1">// In your model</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">scopeActive</span><span class="p">(</span><span class="nv">$query</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">return</span> <span class="nv">$query</span><span class="o">-&gt;</span><span class="na">where</span><span class="p">(</span><span class="s1">&#39;status&#39;</span><span class="p">,</span> <span class="s1">&#39;active&#39;</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="c1">// Usage</span>
+    <span class="nv">$activeUsers</span> <span class="o">=</span> <span class="nx">User</span><span class="o">::</span><span class="na">active</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">get</span><span class="p">();</span>
+<span class="cp">?&gt;</span>
+</code></pre>
+</div>
+
+<p>Suddenly, instead of littering your controllers with <code>where('status', 'active')</code> everywhere, you have a single, reusable method that reads like English. Scopes shine when you need commonly used filters like <code>active</code>, <code>published</code>, or <code>recent</code>. They’re easy to use, they’re consistent, and they make your code feel more intuitive.</p>
+
+<h3>Why I Prefer Scopes for Reusability</h3>
+
+<p>Here’s the thing: in any sizable Laravel app, you’ll inevitably find patterns in your queries. Rewriting the same query logic over and over? That’s a code smell. By using scopes, you centralize your query logic, reducing redundancy and improving maintainability.</p>
+
+<p>For example:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+    <span class="nv">$pubishedPosts</span> <span class="o">=</span> <span class="nx">Post</span><span class="o">::</span><span class="na">published</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">recent</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">get</span><span class="p">();</span>
+<span class="cp">?&gt;</span>
+</code></pre>
+</div>
+
+<p>This reads beautifully and keeps your codebase DRY (Don’t Repeat Yourself). If the definition of "published" or "recent" changes, you only need to update it in one place. Scopes turn repetitive query logic into single lines of magic.</p>
+
+<h2>The Case for Builder Queries</h2>
+
+<p>That said, not everything belongs in a scope. Some queries are just too specific, too complex, or too dynamic. This is where <strong>builder queries</strong> come in.</p>
+
+<p>Imagine you’re building a report that requires multiple joins, conditional logic, or dynamic filters. Scopes could become unwieldy here. Instead, a well-crafted builder query in your controller, service, or repository might make more sense:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="cp">&lt;?php</span>
+    <span class="nv">$users</span> <span class="o">=</span> <span class="nx">User</span><span class="o">::</span><span class="na">where</span><span class="p">(</span><span class="s1">&#39;status&#39;</span><span class="p">,</span> <span class="s1">&#39;active&#39;</span><span class="p">)</span>
+        <span class="o">-&gt;</span><span class="na">whereDate</span><span class="p">(</span><span class="s1">&#39;created_at&#39;</span><span class="p">,</span> <span class="s1">&#39;&gt;&#39;</span><span class="p">,</span> <span class="nx">now</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">subDays</span><span class="p">(</span><span class="mi">30</span><span class="p">))</span>
+        <span class="o">-&gt;</span><span class="na">orderBy</span><span class="p">(</span><span class="s1">&#39;created_at&#39;</span><span class="p">,</span> <span class="s1">&#39;desc&#39;</span><span class="p">)</span>
+        <span class="o">-&gt;</span><span class="na">get</span><span class="p">();</span>
+<span class="cp">?&gt;</span>
+</code></pre>
+</div>
+
+<p>Builder queries are perfect for:</p>
+
+<ul>
+<li>One-off operations.</li>
+<li>Highly dynamic queries.</li>
+<li>Scenarios where scopes would make your models bloated or overly complex.</li>
+</ul>
+
+<p>The flexibility of builder queries is unmatched. You can construct them on the fly, adapt them to user inputs, and handle edge cases without worrying about making your models an unreadable mess.</p>
+
+<h2>My Opinionated Take: Use Scopes as a Default, Builder Queries for the Edge Cases</h2>
+
+<p>If I had to pick a side, I’d say: lean on scopes as your default tool, and reserve builder queries for those rare cases when scopes just don’t cut it. Why?</p>
+
+<ol>
+<li><strong>Scopes enhance readability.</strong> Your queries read like sentences, and your intentions are crystal clear.</li>
+<li><strong>Scopes promote DRY principles.</strong> They’re reusable and encapsulate logic, which makes future maintenance a breeze.</li>
+<li><strong>Builder queries are powerful but can become messy.</strong> Unless you’re careful, a complex query in your controller can grow into a sprawling monstrosity. Keep your controllers lean and delegate to scopes or dedicated query classes where possible.</li>
+</ol>
+
+<h2>When Not to Use Scopes</h2>
+
+<p>There are times when using a scope might do more harm than good:</p>
+
+<ul>
+<li><strong>Too much complexity:</strong> If a scope needs multiple parameters or involves complex joins, it’s better suited as a custom query builder or a dedicated repository method.</li>
+<li><strong>Rarely used logic:</strong> Don’t clutter your models with scopes for queries that are only needed once or twice.</li>
+<li><strong>Dynamic, user-driven queries:</strong> When filters are highly variable, builder queries give you the flexibility you need.</li>
+</ul>
+
+<h2>Conclusion: Balance Is Key</h2>
+
+<p>Laravel gives you powerful tools to write queries, and both scopes and builder queries have their roles. Use scopes to simplify and centralize reusable logic, and reach for builder queries when flexibility and complexity demand it. By balancing both, you’ll keep your codebase clean, maintainable, and a joy to work with.</p>
+
+<p>So, what’s your take? Are you a scope enthusiast or a builder query champion? Either way, Laravel’s got you covered.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>January 25th, 2025</time>
+		<ul class="tags">
 			
 			<li>
 				<a href="/category/laravel/">
 					Laravel
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/php/">
+					PHP
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/writings/posts/a-starter-guide-to-software-version-control">A Starter Guide to Software Version Control</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Version Control Systems (VCS) are indispensable tools for modern software development. When I first started working with version control, I was overwhelmed by the terminology and the various workflows. Over time, I realized that mastering VCS isn't just about understanding commands—it's about adopting practices that make development smoother and more collaborative. In this post, I’ll share my journey, the lessons I’ve learned, and a practical approach to version control that works for teams of any size.</p>
+
+<h2>What is Version Control?</h2>
+
+<p>I remember my first experience losing hours of work because I accidentally overwrote a file. That’s when I discovered the magic of version control. It’s like having a time machine for your code! At its core, version control tracks and manages changes to your software code. Here’s why it’s essential:</p>
+
+<ul>
+<li><strong>Collaborate with ease</strong>: Gone are the days of emailing files back and forth. Multiple developers can work on the same codebase without stepping on each other’s toes.</li>
+<li><strong>Track every change</strong>: With a detailed history of changes, debugging becomes less of a nightmare.</li>
+<li><strong>Rollback anytime</strong>: If something breaks, you can revert to a stable version in seconds.</li>
+</ul>
+
+<p>Today, tools like Git, Subversion (SVN), and Mercurial are popular choices, with Git leading the pack. If you haven’t tried Git yet, you’re missing out on a developer’s best friend.</p>
+
+<h2>Key Concepts</h2>
+
+<p>Here’s a quick glossary that helped me when I was starting out:</p>
+
+<ol>
+<li><strong>Repository</strong>: Think of this as your project’s home. It stores your code and its entire version history.</li>
+<li><strong>Commit</strong>: A snapshot of your code changes. A good commit is like leaving breadcrumbs for your future self or teammates.</li>
+<li><strong>Branch</strong>: This was a game-changer for me. Branches let you work on new features or fixes without touching the main codebase.</li>
+<li><strong>Merge</strong>: When you’re ready to bring your work back into the main project, merging combines it with the existing code.</li>
+<li><strong>Tag</strong>: These are like bookmarks, marking specific points in your project’s history—perfect for releases.</li>
+</ol>
+
+<h2>Types of Branches</h2>
+
+<p>When I joined my first team project, I was introduced to a branching strategy that revolutionized the way I worked. Here’s how it breaks down:</p>
+
+<h3>1. Main Branches</h3>
+
+<ul>
+<li><strong>Main (<code>main</code> or <code>master</code>)</strong>: This is the crown jewel—the stable, production-ready branch. It’s sacred territory where only thoroughly tested code belongs.</li>
+<li><strong>Development (<code>dev</code>)</strong>: This is where the magic happens. New features and fixes are integrated and tested here before they’re ready for production.</li>
+</ul>
+
+<h3>2. Feature Branches</h3>
+
+<p>When you’re working on something new, create a feature branch. Here’s how it works:</p>
+
+<ul>
+<li><strong>Purpose</strong>: To develop a specific feature.</li>
+<li><strong>Workflow</strong>: Start from <code>dev</code>, and when you’re done, merge back into <code>dev</code>.</li>
+<li><strong>Naming Convention</strong>: <code>feature/new-login-system</code></li>
+</ul>
+
+<h3>3. Release Branches</h3>
+
+<p>Preparing for a new release? Here’s what you do:</p>
+
+<ul>
+<li><strong>Purpose</strong>: To finalize a version for production.</li>
+<li><strong>Workflow</strong>: Start from <code>dev</code>, do final testing and fixes, then merge into <code>main</code>.</li>
+<li><strong>Naming Convention</strong>: <code>release/v1.0</code></li>
+</ul>
+
+<h3>4. Hotfix Branches</h3>
+
+<p>Production bugs can’t wait. That’s where hotfix branches save the day:</p>
+
+<ul>
+<li><strong>Purpose</strong>: To fix critical issues in production.</li>
+<li><strong>Workflow</strong>: Start from <code>main</code>, fix the issue, then merge into both <code>main</code> and <code>dev</code>.</li>
+<li><strong>Naming Convention</strong>: <code>hotfix/login-bugfix</code></li>
+</ul>
+
+<h2>A Practical Workflow Example</h2>
+
+<p>Here’s a typical workflow I follow:</p>
+
+<ol>
+<li><strong>Feature Development</strong>: Let’s say I’m building a new login system. I’d create a branch called <code>feature/new-login-system</code> off <code>dev</code>. Once the feature is complete and tested, I merge it back into <code>dev</code>.</li>
+<li><strong>Preparing for Release</strong>: When it’s time to launch, I’d create a branch called <code>release/v1.0</code> from <code>dev</code>. After some final tweaks, I merge it into <code>main</code> and tag it as <code>v1.0</code>.</li>
+<li><strong>Production Hotfix</strong>: If a bug pops up in <code>v1.0</code>, I’d create a branch called <code>hotfix/login-bugfix</code> from <code>main</code>. Once fixed, I’d merge it into both <code>main</code> and <code>dev</code> and tag it as <code>v1.0.1</code>.</li>
+</ol>
+
+<h2>Best Practices</h2>
+
+<p>Here are some lessons I learned the hard way:</p>
+
+<ol>
+<li><strong>Write Clear Commit Messages</strong>: Your future self will thank you. A good message explains what changed and why.</li>
+<li><strong>Keep Commits Small</strong>: Each commit should represent a single, logical change. This makes debugging a breeze.</li>
+<li><strong>Review Before Merging</strong>: Always use pull requests or merge requests. Two heads are better than one.</li>
+<li><strong>Use Tags for Releases</strong>: Tags are lifesavers when you need to rollback or track changes.</li>
+<li><strong>Backup Your Repository</strong>: This might sound obvious, but don’t take it for granted.</li>
+</ol>
+
+<h2>Why Version Control is a Game-Changer?</h2>
+
+<p>For me, version control transformed how I approach coding. It made collaboration smoother, debugging faster, and deployments safer. Whether you’re working solo or with a team, adopting a thoughtful version control strategy is a must.</p>
+
+<h2>Final Thoughts</h2>
+
+<p>Version control is more than just a tool—it’s a mindset. By following the practices and strategies outlined here, you’ll be well on your way to mastering it. Trust me, your future self—and your teammates—will thank you.</p>
+
+	</div>
+	<div class="article-footer">
+		<time>January 24th, 2025</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/git/">
+					Git
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/vcs/">
+					VCS
 				</a>
 			</li>
 			
@@ -1207,7 +1076,7 @@ find<span class="w"> </span><span class="o">[</span>foldername<span class="o">]<
 		
 	
 		
-			<a class="" href="/pages/33">33</a>
+			<a class="" href="/pages/34">34</a>
 		
 	
 
@@ -1242,16 +1111,16 @@ find<span class="w"> </span><span class="o">[</span>foldername<span class="o">]<
 	<ul class="tags">
 		
 		<li>
-			<a href="/category/linux/">
-				Linux
-				<span class="count">28</span>
+			<a href="/category/devops/">
+				DevOps
+				<span class="count">36</span>
 			</a>
 		</li>
 		
 		<li>
-			<a href="/category/devops/">
-				DevOps
-				<span class="count">24</span>
+			<a href="/category/linux/">
+				Linux
+				<span class="count">30</span>
 			</a>
 		</li>
 		
@@ -1280,6 +1149,13 @@ find<span class="w"> </span><span class="o">[</span>foldername<span class="o">]<
 			<a href="/category/cryptography/">
 				Cryptography
 				<span class="count">12</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/mysql/">
+				MySQL
+				<span class="count">11</span>
 			</a>
 		</li>
 		
@@ -1319,9 +1195,9 @@ find<span class="w"> </span><span class="o">[</span>foldername<span class="o">]<
 		</li>
 		
 		<li>
-			<a href="/category/mysql/">
-				MySQL
-				<span class="count">10</span>
+			<a href="/category/kubernetes/">
+				Kubernetes
+				<span class="count">9</span>
 			</a>
 		</li>
 		
@@ -1431,6 +1307,27 @@ find<span class="w"> </span><span class="o">[</span>foldername<span class="o">]<
 		</li>
 		
 		<li>
+			<a href="/category/curl/">
+				curl
+				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/networking/">
+				Networking
+				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/smtp/">
+				SMTP
+				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/self-reflection/">
 				Self-reflection
 				<span class="count">3</span>
@@ -1501,6 +1398,13 @@ find<span class="w"> </span><span class="o">[</span>foldername<span class="o">]<
 		</li>
 		
 		<li>
+			<a href="/category/troubleshooting/">
+				Troubleshooting
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/thoughts/">
 				Thoughts
 				<span class="count">2</span>
@@ -1531,13 +1435,6 @@ find<span class="w"> </span><span class="o">[</span>foldername<span class="o">]<
 		<li>
 			<a href="/category/powershell/">
 				PowerShell
-				<span class="count">2</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/smtp/">
-				SMTP
 				<span class="count">2</span>
 			</a>
 		</li>
@@ -1630,6 +1527,20 @@ find<span class="w"> </span><span class="o">[</span>foldername<span class="o">]<
 			<a href="/category/wamp/">
 				WAMP
 				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/http/">
+				HTTP
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/nodejs/">
+				Node.js
+				<span class="count">1</span>
 			</a>
 		</li>
 		
@@ -1741,13 +1652,6 @@ find<span class="w"> </span><span class="o">[</span>foldername<span class="o">]<
 		<li>
 			<a href="/category/oop/">
 				OOP
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/troubleshooting/">
-				Troubleshooting
 				<span class="count">1</span>
 			</a>
 		</li>

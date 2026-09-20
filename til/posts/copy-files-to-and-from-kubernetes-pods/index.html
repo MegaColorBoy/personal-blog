@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html data-theme="" lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="author" content="Abdush Shakoor">
+	
+	<meta name="description" content=".">
+	<meta name="og:title" content="Copy files to and from Kubernetes pods | Abdush Shakoor's Weblog" />
+	<meta name="og:type" content="article" />
+	<meta name="og:url" content="til/posts/copy-files-to-and-from-kubernetes-pods" />
+	<meta name="og:description" content="" />
+	<meta name="og:site_name" content="Abdush Shakoor's Weblog | Abdush Shakoor's Weblog" />
+	
+	<meta name="robots" content="follow">
+	<title>Copy files to and from Kubernetes pods | Abdush Shakoor's Weblog </title>
+	<link rel="stylesheet" href="/static/css/main.css" type="text/css">
+	<link rel="stylesheet" href="/static/css/pygments.css" type="text/css">
+
+	<link rel="apple-touch-icon" sizes="57x57" href="/static/favicon/apple-icon-57x57.png">
+<link rel="apple-touch-icon" sizes="60x60" href="/static/favicon/apple-icon-60x60.png">
+<link rel="apple-touch-icon" sizes="72x72" href="/static/favicon/apple-icon-72x72.png">
+<link rel="apple-touch-icon" sizes="76x76" href="/static/favicon/apple-icon-76x76.png">
+<link rel="apple-touch-icon" sizes="114x114" href="/static/favicon/apple-icon-114x114.png">
+<link rel="apple-touch-icon" sizes="120x120" href="/static/favicon/apple-icon-120x120.png">
+<link rel="apple-touch-icon" sizes="144x144" href="/static/favicon/apple-icon-144x144.png">
+<link rel="apple-touch-icon" sizes="152x152" href="/static/favicon/apple-icon-152x152.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/static/favicon/apple-icon-180x180.png">
+<link rel="icon" type="image/static/favicon/png" sizes="192x192"  href="/static/favicon/android-icon-192x192.png">
+<link rel="icon" type="image/static/favicon/png" sizes="32x32" href="/static/favicon/favicon-32x32.png">
+<link rel="icon" type="image/static/favicon/png" sizes="96x96" href="/static/favicon/favicon-96x96.png">
+<link rel="icon" type="image/static/favicon/png" sizes="16x16" href="/static/favicon/favicon-16x16.png">
+<link rel="manifest" href="/static/favicon/manifest.json">
+<meta name="msapplication-TileColor" content="#ffffff">
+<meta name="msapplication-TileImage" content="/static/favicon/ms-icon-144x144.png">
+<meta name="theme-color" content="#ffffff">
+	
+	<!-- <script src="https://unpkg.com/phosphor-icons"></script> -->
+	<!-- <script>
+		if(localStorage.theme){
+			document.documentElement.setAttribute('data-theme', localStorage.getItem("theme"));
+		}
+	</script> -->
+</head>
+<body class="">
+	<!-- Navbar -->
+	<header class="header">
+	<!-- Logo with Author Name -->
+	<div class="author">
+		<a href="/">
+			<img src="/static/logo.png" alt="megacolorboy">
+			<div class="name">
+				<h1>Abdush Shakoor's Weblog</h1>
+				<p>Writings, experiments & ideas.</p>
+			</div>
+		</a>
+	</div>
+	<!-- Logo with Author Name -->
+	<nav>
+		<ul class="menu">
+			
+				<li><a href="/about">About</a></li>
+			
+				<li><a href="/archive">Archive</a></li>
+			
+				<li><a href="/resume">Resume</a></li>
+			
+		</ul>
+	</nav>	
+</header>
+
+<main>
+	<div class="two-col-grid">
+		<section id="primary">
+			<div class="articles">
+				
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/copy-files-to-and-from-kubernetes-pods">Copy files to and from Kubernetes pods</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Every now and then, I need to copy files into an application pod. One use case for me is moving uploaded assets while migrating an application from staging to production.</p>
+
+<p>For this, you can use <code>kubectl cp</code>. The remote path uses a namespace and pod name, so there's no SSH username or server address involved.</p>
+
+<p>Here's an example of copying a local file into a container:</p>
+
+<div class="codehilite">
+<pre><span></span><code>kubectl<span class="w"> </span>cp<span class="w"> </span>./logo.png<span class="w"> </span>staging/web-7c9d6f8b5d-k2m4p:/var/www/html/public/logo.png<span class="w"> </span>-c<span class="w"> </span>app
+</code></pre>
+</div>
+
+<p>Replace <code>staging</code>, the pod name, <code>app</code>, and the paths with your own values. The destination directory must exist and be writable by the container's user.</p>
+
+<p>You can also do the reverse and copy a file into your current directory:</p>
+
+<div class="codehilite">
+<pre><span></span><code>kubectl<span class="w"> </span>cp<span class="w"> </span>staging/web-7c9d6f8b5d-k2m4p:/var/www/html/public/logo.png<span class="w"> </span>./logo.png<span class="w"> </span>-c<span class="w"> </span>app
+</code></pre>
+</div>
+
+<p>For a directory of uploaded assets, I would copy it locally first, then into the destination pod:</p>
+
+<div class="codehilite">
+<pre><span></span><code>kubectl<span class="w"> </span>cp<span class="w"> </span>staging/web-7c9d6f8b5d-k2m4p:/var/www/html/public/uploads<span class="w"> </span>./uploads<span class="w"> </span>-c<span class="w"> </span>app
+kubectl<span class="w"> </span>cp<span class="w"> </span>./uploads<span class="w"> </span>production/web-5f7c8d9b6-m3q8r:/var/www/html/public/<span class="w"> </span>-c<span class="w"> </span>app
+</code></pre>
+</div>
+
+<p>Use a fresh local destination and check the target directory before copying, as existing files can be overwritten.</p>
+
+<p>One detail that's easy to miss: <code>kubectl cp</code> needs <code>tar</code> inside the container. Without it, the copy fails. The <a href="https://kubernetes.io/docs/reference/kubectl/generated/kubectl_cp/">kubectl cp reference</a> also covers cases that need a more explicit tar-based copy.</p>
+
+<p>Also, think about where these files will live. Files written into a container's writable layer won't survive its replacement. For uploaded assets that need to persist, use the application's persistent volume or shared storage, and coordinate the copy if uploads are still changing.</p>
+
+<p>Hope you found this useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>September 2nd, 2026</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/kubernetes/">
+					Kubernetes
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+			</div>
+		</section>
+		<section id="secondary">
+			<div class="sidebar">
+				<div class="author-intro">
+	<h3>Hello, I'm Abdush Shakoor! &#x1F44B;</h3>
+	<p>I'm a programmer & designer based in Dubai, United Arab Emirates. I love tinkering with code and writing about what I learn.</p>
+	<p>Like this article? Please share it with your friends and colleagues or else, <a href="mailto:megacolorboy@gmail.com">send me</a> a private message about your feedback.</p>
+
+	<ul class="sitemap">
+		<li><a class="back" href="/"><span>👈</span> Check out more articles!</a></li>
+	</ul>
+</div>
+			</div>
+		</section>
+	</div>
+</main>
+
+<footer>
+    <span class="copyright">&copy; Abdush Shakoor</span>
+</footer>
+
+<script src="/static/vendor/jquery/jquery-3.5.1.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+
+<script src="/static/js/art.js"></script>
+
+<script defer src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script defer id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-98290003-2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-98290003-2');
+</script>
+<script src="/static/vendor/jquery-lazy/jquery.lazy.min.js"></script>
+<script>
+  $(function () {
+    $('.lazy').lazy();
+  });
+</script>
+<!-- <script>
+    const darkModeButton = document.createElement('button');
+    const syntaxHighlightSource = document.getElementById('syntaxHighlight');
+    const menuList = document.querySelector('.menu');
+    const themeSettings = {
+        "dark": {
+            "icon": '<i class="ph-moon-fill"></i>',
+            "hljs": "/static/vendor/hljs/css/github-dark.css",
+        },
+        "light": {
+            "icon": '<i class="ph-sun-fill"></i>',
+            "hljs": "/static/vendor/hljs/css/github.min.css",
+        },
+    }
+
+    function highlightMenuLink() {
+        var currentURI = window.location.href;
+        currentURI = currentURI.replace(window.location.protocol + "//", "");
+        var currentPage	 = currentURI.split('/')[1];
+
+        if(currentPage) {
+            $('a[href="/' + currentPage + '"').parent().addClass('active');
+        }
+    }
+    
+    function initThemeSwitcher() {
+        darkModeButton.innerHTML = themeSettings.light.icon;
+        darkModeButton.classList.add('darkModeButton');
+        
+        darkModeButton.addEventListener('click', function(){
+            switch(document.documentElement.getAttribute('data-theme')) {
+                case 'dark':
+                    lightMode();
+                    break;
+
+                case 'light':
+                default:
+                    darkMode();
+                    break;
+            }
+        });
+        
+        var newItem = document.createElement('li');
+        newItem.appendChild(darkModeButton);
+        menuList.insertBefore(newItem, menuList.childNodes[menuList.childNodes - 1]);
+    }
+    
+
+    // Settings for dark mode
+    function darkMode() {
+        darkModeButton.innerHTML = themeSettings.dark.icon;
+        document.documentElement.setAttribute('data-theme', 'dark');
+        syntaxHighlightSource.setAttribute('href', themeSettings.dark.hljs);
+        localStorage.setItem("theme", "dark");
+    }
+
+    // Settings for light mode
+    function lightMode() {
+        darkModeButton.innerHTML = themeSettings.light.icon;
+        document.documentElement.setAttribute('data-theme', '');
+        syntaxHighlightSource.setAttribute('href', themeSettings.light.hljs);
+        localStorage.setItem("theme", "");
+    }
+
+    function checkTheme() {
+        const localStorageTheme = localStorage.getItem("theme");
+        switch(localStorageTheme) {
+            case "dark":
+                darkMode();
+                break;
+            
+            default:
+                lightMode();
+                break;
+        }
+    }
+
+    // Check if the theme is stored in session
+    window.onload = function() {
+        initThemeSwitcher();
+        checkTheme();
+        highlightMenuLink();
+    }
+
+    //  open and close nav 
+    $('#navbar-toggle').click(function() {
+      $('nav ul').slideToggle();
+    });
+
+    // Hamburger toggle
+    $('#navbar-toggle').on('click', function() {
+      this.classList.toggle('active');
+    });
+
+    // Click outside the dropdown will remove the dropdown class
+    $('html').click(function() {
+      $('.navbar-dropdown').hide();
+    });
+</script> -->
+</body>
+</html>

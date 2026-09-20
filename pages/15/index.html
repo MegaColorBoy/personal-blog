@@ -78,39 +78,27 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/clearing-cache-on-a-shared-hosting-server">Clearing cache on a Shared Hosting Server</a></h1>
+		<h1 class="heading"><a href="/til/posts/exclude-directories-while-searching-for-a-pattern-in-files">Exclude directories while searching for a pattern in files</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>Hosted your website on a Shared Hosting Server and got limited access to clear the cache on your project?</p>
-
-<p>Open up <code>routes/web.php</code> and create this route:</p>
+		<p>Looking for a specific text pattern in a directory but wanted to avoid some paths? Here's a quick command that you can try:</p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="nx">Route</span><span class="o">::</span><span class="na">get</span><span class="p">(</span><span class="s1">&#39;/clearcache&#39;</span><span class="p">,</span> <span class="k">function</span><span class="p">(){</span>
-    <span class="nx">\Artisan</span><span class="o">::</span><span class="na">run</span><span class="p">(</span><span class="s1">&#39;config:clear&#39;</span><span class="p">);</span>
-    <span class="nx">\Artisan</span><span class="o">::</span><span class="na">run</span><span class="p">(</span><span class="s1">&#39;cache:clear&#39;</span><span class="p">);</span>
-    <span class="nx">\Artisan</span><span class="o">::</span><span class="na">run</span><span class="p">(</span><span class="s1">&#39;view:clear&#39;</span><span class="p">);</span>
-    <span class="nx">\Artisan</span><span class="o">::</span><span class="na">run</span><span class="p">(</span><span class="s1">&#39;route:clear&#39;</span><span class="p">);</span>
-    <span class="nx">\Artisan</span><span class="o">::</span><span class="na">run</span><span class="p">(</span><span class="s1">&#39;config:cache&#39;</span><span class="p">);</span>
-<span class="p">});</span>
-<span class="cp">?&gt;</span>
+<pre><span></span><code>grep<span class="w"> </span>-R<span class="w"> </span>--exclude-dir<span class="o">=</span>path/to/directory<span class="w"> </span><span class="s1">&#39;some pattern&#39;</span><span class="w"> </span>/path/to/search
 </code></pre>
 </div>
-
-<p>Just type the URL and it will clear all existing cache from the project.</p>
 
 <p>Hope this helps you out!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>March 12th, 2021</time>
+		<time>April 10th, 2021</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/laravel/">
-					Laravel
+				<a href="/category/unix/">
+					UNIX
 				</a>
 			</li>
 			
@@ -122,125 +110,184 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/convert-numbers-from-english-to-arabic-in-php">Convert numbers from English to Arabic in PHP</a></h1>
+		<h1 class="heading"><a href="/til/posts/zip-all-files-that-are-modified-on-a-specific-date">Zip all files that are modified on a specific date</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>If you're a developer working in the Middle East, it's quite common that you'll work on a project that bilingual, in our case, it's english and arabic.</p>
+		<p>I wrote a nifty command to make an archive of the files that I have modified on a particular date. By doing so, this script comes in handy during urgent deployments, so that I don't lose track of the files that I should be updating.</p>
 
-<p>In my opinion, it's not aesthetically pleasing and logical to have english numbers in arabic text, so, write a simple helper function to convert the numerals from english to arabic:</p>
+<p>Here's the command at your disposal:</p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="cp">&lt;?php</span>
-<span class="k">function</span> <span class="nf">convertEnglishToArabicNumerals</span><span class="p">(</span><span class="nv">$str</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">if</span> <span class="p">(</span><span class="nx">\App</span><span class="o">::</span><span class="na">getLocale</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;ar&#39;</span><span class="p">)</span> <span class="p">{</span>
-        <span class="nv">$westernArabic</span> <span class="o">=</span> <span class="k">array</span><span class="p">(</span><span class="s1">&#39;0&#39;</span><span class="p">,</span> <span class="s1">&#39;1&#39;</span><span class="p">,</span> <span class="s1">&#39;2&#39;</span><span class="p">,</span> <span class="s1">&#39;3&#39;</span><span class="p">,</span> <span class="s1">&#39;4&#39;</span><span class="p">,</span> <span class="s1">&#39;5&#39;</span><span class="p">,</span> <span class="s1">&#39;6&#39;</span><span class="p">,</span> <span class="s1">&#39;7&#39;</span><span class="p">,</span> <span class="s1">&#39;8&#39;</span><span class="p">,</span> <span class="s1">&#39;9&#39;</span><span class="p">);</span>
-        <span class="nv">$easternArabic</span> <span class="o">=</span> <span class="k">array</span><span class="p">(</span><span class="s1">&#39;٠&#39;</span><span class="p">,</span> <span class="s1">&#39;١&#39;</span><span class="p">,</span> <span class="s1">&#39;٢&#39;</span><span class="p">,</span> <span class="s1">&#39;٣&#39;</span><span class="p">,</span> <span class="s1">&#39;٤&#39;</span><span class="p">,</span> <span class="s1">&#39;٥&#39;</span><span class="p">,</span> <span class="s1">&#39;٦&#39;</span><span class="p">,</span> <span class="s1">&#39;٧&#39;</span><span class="p">,</span> <span class="s1">&#39;٨&#39;</span><span class="p">,</span> <span class="s1">&#39;٩&#39;</span><span class="p">);</span>
-        <span class="nv">$str</span> <span class="o">=</span> <span class="nb">str_replace</span><span class="p">(</span><span class="nv">$westernArabic</span><span class="p">,</span> <span class="nv">$easternArabic</span><span class="p">,</span> <span class="nv">$str</span><span class="p">);</span>
-    <span class="p">}</span>
-    <span class="k">return</span> <span class="nv">$str</span><span class="p">;</span>
-<span class="p">}</span>
-<span class="cp">?&gt;</span>
+<pre><span></span><code>find<span class="w"> </span>.<span class="w"> </span>-maxdepth<span class="w"> </span><span class="m">10</span><span class="w"> </span>-type<span class="w"> </span>f<span class="w"> </span>-newermt<span class="w"> </span><span class="s2">&quot;2021-04-10&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>zip<span class="w"> </span>-qur<span class="w"> </span>archive.zip<span class="w"> </span>-@
 </code></pre>
 </div>
 
-<p>And since most browsers can handle RTL, you don't have to worry about how the arabic numerals are being displayed in your application.</p>
+<h2>How this works?</h2>
 
-	</div>
-	<div class="article-footer">
-		<time>March 12th, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/php/">
-					PHP
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
+<p>Let's see what this command does in pieces:</p>
 
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/convert-string-to-variable-in-php">Convert string to variable in PHP</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>I read about <a href="https://www.php.net/language.variables.variable">variable variables</a> in PHP's official documentation.</p>
+<p><code>find</code> is the utility tool used to return the filenames that match the specified parameters in the given directory.</p>
 
-<p>Here's a sample:</p>
+<p><code>-maxdepth</code> is the flag that allows you to specify the depth of recursive searches it should perform.</p>
+
+<p><code>-type</code> is the flag that determines if you're looking for file or a directory.</p>
+
+<p><code>-newermt</code> is the flag that determines if the file has been modified on and/or after the given date.</p>
+
+<p>Once, the file has been found, the output is being <a href="https://www.geeksforgeeks.org/piping-in-unix-or-linux/">redirected</a> to the <code>zip</code> utility function, which would then add the files to the <code>.zip</code> file.
+The <code>-q</code> flag would perform the operation in silent mode, <code>-u</code> flag would update the files in the archive if modified or add it as a new file if it doesn't exist and <code>-@</code> takes the list of files from the standard input.</p>
+
+<p>If you want to ignore certain directories or file extensions, in that case, you can exclude them like so:</p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="cp">&lt;?php</span>
-    <span class="nv">$a</span> <span class="o">=</span> <span class="s2">&quot;hello&quot;</span><span class="p">;</span>
-    <span class="c1">// Remove special characters and tags to prevent it from crashing.</span>
-    <span class="nv">$foo</span> <span class="o">=</span> <span class="nb">preg_replace</span><span class="p">(</span><span class="s1">&#39;/[^a-zA-Z0-9\s]/&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="nv">$$a</span><span class="p">);</span>
-    <span class="k">echo</span> <span class="nv">$foo</span><span class="p">;</span>
-<span class="cp">?&gt;</span>
+<pre><span></span><code>find<span class="w"> </span>.<span class="w"> </span>-maxdepth<span class="w"> </span><span class="m">30</span><span class="w"> </span>-type<span class="w"> </span>f<span class="w"> </span>!<span class="w"> </span>-path<span class="w"> </span><span class="s2">&quot;./path/to/directory/*&quot;</span><span class="w"> </span>!<span class="w">  </span>-path<span class="w"> </span><span class="s2">&quot;*.ext&quot;</span><span class="w"> </span>-newermt<span class="w"> </span><span class="s2">&quot;2021-04-10&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>zip<span class="w"> </span>-qur<span class="w"> </span>archive.zip<span class="w"> </span>-@
 </code></pre>
 </div>
 
-<p>Not sure if this is a good practice but it sure gets the job done!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>March 12th, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/php/">
-					PHP
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-resolve-the-failed-to-clear-cache-make-sure-you-have-the-appropriate-permissions-error">How to resolve the "Failed to clear cache. Make sure you have the appropriate permissions." error</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>This error is annoying and mostly happens if the <code>data</code> directory is missing under the <code>storage/framework/cache/data</code> directory. For some reason, this folder doesn't exist by default.</p>
-
-<p>To resolve it, just manually create the <code>data</code> directory under the <code>storage/framework/cache/data</code> directory and it should fix the issue.</p>
-
-	</div>
-	<div class="article-footer">
-		<time>March 12th, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/laravel/">
-					Laravel
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-exclude-certain-slugs-in-laravel">How to exclude certain slugs in Laravel</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Using plain Regular Expressions, you can exclude certain slug from your routes, try adding the following to your <code>routes/web.php</code> file:</p>
+<p>Or, you can even archive the modified files by specifying a date range:</p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="cp">&lt;?php</span>
-    <span class="nx">Route</span><span class="o">::</span><span class="na">match</span><span class="p">(</span><span class="k">array</span><span class="p">(</span><span class="s1">&#39;GET&#39;</span><span class="p">,</span> <span class="s1">&#39;POST&#39;</span><span class="p">),</span> <span class="s1">&#39;/{slug}&#39;</span><span class="p">,</span> <span class="s1">&#39;YourController@index&#39;</span><span class="p">)</span><span class="o">-&gt;</span><span class="na">name</span><span class="p">(</span><span class="s1">&#39;page&#39;</span><span class="p">)</span><span class="o">-&gt;</span><span class="na">where</span><span class="p">(</span><span class="s1">&#39;slug&#39;</span><span class="p">,</span> <span class="s1">&#39;^(?!pattern).*$&#39;</span><span class="p">);</span>
-<span class="cp">?&gt;</span>
+<pre><span></span><code>touch<span class="w"> </span>--date<span class="w"> </span><span class="s2">&quot;2021-04-10&quot;</span><span class="w"> </span>startdate
+touch<span class="w"> </span>--date<span class="w"> </span><span class="s2">&quot;2021-04-15&quot;</span><span class="w"> </span>enddate
+find<span class="w"> </span>.<span class="w"> </span>-maxdepth<span class="w"> </span><span class="m">30</span><span class="w"> </span>-type<span class="w"> </span>f<span class="w"> </span>-newer<span class="w"> </span>startdate<span class="w"> </span>-not<span class="w"> </span>-newer<span class="w"> </span>enddate<span class="w"> </span><span class="p">|</span><span class="w"> </span>zip<span class="w"> </span>-ur<span class="w"> </span>archive.zip<span class="w"> </span>-@
+</code></pre>
+</div>
+
+<p>Hope you found this tip useful! &#x1F601;</p>
+
+	</div>
+	<div class="article-footer">
+		<time>April 10th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/unix/">
+					UNIX
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/find-directories-older-than-a-specific-date-and-sorted-by-size">Find directories older than a specific date and sorted by size</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Wanted to see which directories were created on an older date along with their sizes? Try this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>find<span class="w"> </span>.<span class="w"> </span>-type<span class="w"> </span>d<span class="w"> </span>-maxdepth<span class="w"> </span><span class="m">1</span><span class="w"> </span>!<span class="w"> </span>-newermt<span class="w"> </span><span class="s2">&quot;2021-04-10&quot;</span><span class="w"> </span>-exec<span class="w"> </span>du<span class="w"> </span>-sh<span class="w"> </span><span class="o">{}</span><span class="w"> </span><span class="se">\;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sort<span class="w"> </span>-h<span class="w"> </span>&gt;&gt;<span class="w"> </span>oldprojectsizes.txt
+</code></pre>
+</div>
+
+<p>Hope you found this tip useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>April 10th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/unix/">
+					UNIX
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/get-a-list-of-directories-with-their-sizes-in-the-current-directory">Get a list of directories with their sizes in the current directory</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>If you want to sizes of each directory in a list, try the following command:</p>
+
+<div class="codehilite">
+<pre><span></span><code>du<span class="w"> </span>-sh<span class="w"> </span>*<span class="w"> </span><span class="p">|</span><span class="w"> </span>sort<span class="w"> </span>-h<span class="w"> </span>&gt;&gt;<span class="w"> </span>directories-sorted.txt
+</code></pre>
+</div>
+
+<p>And, if you wanted to find the directory that takes consumes a lot of space in your directory, you can try this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>du<span class="w"> </span>-sh<span class="w"> </span>*<span class="w"> </span><span class="p">|</span><span class="w"> </span>sort<span class="w"> </span>-h<span class="w"> </span><span class="p">|</span><span class="w"> </span>tail<span class="w"> </span>-n<span class="w"> </span><span class="m">1</span>
+</code></pre>
+</div>
+
+<p>Hope these tips do come in handy! &#x1F60A;</p>
+
+	</div>
+	<div class="article-footer">
+		<time>April 10th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/unix/">
+					UNIX
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/perform-git-operations-using-path-directory">Perform Git operations using path directory</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>The <code>-C</code> flag means the path of the directory and using this flag, you can perform any Git operations outside the project's directory without having to enter the directory all the time:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>-C<span class="w"> </span>/path/to/directory<span class="w"> </span>&lt;command&gt;
+</code></pre>
+</div>
+
+<p>Hope this tip helps you out!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>April 10th, 2021</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/git/">
+					Git
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-update-your-git-remote-origin-url">How to update your Git remote origin URL?</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Did you make a typo while typing out your Git remote origin URL? Is it pointing towards the wrong repository?</p>
+
+<p>You can easily update it using the following command:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>remote<span class="w"> </span>set-url<span class="w"> </span>origin<span class="w"> </span>https://example.com/username/repository.git
 </code></pre>
 </div>
 
@@ -248,12 +295,12 @@
 
 	</div>
 	<div class="article-footer">
-		<time>March 12th, 2021</time>
+		<time>April 10th, 2021</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/laravel/">
-					Laravel
+				<a href="/category/git/">
+					Git
 				</a>
 			</li>
 			
@@ -265,33 +312,29 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/convert-to-date-from-timestamp-using-carbon">Convert to date from timestamp using Carbon</a></h1>
+		<h1 class="heading"><a href="/til/posts/how-to-change-the-character-encoding-of-a-file-via-terminal">How to change the character encoding of a file via Terminal?</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>Using Carbon's <code>createFromFormat()</code> method is basically a wrapper for <code>DateTime::createFromFormat()</code>, the main difference between the two methods is that you can add a timezone to Carbon's method.</p>
+		<p>Sometimes, I face character encoding issues while making minor edits via a SFTP console connected to a Linux server. I found a quick hack to change the file encoding using <code>vim</code> on the command line.</p>
 
-<p>Here's a sample on how you can convert to date using timestamp using Carbon:</p>
+<p>In this example, I'm changing the encoding of the file to <code>unix</code>:</p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="cp">&lt;?php</span>
-    <span class="k">function</span> <span class="nf">formatDate</span><span class="p">(</span><span class="nx">Request</span> <span class="nv">$request</span><span class="p">)</span> <span class="p">{</span>
-        <span class="k">return</span> <span class="nx">\Carbon\Carbon</span><span class="o">::</span><span class="na">createFromFormat</span><span class="p">(</span><span class="s1">&#39;Y-m-d H:i:s&#39;</span><span class="p">,</span> <span class="nv">$request</span><span class="o">-&gt;</span><span class="na">date</span><span class="p">)</span><span class="o">-&gt;</span><span class="na">format</span><span class="p">(</span><span class="s1">&#39;Y-m-d&#39;</span><span class="p">);</span>
-    <span class="p">}</span>
-<span class="cp">?&gt;</span>
+<pre><span></span><code>vim<span class="w"> </span><span class="nv">$filename</span><span class="w"> </span>+<span class="s2">&quot;set ff=unix&quot;</span><span class="w"> </span>+wq
 </code></pre>
 </div>
 
-<p>Hope you found this useful!</p>
+<p>Hope you found this helpful!</p>
 
 	</div>
 	<div class="article-footer">
-		<time>March 12th, 2021</time>
+		<time>April 10th, 2021</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/laravel/">
-					Laravel
+				<a href="/category/unix/">
+					UNIX
 				</a>
 			</li>
 			
@@ -303,108 +346,29 @@
 					
 <div class="article">
 	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/convert-string-to-date-using-mysql">Convert string to date using MySQL</a></h1>
+		<h1 class="heading"><a href="/til/posts/find-directories-created-within-a-date-range">Find directories created within a date range</a></h1>
 		<p class="description"></p>
 	</div>
 	<div class="article-body">
-		<p>Today, I was debugging a piece of code that is supposed to return a list of data based on the year, the funny thing is that the data was being returned on the development server but not on the production one.</p>
-
-<p>Weird, so I opened up <strong>MySQL Workbench</strong> and wrote a simple query to see if the dates were being returned because who knows maybe they weren't stored at all.</p>
+		<p>Executing these commands helps me create a sorted list of files/directories created within a specific date range:</p>
 
 <div class="codehilite">
-<pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="kt">YEAR</span><span class="p">(</span><span class="n">date_posted</span><span class="p">)</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">posts</span><span class="p">;</span>
+<pre><span></span><code>touch<span class="w"> </span>-t<span class="w"> </span><span class="m">202104100000</span><span class="w"> </span>start
+touch<span class="w"> </span>-t<span class="w"> </span><span class="m">202104150000</span><span class="w"> </span>stop
+find<span class="w"> </span>.<span class="w"> </span>-type<span class="w"> </span>d<span class="w"> </span>-maxdepth<span class="w"> </span><span class="m">1</span><span class="w"> </span>-newer<span class="w"> </span>start<span class="w"> </span><span class="se">\!</span><span class="w"> </span>-newer<span class="w"> </span>stop<span class="w"> </span><span class="p">|</span><span class="w"> </span>sort<span class="w"> </span>&gt;&gt;<span class="w"> </span>directories.txt
 </code></pre>
 </div>
 
-<p>The values returned were <code>null</code>. Now, that's strange because the dates were present in the column. So, I took a deep look and figured out that the dates were stored in <code>VARCHAR</code> instead of <code>DATETIME</code> data type! &#x1F614;</p>
-
-<p>Luckily, I figured that there's a way to resolve this by <code>STR_TO_DATE()</code> function:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="kt">YEAR</span><span class="p">(</span><span class="nf">STR_TO_DATE</span><span class="p">(</span><span class="n">date_posted</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;%Y-%m-%d&#39;</span><span class="p">))</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">posts</span><span class="p">;</span>
-</code></pre>
-</div>
-
-<p>Bam! The results were coming now! &#x1F60C;</p>
-
-<p>Hope this helps you out!</p>
+<p>Someday, these commands shall come in handy, bud! &#x1F60E;</p>
 
 	</div>
 	<div class="article-footer">
-		<time>March 12th, 2021</time>
+		<time>April 10th, 2021</time>
 		<ul class="tags">
 			
 			<li>
-				<a href="/category/mysql/">
-					MySQL
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/show-git-branch-in-your-bash-prompt-with-colors">Show Git branch in your Bash prompt (with colors)</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Do you work on a project with multiple Git branches but don't know which one you're in? Open your <code>.bashrc</code> file and add this:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="nv">force_color_prompt</span><span class="o">=</span>yes
-<span class="nv">color_prompt</span><span class="o">=</span>yes
-
-parse_git_branch<span class="o">()</span><span class="w"> </span><span class="o">{</span>
-<span class="w"> </span>git<span class="w"> </span>branch<span class="w"> </span><span class="m">2</span>&gt;<span class="w"> </span>/dev/null<span class="w"> </span><span class="p">|</span><span class="w"> </span>sed<span class="w"> </span>-e<span class="w"> </span><span class="s1">&#39;/^[^*]/d&#39;</span><span class="w"> </span>-e<span class="w"> </span><span class="s1">&#39;s/* \(.*\)/(\1)/&#39;</span>
-<span class="o">}</span>
-
-<span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$color_prompt</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>yes<span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
-<span class="w"> </span><span class="nv">PS1</span><span class="o">=</span><span class="s1">&#39;${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[01;31m\]$(parse_git_branch)\[\033[00m\]\$ &#39;</span>
-<span class="k">else</span>
-<span class="w"> </span><span class="nv">PS1</span><span class="o">=</span><span class="s1">&#39;${debian_chroot:+($debian_chroot)}\u@\h:\w$(parse_git_branch)\$ &#39;</span>
-<span class="k">fi</span>
-
-<span class="nb">unset</span><span class="w"> </span>color_prompt<span class="w"> </span>force_color_prompt
-</code></pre>
-</div>
-
-<div class="post-notification info">
-    <h3>Updated: November 26th, 2022</h3>
-    The above script works fine for Ubuntu but doesn't work fine on other distros. Here's an alternative one that works on all distros:
-<div class="codehilite">
-<pre><span></span><code>parse_git_branch<span class="o">()</span><span class="w"> </span><span class="o">{</span>
-<span class="w">    </span>git<span class="w"> </span>branch<span class="w"> </span><span class="m">2</span>&gt;<span class="w"> </span>/dev/null<span class="w"> </span><span class="p">|</span><span class="w"> </span>sed<span class="w"> </span>-e<span class="w"> </span><span class="s1">&#39;/^[^*]/d&#39;</span><span class="w"> </span>-e<span class="w"> </span><span class="s1">&#39;s/* \(.*\)/(\1)/&#39;</span>
-<span class="o">}</span>
-
-<span class="nb">export</span><span class="w"> </span><span class="nv">PS1</span><span class="o">=</span><span class="s2">&quot;\u@\h \[\e[32m\]\w \[\e[91m\]\$(parse_git_branch)\[\e[00m\]</span>$<span class="s2"> &quot;</span>
-</code></pre>
-</div>
-
-</div>
-
-<p>Save the file and execute this command for your changes to take effect:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="nb">source</span><span class="w"> </span>~/.bashrc
-</code></pre>
-</div>
-
-<p>Now, you should see your colors in your Bash prompt along with the Git branch that you're working on (<strong>Note: this will be shown if you're in a project that uses a Git repository</strong>).</p>
-
-<p>Hope this helps you out!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>March 12th, 2021</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/bash/">
-					Bash
+				<a href="/category/unix/">
+					UNIX
 				</a>
 			</li>
 			
@@ -454,7 +418,7 @@ parse_git_branch<span class="o">()</span><span class="w"> </span><span class="o"
 		
 	
 		
-			<a class="" href="/pages/33">33</a>
+			<a class="" href="/pages/34">34</a>
 		
 	
 
@@ -489,16 +453,16 @@ parse_git_branch<span class="o">()</span><span class="w"> </span><span class="o"
 	<ul class="tags">
 		
 		<li>
-			<a href="/category/linux/">
-				Linux
-				<span class="count">28</span>
+			<a href="/category/devops/">
+				DevOps
+				<span class="count">36</span>
 			</a>
 		</li>
 		
 		<li>
-			<a href="/category/devops/">
-				DevOps
-				<span class="count">24</span>
+			<a href="/category/linux/">
+				Linux
+				<span class="count">30</span>
 			</a>
 		</li>
 		
@@ -527,6 +491,13 @@ parse_git_branch<span class="o">()</span><span class="w"> </span><span class="o"
 			<a href="/category/cryptography/">
 				Cryptography
 				<span class="count">12</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/mysql/">
+				MySQL
+				<span class="count">11</span>
 			</a>
 		</li>
 		
@@ -566,9 +537,9 @@ parse_git_branch<span class="o">()</span><span class="w"> </span><span class="o"
 		</li>
 		
 		<li>
-			<a href="/category/mysql/">
-				MySQL
-				<span class="count">10</span>
+			<a href="/category/kubernetes/">
+				Kubernetes
+				<span class="count">9</span>
 			</a>
 		</li>
 		
@@ -678,6 +649,27 @@ parse_git_branch<span class="o">()</span><span class="w"> </span><span class="o"
 		</li>
 		
 		<li>
+			<a href="/category/curl/">
+				curl
+				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/networking/">
+				Networking
+				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/smtp/">
+				SMTP
+				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/self-reflection/">
 				Self-reflection
 				<span class="count">3</span>
@@ -748,6 +740,13 @@ parse_git_branch<span class="o">()</span><span class="w"> </span><span class="o"
 		</li>
 		
 		<li>
+			<a href="/category/troubleshooting/">
+				Troubleshooting
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
 			<a href="/category/thoughts/">
 				Thoughts
 				<span class="count">2</span>
@@ -778,13 +777,6 @@ parse_git_branch<span class="o">()</span><span class="w"> </span><span class="o"
 		<li>
 			<a href="/category/powershell/">
 				PowerShell
-				<span class="count">2</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/smtp/">
-				SMTP
 				<span class="count">2</span>
 			</a>
 		</li>
@@ -877,6 +869,20 @@ parse_git_branch<span class="o">()</span><span class="w"> </span><span class="o"
 			<a href="/category/wamp/">
 				WAMP
 				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/http/">
+				HTTP
+				<span class="count">1</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/nodejs/">
+				Node.js
+				<span class="count">1</span>
 			</a>
 		</li>
 		
@@ -988,13 +994,6 @@ parse_git_branch<span class="o">()</span><span class="w"> </span><span class="o"
 		<li>
 			<a href="/category/oop/">
 				OOP
-				<span class="count">1</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/troubleshooting/">
-				Troubleshooting
 				<span class="count">1</span>
 			</a>
 		</li>
