@@ -77,6 +77,623 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/ubuntu-bootloader-recovery">Ubuntu Bootloader Recovery</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>This is a guide on how to recover Ubuntu's GRUB Bootloader in the case of whenever a LVM UUID is changed or corrupted.</p>
+
+<h2>The Problem</h2>
+
+<p>The error <code>"disk not found: /xxx-xxx"</code> in <code>grub rescue&gt;</code> mode suggests GRUB can't find the device or logical volume it was previously configured to boot from. </p>
+
+<p>This usually happens when:
+* LVM volumes weren't activated during boot
+* The volume group UUID changed or became corrupted</p>
+
+<h2>The Context</h2>
+
+<p>The <code>/xxx-xxx</code> in the message is likely referring to a <strong>LVM volume by UUID</strong>, e.g.:</p>
+
+<div class="codehilite">
+<pre><span></span><code>error:<span class="w"> </span>disk<span class="w"> </span><span class="s1">&#39;lvmid/XXX-XXX-XXX&#39;</span><span class="w"> </span>not<span class="w"> </span>found
+</code></pre>
+</div>
+
+<p>This typically means GRUB is referencing a <strong>missing or renamed LVM LV or VG</strong></p>
+
+<h2>The Solution</h2>
+
+<p>Boot from a live ISO, open a terminal and follow these steps:</p>
+
+<h3>1. Check Disks and LVM State</h3>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>lsblk
+sudo<span class="w"> </span>fdisk<span class="w"> </span>-l
+</code></pre>
+</div>
+
+<p>Then:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>vgscan
+</code></pre>
+</div>
+
+<p>This activates any found LVM volume groups and logical volumes.</p>
+
+<p>Then verify with:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>lvdisplay
+</code></pre>
+</div>
+
+<h3>3. Mount the System Manually</h3>
+
+<p>Assuming your root volume is <code>/dev/mapper/your_lvm_drive</code>:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>mkdir<span class="w"> </span>/mnt/recovery
+sudo<span class="w"> </span>mount<span class="w"> </span>/dev/mapper/your_lvm_drive<span class="w"> </span>/mnt/recovery
+</code></pre>
+</div>
+
+<h3>4. Prepare for chroot</h3>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>mount<span class="w"> </span>--bind<span class="w"> </span>/dev<span class="w"> </span>/mnt/recovery/dev
+sudo<span class="w"> </span>mount<span class="w"> </span>--bind<span class="w"> </span>/proc<span class="w"> </span>/mnt/recovery/proc
+sudo<span class="w"> </span>mount<span class="w"> </span>--bind<span class="w"> </span>/sys<span class="w"> </span>/mnt/recovery/sys
+sudo<span class="w"> </span>chroot<span class="w"> </span>/mnt/recovery
+</code></pre>
+</div>
+
+<p>The <code>chroot</code> command changes the root directory for the kernel, effectively making a specified directory the new starting point for any file access within the chrooted process. </p>
+
+<h3>5. Reinstall GRUB</h3>
+
+<div class="codehilite">
+<pre><span></span><code>grub-install<span class="w"> </span>/dev/sdX<span class="w">  </span><span class="c1"># Replace sdX with the actual disk (like /dev/sda)</span>
+update-grub
+</code></pre>
+</div>
+
+<p>Exit <code>chroot</code> mode, unmount the recovery path from live-boot OS and reboot the system:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nb">exit</span>
+sudo<span class="w"> </span>umount<span class="w"> </span>-R<span class="w"> </span>/mnt/recovery
+sudo<span class="w"> </span>reboot
+</code></pre>
+</div>
+
+<p>Hope you found this article useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>June 12th, 2025</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/ubuntu/">
+					Ubuntu
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/grub/">
+					GRUB
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/eliminate-laravel-env-leakage-between-multiple-sites-on-apache-windows">Eliminate Laravel .env leakage between multiple sites on Apache (Windows)</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Today, I learned something pretty important (and frustrating until I figured it out): if you're running <strong>multiple Laravel applications</strong> on <strong>Apache (Windows)</strong> using <code>mod_php</code>, you can run into a strange bug where <strong>one site's <code>.env</code> settings override the other</strong>.</p>
+
+<p>This became painfully obvious when I noticed that <strong>one of my Laravel sites was randomly connecting to the wrong database</strong>, even though the configurations in each <code>.env</code> were different. Weird, right?</p>
+
+<p>Turns out, the culprit was <code>mod_php</code>.</p>
+
+<h2>The problem</h2>
+
+<p>I had two Laravel sites hosted on the same Windows machine with Apache. Both were running fine — until they weren’t.</p>
+
+<p>The issue? Sometimes one site would pick up the database config of the other. One minute I’d be on Site A, and then somehow its <code>.env</code> settings were coming from Site B. </p>
+
+<p>This is just total chaos and worse, this issue existed from more two years until I decided to dive into the problem.</p>
+
+<h2>The cause</h2>
+
+<p>Laravel loads <code>.env</code> values during the bootstrap process and <strong>caches them in memory</strong>. When using <code>mod_php</code>, Apache loads PHP as a module <strong>once</strong> and shares it across all sites. That means <strong>only one copy of Laravel’s environment gets loaded — and reused</strong> across both apps.</p>
+
+<p>So even if each app had its own <code>.env</code>, it didn’t matter. Apache was essentially saying:</p>
+
+<blockquote>
+  <p>“Hey, here’s PHP. I already booted Laravel with this config — just reuse it.”</p>
+</blockquote>
+
+<h2>The solution</h2>
+
+<p>After some digging, the solution is <strong>ditch <code>mod_php</code></strong> and switch to <strong>FastCGI (<code>mod_fcgid</code>)</strong>.</p>
+
+<p>With FastCGI, each site runs its own instance of PHP via <code>php-cgi.exe</code>, which <strong>boots Laravel in isolation</strong> — meaning <strong>each <code>.env</code> file is respected per site</strong>.</p>
+
+<h3>How to configure it?</h3>
+
+<p>First, you need to disable <strong><code>mod_php</code></strong> in <code>httpd.conf</code>:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="c"># LoadModule php_module &quot;C:/path/to/php/php8apache2_4.dll&quot;</span>
+<span class="c"># &lt;FilesMatch \.php$&gt;</span>
+<span class="c">#     SetHandler application/x-httpd-php</span>
+<span class="c"># &lt;/FilesMatch&gt;</span>
+<span class="c"># PHPIniDir &quot;C:/path/to/php/&quot;</span>
+</code></pre>
+</div>
+
+<p>Then install <strong><code>mod_fcgid</code></strong> from Apache Lounge and copy <code>mod_fcgid.so</code> to <code>modules/</code> directory and enable it in <code>httpd.conf</code>:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nb">LoadModule</span><span class="w"> </span>fcgid_module<span class="w"> </span>modules/mod_fcgid.so
+<span class="nb">Include</span><span class="w"> </span>conf/extra/httpd-fcgid.conf
+</code></pre>
+</div>
+
+<p>Next, you have to create/update <strong><code>httpd-fcgid.conf</code></strong>:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nt">&lt;IfModule</span><span class="w"> </span><span class="s">fcgid_module</span><span class="nt">&gt;</span>
+<span class="w">   </span><span class="nb">AddHandler</span><span class="w"> </span>fcgid-script<span class="w"> </span>.php
+<span class="w">   </span><span class="nb">FcgidInitialEnv</span><span class="w"> </span>PHPRC<span class="w"> </span><span class="s2">&quot;C:/path/to/php&quot;</span>
+<span class="w">   </span><span class="nb">FcgidWrapper</span><span class="w"> </span><span class="s2">&quot;C:/path/to/php/php-cgi.exe&quot;</span><span class="w"> </span>.php
+<span class="w">   </span><span class="nb">Options</span><span class="w"> </span>+ExecCGI
+<span class="w">   </span><span class="nb">FcgidMaxProcessesPerClass</span><span class="w"> </span><span class="m">150</span>
+<span class="w">   </span><span class="nb">FcgidMaxRequestsPerProcess</span><span class="w"> </span><span class="m">1000</span>
+<span class="w">   </span><span class="nb">FcgidProcessLifeTime</span><span class="w"> </span><span class="m">300</span>
+<span class="w">   </span><span class="nb">FcgidIOTimeout</span><span class="w"> </span><span class="m">120</span>
+<span class="w">   </span><span class="nb">FcgidPassHeader</span><span class="w"> </span>Authorization
+<span class="w">   </span><span class="nb">FcgidFixPathinfo</span><span class="w"> </span><span class="m">0</span>
+<span class="nt">&lt;/IfModule&gt;</span>
+</code></pre>
+</div>
+
+<p>And then atlast, update your virtual host:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nt">&lt;VirtualHost</span><span class="w"> </span><span class="s">*:443</span><span class="nt">&gt;</span>
+<span class="w">   </span><span class="nb">ServerName</span><span class="w"> </span>example.com
+<span class="w">   </span><span class="nb">DocumentRoot</span><span class="w"> </span><span class="s2">&quot;C:/path/to/website/public&quot;</span>
+
+<span class="w">   </span><span class="nt">&lt;Directory</span><span class="w"> </span><span class="s">&quot;C:/path/to/website/public&quot;</span><span class="nt">&gt;</span>
+<span class="w">      </span><span class="nb">Options</span><span class="w"> </span>+ExecCGI<span class="w"> </span>-Indexes<span class="w"> </span>+FollowSymLinks
+<span class="w">      </span><span class="nb">AllowOverride</span><span class="w"> </span><span class="k">All</span>
+<span class="w">      </span><span class="nb">Require</span><span class="w"> </span><span class="k">all</span><span class="w"> </span>granted
+<span class="w">      </span><span class="nb">AddHandler</span><span class="w"> </span>fcgid-script<span class="w"> </span>.php
+<span class="w">      </span><span class="nb">FCGIWrapper</span><span class="w"> </span><span class="s2">&quot;C:/path/to/php/php-cgi.exe&quot;</span><span class="w"> </span>.php
+<span class="w">   </span><span class="nt">&lt;/Directory&gt;</span>
+
+<span class="w">   </span><span class="nb">SSLEngine</span><span class="w"> </span><span class="k">on</span>
+<span class="w">   </span><span class="nb">SSLCertificateFile</span><span class="w"> </span><span class="s2">&quot;...&quot;</span>
+<span class="w">   </span><span class="nb">SSLCertificateKeyFile</span><span class="w"> </span><span class="s2">&quot;...&quot;</span>
+<span class="nt">&lt;/VirtualHost&gt;</span>
+</code></pre>
+</div>
+
+<p>Restart the nginx service and clear the laravel application cache:</p>
+
+<div class="codehilite">
+<pre><span></span><code>httpd<span class="w"> </span>-k<span class="w"> </span>restart
+php<span class="w"> </span>artisan<span class="w"> </span>config:clear
+php<span class="w"> </span>artisan<span class="w"> </span>cache:clear
+</code></pre>
+</div>
+
+<h3>Bonus: Fixing 403 Forbidden Errors</h3>
+
+<p>After switching to FastCGI, I ran into a <code>403 Forbidden</code> error on one site. That turned out to be a <strong>missing <code>Options +ExecCGI</code></strong> and <code>Require all granted</code> in the <code>&lt;Directory&gt;</code> block. Once added, everything worked perfectly.</p>
+
+<h2>Result</h2>
+
+<p>Now, each Laravel site runs completely isolated, even though they use the same <code>php-cgi.exe</code>. No more <code>.env</code> bleed. No more wrong DBs. Just clean, independent Laravel environments — as it should be.</p>
+
+<h2>Takeaways</h2>
+
+<ul>
+<li>Don’t run multiple Laravel apps on Apache with <code>mod_php</code> unless you're okay with shared config risks.</li>
+<li>Use <code>mod_fcgid</code> and <code>php-cgi.exe</code> for <strong>true isolation</strong>.</li>
+<li>Even if using the <strong>same PHP version</strong>, FastCGI will <strong>spawn separate processes</strong>, so <code>.env</code> loading stays scoped.</li>
+<li>Always check Apache error logs (<code>error.log</code>) and <code>php_sapi_name()</code> for confirmation.</li>
+</ul>
+
+<p>If you’re running Laravel on Windows with Apache — <strong>this fix is a must</strong>. </p>
+
+<p>Happy hosting and hope you found this article useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>May 13th, 2025</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/php/">
+					PHP
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/windows/">
+					Windows
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/apache/">
+					Apache
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/removing-commits-from-a-branch-using-git-interactive-rebase">Removing Commits from a Branch Using Git Interactive Rebase</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>I'm working on a project that had approximately five minor incident fixes. However, I got approval from the client side to push only three of them. Luckily, my commits are atomic, so making this build was easier than I thought.</p>
+
+<p>At this moment, I decided to clone the latest branch into a temporary branch and roll back two commits for today's deployment while keeping the latest branch intact with all the fixes.</p>
+
+<p>To achieve this, I used <strong>Git interactive rebase</strong>, a powerful tool for modifying commit history.</p>
+
+<h2>Why Use Interactive Rebase?</h2>
+
+<p>Interactive rebase allows you to modify commit history, including:</p>
+
+<ul>
+<li>Removing unwanted commits</li>
+<li>Reordering commits</li>
+<li>Squashing multiple commits into one</li>
+<li>Editing commit messages</li>
+</ul>
+
+<h2>How I Did It?</h2>
+
+<p>Here’s the step-by-step process I followed:</p>
+
+<h3>1. Clone the Branch</h3>
+
+<p>Before making any changes, I cloned the branch to have a backup:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>checkout<span class="w"> </span>-b<span class="w"> </span>my-cloned-branch<span class="w"> </span>original-branch
+</code></pre>
+</div>
+
+<h3>2. Start Interactive Rebase</h3>
+
+<p>To remove specific commits, I ran:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>rebase<span class="w"> </span>-i<span class="w"> </span>HEAD~N
+</code></pre>
+</div>
+
+<p>Where <code>N</code> is the number of commits I wanted to review. This opened an editor displaying the most recent commits.</p>
+
+<h3>3. Modify the Commit List</h3>
+
+<p>The interactive rebase interface showed something like this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>pick<span class="w"> </span>abc123<span class="w"> </span>Commit<span class="w"> </span>message<span class="w"> </span><span class="m">1</span>
+pick<span class="w"> </span>def456<span class="w"> </span>Commit<span class="w"> </span>message<span class="w"> </span><span class="m">2</span>
+pick<span class="w"> </span>ghi789<span class="w"> </span>Commit<span class="w"> </span>message<span class="w"> </span><span class="m">3</span>
+</code></pre>
+</div>
+
+<p>To <strong>remove</strong> a commit, I replaced <code>pick</code> with <code>drop</code>.</p>
+
+<p>To <strong>edit</strong> or <strong>squash</strong> commits, I could replace <code>pick</code> with commands like <code>edit</code> or <code>squash</code>.</p>
+
+<p>After making my changes, I saved and closed the editor.</p>
+
+<h3>4. Handle Any Conflicts (If Needed)</h3>
+
+<p>If Git encountered conflicts, it prompted me to resolve them. I fixed the files and continued the rebase:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>rebase<span class="w"> </span>--continue
+</code></pre>
+</div>
+
+<h2>Key Takeaways</h2>
+
+<ul>
+<li>Interactive rebase is powerful for cleaning up commit history.</li>
+<li>Always clone or create a backup branch before rebasing.</li>
+<li>If working with a team, communicate before modifying shared branches.</li>
+</ul>
+
+<p>This was a great learning experience, and now I feel more confident managing Git history efficiently!</p>
+
+<p>Hope you found this tip useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>February 24th, 2025</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/git/">
+					Git
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/vcs/">
+					VCS
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/recovering-my-sql-after-an-accidental-binlog-deletion">Recovering MySQL After an Accidental Binlog Deletion</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Last night, I found myself debugging a MySQL issue at an ungodly hour. The <strong>MySQL80 service refused to start</strong>, throwing a vague error:  </p>
+
+<blockquote>
+  <p><em>The MySQL80 service started and then stopped…</em>  </p>
+</blockquote>
+
+<p>Digging into <code>mysql.err</code>, I discovered the culprit—someone (not me! 😤) had <strong>accidentally deleted a binary log (<code>mysql-bin.000xxx</code>)</strong> while MySQL was still tracking it. Since MySQL relies on binlogs for replication and crash recovery, it panicked when it couldn't find the missing file.  </p>
+
+<h2>The Fix</h2>
+
+<p>To get MySQL running again, I had to:  </p>
+
+<ul>
+<li><strong>Disable binary logging</strong> (since this is a standalone server)  </li>
+<li><strong>Delete the corrupt binlog index file</strong> (<code>mysql-bin.index</code>)  </li>
+<li><strong>Purge all old binlog files</strong> that were hogging disk space  </li>
+</ul>
+
+<h2>How to Properly Disable Binary Logging in MySQL 8.0?</h2>
+
+<p>Since <strong>MySQL 8.0 enables binlogs by default</strong>, simply removing <code>log-bin=mysql-bin</code> from <code>my.ini</code> wasn’t enough. I had to:  </p>
+
+<h3>Comment out the existing binlog setting in my.ini</h3>
+
+<div class="codehilite">
+<pre><span></span><code><span class="c1"># log-bin=mysql-bin</span>
+</code></pre>
+</div>
+
+<h3>Explicitly disable binary logging</h3>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">[mysqld]</span>
+<span class="na">skip-log-bin</span>
+</code></pre>
+</div>
+
+<h3>Delete the old <code>mysql-bin.index</code> file</h3>
+
+<ul>
+<li>This file keeps track of all binary log files.  </li>
+<li>Since a referenced binlog file was deleted, MySQL would <strong>fail to start</strong> if the index still contained entries for missing files.  </li>
+<li>Deleting it ensures that MySQL doesn’t look for non-existent logs.  </li>
+</ul>
+
+<p>After restarting the service, I confirmed binlogging was off with:  </p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">SHOW</span><span class="w"> </span><span class="n">VARIABLES</span><span class="w"> </span><span class="k">LIKE</span><span class="w"> </span><span class="s1">&#39;log_bin&#39;</span><span class="p">;</span>
+</code></pre>
+</div>
+
+<p>Output:  </p>
+
+<div class="codehilite">
+<pre><span></span><code>log_bin<span class="w"> </span><span class="p">|</span><span class="w"> </span>OFF
+</code></pre>
+</div>
+
+<p>In conclusion, crisis averted, disk space reclaimed and finally got some sleep. 😴</p>
+
+<p>Hope you found this useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>February 18th, 2025</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/mysql/">
+					MySQL
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/databases/">
+					Databases
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/how-to-revert-a-git-commit-on-the-server">How to Revert a Git Commit on the Server?</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Today I learned how to revert a Git commit after pulling it on a server. Whether you've made a mistake or just need to backtrack, Git offers several ways to undo commits depending on your situation. Here's a quick guide on how to handle it.</p>
+
+<h2>If you haven't pushed the commit yet</h2>
+
+<p>If the commit hasn't been pushed to the remote repository, you can use <code>git reset</code> to undo it.</p>
+
+<h2>Soft Reset (keeps changes staged)</h2>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>reset<span class="w"> </span>--soft<span class="w"> </span>HEAD~1
+</code></pre>
+</div>
+
+<p>This moves the HEAD back by one commit but keeps your changes staged.</p>
+
+<h2>Mixed Reset (keeps changes unstaged):</h2>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>reset<span class="w"> </span>--mixed<span class="w"> </span>HEAD~1
+</code></pre>
+</div>
+
+<p>This moves the HEAD back by one commit and unstages your changes.</p>
+
+<h2>Hard Reset (discards changes):</h2>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>reset<span class="w"> </span>--hard<span class="w"> </span>HEAD~1
+</code></pre>
+</div>
+
+<p>This completely removes the last commit and discards any changes.</p>
+
+<blockquote>
+  <p><strong>Tip:</strong> Replace <code>HEAD~1</code> with <code>HEAD~2</code> to go back two commits, and so on.</p>
+</blockquote>
+
+<h2>If you've already pushed the commit</h2>
+
+<h3>Revert the commit (safe for shared repos):</h3>
+
+<p>If you've already pushed the commit and want to undo it without rewriting history, use <code>git revert</code>. This creates a new commit that undoes the changes.</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>revert<span class="w"> </span>&lt;commit_hash&gt;
+</code></pre>
+</div>
+
+<p>Find the commit hash using:</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>log<span class="w"> </span>--oneline
+</code></pre>
+</div>
+
+<h3>Force Reset (i.e. if you're okay with rewriting history):</h3>
+
+<p>If you don't mind rewriting history (and no one else is working on the branch), you can force reset.</p>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>reset<span class="w"> </span>--hard<span class="w"> </span>&lt;commit_hash&gt;
+git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>HEAD<span class="w"> </span>--force
+</code></pre>
+</div>
+
+<div class="post-notification">
+    <h3>⚠️Warning</h3>
+    <p>This is not recommended if others are working on the same branch as it can cause conflicts.</p>
+</div>
+
+<h2>If you just pulled and want to undo</h2>
+
+<p>If you just pulled and want to undo the merge, you can reset to the previous state using <code>ORIG_HEAD</code>.</p>
+
+<h3>Undo a merge pull:</h3>
+
+<div class="codehilite">
+<pre><span></span><code>git<span class="w"> </span>reset<span class="w"> </span>--hard<span class="w"> </span>ORIG_HEAD
+</code></pre>
+</div>
+
+<p>This will bring your repository back to the state before the last pull.</p>
+
+<h3>Final thoughts</h3>
+
+<p>Reverting commits can seem daunting at first, but once you understand the tools Git offers, it's pretty straightforward. Always double-check before using <code>--hard</code> or <code>--force</code> to avoid accidental data loss!</p>
+
+<p>Hope this helps you get back on track!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>February 5th, 2025</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/git/">
+					Git
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/vcs/">
+					VCS
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/how-to-delete-multiple-git-branches-from-the-command-line">How to Delete Multiple Git Branches from the Command Line?</a></h1>
 		<p class="description"></p>
 	</div>
@@ -459,761 +1076,6 @@ sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class=
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-send-test-emails-via-power-shell">How to Send Test Emails via PowerShell?</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<h2>How to Send Test Emails via PowerShell</h2>
-
-<p>Whenever I wanted to send a test mail from a Windows Server, I make use of PowerShell. This makes it easier and is a quick yet efficient way to test email functionality, troubleshoot SMTP servers, or verify email delivery. </p>
-
-<p>Here’s what I usually do, including examples with and without user authentication.</p>
-
-<h2>1. Basic Command to Send a Test Email</h2>
-
-<p>The <code>Send-MailMessage</code> cmdlet in PowerShell makes it easy to send emails via an SMTP server. Here’s the basic command I used:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="nb">Send-MailMessage</span> <span class="n">-SmtpServer</span> <span class="s2">&quot;0.0.0.0&quot;</span> <span class="n">-Port</span> <span class="n">25</span> <span class="n">-From</span> <span class="s2">&quot;sample@example.com&quot;</span> <span class="n">-To</span> <span class="s2">&quot;john.doe@example.com&quot;</span> <span class="n">-Subject</span> <span class="s2">&quot;A subject&quot;</span> <span class="n">-Body</span> <span class="s2">&quot;A body&quot;</span>
-</code></pre>
-</div>
-
-<ul>
-<li><code>-SmtpServer</code>: The IP address or hostname of the SMTP server.</li>
-<li><code>-Port</code>: The SMTP port (default is 25).</li>
-<li><code>-From</code>: The sender’s email address.</li>
-<li><code>-To</code>: The recipient’s email address.</li>
-<li><code>-Subject</code>: The subject of the email.</li>
-<li><code>-Body</code>: The content of the email.</li>
-</ul>
-
-<p>This command works for SMTP servers that don’t require authentication (e.g., internal SMTP relays).</p>
-
-<h2>2. Sending Emails with User Authentication</h2>
-
-<p>If the SMTP server requires authentication, you can add the <code>-Credential</code> parameter to provide a username and password. Here’s how:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="nv">$credential</span> <span class="p">=</span> <span class="nb">Get-Credential</span>
-<span class="nb">Send-MailMessage</span> <span class="n">-SmtpServer</span> <span class="s2">&quot;smtp.example.com&quot;</span> <span class="n">-Port</span> <span class="n">587</span> <span class="n">-From</span> <span class="s2">&quot;sample@example.com&quot;</span> <span class="n">-To</span> <span class="s2">&quot;john.doe@example.com&quot;</span> <span class="n">-Subject</span> <span class="s2">&quot;A subject&quot;</span> <span class="n">-Body</span> <span class="s2">&quot;A body&quot;</span> <span class="n">-Credential</span> <span class="nv">$credential</span> <span class="n">-UseSsl</span>
-</code></pre>
-</div>
-
-<ul>
-<li><code>-Credential</code>: Prompts for a username and password. You can also create a <code>PSCredential</code> object programmatically.</li>
-<li><code>-UseSsl</code>: Enables SSL/TLS encryption, which is often required for authenticated SMTP servers (e.g., port 587).</li>
-</ul>
-
-<h3>Example with Hardcoded Credentials:</h3>
-
-<p>If you don’t want to be prompted for credentials, you can create a <code>PSCredential</code> object like this on PowerShell ISE:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="nv">$username</span> <span class="p">=</span> <span class="s2">&quot;sample@example.com&quot;</span>
-<span class="nv">$password</span> <span class="p">=</span> <span class="nb">ConvertTo-SecureString</span> <span class="s2">&quot;YourPassword&quot;</span> <span class="n">-AsPlainText</span> <span class="n">-Force</span>
-<span class="nv">$credential</span> <span class="p">=</span> <span class="nb">New-Object</span> <span class="n">System</span><span class="p">.</span><span class="n">Management</span><span class="p">.</span><span class="n">Automation</span><span class="p">.</span><span class="n">PSCredential</span> <span class="p">(</span><span class="nv">$username</span><span class="p">,</span> <span class="nv">$password</span><span class="p">)</span>
-
-<span class="nb">Send-MailMessage</span> <span class="n">-SmtpServer</span> <span class="s2">&quot;smtp.example.com&quot;</span> <span class="n">-Port</span> <span class="n">587</span> <span class="n">-From</span> <span class="s2">&quot;sample@example.com&quot;</span> <span class="n">-To</span> <span class="s2">&quot;john.doe@example.com&quot;</span> <span class="n">-Subject</span> <span class="s2">&quot;A subject&quot;</span> <span class="n">-Body</span> <span class="s2">&quot;A body&quot;</span> <span class="n">-Credential</span> <span class="nv">$credential</span> <span class="n">-UseSsl</span>
-</code></pre>
-</div>
-
-<h2>3. Adding Attachments</h2>
-
-<p>You can also attach files to your email using the <code>-Attachments</code> parameter:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="nb">Send-MailMessage</span> <span class="n">-SmtpServer</span> <span class="s2">&quot;smtp.example.com&quot;</span> <span class="n">-Port</span> <span class="n">587</span> <span class="n">-From</span> <span class="s2">&quot;sample@example.com&quot;</span> <span class="n">-To</span> <span class="s2">&quot;john.doe@example.com&quot;</span> <span class="n">-Subject</span> <span class="s2">&quot;A subject&quot;</span> <span class="n">-Body</span> <span class="s2">&quot;A body&quot;</span> <span class="n">-Attachments</span> <span class="s2">&quot;C:\path\to\file.txt&quot;</span> <span class="n">-Credential</span> <span class="nv">$credential</span> <span class="n">-UseSsl</span>
-</code></pre>
-</div>
-
-<h2>4. Troubleshooting Tips</h2>
-
-<h3>Connection Issues:</h3>
-
-<p>If the email fails to send, ensure the SMTP server is reachable and the port is open. Use <code>Test-NetConnection</code> to verify connectivity:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="nb">Test-NetConnection</span> <span class="n">-ComputerName</span> <span class="n">smtp</span><span class="p">.</span><span class="n">example</span><span class="p">.</span><span class="n">com</span> <span class="n">-Port</span> <span class="n">587</span>
-</code></pre>
-</div>
-
-<h3>Authentication Errors:</h3>
-
-<p>Double-check the username and password. If the SMTP server requires a specific authentication method (e.g., OAuth), you may need additional configuration.</p>
-
-<h3>SSL/TLS Errors:</h3>
-
-<p>Ensure the <code>-UseSsl</code> parameter is used if the SMTP server requires encryption.</p>
-
-<h2>Example Workflow:</h2>
-
-<p>Here’s a complete example with authentication and attachments:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="c"># Create credentials</span>
-<span class="nv">$username</span> <span class="p">=</span> <span class="s2">&quot;sample@example.com&quot;</span>
-<span class="nv">$password</span> <span class="p">=</span> <span class="nb">ConvertTo-SecureString</span> <span class="s2">&quot;YourPassword&quot;</span> <span class="n">-AsPlainText</span> <span class="n">-Force</span>
-<span class="nv">$credential</span> <span class="p">=</span> <span class="nb">New-Object</span> <span class="n">System</span><span class="p">.</span><span class="n">Management</span><span class="p">.</span><span class="n">Automation</span><span class="p">.</span><span class="n">PSCredential</span> <span class="p">(</span><span class="nv">$username</span><span class="p">,</span> <span class="nv">$password</span><span class="p">)</span>
-
-<span class="c"># Send email with attachment</span>
-<span class="nb">Send-MailMessage</span> <span class="n">-SmtpServer</span> <span class="s2">&quot;smtp.example.com&quot;</span> <span class="n">-Port</span> <span class="n">587</span> <span class="n">-From</span> <span class="s2">&quot;sample@example.com&quot;</span> <span class="n">-To</span> <span class="s2">&quot;john.doe@example.com&quot;</span> <span class="n">-Subject</span> <span class="s2">&quot;Test Email with Attachment&quot;</span> <span class="n">-Body</span> <span class="s2">&quot;Please find the attached file.&quot;</span> <span class="n">-Attachments</span> <span class="s2">&quot;C:\path\to\file.txt&quot;</span> <span class="n">-Credential</span> <span class="nv">$credential</span> <span class="n">-UseSsl</span>
-</code></pre>
-</div>
-
-<h2>Why do this way?</h2>
-
-<p>Using PowerShell to send test emails is a powerful way to:</p>
-
-<ul>
-<li>Test SMTP server configurations.</li>
-<li>Verify email delivery and troubleshoot issues.</li>
-<li>Automate email notifications in scripts.</li>
-</ul>
-
-<p>Whether you’re working with an internal SMTP relay or an external server requiring authentication, PowerShell’s <code>Send-MailMessage</code> cmdlet makes it easy to get the job done.</p>
-
-<p>Hope you found this useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>January 21st, 2025</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/powershell/">
-					PowerShell
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/smtp/">
-					SMTP
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/devops/">
-					DevOps
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-find-users-with-duplicate-email-addresses-in-sql">How to Find Users with Duplicate Email Addresses in SQL?</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>When managing a database with user information, ensuring data integrity is crucial. One common issue that can arise is duplicate email addresses in the <code>users</code> table. </p>
-
-<p>Let me show you how to write a simple yet powerful SQL query to identify such duplicates!</p>
-
-<h2>The Problem</h2>
-
-<p>In many applications, email addresses should be unique identifiers for users. However, duplicates can sneak into the database due to bugs, manual data imports, or other anomalies. Detecting and resolving these duplicates is essential to maintain data integrity and ensure proper functionality of user-related features, such as authentication.</p>
-
-<h2>The Solution</h2>
-
-<p>Using SQL, you can quickly find all duplicate email addresses in your <code>users</code> table by leveraging the <code>GROUP BY</code> and <code>HAVING</code> clauses.</p>
-
-<p>Here’s the query:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">email</span><span class="p">,</span><span class="w"> </span><span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">email_count</span>
-<span class="k">FROM</span><span class="w"> </span><span class="n">users</span>
-<span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">email</span>
-<span class="k">HAVING</span><span class="w"> </span><span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
-</code></pre>
-</div>
-
-<h2>How It Works:</h2>
-
-<ol>
-<li><code>GROUP BY email</code>: Groups the rows in the <code>users</code> table by the email column, so each group represents a unique email.</li>
-<li><code>COUNT(*)</code>: Counts the number of rows in each group.</li>
-<li><code>HAVING COUNT(*) &gt; 1</code>: Filters the groups to only include those where the count is greater than 1, i.e., duplicate email addresses.</li>
-</ol>
-
-<h2>Enhanced Query for User Details</h2>
-
-<p>If you want to see more details about the users who share the same email address (e.g., user IDs, names), you can use a subquery:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">u</span><span class="p">.</span><span class="o">*</span>
-<span class="k">FROM</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="n">u</span>
-<span class="k">JOIN</span><span class="w"> </span><span class="p">(</span>
-<span class="w">    </span><span class="k">SELECT</span><span class="w"> </span><span class="n">email</span>
-<span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">users</span>
-<span class="w">    </span><span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">email</span>
-<span class="w">    </span><span class="k">HAVING</span><span class="w"> </span><span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1</span>
-<span class="p">)</span><span class="w"> </span><span class="n">dup_emails</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">u</span><span class="p">.</span><span class="n">email</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dup_emails</span><span class="p">.</span><span class="n">email</span><span class="p">;</span>
-</code></pre>
-</div>
-
-<h2>Explanation</h2>
-
-<ul>
-<li>The subquery identifies all duplicate email addresses.</li>
-<li>The main query joins this result with the <code>users</code> table to retrieve detailed information about each user associated with the duplicate emails.</li>
-</ul>
-
-<h2>Final Thoughts</h2>
-
-<p>This simple query can save you a lot of time when auditing your database for duplicate entries. Whether you’re cleaning up data or debugging an issue, identifying duplicates is an important step toward ensuring a robust and reliable application.</p>
-
-<p>Hope you found this tip useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>January 20th, 2025</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/databases/">
-					Databases
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/sql/">
-					SQL
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/mysql/">
-					MySQL
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-filter-records-based-on-a_string-column-containing-numbers-with-commas-and-dots">How to Filter Records Based on a String Column Containing Numbers with Commas and Dots?</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Last month, I encountered a scenario where I needed to filter records in a database based on a "revenue" column. The challenge? The <code>revenue</code> column was stored as a string data type, and some of the values contained commas (<code>,</code>) and dots (<code>.</code>). Here’s how I tackled the problem and wrote an SQL query to filter records based on the numeric value of the <code>revenue</code> column.</p>
-
-<h2>What I faced?</h2>
-
-<p>The <code>revenue</code> column was stored as a string, and the values looked like this:</p>
-
-<ul>
-<li>"50,000,000"</li>
-<li>"75.000.000"</li>
-<li>"10000000"</li>
-</ul>
-
-<p>I needed to filter records where the revenue was greater than <strong>"50,000,000"</strong>. However, since the column was a string, I couldn’t directly compare it to a numeric value.</p>
-
-<h2>What I did?</h2>
-
-<p>To handle this, I used a combination of SQL functions:</p>
-
-<ol>
-<li><code>REPLACE</code>: To remove commas (<code>,</code>) and dots (<code>.</code>) from the string.</li>
-<li><code>CAST</code>: To convert the cleaned string into a numeric data type (<code>DECIMAL</code> in this case).</li>
-</ol>
-
-<p>Here’s the SQL query I wrote:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span>
-<span class="k">FROM</span><span class="w"> </span><span class="n">your_table</span>
-<span class="k">WHERE</span><span class="w"> </span><span class="k">CAST</span><span class="p">(</span><span class="k">REPLACE</span><span class="p">(</span><span class="n">revenue</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;,&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="nb">DECIMAL</span><span class="p">(</span><span class="mi">18</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">))</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">50000000</span><span class="p">;</span>
-</code></pre>
-</div>
-
-<p>Need a breakdown? Here you go:</p>
-
-<ol>
-<li><code>REPLACE(revenue, ',', '')</code>:
-This removes commas from the <code>revenue</code> string. For example, <strong>"50,000,000"</strong> becomes <strong>"50000000"</strong>.</li>
-<li><code>CAST(... AS DECIMAL(18, 2))</code>:
-This converts the cleaned string into a <code>DECIMAL</code> value with 18 total digits and 2 decimal places. For example, <strong>"50000000"</strong> becomes <strong>50000000.00</strong>.</li>
-<li><code>&gt; 50000000</code>:
-Finally, the query filters records where the numeric value of <code>revenue</code> is greater than <strong>50,000,000</strong>.</li>
-</ol>
-
-<h2>Handling Dots as Thousand Separators</h2>
-
-<p>If the <code>revenue</code> column uses dots (<code>.</code>) as thousand separators (e.g., <strong>"75.000.000"</strong>), you can extend the <code>REPLACE</code> function to remove dots as well:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span>
-<span class="k">FROM</span><span class="w"> </span><span class="n">your_table</span>
-<span class="k">WHERE</span><span class="w"> </span><span class="k">CAST</span><span class="p">(</span><span class="k">REPLACE</span><span class="p">(</span><span class="k">REPLACE</span><span class="p">(</span><span class="n">revenue</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;,&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">),</span><span class="w"> </span><span class="s1">&#39;.&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="nb">DECIMAL</span><span class="p">(</span><span class="mi">18</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">))</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">50000000</span><span class="p">;</span>
-</code></pre>
-</div>
-
-<p>This ensures that both commas and dots are removed before converting the string to a numeric value.</p>
-
-<h2>Why did I do this?</h2>
-
-<p>This approach is helpful when:</p>
-
-<ul>
-<li>You’re working with data stored as strings but need to perform numeric comparisons.</li>
-<li>The data contains formatting characters like commas or dots.</li>
-<li>You want to avoid manual data cleaning or preprocessing.</li>
-</ul>
-
-<p>By using SQL functions like <code>REPLACE</code> and <code>CAST</code>, you can handle these scenarios directly in your queries.</p>
-
-<p>Oh, this works for SQL and MySQL as well!</p>
-
-<p>Hope you found this article useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>January 19th, 2025</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/sql/">
-					SQL
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/mysql/">
-					MySQL
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/databases/">
-					Databases
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/data-manipulation/">
-					Data Manipulation
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-cherry-pick-commits-from-one-git-branch-to-another">How to Cherry-Pick Commits from One Git Branch to Another?</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Although I had heard of Git's <code>cherry-pick</code> command, I never used it until a few months ago when I encountered a situation that demanded it. A client required us to work on multiple incidents and change requests (CRs), but they only wanted specific, approved updates pushed to the repository.</p>
-
-<p>This created a challenge, especially when I was simultaneously working on CRs and incidents. I needed a way to isolate and push only the approved changes while keeping the rest intact. That’s when I decided to try out Git’s <code>cherry-pick</code> command—and it worked like a charm! It made managing my codebase much easier.</p>
-
-<p>Here’s a simple walkthrough of how you can use it too:</p>
-
-<h2>The Scenario</h2>
-
-<p>I had two branches in my Git repository:</p>
-
-<ul>
-<li><strong>Branch A</strong>: The primary branch where ongoing development happens.</li>
-<li><strong>Branch B</strong>: A feature branch where I accidentally pushed updates that should partially go into <strong>Branch A</strong>.</li>
-</ul>
-
-<p>While it’s straightforward to merge changes from one branch into another, I only needed a subset of the commits from <strong>Branch B</strong> to be applied to <strong>Branch A</strong>. This is where Git’s <code>cherry-pick</code> command shines.</p>
-
-<p>Go along with me and follow it step-by-step:</p>
-
-<h2>1. Switch to the Target Branch</h2>
-
-<p>First, check out the branch where you want to apply the commits (in my case, <strong>Branch A</strong>):</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>checkout<span class="w"> </span>A
-</code></pre>
-</div>
-
-<h2>2. Find the Commits to Cherry-Pick</h2>
-
-<p>Use the <code>git log</code> command to list the commits in <strong>Branch B</strong> and identify the specific commit hashes you want to cherry-pick:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>log<span class="w"> </span>B
-</code></pre>
-</div>
-
-<p>You should see output similar to this:</p>
-
-<div class="codehilite">
-<pre><span></span><code>commit<span class="w"> </span>abc1234<span class="w"> </span><span class="o">(</span>HEAD<span class="w"> </span>-&gt;<span class="w"> </span>B<span class="o">)</span>
-Author:<span class="w"> </span>Your<span class="w"> </span>Name<span class="w"> </span>&lt;you@example.com&gt;
-Date:<span class="w">   </span>Mon<span class="w"> </span>Jan<span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="m">12</span>:00:00<span class="w"> </span><span class="m">2025</span><span class="w"> </span>+0000
-
-<span class="w">    </span>Add<span class="w"> </span>feature<span class="w"> </span>X
-
-commit<span class="w"> </span>def5678
-Author:<span class="w"> </span>Your<span class="w"> </span>Name<span class="w"> </span>&lt;you@example.com&gt;
-Date:<span class="w">   </span>Sun<span class="w"> </span>Dec<span class="w"> </span><span class="m">31</span><span class="w"> </span><span class="m">12</span>:00:00<span class="w"> </span><span class="m">2024</span><span class="w"> </span>+0000
-
-<span class="w">    </span>Fix<span class="w"> </span>bug<span class="w"> </span>Y
-</code></pre>
-</div>
-
-<p>Take note of the commit hash(es) you need. For example, let’s say you want to cherry-pick <code>abc1234</code> and <code>def5678</code>.</p>
-
-<h2>3. Cherry-Pick the Commit(s)</h2>
-
-<h3>Single Commit</h3>
-
-<p>To apply a single commit from <strong>Branch B</strong> onto <strong>Branch A</strong>, use:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>cherry-pick<span class="w"> </span>abc1234
-</code></pre>
-</div>
-
-<h3>Multiple Commits</h3>
-
-<p>To apply multiple non-contiguous commits, list their hashes:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>cherry-pick<span class="w"> </span>abc1234<span class="w"> </span>def5678
-</code></pre>
-</div>
-
-<h3>Range of Commits</h3>
-
-<p>To cherry-pick a range of contiguous commits, use the <code>^..&lt;</code> notation:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>cherry-pick<span class="w"> </span>def5678^..abc1234
-</code></pre>
-</div>
-
-<p>This includes all commits from <code>def5678</code> to <code>abc1234</code>, inclusive.</p>
-
-<h2>4. Resolve Any Conflicts</h2>
-
-<p>If there are conflicts during the cherry-picking process, Git will pause and notify you. Resolve the conflicts in your files, then mark them as resolved:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>add<span class="w"> </span>&lt;file&gt;
-</code></pre>
-</div>
-
-<p>Continue the cherry-pick process:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>cherry-pick<span class="w"> </span>--continue
-</code></pre>
-</div>
-
-<p>To abort the cherry-pick if things go wrong:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>cherry-pick<span class="w"> </span>--abort
-</code></pre>
-</div>
-
-<ol start="5">
-<li>Verify the Result</li>
-</ol>
-
-<p>Once the cherry-picking is complete, you can inspect your branch to ensure the changes were applied:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>log
-</code></pre>
-</div>
-
-<p>You should see the cherry-picked commits in <strong>Branch A</strong>.</p>
-
-<h2>When is cherry-picking useful?</h2>
-
-<p>Cherry-picking is perfect when you need specific commits from another branch without merging all its changes. This is especially helpful in scenarios like:</p>
-
-<ul>
-<li>Applying a bug fix from a feature branch to the main branch.</li>
-<li>Pulling specific updates without merging unrelated work.</li>
-</ul>
-
-<h2>Bonus Tips</h2>
-
-<ul>
-<li>Always double-check commit hashes before cherry-picking to avoid unexpected results.</li>
-<li>Use descriptive commit messages to make it easier to identify what each commit does</li>
-<li>If you find yourself cherry-picking often, consider rethinking your branch workflows to reduce the need for it.</li>
-</ul>
-
-<p>That’s it! Now you know how to cherry-pick commits in Git. It’s a small but incredibly powerful tool to keep in your Git arsenal.</p>
-
-	</div>
-	<div class="article-footer">
-		<time>January 18th, 2025</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/git/">
-					Git
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/vcs/">
-					VCS
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-check-if-smtp-is-reachable-from-my-machine-using-telnet">How to Check if SMTP is Reachable from My Machine Using Telnet?</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Recently, I learned how to test SMTP server connectivity using <code>telnet</code>. This is a handy way to verify if an SMTP server is reachable, troubleshoot email delivery issues, and manually interact with the server to diagnose problems. </p>
-
-<p>Here’s how I did it:</p>
-
-<h2>1. Ensure Telnet is Installed</h2>
-
-<p>First, I made sure <code>telnet</code> was installed on my machine. Most Linux distributions come with <code>telnet</code> pre-installed, but if it’s missing, here’s how to install it:</p>
-
-<h3>For Ubuntu/Debian:</h3>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>telnet
-</code></pre>
-</div>
-
-<h3>For CentOS/RHEL:</h3>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>yum<span class="w"> </span>install<span class="w"> </span>telnet
-</code></pre>
-</div>
-
-<h3>For Windows</h3>
-
-<p>Ironically, <code>telnet</code> is not enabled by default on Windows, but you can enable it:</p>
-
-<ol>
-<li>Open the Control Panel.</li>
-<li>Go to <strong>Programs</strong> &gt; <strong>Programs and Features</strong> &gt; <strong>Turn Windows features on or off</strong>.</li>
-<li>Check the box for <strong>Telnet Client</strong> and click <strong>OK</strong>.</li>
-<li>Once enabled, open the Command Prompt (<code>cmd</code>) to use Telnet.</li>
-</ol>
-
-<h2>2. Open a Telnet Connection to the SMTP Server</h2>
-
-<p>To connect to the SMTP server, I used the following command:</p>
-
-<div class="codehilite">
-<pre><span></span><code>telnet<span class="w"> </span>&lt;smtp_server_address&gt;<span class="w"> </span><span class="m">25</span>
-</code></pre>
-</div>
-
-<p>Replace <code>&lt;smtp_server_address&gt;</code> with the SMTP server’s hostname or IP address. For example:</p>
-
-<div class="codehilite">
-<pre><span></span><code>telnet<span class="w"> </span>smtp.example.com<span class="w"> </span><span class="m">25</span>
-</code></pre>
-</div>
-
-<p>If the connection is successful, the server responds with a <code>220</code> message, like this:</p>
-
-<div class="codehilite">
-<pre><span></span><code>220 smtp.example.com ESMTP Postfix
-</code></pre>
-</div>
-
-<p>This means the SMTP server is reachable and ready to accept commands.</p>
-
-<h2>3. Test SMTP Commands (Optional)</h2>
-
-<p>To further test the SMTP server, I manually interacted with it using basic SMTP commands:</p>
-
-<h3>Greet the Server:</h3>
-
-<p>I sent an <code>EHLO</code> command to introduce myself:</p>
-
-<div class="codehilite">
-<pre><span></span><code>EHLO example.com
-</code></pre>
-</div>
-
-<p>The server responded with a list of supported features.</p>
-
-<h3>Start an Email Transaction:</h3>
-
-<p>I specified the sender using the <code>MAIL FROM</code> command:</p>
-
-<div class="codehilite">
-<pre><span></span><code>MAIL FROM:&lt;test@example.com&gt;
-</code></pre>
-</div>
-
-<p>The server responded with <code>250 OK</code>.</p>
-
-<h3>Specify the Recipient:</h3>
-
-<p>I added the recipient using the <code>RCPT TO</code> command:</p>
-
-<div class="codehilite">
-<pre><span></span><code>RCPT TO:&lt;user@example.com&gt;
-</code></pre>
-</div>
-
-<p>The server responded with <code>250 OK</code>.</p>
-
-<h3>Enter the Email Data:</h3>
-
-<p>I typed <code>DATA</code> to start composing the email:</p>
-
-<div class="codehilite">
-<pre><span></span><code>DATA
-</code></pre>
-</div>
-
-<p>After entering the email content, I ended the message with a single <code>.</code> on a new line:</p>
-
-<div class="codehilite">
-<pre><span></span><code>Subject: Test Email
-This is a test email sent via Telnet.
-.
-</code></pre>
-</div>
-
-<p>The server responded with <code>250 OK</code>, confirming that the email was accepted.</p>
-
-<h3>Quit the Session:</h3>
-
-<p>Finally, I ended the session with the <code>QUIT</code> command:</p>
-
-<div class="codehilite">
-<pre><span></span><code>QUIT
-</code></pre>
-</div>
-
-<h2>4. Troubleshoot Connection Issues</h2>
-
-<p>If the connection fails, I might see an error like:</p>
-
-<div class="codehilite">
-<pre><span></span><code>telnet: Unable to connect to remote host: Connection refused
-</code></pre>
-</div>
-
-<p>This could mean:</p>
-
-<ul>
-<li>The SMTP server is not running.</li>
-<li>The port is blocked by a firewall.</li>
-<li>The server uses a different port (e.g., 587 for submission or 465 for SMTPS).</li>
-</ul>
-
-<p>To resolve this, I checked:</p>
-
-<ul>
-<li>If the SMTP server is running and listening on the correct port.</li>
-<li>If my firewall or network allows outbound connections to the SMTP port.</li>
-</ul>
-
-<h2>Example Workflow:</h2>
-
-<p>Here’s what a successful Telnet session looks like:</p>
-
-<div class="codehilite">
-<pre><span></span><code>$<span class="w"> </span>telnet<span class="w"> </span>smtp.example.com<span class="w"> </span><span class="m">25</span>
-Trying<span class="w"> </span><span class="m">192</span>.0.2.1...
-Connected<span class="w"> </span>to<span class="w"> </span>smtp.example.com.
-Escape<span class="w"> </span>character<span class="w"> </span>is<span class="w"> </span><span class="s1">&#39;^]&#39;</span>.
-<span class="m">220</span><span class="w"> </span>smtp.example.com<span class="w"> </span>ESMTP<span class="w"> </span>Postfix
-EHLO<span class="w"> </span>example.com
-<span class="m">250</span>-smtp.example.com
-<span class="m">250</span>-PIPELINING
-<span class="m">250</span>-SIZE<span class="w"> </span><span class="m">10240000</span>
-<span class="m">250</span>-VRFY
-<span class="m">250</span>-ETRN
-<span class="m">250</span>-STARTTLS
-<span class="m">250</span>-ENHANCEDSTATUSCODES
-<span class="m">250</span>-8BITMIME
-<span class="m">250</span><span class="w"> </span>DSN
-MAIL<span class="w"> </span>FROM:&lt;test@example.com&gt;
-<span class="m">250</span><span class="w"> </span><span class="m">2</span>.1.0<span class="w"> </span>Ok
-RCPT<span class="w"> </span>TO:&lt;user@example.com&gt;
-<span class="m">250</span><span class="w"> </span><span class="m">2</span>.1.5<span class="w"> </span>Ok
-DATA
-<span class="m">354</span><span class="w"> </span>End<span class="w"> </span>data<span class="w"> </span>with<span class="w"> </span>&lt;CR&gt;&lt;LF&gt;.&lt;CR&gt;&lt;LF&gt;
-Subject:<span class="w"> </span>Test<span class="w"> </span>Email
-This<span class="w"> </span>is<span class="w"> </span>a<span class="w"> </span><span class="nb">test</span><span class="w"> </span>email<span class="w"> </span>sent<span class="w"> </span>via<span class="w"> </span>Telnet.
-.
-<span class="m">250</span><span class="w"> </span><span class="m">2</span>.0.0<span class="w"> </span>Ok:<span class="w"> </span>queued<span class="w"> </span>as<span class="w"> </span><span class="m">12345</span>
-QUIT
-<span class="m">221</span><span class="w"> </span><span class="m">2</span>.0.0<span class="w"> </span>Bye
-Connection<span class="w"> </span>closed<span class="w"> </span>by<span class="w"> </span>foreign<span class="w"> </span>host.
-</code></pre>
-</div>
-
-<h2>Why This is Useful?</h2>
-
-<p>Using Telnet to test SMTP connectivity is a quick and effective way to:</p>
-
-<ul>
-<li>Verify if the SMTP server is reachable.</li>
-<li>Diagnose email delivery issues.</li>
-<li>Manually test SMTP commands and server responses.</li>
-</ul>
-
-<p>Hope you've found this article useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>January 17th, 2025</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/smtp/">
-					SMTP
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/telnet/">
-					Telnet
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/devops/">
-					DevOps
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -1251,7 +1113,7 @@ Connection<span class="w"> </span>closed<span class="w"> </span>by<span class="w
 		
 	
 		
-			<a class="" href="/til/pages/23">23</a>
+			<a class="" href="/til/pages/24">24</a>
 		
 	
 
@@ -1278,14 +1140,14 @@ Connection<span class="w"> </span>closed<span class="w"> </span>by<span class="w
 		<li>
 			<a href="/category/devops/">
 				DevOps
-				<span class="count">36</span>
+				<span class="count">39</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/linux/">
 				Linux
-				<span class="count">30</span>
+				<span class="count">32</span>
 			</a>
 		</li>
 		
@@ -1314,6 +1176,13 @@ Connection<span class="w"> </span>closed<span class="w"> </span>by<span class="w
 			<a href="/category/cryptography/">
 				Cryptography
 				<span class="count">12</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/kubernetes/">
+				Kubernetes
+				<span class="count">11</span>
 			</a>
 		</li>
 		
@@ -1360,13 +1229,6 @@ Connection<span class="w"> </span>closed<span class="w"> </span>by<span class="w
 		</li>
 		
 		<li>
-			<a href="/category/kubernetes/">
-				Kubernetes
-				<span class="count">9</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/vim/">
 				VIM
 				<span class="count">8</span>
@@ -1384,6 +1246,13 @@ Connection<span class="w"> </span>closed<span class="w"> </span>by<span class="w
 			<a href="/category/c/">
 				C#
 				<span class="count">7</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/troubleshooting/">
+				Troubleshooting
+				<span class="count">6</span>
 			</a>
 		</li>
 		
@@ -1468,6 +1337,20 @@ Connection<span class="w"> </span>closed<span class="w"> </span>by<span class="w
 			<a href="/category/arcade-challenge/">
 				Arcade Challenge
 				<span class="count">4</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/sql/">
+				SQL
+				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/windows/">
+				Windows
+				<span class="count">3</span>
 			</a>
 		</li>
 		
@@ -1563,8 +1446,15 @@ Connection<span class="w"> </span>closed<span class="w"> </span>by<span class="w
 		</li>
 		
 		<li>
-			<a href="/category/troubleshooting/">
-				Troubleshooting
+			<a href="/category/plesk/">
+				Plesk
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/storage/">
+				Storage
 				<span class="count">2</span>
 			</a>
 		</li>
@@ -1572,13 +1462,6 @@ Connection<span class="w"> </span>closed<span class="w"> </span>by<span class="w
 		<li>
 			<a href="/category/thoughts/">
 				Thoughts
-				<span class="count">2</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/windows/">
-				Windows
 				<span class="count">2</span>
 			</a>
 		</li>
@@ -1600,13 +1483,6 @@ Connection<span class="w"> </span>closed<span class="w"> </span>by<span class="w
 		<li>
 			<a href="/category/powershell/">
 				PowerShell
-				<span class="count">2</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/sql/">
-				SQL
 				<span class="count">2</span>
 			</a>
 		</li>
@@ -1692,6 +1568,13 @@ Connection<span class="w"> </span>closed<span class="w"> </span>by<span class="w
 			<a href="/category/wamp/">
 				WAMP
 				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/azure-devops/">
+				Azure DevOps
+				<span class="count">1</span>
 			</a>
 		</li>
 		

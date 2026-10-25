@@ -77,6 +77,441 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/check-connectivity-from-a-nodejs-application-pod">Check connectivity from a Node.js application pod</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>I've deployed quite a few Node.js applications over the past three months. Sometimes I just want to do a basic connectivity check from the application's container without installing another tool.</p>
+
+<p>Since Node.js is already there, why not use it?</p>
+
+<p>For a hostname lookup using the container's operating-system resolver, try this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>web-7c9d6f8b5d-k2m4p<span class="w"> </span>-n<span class="w"> </span>staging<span class="w"> </span>-c<span class="w"> </span>app<span class="w"> </span>--<span class="w"> </span>node<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;require(&#39;node:dns&#39;).lookup(&#39;example.com&#39;, { all: true }, (error, addresses) =&gt; { if (error) { console.error(error); process.exitCode = 1; return; } console.log(addresses); })&quot;</span>
+</code></pre>
+</div>
+
+<p>Replace the pod name, namespace, container name, and hostname with your own. An illustrative result might look like this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>[ { address: &#39;192.0.2.10&#39;, family: 4 } ]
+</code></pre>
+</div>
+
+<p>That address is only an example, not the actual address of <code>example.com</code>. Also, <code>dns.lookup()</code> uses the system's name-resolution facilities, which may include <code>/etc/hosts</code>; it isn't necessarily a direct DNS query. The <a href="https://nodejs.org/api/dns.html">Node.js DNS documentation</a> explains the distinction.</p>
+
+<p>To go a step further and make an HTTPS request, use a Node.js runtime with built-in <code>fetch</code> and <code>AbortSignal.timeout</code> support, such as Node.js 18 or later:</p>
+
+<div class="codehilite">
+<pre><span></span><code>kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>web-7c9d6f8b5d-k2m4p<span class="w"> </span>-n<span class="w"> </span>staging<span class="w"> </span>-c<span class="w"> </span>app<span class="w"> </span>--<span class="w"> </span>node<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;fetch(&#39;https://example.com&#39;, { signal: AbortSignal.timeout(10000) }).then(response =&gt; { console.log(&#39;HTTP status:&#39;, response.status); if (!response.ok) process.exitCode = 1; }).catch(error =&gt; { console.error(error); process.exitCode = 1; })&quot;</span>
+</code></pre>
+</div>
+
+<p>An example response is:</p>
+
+<div class="codehilite">
+<pre><span></span><code>HTTP status: 200
+</code></pre>
+</div>
+
+<p>This checks more than name resolution: the request must also connect and complete TLS negotiation before receiving an HTTP response. A <code>401</code> or <code>403</code> still shows that an HTTP server responded, even though access wasn't granted. See the <a href="https://nodejs.org/api/globals.html#fetch">Node.js fetch documentation</a>.</p>
+
+<p>These commands start a new Node.js process, so they won't automatically reproduce proxy settings or custom HTTP clients configured inside your running application.</p>
+
+<p>Hope you found this tip useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>September 15th, 2026</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/nodejs/">
+					Node.js
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/kubernetes/">
+					Kubernetes
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/networking/">
+					Networking
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/test-port-connectivity-using-curls-telnet-support">Test port connectivity using curl's Telnet support</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Honestly, I discovered this for the first time recently. I had always used <code>telnet</code> to check whether I could connect to a port, but I never knew curl could do this too.</p>
+
+<p>Here's a quick example:</p>
+
+<div class="codehilite">
+<pre><span></span><code>curl<span class="w"> </span>-v<span class="w"> </span>--connect-timeout<span class="w"> </span><span class="m">5</span><span class="w"> </span>--max-time<span class="w"> </span><span class="m">10</span><span class="w"> </span>telnet://mail.example.com:25
+</code></pre>
+</div>
+
+<p>Replace the hostname and port with the service you're testing. The connection timeout gives it five seconds to establish a connection, while <code>--max-time</code> limits the whole session to ten seconds.</p>
+
+<p>An illustrative excerpt from a reachable SMTP server might look like this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>*   Trying 192.0.2.25:25...
+* Connected to mail.example.com (192.0.2.25) port 25
+220 mail.example.com ESMTP Postfix
+</code></pre>
+</div>
+
+<p>The <code>Connected</code> line confirms that the TCP connection opened. In this example, the SMTP banner also tells us that the server responded. Other services might stay silent until you send something.</p>
+
+<p>Don't be surprised if the command eventually reports a timeout: the TCP connection may have succeeded and then remained open until the ten-second limit. Read the connection messages instead of relying only on the final exit code.</p>
+
+<p>This doesn't verify authentication, TLS, or the health of an entire application. It's just a handy first check when troubleshooting connectivity.</p>
+
+<p>If your curl build reports that Telnet isn't supported, run <code>curl --version</code> and check its protocol list. The <a href="https://curl.se/docs/tutorial.html">curl tutorial</a> includes more about its Telnet support.</p>
+
+<p>Hope you found this useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>September 13th, 2026</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/networking/">
+					Networking
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/curl/">
+					curl
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/find-out-why-a-kubernetes-pod-keeps-crashing">Find out why a Kubernetes pod keeps crashing</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>If you've been deploying applications to Kubernetes for a while, you've probably come across <code>CrashLoopBackOff</code>. Seeing it is annoying, but the useful part is finding out what happened just before the container stopped.</p>
+
+<p>Here's how I would start:</p>
+
+<div class="codehilite">
+<pre><span></span><code>kubectl<span class="w"> </span>get<span class="w"> </span>pod<span class="w"> </span>web-7c9d6f8b5d-k2m4p<span class="w"> </span>-n<span class="w"> </span>staging
+</code></pre>
+</div>
+
+<p>Replace the pod name and namespace with your own. For example, the output might be:</p>
+
+<div class="codehilite">
+<pre><span></span><code>NAME                  READY   STATUS             RESTARTS      AGE
+web-7c9d6f8b5d-k2m4p   0/1     CrashLoopBackOff   5 (34s ago)   8m
+</code></pre>
+</div>
+
+<p>That shows the symptom. To investigate it, get the pod's details:</p>
+
+<div class="codehilite">
+<pre><span></span><code>kubectl<span class="w"> </span>describe<span class="w"> </span>pod<span class="w"> </span>web-7c9d6f8b5d-k2m4p<span class="w"> </span>-n<span class="w"> </span>staging
+</code></pre>
+</div>
+
+<p>Look at the container's state, last termination reason, exit code, and the events near the bottom. An illustrative excerpt could look like this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>State:          Waiting
+  Reason:       CrashLoopBackOff
+Last State:     Terminated
+  Reason:       Error
+  Exit Code:    1
+</code></pre>
+</div>
+
+<p>Next, check the application logs:</p>
+
+<div class="codehilite">
+<pre><span></span><code>kubectl<span class="w"> </span>logs<span class="w"> </span>web-7c9d6f8b5d-k2m4p<span class="w"> </span>-n<span class="w"> </span>staging<span class="w"> </span>-c<span class="w"> </span>app<span class="w"> </span>--tail<span class="o">=</span><span class="m">100</span>
+</code></pre>
+</div>
+
+<p>If the container has already restarted, the previous instance's logs can be more useful:</p>
+
+<div class="codehilite">
+<pre><span></span><code>kubectl<span class="w"> </span>logs<span class="w"> </span>web-7c9d6f8b5d-k2m4p<span class="w"> </span>-n<span class="w"> </span>staging<span class="w"> </span>-c<span class="w"> </span>app<span class="w"> </span>--previous<span class="w"> </span>--tail<span class="o">=</span><span class="m">100</span>
+</code></pre>
+</div>
+
+<p>Here, <code>app</code> is the container name. The <code>--previous</code> flag retrieves logs from its previous terminated instance when available; it isn't a history of every restart. See the <a href="https://kubernetes.io/docs/reference/kubectl/generated/kubectl_logs/">kubectl logs reference</a>.</p>
+
+<p>For example, your application might have logged:</p>
+
+<div class="codehilite">
+<pre><span></span><code>Error: Missing required environment variable DATABASE_URL
+</code></pre>
+</div>
+
+<p>Now you have something specific to investigate: the application's configuration.</p>
+
+<p>If you see <code>ImagePullBackOff</code> or <code>ErrImagePull</code> instead, the image couldn't be pulled, so application logs may not exist yet. Start with the events from <code>describe</code> and check the image name, tag, registry access, and image-pull credentials. The <a href="https://kubernetes.io/docs/tasks/debug/debug-application/debug-running-pod/">Kubernetes debugging guide</a> covers these checks.</p>
+
+<p>Hope you found this tip useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>September 11th, 2026</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/kubernetes/">
+					Kubernetes
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/troubleshooting/">
+					Troubleshooting
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/send-a-test-email-from-kubernetes-using-curl">Send a test email from Kubernetes using curl</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>When troubleshooting email delivery, I sometimes want to send a test message from inside the cluster. This helps narrow down whether the SMTP server is reachable from that environment.</p>
+
+<p>For a quick test, you can start a temporary pod with curl installed:</p>
+
+<div class="codehilite">
+<pre><span></span><code>kubectl<span class="w"> </span>run<span class="w"> </span>smtp-test<span class="w"> </span>-n<span class="w"> </span>staging<span class="w"> </span>--rm<span class="w"> </span>-it<span class="w"> </span>--restart<span class="o">=</span>Never<span class="w"> </span>--image<span class="o">=</span>curlimages/curl<span class="w"> </span>--command<span class="w"> </span>--<span class="w"> </span>sh
+</code></pre>
+</div>
+
+<p>Replace <code>staging</code> with your namespace. This creates a separate pod. <code>--command</code> selects the shell, and <code>--restart=Never</code> prevents the container from restarting when it exits. During a normal attached session, <code>--rm</code> cleans up the pod when you're done. See the <a href="https://kubernetes.io/docs/reference/kubectl/generated/kubectl_run/">kubectl run reference</a>.</p>
+
+<p>Inside the shell, send a message through your internal SMTP relay:</p>
+
+<div class="codehilite">
+<pre><span></span><code>curl<span class="w"> </span>-v<span class="w"> </span>--connect-timeout<span class="w"> </span><span class="m">5</span><span class="w"> </span>--max-time<span class="w"> </span><span class="m">30</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--url<span class="w"> </span>smtp://mail.example.com:25<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--mail-from<span class="w"> </span><span class="s1">&#39;sender@example.com&#39;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--mail-rcpt<span class="w"> </span><span class="s1">&#39;recipient@example.com&#39;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--crlf<span class="w"> </span>--upload-file<span class="w"> </span>-<span class="w"> </span><span class="s">&lt;&lt;&#39;EOF&#39;</span>
+<span class="s">From: sender@example.com</span>
+<span class="s">To: recipient@example.com</span>
+<span class="s">Subject: Test email from Kubernetes</span>
+
+<span class="s">This is a test message.</span>
+<span class="s">EOF</span>
+</code></pre>
+</div>
+
+<p>Replace the hostname and addresses with real ones before running it. This example assumes an internal relay that allows unauthenticated, unencrypted SMTP from the test pod.</p>
+
+<p>For an authenticated server using STARTTLS on port 587, use these options in the same command:</p>
+
+<div class="codehilite">
+<pre><span></span><code>--url<span class="w"> </span>smtp://mail.example.com:587<span class="w"> </span>--ssl-reqd<span class="w"> </span>--user<span class="w"> </span><span class="s1">&#39;smtp-user&#39;</span>
+</code></pre>
+</div>
+
+<p>With only a username supplied, curl prompts for the password. For implicit TLS, use <code>smtps://mail.example.com:465</code> instead. These options are described in the <a href="https://curl.se/docs/manpage.html">curl manual</a>.</p>
+
+<p>An illustrative excerpt after uploading the message might look like this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>&lt; 250 2.0.0 Ok: queued as A1B2C3D4
+&gt; QUIT
+&lt; 221 2.0.0 Bye
+</code></pre>
+</div>
+
+<p>That means the relay accepted the message, not that it has reached the recipient's inbox. Check delivery logs if it never arrives.</p>
+
+<p>Also, a separate test pod may have different labels and network policies from your application. Treat this as a test from that pod, rather than proof that the application has identical access.</p>
+
+<p>Type <code>exit</code> to finish. If the session was interrupted and the pod remains, remove it with <code>kubectl delete pod smtp-test -n staging</code>.</p>
+
+<p>Hope you found this useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>September 9th, 2026</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/kubernetes/">
+					Kubernetes
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/smtp/">
+					SMTP
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/curl/">
+					curl
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/restart-kubernetes-deployments-using-kubectl">Restart Kubernetes deployments using kubectl</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>I usually restart application pods using Argo CD or Rancher. That's convenient for one or two applications, but when there are several deployments to restart, I'd rather do it from the terminal.</p>
+
+<p>First, check the current cluster context and the deployments in your namespace:</p>
+
+<div class="codehilite">
+<pre><span></span><code>kubectl<span class="w"> </span>config<span class="w"> </span>current-context
+kubectl<span class="w"> </span>get<span class="w"> </span>deployments<span class="w"> </span>-n<span class="w"> </span>staging
+</code></pre>
+</div>
+
+<p>Then trigger a restart for one deployment:</p>
+
+<div class="codehilite">
+<pre><span></span><code>kubectl<span class="w"> </span>rollout<span class="w"> </span>restart<span class="w"> </span>deployment/web<span class="w"> </span>-n<span class="w"> </span>staging
+</code></pre>
+</div>
+
+<p>An example response is:</p>
+
+<div class="codehilite">
+<pre><span></span><code>deployment.apps/web restarted
+</code></pre>
+</div>
+
+<p>Replace <code>web</code> and <code>staging</code> with your deployment and namespace. The response confirms that the restart was requested, so I also watch its progress:</p>
+
+<div class="codehilite">
+<pre><span></span><code>kubectl<span class="w"> </span>rollout<span class="w"> </span>status<span class="w"> </span>deployment/web<span class="w"> </span>-n<span class="w"> </span>staging<span class="w"> </span>--timeout<span class="o">=</span>120s
+</code></pre>
+</div>
+
+<p>Once complete, you might see:</p>
+
+<div class="codehilite">
+<pre><span></span><code>deployment &quot;web&quot; successfully rolled out
+</code></pre>
+</div>
+
+<p>To restart all deployments in that namespace:</p>
+
+<div class="codehilite">
+<pre><span></span><code>kubectl<span class="w"> </span>rollout<span class="w"> </span>restart<span class="w"> </span>deployment<span class="w"> </span>-n<span class="w"> </span>staging
+</code></pre>
+</div>
+
+<p>Or narrow it down using a label that exists on your deployments:</p>
+
+<div class="codehilite">
+<pre><span></span><code>kubectl<span class="w"> </span>rollout<span class="w"> </span>restart<span class="w"> </span>deployment<span class="w"> </span>-n<span class="w"> </span>staging<span class="w"> </span>-l<span class="w"> </span><span class="nv">app</span><span class="o">=</span>web
+</code></pre>
+</div>
+
+<p>One distinction worth remembering: this replaces the pods managed by the selected deployments. It doesn't restart every kind of pod in the namespace. Replacement behavior follows each deployment's strategy, so availability still depends on its configuration and available capacity.</p>
+
+<p>You can find more examples in the <a href="https://kubernetes.io/docs/reference/kubectl/generated/kubectl_rollout/">kubectl rollout reference</a>.</p>
+
+<p>Hope you found this useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>September 7th, 2026</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/kubernetes/">
+					Kubernetes
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/connect-to-mysql-using-a-kubernetes-debug-container">Connect to MySQL using a Kubernetes debug container</a></h1>
 		<p class="description"></p>
 	</div>
@@ -302,447 +737,6 @@ kubectl<span class="w"> </span>cp<span class="w"> </span>./uploads<span class="w
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/find-a-kubernetes-pod-and-open-a-shell-inside-it">Find a Kubernetes pod and open a shell inside it</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>At my new job as a Senior DevOps engineer, I have learnt a lot in a short amount of time. One of the first things I got comfortable with was finding an application's pod and opening a shell inside its container.</p>
-
-<p>This is quite useful when you want to check file permissions or explore what is actually running inside your application container.</p>
-
-<p>First, get the pods in your namespace:</p>
-
-<div class="codehilite">
-<pre><span></span><code>kubectl<span class="w"> </span>get<span class="w"> </span>pods<span class="w"> </span>-n<span class="w"> </span>staging
-</code></pre>
-</div>
-
-<p>For example, you might see:</p>
-
-<div class="codehilite">
-<pre><span></span><code>NAME                   READY   STATUS    RESTARTS   AGE
-web-7c9d6f8b5d-k2m4p    1/1     Running   0          2h
-worker-6b8f4d7c9-x5n2q  1/1     Running   0          2h
-</code></pre>
-</div>
-
-<p>Here, <code>staging</code> is an example namespace. Replace it and the pod names with your own throughout this post. Also, make sure <code>kubectl</code> is connected to the intended cluster.</p>
-
-<p>Once you have the pod name, open a shell:</p>
-
-<div class="codehilite">
-<pre><span></span><code>kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-it<span class="w"> </span>web-7c9d6f8b5d-k2m4p<span class="w"> </span>-n<span class="w"> </span>staging<span class="w"> </span>--<span class="w"> </span>/bin/sh
-</code></pre>
-</div>
-
-<p>The <code>-i</code> flag keeps standard input open, and <code>-t</code> allocates a terminal. The <code>--</code> separates kubectl's options from the command you want to run inside the container.</p>
-
-<p>If the pod has multiple containers, choose one explicitly:</p>
-
-<div class="codehilite">
-<pre><span></span><code>kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-it<span class="w"> </span>web-7c9d6f8b5d-k2m4p<span class="w"> </span>-n<span class="w"> </span>staging<span class="w"> </span>-c<span class="w"> </span>app<span class="w"> </span>--<span class="w"> </span>/bin/sh
-</code></pre>
-</div>
-
-<p>The shell depends on the image. <code>/bin/sh</code> is common, while <code>/bin/bash</code> only works if Bash is installed. Some minimal images have no shell at all; in that case, a <a href="https://kubernetes.io/docs/tasks/debug/debug-application/debug-running-pod/#debugging-with-an-ephemeral-debug-container">debug container</a> can help.</p>
-
-<p>Type <code>exit</code> when you're done. This closes your shell session; it doesn't stop the application.</p>
-
-<p>Hope you found this tip useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>September 1st, 2026</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/kubernetes/">
-					Kubernetes
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/devops/">
-					DevOps
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/enable-password-asterisks-for-sudo-on-fedora">Enable password asterisks for sudo on Fedora</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>After switching from Linux Mint to Fedora, one small difference I noticed was the password prompt behavior in the terminal. On Mint, <code>sudo</code> showed asterisks while typing the password. On Fedora, it stayed blank.</p>
-
-<p>Some people prefer the blank prompt, but I like having visual feedback when typing, especially if I am not fully sure whether I missed a key.</p>
-
-<p>If you want the same behavior on Fedora, you can enable <code>sudo</code> password feedback with a small <code>sudoers</code> change.</p>
-
-<p>This note applies to <code>sudo</code> prompts in the terminal, not graphical login screens.</p>
-
-<h2>1. Open the <code>sudoers</code> file safely</h2>
-
-<p>Do not edit <code>/etc/sudoers</code> directly with a normal text editor. Use <code>visudo</code> so syntax errors are caught before the file is saved:</p>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>visudo
-</code></pre>
-</div>
-
-<h2>2. Enable password feedback</h2>
-
-<p>Add this line:</p>
-
-<div class="codehilite">
-<pre><span></span><code>Defaults<span class="w"> </span>pwfeedback
-</code></pre>
-</div>
-
-<p>If you already have other <code>Defaults</code> lines such as <code>Defaults env_reset</code>, leave them as they are. Just add <code>Defaults pwfeedback</code> as a separate line.</p>
-
-<h2>3. Save and test</h2>
-
-<p>Save the file and exit the editor. Then run a <code>sudo</code> command again, for example:</p>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>-k
-sudo<span class="w"> </span><span class="nb">true</span>
-</code></pre>
-</div>
-
-<p>When prompted for your password, you should now see asterisks as you type. This setting makes password length visible on screen. If that matters in your environment, leave the default behavior in place.</p>
-
-<p>Hope you found this article useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>May 14th, 2026</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/linux/">
-					Linux
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/clean-removal-of-linux-from-a-windows-dual-boot-machine">Clean removal of Linux from a Windows dual-boot machine</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Recently, I purchased a ThinkPad X1 Carbon Gen 13 to replace my old Dell XPS 13 9360. It came with Windows 11, and instead of wiping it, I decided to set up a dual-boot system with Linux. I still need Windows for .NET development, but I use Linux most of the time.</p>
-
-<p>I eventually settled on Fedora, but I tried several distributions and desktop environments before getting there. Each time I removed Linux, I needed to clean up the old partitions and boot entries properly so they would not interfere with the next installation.</p>
-
-<p>If you are doing the same kind of distro-hopping on a UEFI system, this is the cleanup process that worked for me.</p>
-
-<p>This note covers UEFI systems only.</p>
-
-<p>If you want to remove Linux from a Windows dual-boot setup, there are two things to clean up:</p>
-
-<ol>
-<li>Delete the Linux partitions.</li>
-<li>Remove the Linux bootloader files and firmware entries.</li>
-</ol>
-
-<p>Before making changes, make sure Windows is working normally and back up anything you want to keep from your Linux installation.</p>
-
-<h2>1. Delete the Linux partitions</h2>
-
-<p>Open Windows Disk Management and identify the partitions that belong to Linux. These are usually the Linux root partition, swap partition, and optionally a separate <code>/home</code> partition.</p>
-
-<p>Do not delete:</p>
-
-<ul>
-<li>The Windows partition</li>
-<li>The EFI System Partition</li>
-<li>The Windows recovery partition</li>
-</ul>
-
-<p>Delete only the Linux partitions, then either leave the space unallocated or extend your Windows partition into it.</p>
-
-<h2>2. Remove Linux bootloader files from the EFI partition</h2>
-
-<p>Open Command Prompt as Administrator and assign a drive letter to the EFI System Partition:</p>
-
-<div class="codehilite">
-<pre><span></span><code>diskpart
-list<span class="w"> </span>vol
-<span class="k">select</span><span class="w"> </span>vol<span class="w"> </span>&lt;EFI<span class="w"> </span>volume<span class="w"> </span>number&gt;
-assign<span class="w"> </span><span class="nv">letter</span><span class="o">=</span>S
-<span class="nb">exit</span>
-</code></pre>
-</div>
-
-<p>Then remove the Linux bootloader directories from the EFI partition:</p>
-
-<div class="codehilite">
-<pre><span></span><code>S:
-<span class="nb">cd</span><span class="w"> </span>EFI
-dir
-rmdir<span class="w"> </span>/s<span class="w"> </span>/q<span class="w"> </span>&lt;linux-folder&gt;
-</code></pre>
-</div>
-
-<p>Only delete the directory that matches your Linux installation. Common names include <code>fedora</code>, <code>ubuntu</code>, <code>debian</code>, and similar distro-specific folders.</p>
-
-<p>Do not delete <code>Microsoft</code>.</p>
-
-<h2>3. Remove stale UEFI firmware boot entries</h2>
-
-<p>List the firmware boot entries:</p>
-
-<div class="codehilite">
-<pre><span></span><code>bcdedit<span class="w"> </span>/enum<span class="w"> </span>firmware
-</code></pre>
-</div>
-
-<p>Look for entries that reference your removed Linux installation, such as descriptions containing <code>Fedora</code>, <code>ubuntu</code>, <code>GRUB</code>, or a path that points to the distro's EFI loader.</p>
-
-<p>Delete only the matching Linux entry:</p>
-
-<div class="codehilite">
-<pre><span></span><code>bcdedit<span class="w"> </span>/delete<span class="w"> </span><span class="o">{</span>xxxx-xxxx-xxxx-xxxx<span class="o">}</span>
-</code></pre>
-</div>
-
-<p>Replace <code>{xxxx-xxxx-xxxx-xxxx}</code> with the actual identifier from the previous command.</p>
-
-<h2>4. Reboot and verify</h2>
-
-<p>Reboot the machine and confirm that the Linux boot entry is gone from the firmware boot menu and that Windows starts normally.</p>
-
-<p>Hope you found this article useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>May 13th, 2026</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/linux/">
-					Linux
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/windows/">
-					Windows
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/uefi/">
-					UEFI
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/why-hangfire-recurring-jobs-should-always-have-stable-ids">Why Hangfire recurring jobs should always have stable IDs?</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Recently, I learned that <strong>not giving explicit IDs to Hangfire recurring jobs can silently create duplicates</strong>.</p>
-
-<p>When you call <code>RecurringJob.AddOrUpdate(...)</code> without a pre-defined ID, Hangfire auto-generates one based on the method expression. That sounds fine—until you deploy across multiple nodes or refactor your code.</p>
-
-<p>In such cases, Hangfire may generate a <em>new derived ID</em>, while the old recurring job continues running in the background. The result? <strong>Duplicate jobs executing on schedule</strong>, often goes unnoticed.</p>
-
-<h2>Simple fix</h2>
-
-<p>Make sure that you always pass a clear, human-readable ID:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="n">RecurringJob</span><span class="p">.</span><span class="n">AddOrUpdate</span><span class="o">&lt;</span><span class="n">ICustomBackgroundServiceManager</span><span class="o">&gt;</span><span class="p">(</span>
-<span class="w">    </span><span class="s">&quot;payments:reconcile-3h&quot;</span><span class="p">,</span><span class="w"> </span><span class="c1">// Human-readable ID</span>
-<span class="w">    </span><span class="n">s</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">ResendPaymentReportToVendorHourly</span><span class="p">(),</span>
-<span class="w">    </span><span class="n">Cron</span><span class="p">.</span><span class="n">Hourly</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
-<span class="p">);</span>
-</code></pre>
-</div>
-
-<p>Next, ensure that overlaps are impossible in a multi-node setup by adding this attribute to your job method:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="na">[DisableConcurrentExecution(timeoutInSeconds: 3600)]</span>
-<span class="k">public</span><span class="w"> </span><span class="n">Task</span><span class="w"> </span><span class="nf">ResendPaymentReportToVendorHourly</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="cm">/* ... */</span><span class="w"> </span><span class="p">}</span>
-</code></pre>
-</div>
-
-<p>This uses a <strong>distributed lock</strong> backed by Hangfire storage—so even with multiple nodes, only one execution runs at a time. If you’re wondering whether this locks the job for the full hour: <strong>it doesn’t</strong>. The timeout exists for crash-safety, not throttling.</p>
-
-<p>After doing this, recurring jobs become much easier to reason about, identify, pause, or delete in a multi-node environment.</p>
-
-<p>Hope you found this tip useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>January 5th, 2026</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/c/">
-					C#
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/hangfire/">
-					Hangfire
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/running-laravel-queues-with-supervisor-on-ubuntu">Running Laravel queues with Supervisor on Ubuntu</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Laravel queues aren’t new to me, but I realized I’d never really written down how I usually set them up on a fresh Ubuntu server.</p>
-
-<p>Whenever I need queue workers to run continuously — and survive restarts or crashes — I almost always reach for <strong>Supervisor</strong>. It’s simple, boring, and gets the job done.</p>
-
-<p>First, install it on your server:</p>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>update
-sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>supervisor
-</code></pre>
-</div>
-
-<p>Then create a small config file for the queue worker:</p>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>vim<span class="w"> </span>/etc/supervisor/conf.d/laravel-worker.conf
-</code></pre>
-</div>
-
-<p>This is the setup I generally start with:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">[program:laravel-worker]</span>
-<span class="na">process_name</span><span class="o">=</span><span class="s">%(program_name)s_%(process_num)02d</span>
-<span class="na">command</span><span class="o">=</span><span class="s">php /var/www/project/artisan queue:work --sleep=3 --tries=3 --max-time=3600</span>
-<span class="na">autostart</span><span class="o">=</span><span class="s">true</span>
-<span class="na">autorestart</span><span class="o">=</span><span class="s">true</span>
-<span class="na">user</span><span class="o">=</span><span class="s">www-data</span>
-<span class="na">numprocs</span><span class="o">=</span><span class="s">2</span>
-<span class="na">redirect_stderr</span><span class="o">=</span><span class="s">true</span>
-<span class="na">stdout_logfile</span><span class="o">=</span><span class="s">/var/www/project/storage/logs/laravel-worker.log</span>
-<span class="na">stopwaitsecs</span><span class="o">=</span><span class="s">600</span>
-</code></pre>
-</div>
-
-<p>A few quick notes on what this does:</p>
-
-<ul>
-<li>It runs <code>queue:work</code> instead of <code>queue:listen</code>, so the worker stays in memory</li>
-<li>Two worker processes are started in parallel (<code>numprocs=2</code>)</li>
-<li>If the queue is empty, the worker sleeps for a few seconds instead of spinning</li>
-<li>Failed jobs are retried a limited number of times</li>
-<li>The worker is force-restarted every hour to avoid memory leaks</li>
-<li>If a worker crashes, Supervisor brings it back up automatically</li>
-</ul>
-
-<p>Once the file is saved, reload Supervisor’s config:</p>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>supervisorctl<span class="w"> </span>reread
-sudo<span class="w"> </span>supervisorctl<span class="w"> </span>update
-</code></pre>
-</div>
-
-<p>Start the workers:</p>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>supervisorctl<span class="w"> </span>start<span class="w"> </span>laravel-worker:*
-</code></pre>
-</div>
-
-<p>And check their status:</p>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>supervisorctl<span class="w"> </span>status
-</code></pre>
-</div>
-
-<p>Whenever I deploy new code or change environment variables, I just restart them:</p>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>supervisorctl<span class="w"> </span>restart<span class="w"> </span>laravel-worker:*
-</code></pre>
-</div>
-
-<p>Logs end up in Laravel’s <code>storage/logs</code>, which is usually the first place I look when something feels off.</p>
-
-<p>This setup has been reliable for me across multiple projects. No dashboards, no extra moving parts — just queue workers quietly doing their job in the background.</p>
-
-<p>Hope you found this useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>January 4th, 2026</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/laravel/">
-					Laravel
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/ubuntu/">
-					Ubuntu
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/devops/">
-					DevOps
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/supervisor/">
-					Supervisor
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -772,7 +766,7 @@ sudo<span class="w"> </span>supervisorctl<span class="w"> </span>update
 		
 	
 		
-			<a class="" href="/til/pages/23">23</a>
+			<a class="" href="/til/pages/24">24</a>
 		
 	
 
@@ -799,14 +793,14 @@ sudo<span class="w"> </span>supervisorctl<span class="w"> </span>update
 		<li>
 			<a href="/category/devops/">
 				DevOps
-				<span class="count">36</span>
+				<span class="count">39</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/linux/">
 				Linux
-				<span class="count">30</span>
+				<span class="count">32</span>
 			</a>
 		</li>
 		
@@ -835,6 +829,13 @@ sudo<span class="w"> </span>supervisorctl<span class="w"> </span>update
 			<a href="/category/cryptography/">
 				Cryptography
 				<span class="count">12</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/kubernetes/">
+				Kubernetes
+				<span class="count">11</span>
 			</a>
 		</li>
 		
@@ -881,13 +882,6 @@ sudo<span class="w"> </span>supervisorctl<span class="w"> </span>update
 		</li>
 		
 		<li>
-			<a href="/category/kubernetes/">
-				Kubernetes
-				<span class="count">9</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/vim/">
 				VIM
 				<span class="count">8</span>
@@ -905,6 +899,13 @@ sudo<span class="w"> </span>supervisorctl<span class="w"> </span>update
 			<a href="/category/c/">
 				C#
 				<span class="count">7</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/troubleshooting/">
+				Troubleshooting
+				<span class="count">6</span>
 			</a>
 		</li>
 		
@@ -989,6 +990,20 @@ sudo<span class="w"> </span>supervisorctl<span class="w"> </span>update
 			<a href="/category/arcade-challenge/">
 				Arcade Challenge
 				<span class="count">4</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/sql/">
+				SQL
+				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/windows/">
+				Windows
+				<span class="count">3</span>
 			</a>
 		</li>
 		
@@ -1084,8 +1099,15 @@ sudo<span class="w"> </span>supervisorctl<span class="w"> </span>update
 		</li>
 		
 		<li>
-			<a href="/category/troubleshooting/">
-				Troubleshooting
+			<a href="/category/plesk/">
+				Plesk
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/storage/">
+				Storage
 				<span class="count">2</span>
 			</a>
 		</li>
@@ -1093,13 +1115,6 @@ sudo<span class="w"> </span>supervisorctl<span class="w"> </span>update
 		<li>
 			<a href="/category/thoughts/">
 				Thoughts
-				<span class="count">2</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/windows/">
-				Windows
 				<span class="count">2</span>
 			</a>
 		</li>
@@ -1121,13 +1136,6 @@ sudo<span class="w"> </span>supervisorctl<span class="w"> </span>update
 		<li>
 			<a href="/category/powershell/">
 				PowerShell
-				<span class="count">2</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/sql/">
-				SQL
 				<span class="count">2</span>
 			</a>
 		</li>
@@ -1213,6 +1221,13 @@ sudo<span class="w"> </span>supervisorctl<span class="w"> </span>update
 			<a href="/category/wamp/">
 				WAMP
 				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/azure-devops/">
+				Azure DevOps
+				<span class="count">1</span>
 			</a>
 		</li>
 		

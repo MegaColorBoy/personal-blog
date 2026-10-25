@@ -77,6 +77,469 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/list-plesk-hosted-sites-and-php-handlers">List Plesk hosted sites and PHP handlers</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>If you need a quick inventory of the sites hosted on a Plesk server, <code>plesk db</code> is useful to have around. I find it especially handy when checking which PHP handler each site uses.</p>
+
+<p>From an administrative shell on the Plesk server, run:</p>
+
+<div class="codehilite">
+<pre><span></span><code>plesk<span class="w"> </span>db<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;SELECT d.name AS Domain, h.php AS PHP_ENABLED, h.php_handler_id AS PHP_Handler FROM domains d JOIN hosting h ON h.dom_id = d.id ORDER BY d.name ASC;&quot;</span>
+</code></pre>
+</div>
+
+<p>An illustrative result might look like this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>+---------------------+-------------+-----------------+
+| Domain              | PHP_ENABLED | PHP_Handler     |
++---------------------+-------------+-----------------+
+| example.com         | true        | plesk-php83-fpm |
+| staging.example.com | true        | plesk-php82-fpm |
++---------------------+-------------+-----------------+
+</code></pre>
+</div>
+
+<p>The query joins domain names to their hosting settings. Plesk uses the same tables and handler field in its <a href="https://support.plesk.com/hc/en-us/articles/12377435963927-How-to-change-PHP-version-handler-for-a-domain-or-all-domains-in-Plesk">PHP handler management examples</a>.</p>
+
+<p>Because this is an inner join with <code>hosting</code>, it lists domains with hosting records. It isn't an inventory of every alias or forwarding-only domain. Also, a handler ID identifies the configured handler, not its exact installed PHP patch version.</p>
+
+<p>To narrow the list to domains whose database status is <code>0</code> (active), add a <code>WHERE</code> clause:</p>
+
+<div class="codehilite">
+<pre><span></span><code>plesk<span class="w"> </span>db<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;SELECT d.name AS Domain, h.php AS PHP_ENABLED, h.php_handler_id AS PHP_Handler FROM domains d JOIN hosting h ON h.dom_id = d.id WHERE d.status = 0 ORDER BY d.name ASC;&quot;</span>
+</code></pre>
+</div>
+
+<p>For example, if only <code>example.com</code> from the first listing is active, the result would be:</p>
+
+<div class="codehilite">
+<pre><span></span><code>+-------------+-------------+-----------------+
+| Domain      | PHP_ENABLED | PHP_Handler     |
++-------------+-------------+-----------------+
+| example.com | true        | plesk-php83-fpm |
++-------------+-------------+-----------------+
+</code></pre>
+</div>
+
+<p>That status filter reflects Plesk's domain status; it doesn't test whether the website responds successfully.</p>
+
+<p>If you only need a count of those active hosted domains:</p>
+
+<div class="codehilite">
+<pre><span></span><code>plesk<span class="w"> </span>db<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;SELECT COUNT(*) AS Active_Hosted_Domains FROM domains d JOIN hosting h ON h.dom_id = d.id WHERE d.status = 0;&quot;</span>
+</code></pre>
+</div>
+
+<p>All three queries only read the database, which makes them handy for a quick inventory before reviewing site settings.</p>
+
+<p>Hope you found this useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>October 25th, 2026</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/plesk/">
+					Plesk
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/sql/">
+					SQL
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/fix-plesk-installer-download-failures-with-https">Fix Plesk installer download failures with HTTPS</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>While updating Plesk on an Ubuntu server, I came across an error that didn't make much sense for an existing installation:</p>
+
+<div class="codehilite">
+<pre><span></span><code>ERROR: No products are installed yet.
+Use the &#39;install&#39; command to install one first.
+</code></pre>
+</div>
+
+<p>The installer logs gave me a more useful clue:</p>
+
+<div class="codehilite">
+<pre><span></span><code>Can&#39;t process versions.inf3:
+Failed to download the file http://autoinstall.plesk.com/versions.inf3
+</code></pre>
+</div>
+
+<p>The installer was trying to download its repository metadata over HTTP. I checked whether the HTTPS endpoint was reachable from the same server:</p>
+
+<div class="codehilite">
+<pre><span></span><code>curl<span class="w"> </span>-ILv<span class="w"> </span>--connect-timeout<span class="w"> </span><span class="m">10</span><span class="w"> </span>--max-time<span class="w"> </span><span class="m">20</span><span class="w"> </span>https://autoinstall.plesk.com/versions.inf3
+</code></pre>
+</div>
+
+<p>Here, <code>-I</code> requests response headers, <code>-L</code> follows redirects, and <code>-v</code> shows connection details. The timeouts keep the check from hanging indefinitely.</p>
+
+<p>HTTPS was reachable. That suggested a problem with the HTTP request path, although it didn't establish whether a firewall, proxy, or another network condition was responsible.</p>
+
+<p>I then ran the installer as root with an explicit HTTPS package source:</p>
+
+<div class="codehilite">
+<pre><span></span><code>plesk<span class="w"> </span>installer<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--source<span class="w"> </span>https://autoinstall.plesk.com<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--select-release-latest<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--upgrade-installed-components
+</code></pre>
+</div>
+
+<p>The <code>--source</code> option overrides the package source for this run, as described in the <a href="https://docs.plesk.com/en-US/onyx/deployment-guide/plesk-installation-and-upgrade-on-multiple-servers/installing-plesk-in-unattended-mode/installing-plesk-for-linux-in-unattended-mode.76510/">Plesk installer documentation</a>. The remaining options select the latest release and update installed components; see the <a href="https://doc.plesk.com/en-US/obsidian/administrator-guide/plesk-updates-and-upgrades.59215/">Plesk update documentation</a>.</p>
+
+<p>This command performs an update, so run it during your planned maintenance window with a current backup. In a multiline shell command, each backslash must be the final character on its line.</p>
+
+<p>Using HTTPS got the installer past the metadata download failure. If you see the same initial error, check the installer logs first—the failed download was the clue that mattered here.</p>
+
+<p>Hope you found this useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>October 24th, 2026</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/plesk/">
+					Plesk
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/troubleshooting/">
+					Troubleshooting
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/fix-kubernetes-nfs-mount-failures-on-ubuntu-workers">Fix Kubernetes NFS mount failures on Ubuntu workers</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>While deploying an application to staging, I noticed its pod was stuck in <code>ContainerCreating</code>. Restarting it didn't help, so I checked the pod's events:</p>
+
+<div class="codehilite">
+<pre><span></span><code>kubectl<span class="w"> </span>describe<span class="w"> </span>pod<span class="w"> </span>&lt;pod_name&gt;<span class="w"> </span>-n<span class="w"> </span>&lt;namespace&gt;
+</code></pre>
+</div>
+
+<p>Replace the placeholders with your pod name and namespace. The relevant error was:</p>
+
+<div class="codehilite">
+<pre><span></span><code>MountVolume.SetUp failed for volume:
+mount failed: exit status 32
+
+Mounting command: mount
+Mounting arguments: -t nfs ...
+
+Output:
+mount: bad option; for several filesystems
+(e.g. nfs, cifs) you might need a
+/sbin/mount.&lt;type&gt; helper program.
+</code></pre>
+</div>
+
+<p>I initially suspected the PVC or NFS server, but the missing helper message pointed me toward the worker node.</p>
+
+<p>To see which node the pod was assigned to:</p>
+
+<div class="codehilite">
+<pre><span></span><code>kubectl<span class="w"> </span>get<span class="w"> </span>pod<span class="w"> </span>&lt;pod_name&gt;<span class="w"> </span>-n<span class="w"> </span>&lt;namespace&gt;<span class="w"> </span>-o<span class="w"> </span>wide
+</code></pre>
+</div>
+
+<p>In my case, it was a newly installed Ubuntu worker. For this NFS volume setup, the mount was performed on the node, before the application container could start.</p>
+
+<p>After logging into that worker, I checked for the helper:</p>
+
+<div class="codehilite">
+<pre><span></span><code>which<span class="w"> </span>mount.nfs
+</code></pre>
+</div>
+
+<p>There was no output. That suggested the helper wasn't available on the command search path; checking the installed package was the next step:</p>
+
+<div class="codehilite">
+<pre><span></span><code>dpkg-query<span class="w"> </span>-W<span class="w"> </span>nfs-common
+</code></pre>
+</div>
+
+<p>On Ubuntu, <code>nfs-common</code> provides the NFS client utilities. The <a href="https://ubuntu.com/server/docs/how-to/networking/install-nfs/">Ubuntu NFS guide</a> covers client installation.</p>
+
+<p>The package was missing on this worker, so I installed it there:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>update
+sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>nfs-common
+</code></pre>
+</div>
+
+<p>Once the utilities were installed, the pod started successfully after I restarted it. Kubernetes also retries failed volume mounts, so a restart isn't always necessary.</p>
+
+<p>The useful lesson for me was to include the NFS client utilities in the setup for every worker that can run these workloads. Installing them inside the application image wouldn't fix this node-level mount failure.</p>
+
+<p>Hope you found this useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>October 23rd, 2026</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/kubernetes/">
+					Kubernetes
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/storage/">
+					Storage
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/troubleshooting/">
+					Troubleshooting
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/fix-for-loop-percent-signs-in-azure-devops-pipelines">Fix FOR loop percent signs in Azure DevOps pipelines</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>One day, a vendor told me they couldn't push updates to staging because the release pipeline was failing while extracting ZIP artifacts.</p>
+
+<p>The error looked like this:</p>
+
+<div class="codehilite">
+<pre><span></span><code>i&quot; -C &quot;...\extracted&quot; was unexpected at this time.
+Cmd.exe exited with code &#39;255&#39;.
+</code></pre>
+</div>
+
+<p>At first glance, the command looked fine:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">for</span><span class="w"> </span>/r<span class="w"> </span><span class="s2">&quot;drop&quot;</span><span class="w"> </span>%i<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="o">(</span>*.zip<span class="o">)</span><span class="w"> </span><span class="k">do</span><span class="w"> </span>tar<span class="w"> </span>-xf<span class="w"> </span><span class="s2">&quot;%i&quot;</span><span class="w"> </span>-C<span class="w"> </span><span class="s2">&quot;drop\extracted&quot;</span>
+</code></pre>
+</div>
+
+<p>The part I'd missed was where the command was running. On Windows, Azure DevOps Command Line tasks put inline scripts into a temporary <code>.cmd</code> file. The <a href="https://learn.microsoft.com/en-us/azure/devops/pipelines/tasks/utility/command-line?view=azure-devops">Microsoft task documentation</a> describes this behavior.</p>
+
+<p>Windows CMD uses <code>%i</code> for a <code>FOR</code> variable in an interactive session, but <code>%%i</code> in a batch script. That applies both when declaring the variable and when using it inside the loop.</p>
+
+<p>So the corrected script was:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">if</span><span class="w"> </span>not<span class="w"> </span>exist<span class="w"> </span><span class="s2">&quot;drop\extracted&quot;</span><span class="w"> </span>mkdir<span class="w"> </span><span class="s2">&quot;drop\extracted&quot;</span>
+<span class="k">for</span><span class="w"> </span>/r<span class="w"> </span><span class="s2">&quot;drop&quot;</span><span class="w"> </span>%%i<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="o">(</span>*.zip<span class="o">)</span><span class="w"> </span><span class="k">do</span><span class="w"> </span>tar<span class="w"> </span>-xf<span class="w"> </span><span class="s2">&quot;%%i&quot;</span><span class="w"> </span>-C<span class="w"> </span><span class="s2">&quot;drop\extracted&quot;</span>
+</code></pre>
+</div>
+
+<p>Here, <code>drop</code> is relative to the task's working directory. This assumes the Windows agent has a <code>tar</code> executable that supports ZIP extraction and that the output directory is dedicated to these artifacts. Archives with matching filenames can overwrite each other's extracted files.</p>
+
+<p>After changing both occurrences to <code>%%i</code>, the deployment succeeded.</p>
+
+<p>It was a small difference, but one I'll remember the next time a command works in a terminal and fails in a pipeline.</p>
+
+<p>Hope you found this useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>October 22nd, 2026</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/azure-devops/">
+					Azure DevOps
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/windows/">
+					Windows
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/troubleshooting/">
+					Troubleshooting
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/fix-kubernetes-initialization-with-subpath">Fix Kubernetes initialization with subPath</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>While deploying a .NET Core application to production, I came across an error that hadn't appeared in staging:</p>
+
+<div class="codehilite">
+<pre><span></span><code>System.InvalidOperationException: Fresh setup refused: existing private files, keys or uploads requires operator recovery.
+</code></pre>
+</div>
+
+<p>At first, I suspected a permissions issue. The application needed persistent directories for uploads, encryption keys, and configuration, with a separate PVC for each one. This was the container's mount configuration:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nt">volumeMounts</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">uploads</span>
+<span class="w">    </span><span class="nt">mountPath</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/var/lib/app/storage</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">keys</span>
+<span class="w">    </span><span class="nt">mountPath</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/var/lib/app/keys</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">configuration</span>
+<span class="w">    </span><span class="nt">mountPath</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/var/lib/app/configuration</span>
+</code></pre>
+</div>
+
+<p>These are mount entries from the workload, not a complete manifest. Each name refers to a volume backed by its corresponding PVC.</p>
+
+<p>The vendor confirmed that the directories had to be empty during initial setup. To inspect them, I temporarily replaced the container's startup command with <code>sleep</code> and opened a shell inside it.</p>
+
+<p>Listing the storage directory revealed an unexpected entry:</p>
+
+<div class="codehilite">
+<pre><span></span><code>ls<span class="w"> </span>-la<span class="w"> </span>/var/lib/app/storage
+</code></pre>
+</div>
+
+<p>Alongside <code>.</code> and <code>..</code>, there was a <code>lost+found</code> directory. The other two mounts had one too.</p>
+
+<p>Filesystems such as ext4 typically create <code>lost+found</code> during initialization for filesystem recovery. So a freshly provisioned PVC doesn't necessarily expose an empty directory. In this case, the application treated that entry as existing application data and refused to initialize.</p>
+
+<p>The fix was to mount a dedicated subdirectory using <code>subPath</code>:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nt">volumeMounts</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">uploads</span>
+<span class="w">    </span><span class="nt">mountPath</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/var/lib/app/storage</span>
+<span class="w">    </span><span class="nt">subPath</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">app-data</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">keys</span>
+<span class="w">    </span><span class="nt">mountPath</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/var/lib/app/keys</span>
+<span class="w">    </span><span class="nt">subPath</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">app-data</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">configuration</span>
+<span class="w">    </span><span class="nt">mountPath</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/var/lib/app/configuration</span>
+<span class="w">    </span><span class="nt">subPath</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">app-data</span>
+</code></pre>
+</div>
+
+<p>Each of the three separate PVCs then had this layout:</p>
+
+<div class="codehilite">
+<pre><span></span><code>PVC root/
+├── lost+found/
+└── app-data/
+</code></pre>
+</div>
+
+<p>The application now saw only <code>app-data</code> at each mount path, without the <code>lost+found</code> entry. After restoring the normal startup command, initialization succeeded.</p>
+
+<p>The <a href="https://kubernetes.io/docs/concepts/storage/volumes/#using-subpath">Kubernetes volume documentation</a> explains how <code>subPath</code> selects a directory within a volume. Make sure that directory has the permissions required by the container's runtime user. If you reuse one PVC for several mounts, use different subdirectories when the data needs to stay separate.</p>
+
+<p>For an existing deployment, back up the data and plan the move first: files at the PVC root won't automatically appear inside the new subdirectory.</p>
+
+<p>Hope you found this useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>October 21st, 2026</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/kubernetes/">
+					Kubernetes
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/storage/">
+					Storage
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/troubleshooting/">
+					Troubleshooting
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/create-extract-and-inspect-tar-archives">Create, extract, and inspect tar archives</a></h1>
 		<p class="description"></p>
 	</div>
@@ -344,441 +807,6 @@ uploads/banner.jpg
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/check-connectivity-from-a-nodejs-application-pod">Check connectivity from a Node.js application pod</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>I've deployed quite a few Node.js applications over the past three months. Sometimes I just want to do a basic connectivity check from the application's container without installing another tool.</p>
-
-<p>Since Node.js is already there, why not use it?</p>
-
-<p>For a hostname lookup using the container's operating-system resolver, try this:</p>
-
-<div class="codehilite">
-<pre><span></span><code>kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>web-7c9d6f8b5d-k2m4p<span class="w"> </span>-n<span class="w"> </span>staging<span class="w"> </span>-c<span class="w"> </span>app<span class="w"> </span>--<span class="w"> </span>node<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;require(&#39;node:dns&#39;).lookup(&#39;example.com&#39;, { all: true }, (error, addresses) =&gt; { if (error) { console.error(error); process.exitCode = 1; return; } console.log(addresses); })&quot;</span>
-</code></pre>
-</div>
-
-<p>Replace the pod name, namespace, container name, and hostname with your own. An illustrative result might look like this:</p>
-
-<div class="codehilite">
-<pre><span></span><code>[ { address: &#39;192.0.2.10&#39;, family: 4 } ]
-</code></pre>
-</div>
-
-<p>That address is only an example, not the actual address of <code>example.com</code>. Also, <code>dns.lookup()</code> uses the system's name-resolution facilities, which may include <code>/etc/hosts</code>; it isn't necessarily a direct DNS query. The <a href="https://nodejs.org/api/dns.html">Node.js DNS documentation</a> explains the distinction.</p>
-
-<p>To go a step further and make an HTTPS request, use a Node.js runtime with built-in <code>fetch</code> and <code>AbortSignal.timeout</code> support, such as Node.js 18 or later:</p>
-
-<div class="codehilite">
-<pre><span></span><code>kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>web-7c9d6f8b5d-k2m4p<span class="w"> </span>-n<span class="w"> </span>staging<span class="w"> </span>-c<span class="w"> </span>app<span class="w"> </span>--<span class="w"> </span>node<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;fetch(&#39;https://example.com&#39;, { signal: AbortSignal.timeout(10000) }).then(response =&gt; { console.log(&#39;HTTP status:&#39;, response.status); if (!response.ok) process.exitCode = 1; }).catch(error =&gt; { console.error(error); process.exitCode = 1; })&quot;</span>
-</code></pre>
-</div>
-
-<p>An example response is:</p>
-
-<div class="codehilite">
-<pre><span></span><code>HTTP status: 200
-</code></pre>
-</div>
-
-<p>This checks more than name resolution: the request must also connect and complete TLS negotiation before receiving an HTTP response. A <code>401</code> or <code>403</code> still shows that an HTTP server responded, even though access wasn't granted. See the <a href="https://nodejs.org/api/globals.html#fetch">Node.js fetch documentation</a>.</p>
-
-<p>These commands start a new Node.js process, so they won't automatically reproduce proxy settings or custom HTTP clients configured inside your running application.</p>
-
-<p>Hope you found this tip useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>September 15th, 2026</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/nodejs/">
-					Node.js
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/kubernetes/">
-					Kubernetes
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/networking/">
-					Networking
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/devops/">
-					DevOps
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/test-port-connectivity-using-curls-telnet-support">Test port connectivity using curl's Telnet support</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Honestly, I discovered this for the first time recently. I had always used <code>telnet</code> to check whether I could connect to a port, but I never knew curl could do this too.</p>
-
-<p>Here's a quick example:</p>
-
-<div class="codehilite">
-<pre><span></span><code>curl<span class="w"> </span>-v<span class="w"> </span>--connect-timeout<span class="w"> </span><span class="m">5</span><span class="w"> </span>--max-time<span class="w"> </span><span class="m">10</span><span class="w"> </span>telnet://mail.example.com:25
-</code></pre>
-</div>
-
-<p>Replace the hostname and port with the service you're testing. The connection timeout gives it five seconds to establish a connection, while <code>--max-time</code> limits the whole session to ten seconds.</p>
-
-<p>An illustrative excerpt from a reachable SMTP server might look like this:</p>
-
-<div class="codehilite">
-<pre><span></span><code>*   Trying 192.0.2.25:25...
-* Connected to mail.example.com (192.0.2.25) port 25
-220 mail.example.com ESMTP Postfix
-</code></pre>
-</div>
-
-<p>The <code>Connected</code> line confirms that the TCP connection opened. In this example, the SMTP banner also tells us that the server responded. Other services might stay silent until you send something.</p>
-
-<p>Don't be surprised if the command eventually reports a timeout: the TCP connection may have succeeded and then remained open until the ten-second limit. Read the connection messages instead of relying only on the final exit code.</p>
-
-<p>This doesn't verify authentication, TLS, or the health of an entire application. It's just a handy first check when troubleshooting connectivity.</p>
-
-<p>If your curl build reports that Telnet isn't supported, run <code>curl --version</code> and check its protocol list. The <a href="https://curl.se/docs/tutorial.html">curl tutorial</a> includes more about its Telnet support.</p>
-
-<p>Hope you found this useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>September 13th, 2026</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/linux/">
-					Linux
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/networking/">
-					Networking
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/curl/">
-					curl
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/devops/">
-					DevOps
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/find-out-why-a-kubernetes-pod-keeps-crashing">Find out why a Kubernetes pod keeps crashing</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>If you've been deploying applications to Kubernetes for a while, you've probably come across <code>CrashLoopBackOff</code>. Seeing it is annoying, but the useful part is finding out what happened just before the container stopped.</p>
-
-<p>Here's how I would start:</p>
-
-<div class="codehilite">
-<pre><span></span><code>kubectl<span class="w"> </span>get<span class="w"> </span>pod<span class="w"> </span>web-7c9d6f8b5d-k2m4p<span class="w"> </span>-n<span class="w"> </span>staging
-</code></pre>
-</div>
-
-<p>Replace the pod name and namespace with your own. For example, the output might be:</p>
-
-<div class="codehilite">
-<pre><span></span><code>NAME                  READY   STATUS             RESTARTS      AGE
-web-7c9d6f8b5d-k2m4p   0/1     CrashLoopBackOff   5 (34s ago)   8m
-</code></pre>
-</div>
-
-<p>That shows the symptom. To investigate it, get the pod's details:</p>
-
-<div class="codehilite">
-<pre><span></span><code>kubectl<span class="w"> </span>describe<span class="w"> </span>pod<span class="w"> </span>web-7c9d6f8b5d-k2m4p<span class="w"> </span>-n<span class="w"> </span>staging
-</code></pre>
-</div>
-
-<p>Look at the container's state, last termination reason, exit code, and the events near the bottom. An illustrative excerpt could look like this:</p>
-
-<div class="codehilite">
-<pre><span></span><code>State:          Waiting
-  Reason:       CrashLoopBackOff
-Last State:     Terminated
-  Reason:       Error
-  Exit Code:    1
-</code></pre>
-</div>
-
-<p>Next, check the application logs:</p>
-
-<div class="codehilite">
-<pre><span></span><code>kubectl<span class="w"> </span>logs<span class="w"> </span>web-7c9d6f8b5d-k2m4p<span class="w"> </span>-n<span class="w"> </span>staging<span class="w"> </span>-c<span class="w"> </span>app<span class="w"> </span>--tail<span class="o">=</span><span class="m">100</span>
-</code></pre>
-</div>
-
-<p>If the container has already restarted, the previous instance's logs can be more useful:</p>
-
-<div class="codehilite">
-<pre><span></span><code>kubectl<span class="w"> </span>logs<span class="w"> </span>web-7c9d6f8b5d-k2m4p<span class="w"> </span>-n<span class="w"> </span>staging<span class="w"> </span>-c<span class="w"> </span>app<span class="w"> </span>--previous<span class="w"> </span>--tail<span class="o">=</span><span class="m">100</span>
-</code></pre>
-</div>
-
-<p>Here, <code>app</code> is the container name. The <code>--previous</code> flag retrieves logs from its previous terminated instance when available; it isn't a history of every restart. See the <a href="https://kubernetes.io/docs/reference/kubectl/generated/kubectl_logs/">kubectl logs reference</a>.</p>
-
-<p>For example, your application might have logged:</p>
-
-<div class="codehilite">
-<pre><span></span><code>Error: Missing required environment variable DATABASE_URL
-</code></pre>
-</div>
-
-<p>Now you have something specific to investigate: the application's configuration.</p>
-
-<p>If you see <code>ImagePullBackOff</code> or <code>ErrImagePull</code> instead, the image couldn't be pulled, so application logs may not exist yet. Start with the events from <code>describe</code> and check the image name, tag, registry access, and image-pull credentials. The <a href="https://kubernetes.io/docs/tasks/debug/debug-application/debug-running-pod/">Kubernetes debugging guide</a> covers these checks.</p>
-
-<p>Hope you found this tip useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>September 11th, 2026</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/kubernetes/">
-					Kubernetes
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/troubleshooting/">
-					Troubleshooting
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/devops/">
-					DevOps
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/send-a-test-email-from-kubernetes-using-curl">Send a test email from Kubernetes using curl</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>When troubleshooting email delivery, I sometimes want to send a test message from inside the cluster. This helps narrow down whether the SMTP server is reachable from that environment.</p>
-
-<p>For a quick test, you can start a temporary pod with curl installed:</p>
-
-<div class="codehilite">
-<pre><span></span><code>kubectl<span class="w"> </span>run<span class="w"> </span>smtp-test<span class="w"> </span>-n<span class="w"> </span>staging<span class="w"> </span>--rm<span class="w"> </span>-it<span class="w"> </span>--restart<span class="o">=</span>Never<span class="w"> </span>--image<span class="o">=</span>curlimages/curl<span class="w"> </span>--command<span class="w"> </span>--<span class="w"> </span>sh
-</code></pre>
-</div>
-
-<p>Replace <code>staging</code> with your namespace. This creates a separate pod. <code>--command</code> selects the shell, and <code>--restart=Never</code> prevents the container from restarting when it exits. During a normal attached session, <code>--rm</code> cleans up the pod when you're done. See the <a href="https://kubernetes.io/docs/reference/kubectl/generated/kubectl_run/">kubectl run reference</a>.</p>
-
-<p>Inside the shell, send a message through your internal SMTP relay:</p>
-
-<div class="codehilite">
-<pre><span></span><code>curl<span class="w"> </span>-v<span class="w"> </span>--connect-timeout<span class="w"> </span><span class="m">5</span><span class="w"> </span>--max-time<span class="w"> </span><span class="m">30</span><span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--url<span class="w"> </span>smtp://mail.example.com:25<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--mail-from<span class="w"> </span><span class="s1">&#39;sender@example.com&#39;</span><span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--mail-rcpt<span class="w"> </span><span class="s1">&#39;recipient@example.com&#39;</span><span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--crlf<span class="w"> </span>--upload-file<span class="w"> </span>-<span class="w"> </span><span class="s">&lt;&lt;&#39;EOF&#39;</span>
-<span class="s">From: sender@example.com</span>
-<span class="s">To: recipient@example.com</span>
-<span class="s">Subject: Test email from Kubernetes</span>
-
-<span class="s">This is a test message.</span>
-<span class="s">EOF</span>
-</code></pre>
-</div>
-
-<p>Replace the hostname and addresses with real ones before running it. This example assumes an internal relay that allows unauthenticated, unencrypted SMTP from the test pod.</p>
-
-<p>For an authenticated server using STARTTLS on port 587, use these options in the same command:</p>
-
-<div class="codehilite">
-<pre><span></span><code>--url<span class="w"> </span>smtp://mail.example.com:587<span class="w"> </span>--ssl-reqd<span class="w"> </span>--user<span class="w"> </span><span class="s1">&#39;smtp-user&#39;</span>
-</code></pre>
-</div>
-
-<p>With only a username supplied, curl prompts for the password. For implicit TLS, use <code>smtps://mail.example.com:465</code> instead. These options are described in the <a href="https://curl.se/docs/manpage.html">curl manual</a>.</p>
-
-<p>An illustrative excerpt after uploading the message might look like this:</p>
-
-<div class="codehilite">
-<pre><span></span><code>&lt; 250 2.0.0 Ok: queued as A1B2C3D4
-&gt; QUIT
-&lt; 221 2.0.0 Bye
-</code></pre>
-</div>
-
-<p>That means the relay accepted the message, not that it has reached the recipient's inbox. Check delivery logs if it never arrives.</p>
-
-<p>Also, a separate test pod may have different labels and network policies from your application. Treat this as a test from that pod, rather than proof that the application has identical access.</p>
-
-<p>Type <code>exit</code> to finish. If the session was interrupted and the pod remains, remove it with <code>kubectl delete pod smtp-test -n staging</code>.</p>
-
-<p>Hope you found this useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>September 9th, 2026</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/kubernetes/">
-					Kubernetes
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/smtp/">
-					SMTP
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/curl/">
-					curl
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/devops/">
-					DevOps
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/restart-kubernetes-deployments-using-kubectl">Restart Kubernetes deployments using kubectl</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>I usually restart application pods using Argo CD or Rancher. That's convenient for one or two applications, but when there are several deployments to restart, I'd rather do it from the terminal.</p>
-
-<p>First, check the current cluster context and the deployments in your namespace:</p>
-
-<div class="codehilite">
-<pre><span></span><code>kubectl<span class="w"> </span>config<span class="w"> </span>current-context
-kubectl<span class="w"> </span>get<span class="w"> </span>deployments<span class="w"> </span>-n<span class="w"> </span>staging
-</code></pre>
-</div>
-
-<p>Then trigger a restart for one deployment:</p>
-
-<div class="codehilite">
-<pre><span></span><code>kubectl<span class="w"> </span>rollout<span class="w"> </span>restart<span class="w"> </span>deployment/web<span class="w"> </span>-n<span class="w"> </span>staging
-</code></pre>
-</div>
-
-<p>An example response is:</p>
-
-<div class="codehilite">
-<pre><span></span><code>deployment.apps/web restarted
-</code></pre>
-</div>
-
-<p>Replace <code>web</code> and <code>staging</code> with your deployment and namespace. The response confirms that the restart was requested, so I also watch its progress:</p>
-
-<div class="codehilite">
-<pre><span></span><code>kubectl<span class="w"> </span>rollout<span class="w"> </span>status<span class="w"> </span>deployment/web<span class="w"> </span>-n<span class="w"> </span>staging<span class="w"> </span>--timeout<span class="o">=</span>120s
-</code></pre>
-</div>
-
-<p>Once complete, you might see:</p>
-
-<div class="codehilite">
-<pre><span></span><code>deployment &quot;web&quot; successfully rolled out
-</code></pre>
-</div>
-
-<p>To restart all deployments in that namespace:</p>
-
-<div class="codehilite">
-<pre><span></span><code>kubectl<span class="w"> </span>rollout<span class="w"> </span>restart<span class="w"> </span>deployment<span class="w"> </span>-n<span class="w"> </span>staging
-</code></pre>
-</div>
-
-<p>Or narrow it down using a label that exists on your deployments:</p>
-
-<div class="codehilite">
-<pre><span></span><code>kubectl<span class="w"> </span>rollout<span class="w"> </span>restart<span class="w"> </span>deployment<span class="w"> </span>-n<span class="w"> </span>staging<span class="w"> </span>-l<span class="w"> </span><span class="nv">app</span><span class="o">=</span>web
-</code></pre>
-</div>
-
-<p>One distinction worth remembering: this replaces the pods managed by the selected deployments. It doesn't restart every kind of pod in the namespace. Replacement behavior follows each deployment's strategy, so availability still depends on its configuration and available capacity.</p>
-
-<p>You can find more examples in the <a href="https://kubernetes.io/docs/reference/kubectl/generated/kubectl_rollout/">kubectl rollout reference</a>.</p>
-
-<p>Hope you found this useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>September 7th, 2026</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/kubernetes/">
-					Kubernetes
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/devops/">
-					DevOps
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -802,7 +830,7 @@ kubectl<span class="w"> </span>get<span class="w"> </span>deployments<span class
 		
 	
 		
-			<a class="" href="/til/pages/23">23</a>
+			<a class="" href="/til/pages/24">24</a>
 		
 	
 
@@ -829,14 +857,14 @@ kubectl<span class="w"> </span>get<span class="w"> </span>deployments<span class
 		<li>
 			<a href="/category/devops/">
 				DevOps
-				<span class="count">36</span>
+				<span class="count">39</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/linux/">
 				Linux
-				<span class="count">30</span>
+				<span class="count">32</span>
 			</a>
 		</li>
 		
@@ -865,6 +893,13 @@ kubectl<span class="w"> </span>get<span class="w"> </span>deployments<span class
 			<a href="/category/cryptography/">
 				Cryptography
 				<span class="count">12</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/kubernetes/">
+				Kubernetes
+				<span class="count">11</span>
 			</a>
 		</li>
 		
@@ -911,13 +946,6 @@ kubectl<span class="w"> </span>get<span class="w"> </span>deployments<span class
 		</li>
 		
 		<li>
-			<a href="/category/kubernetes/">
-				Kubernetes
-				<span class="count">9</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/vim/">
 				VIM
 				<span class="count">8</span>
@@ -935,6 +963,13 @@ kubectl<span class="w"> </span>get<span class="w"> </span>deployments<span class
 			<a href="/category/c/">
 				C#
 				<span class="count">7</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/troubleshooting/">
+				Troubleshooting
+				<span class="count">6</span>
 			</a>
 		</li>
 		
@@ -1019,6 +1054,20 @@ kubectl<span class="w"> </span>get<span class="w"> </span>deployments<span class
 			<a href="/category/arcade-challenge/">
 				Arcade Challenge
 				<span class="count">4</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/sql/">
+				SQL
+				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/windows/">
+				Windows
+				<span class="count">3</span>
 			</a>
 		</li>
 		
@@ -1114,8 +1163,15 @@ kubectl<span class="w"> </span>get<span class="w"> </span>deployments<span class
 		</li>
 		
 		<li>
-			<a href="/category/troubleshooting/">
-				Troubleshooting
+			<a href="/category/plesk/">
+				Plesk
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/storage/">
+				Storage
 				<span class="count">2</span>
 			</a>
 		</li>
@@ -1123,13 +1179,6 @@ kubectl<span class="w"> </span>get<span class="w"> </span>deployments<span class
 		<li>
 			<a href="/category/thoughts/">
 				Thoughts
-				<span class="count">2</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/windows/">
-				Windows
 				<span class="count">2</span>
 			</a>
 		</li>
@@ -1151,13 +1200,6 @@ kubectl<span class="w"> </span>get<span class="w"> </span>deployments<span class
 		<li>
 			<a href="/category/powershell/">
 				PowerShell
-				<span class="count">2</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/sql/">
-				SQL
 				<span class="count">2</span>
 			</a>
 		</li>
@@ -1243,6 +1285,13 @@ kubectl<span class="w"> </span>get<span class="w"> </span>deployments<span class
 			<a href="/category/wamp/">
 				WAMP
 				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/azure-devops/">
+				Azure DevOps
+				<span class="count">1</span>
 			</a>
 		</li>
 		

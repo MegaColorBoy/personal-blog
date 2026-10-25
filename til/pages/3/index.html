@@ -77,6 +77,447 @@
 					
 <div class="article">
 	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/find-a-kubernetes-pod-and-open-a-shell-inside-it">Find a Kubernetes pod and open a shell inside it</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>At my new job as a Senior DevOps engineer, I have learnt a lot in a short amount of time. One of the first things I got comfortable with was finding an application's pod and opening a shell inside its container.</p>
+
+<p>This is quite useful when you want to check file permissions or explore what is actually running inside your application container.</p>
+
+<p>First, get the pods in your namespace:</p>
+
+<div class="codehilite">
+<pre><span></span><code>kubectl<span class="w"> </span>get<span class="w"> </span>pods<span class="w"> </span>-n<span class="w"> </span>staging
+</code></pre>
+</div>
+
+<p>For example, you might see:</p>
+
+<div class="codehilite">
+<pre><span></span><code>NAME                   READY   STATUS    RESTARTS   AGE
+web-7c9d6f8b5d-k2m4p    1/1     Running   0          2h
+worker-6b8f4d7c9-x5n2q  1/1     Running   0          2h
+</code></pre>
+</div>
+
+<p>Here, <code>staging</code> is an example namespace. Replace it and the pod names with your own throughout this post. Also, make sure <code>kubectl</code> is connected to the intended cluster.</p>
+
+<p>Once you have the pod name, open a shell:</p>
+
+<div class="codehilite">
+<pre><span></span><code>kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-it<span class="w"> </span>web-7c9d6f8b5d-k2m4p<span class="w"> </span>-n<span class="w"> </span>staging<span class="w"> </span>--<span class="w"> </span>/bin/sh
+</code></pre>
+</div>
+
+<p>The <code>-i</code> flag keeps standard input open, and <code>-t</code> allocates a terminal. The <code>--</code> separates kubectl's options from the command you want to run inside the container.</p>
+
+<p>If the pod has multiple containers, choose one explicitly:</p>
+
+<div class="codehilite">
+<pre><span></span><code>kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-it<span class="w"> </span>web-7c9d6f8b5d-k2m4p<span class="w"> </span>-n<span class="w"> </span>staging<span class="w"> </span>-c<span class="w"> </span>app<span class="w"> </span>--<span class="w"> </span>/bin/sh
+</code></pre>
+</div>
+
+<p>The shell depends on the image. <code>/bin/sh</code> is common, while <code>/bin/bash</code> only works if Bash is installed. Some minimal images have no shell at all; in that case, a <a href="https://kubernetes.io/docs/tasks/debug/debug-application/debug-running-pod/#debugging-with-an-ephemeral-debug-container">debug container</a> can help.</p>
+
+<p>Type <code>exit</code> when you're done. This closes your shell session; it doesn't stop the application.</p>
+
+<p>Hope you found this tip useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>September 1st, 2026</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/kubernetes/">
+					Kubernetes
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/enable-password-asterisks-for-sudo-on-fedora">Enable password asterisks for sudo on Fedora</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>After switching from Linux Mint to Fedora, one small difference I noticed was the password prompt behavior in the terminal. On Mint, <code>sudo</code> showed asterisks while typing the password. On Fedora, it stayed blank.</p>
+
+<p>Some people prefer the blank prompt, but I like having visual feedback when typing, especially if I am not fully sure whether I missed a key.</p>
+
+<p>If you want the same behavior on Fedora, you can enable <code>sudo</code> password feedback with a small <code>sudoers</code> change.</p>
+
+<p>This note applies to <code>sudo</code> prompts in the terminal, not graphical login screens.</p>
+
+<h2>1. Open the <code>sudoers</code> file safely</h2>
+
+<p>Do not edit <code>/etc/sudoers</code> directly with a normal text editor. Use <code>visudo</code> so syntax errors are caught before the file is saved:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>visudo
+</code></pre>
+</div>
+
+<h2>2. Enable password feedback</h2>
+
+<p>Add this line:</p>
+
+<div class="codehilite">
+<pre><span></span><code>Defaults<span class="w"> </span>pwfeedback
+</code></pre>
+</div>
+
+<p>If you already have other <code>Defaults</code> lines such as <code>Defaults env_reset</code>, leave them as they are. Just add <code>Defaults pwfeedback</code> as a separate line.</p>
+
+<h2>3. Save and test</h2>
+
+<p>Save the file and exit the editor. Then run a <code>sudo</code> command again, for example:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>-k
+sudo<span class="w"> </span><span class="nb">true</span>
+</code></pre>
+</div>
+
+<p>When prompted for your password, you should now see asterisks as you type. This setting makes password length visible on screen. If that matters in your environment, leave the default behavior in place.</p>
+
+<p>Hope you found this article useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>May 14th, 2026</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/clean-removal-of-linux-from-a-windows-dual-boot-machine">Clean removal of Linux from a Windows dual-boot machine</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Recently, I purchased a ThinkPad X1 Carbon Gen 13 to replace my old Dell XPS 13 9360. It came with Windows 11, and instead of wiping it, I decided to set up a dual-boot system with Linux. I still need Windows for .NET development, but I use Linux most of the time.</p>
+
+<p>I eventually settled on Fedora, but I tried several distributions and desktop environments before getting there. Each time I removed Linux, I needed to clean up the old partitions and boot entries properly so they would not interfere with the next installation.</p>
+
+<p>If you are doing the same kind of distro-hopping on a UEFI system, this is the cleanup process that worked for me.</p>
+
+<p>This note covers UEFI systems only.</p>
+
+<p>If you want to remove Linux from a Windows dual-boot setup, there are two things to clean up:</p>
+
+<ol>
+<li>Delete the Linux partitions.</li>
+<li>Remove the Linux bootloader files and firmware entries.</li>
+</ol>
+
+<p>Before making changes, make sure Windows is working normally and back up anything you want to keep from your Linux installation.</p>
+
+<h2>1. Delete the Linux partitions</h2>
+
+<p>Open Windows Disk Management and identify the partitions that belong to Linux. These are usually the Linux root partition, swap partition, and optionally a separate <code>/home</code> partition.</p>
+
+<p>Do not delete:</p>
+
+<ul>
+<li>The Windows partition</li>
+<li>The EFI System Partition</li>
+<li>The Windows recovery partition</li>
+</ul>
+
+<p>Delete only the Linux partitions, then either leave the space unallocated or extend your Windows partition into it.</p>
+
+<h2>2. Remove Linux bootloader files from the EFI partition</h2>
+
+<p>Open Command Prompt as Administrator and assign a drive letter to the EFI System Partition:</p>
+
+<div class="codehilite">
+<pre><span></span><code>diskpart
+list<span class="w"> </span>vol
+<span class="k">select</span><span class="w"> </span>vol<span class="w"> </span>&lt;EFI<span class="w"> </span>volume<span class="w"> </span>number&gt;
+assign<span class="w"> </span><span class="nv">letter</span><span class="o">=</span>S
+<span class="nb">exit</span>
+</code></pre>
+</div>
+
+<p>Then remove the Linux bootloader directories from the EFI partition:</p>
+
+<div class="codehilite">
+<pre><span></span><code>S:
+<span class="nb">cd</span><span class="w"> </span>EFI
+dir
+rmdir<span class="w"> </span>/s<span class="w"> </span>/q<span class="w"> </span>&lt;linux-folder&gt;
+</code></pre>
+</div>
+
+<p>Only delete the directory that matches your Linux installation. Common names include <code>fedora</code>, <code>ubuntu</code>, <code>debian</code>, and similar distro-specific folders.</p>
+
+<p>Do not delete <code>Microsoft</code>.</p>
+
+<h2>3. Remove stale UEFI firmware boot entries</h2>
+
+<p>List the firmware boot entries:</p>
+
+<div class="codehilite">
+<pre><span></span><code>bcdedit<span class="w"> </span>/enum<span class="w"> </span>firmware
+</code></pre>
+</div>
+
+<p>Look for entries that reference your removed Linux installation, such as descriptions containing <code>Fedora</code>, <code>ubuntu</code>, <code>GRUB</code>, or a path that points to the distro's EFI loader.</p>
+
+<p>Delete only the matching Linux entry:</p>
+
+<div class="codehilite">
+<pre><span></span><code>bcdedit<span class="w"> </span>/delete<span class="w"> </span><span class="o">{</span>xxxx-xxxx-xxxx-xxxx<span class="o">}</span>
+</code></pre>
+</div>
+
+<p>Replace <code>{xxxx-xxxx-xxxx-xxxx}</code> with the actual identifier from the previous command.</p>
+
+<h2>4. Reboot and verify</h2>
+
+<p>Reboot the machine and confirm that the Linux boot entry is gone from the firmware boot menu and that Windows starts normally.</p>
+
+<p>Hope you found this article useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>May 13th, 2026</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/linux/">
+					Linux
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/windows/">
+					Windows
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/uefi/">
+					UEFI
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/why-hangfire-recurring-jobs-should-always-have-stable-ids">Why Hangfire recurring jobs should always have stable IDs?</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Recently, I learned that <strong>not giving explicit IDs to Hangfire recurring jobs can silently create duplicates</strong>.</p>
+
+<p>When you call <code>RecurringJob.AddOrUpdate(...)</code> without a pre-defined ID, Hangfire auto-generates one based on the method expression. That sounds fine—until you deploy across multiple nodes or refactor your code.</p>
+
+<p>In such cases, Hangfire may generate a <em>new derived ID</em>, while the old recurring job continues running in the background. The result? <strong>Duplicate jobs executing on schedule</strong>, often goes unnoticed.</p>
+
+<h2>Simple fix</h2>
+
+<p>Make sure that you always pass a clear, human-readable ID:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="n">RecurringJob</span><span class="p">.</span><span class="n">AddOrUpdate</span><span class="o">&lt;</span><span class="n">ICustomBackgroundServiceManager</span><span class="o">&gt;</span><span class="p">(</span>
+<span class="w">    </span><span class="s">&quot;payments:reconcile-3h&quot;</span><span class="p">,</span><span class="w"> </span><span class="c1">// Human-readable ID</span>
+<span class="w">    </span><span class="n">s</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">ResendPaymentReportToVendorHourly</span><span class="p">(),</span>
+<span class="w">    </span><span class="n">Cron</span><span class="p">.</span><span class="n">Hourly</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="p">);</span>
+</code></pre>
+</div>
+
+<p>Next, ensure that overlaps are impossible in a multi-node setup by adding this attribute to your job method:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="na">[DisableConcurrentExecution(timeoutInSeconds: 3600)]</span>
+<span class="k">public</span><span class="w"> </span><span class="n">Task</span><span class="w"> </span><span class="nf">ResendPaymentReportToVendorHourly</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="cm">/* ... */</span><span class="w"> </span><span class="p">}</span>
+</code></pre>
+</div>
+
+<p>This uses a <strong>distributed lock</strong> backed by Hangfire storage—so even with multiple nodes, only one execution runs at a time. If you’re wondering whether this locks the job for the full hour: <strong>it doesn’t</strong>. The timeout exists for crash-safety, not throttling.</p>
+
+<p>After doing this, recurring jobs become much easier to reason about, identify, pause, or delete in a multi-node environment.</p>
+
+<p>Hope you found this tip useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>January 5th, 2026</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/c/">
+					C#
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/hangfire/">
+					Hangfire
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
+		<h1 class="heading"><a href="/til/posts/running-laravel-queues-with-supervisor-on-ubuntu">Running Laravel queues with Supervisor on Ubuntu</a></h1>
+		<p class="description"></p>
+	</div>
+	<div class="article-body">
+		<p>Laravel queues aren’t new to me, but I realized I’d never really written down how I usually set them up on a fresh Ubuntu server.</p>
+
+<p>Whenever I need queue workers to run continuously — and survive restarts or crashes — I almost always reach for <strong>Supervisor</strong>. It’s simple, boring, and gets the job done.</p>
+
+<p>First, install it on your server:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>update
+sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>supervisor
+</code></pre>
+</div>
+
+<p>Then create a small config file for the queue worker:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>vim<span class="w"> </span>/etc/supervisor/conf.d/laravel-worker.conf
+</code></pre>
+</div>
+
+<p>This is the setup I generally start with:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">[program:laravel-worker]</span>
+<span class="na">process_name</span><span class="o">=</span><span class="s">%(program_name)s_%(process_num)02d</span>
+<span class="na">command</span><span class="o">=</span><span class="s">php /var/www/project/artisan queue:work --sleep=3 --tries=3 --max-time=3600</span>
+<span class="na">autostart</span><span class="o">=</span><span class="s">true</span>
+<span class="na">autorestart</span><span class="o">=</span><span class="s">true</span>
+<span class="na">user</span><span class="o">=</span><span class="s">www-data</span>
+<span class="na">numprocs</span><span class="o">=</span><span class="s">2</span>
+<span class="na">redirect_stderr</span><span class="o">=</span><span class="s">true</span>
+<span class="na">stdout_logfile</span><span class="o">=</span><span class="s">/var/www/project/storage/logs/laravel-worker.log</span>
+<span class="na">stopwaitsecs</span><span class="o">=</span><span class="s">600</span>
+</code></pre>
+</div>
+
+<p>A few quick notes on what this does:</p>
+
+<ul>
+<li>It runs <code>queue:work</code> instead of <code>queue:listen</code>, so the worker stays in memory</li>
+<li>Two worker processes are started in parallel (<code>numprocs=2</code>)</li>
+<li>If the queue is empty, the worker sleeps for a few seconds instead of spinning</li>
+<li>Failed jobs are retried a limited number of times</li>
+<li>The worker is force-restarted every hour to avoid memory leaks</li>
+<li>If a worker crashes, Supervisor brings it back up automatically</li>
+</ul>
+
+<p>Once the file is saved, reload Supervisor’s config:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>supervisorctl<span class="w"> </span>reread
+sudo<span class="w"> </span>supervisorctl<span class="w"> </span>update
+</code></pre>
+</div>
+
+<p>Start the workers:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>supervisorctl<span class="w"> </span>start<span class="w"> </span>laravel-worker:*
+</code></pre>
+</div>
+
+<p>And check their status:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>supervisorctl<span class="w"> </span>status
+</code></pre>
+</div>
+
+<p>Whenever I deploy new code or change environment variables, I just restart them:</p>
+
+<div class="codehilite">
+<pre><span></span><code>sudo<span class="w"> </span>supervisorctl<span class="w"> </span>restart<span class="w"> </span>laravel-worker:*
+</code></pre>
+</div>
+
+<p>Logs end up in Laravel’s <code>storage/logs</code>, which is usually the first place I look when something feels off.</p>
+
+<p>This setup has been reliable for me across multiple projects. No dashboards, no extra moving parts — just queue workers quietly doing their job in the background.</p>
+
+<p>Hope you found this useful!</p>
+
+	</div>
+	<div class="article-footer">
+		<time>January 4th, 2026</time>
+		<ul class="tags">
+			
+			<li>
+				<a href="/category/laravel/">
+					Laravel
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/ubuntu/">
+					Ubuntu
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/devops/">
+					DevOps
+				</a>
+			</li>
+			
+			<li>
+				<a href="/category/supervisor/">
+					Supervisor
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+
+				
+					
+<div class="article">
+	<div class="article-header">
 		<h1 class="heading"><a href="/til/posts/datetimekind-unspecified-can-quietly-break-your-dates">DateTimeKind.Unspecified can quietly break your dates</a></h1>
 		<p class="description"></p>
 	</div>
@@ -275,623 +716,6 @@ banner.jpeg
 </div>
 
 				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/ubuntu-bootloader-recovery">Ubuntu Bootloader Recovery</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>This is a guide on how to recover Ubuntu's GRUB Bootloader in the case of whenever a LVM UUID is changed or corrupted.</p>
-
-<h2>The Problem</h2>
-
-<p>The error <code>"disk not found: /xxx-xxx"</code> in <code>grub rescue&gt;</code> mode suggests GRUB can't find the device or logical volume it was previously configured to boot from. </p>
-
-<p>This usually happens when:
-* LVM volumes weren't activated during boot
-* The volume group UUID changed or became corrupted</p>
-
-<h2>The Context</h2>
-
-<p>The <code>/xxx-xxx</code> in the message is likely referring to a <strong>LVM volume by UUID</strong>, e.g.:</p>
-
-<div class="codehilite">
-<pre><span></span><code>error:<span class="w"> </span>disk<span class="w"> </span><span class="s1">&#39;lvmid/XXX-XXX-XXX&#39;</span><span class="w"> </span>not<span class="w"> </span>found
-</code></pre>
-</div>
-
-<p>This typically means GRUB is referencing a <strong>missing or renamed LVM LV or VG</strong></p>
-
-<h2>The Solution</h2>
-
-<p>Boot from a live ISO, open a terminal and follow these steps:</p>
-
-<h3>1. Check Disks and LVM State</h3>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>lsblk
-sudo<span class="w"> </span>fdisk<span class="w"> </span>-l
-</code></pre>
-</div>
-
-<p>Then:</p>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>vgscan
-</code></pre>
-</div>
-
-<p>This activates any found LVM volume groups and logical volumes.</p>
-
-<p>Then verify with:</p>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>lvdisplay
-</code></pre>
-</div>
-
-<h3>3. Mount the System Manually</h3>
-
-<p>Assuming your root volume is <code>/dev/mapper/your_lvm_drive</code>:</p>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>mkdir<span class="w"> </span>/mnt/recovery
-sudo<span class="w"> </span>mount<span class="w"> </span>/dev/mapper/your_lvm_drive<span class="w"> </span>/mnt/recovery
-</code></pre>
-</div>
-
-<h3>4. Prepare for chroot</h3>
-
-<div class="codehilite">
-<pre><span></span><code>sudo<span class="w"> </span>mount<span class="w"> </span>--bind<span class="w"> </span>/dev<span class="w"> </span>/mnt/recovery/dev
-sudo<span class="w"> </span>mount<span class="w"> </span>--bind<span class="w"> </span>/proc<span class="w"> </span>/mnt/recovery/proc
-sudo<span class="w"> </span>mount<span class="w"> </span>--bind<span class="w"> </span>/sys<span class="w"> </span>/mnt/recovery/sys
-sudo<span class="w"> </span>chroot<span class="w"> </span>/mnt/recovery
-</code></pre>
-</div>
-
-<p>The <code>chroot</code> command changes the root directory for the kernel, effectively making a specified directory the new starting point for any file access within the chrooted process. </p>
-
-<h3>5. Reinstall GRUB</h3>
-
-<div class="codehilite">
-<pre><span></span><code>grub-install<span class="w"> </span>/dev/sdX<span class="w">  </span><span class="c1"># Replace sdX with the actual disk (like /dev/sda)</span>
-update-grub
-</code></pre>
-</div>
-
-<p>Exit <code>chroot</code> mode, unmount the recovery path from live-boot OS and reboot the system:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="nb">exit</span>
-sudo<span class="w"> </span>umount<span class="w"> </span>-R<span class="w"> </span>/mnt/recovery
-sudo<span class="w"> </span>reboot
-</code></pre>
-</div>
-
-<p>Hope you found this article useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>June 12th, 2025</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/ubuntu/">
-					Ubuntu
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/devops/">
-					DevOps
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/linux/">
-					Linux
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/grub/">
-					GRUB
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/eliminate-laravel-env-leakage-between-multiple-sites-on-apache-windows">Eliminate Laravel .env leakage between multiple sites on Apache (Windows)</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Today, I learned something pretty important (and frustrating until I figured it out): if you're running <strong>multiple Laravel applications</strong> on <strong>Apache (Windows)</strong> using <code>mod_php</code>, you can run into a strange bug where <strong>one site's <code>.env</code> settings override the other</strong>.</p>
-
-<p>This became painfully obvious when I noticed that <strong>one of my Laravel sites was randomly connecting to the wrong database</strong>, even though the configurations in each <code>.env</code> were different. Weird, right?</p>
-
-<p>Turns out, the culprit was <code>mod_php</code>.</p>
-
-<h2>The problem</h2>
-
-<p>I had two Laravel sites hosted on the same Windows machine with Apache. Both were running fine — until they weren’t.</p>
-
-<p>The issue? Sometimes one site would pick up the database config of the other. One minute I’d be on Site A, and then somehow its <code>.env</code> settings were coming from Site B. </p>
-
-<p>This is just total chaos and worse, this issue existed from more two years until I decided to dive into the problem.</p>
-
-<h2>The cause</h2>
-
-<p>Laravel loads <code>.env</code> values during the bootstrap process and <strong>caches them in memory</strong>. When using <code>mod_php</code>, Apache loads PHP as a module <strong>once</strong> and shares it across all sites. That means <strong>only one copy of Laravel’s environment gets loaded — and reused</strong> across both apps.</p>
-
-<p>So even if each app had its own <code>.env</code>, it didn’t matter. Apache was essentially saying:</p>
-
-<blockquote>
-  <p>“Hey, here’s PHP. I already booted Laravel with this config — just reuse it.”</p>
-</blockquote>
-
-<h2>The solution</h2>
-
-<p>After some digging, the solution is <strong>ditch <code>mod_php</code></strong> and switch to <strong>FastCGI (<code>mod_fcgid</code>)</strong>.</p>
-
-<p>With FastCGI, each site runs its own instance of PHP via <code>php-cgi.exe</code>, which <strong>boots Laravel in isolation</strong> — meaning <strong>each <code>.env</code> file is respected per site</strong>.</p>
-
-<h3>How to configure it?</h3>
-
-<p>First, you need to disable <strong><code>mod_php</code></strong> in <code>httpd.conf</code>:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="c"># LoadModule php_module &quot;C:/path/to/php/php8apache2_4.dll&quot;</span>
-<span class="c"># &lt;FilesMatch \.php$&gt;</span>
-<span class="c">#     SetHandler application/x-httpd-php</span>
-<span class="c"># &lt;/FilesMatch&gt;</span>
-<span class="c"># PHPIniDir &quot;C:/path/to/php/&quot;</span>
-</code></pre>
-</div>
-
-<p>Then install <strong><code>mod_fcgid</code></strong> from Apache Lounge and copy <code>mod_fcgid.so</code> to <code>modules/</code> directory and enable it in <code>httpd.conf</code>:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="nb">LoadModule</span><span class="w"> </span>fcgid_module<span class="w"> </span>modules/mod_fcgid.so
-<span class="nb">Include</span><span class="w"> </span>conf/extra/httpd-fcgid.conf
-</code></pre>
-</div>
-
-<p>Next, you have to create/update <strong><code>httpd-fcgid.conf</code></strong>:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="nt">&lt;IfModule</span><span class="w"> </span><span class="s">fcgid_module</span><span class="nt">&gt;</span>
-<span class="w">   </span><span class="nb">AddHandler</span><span class="w"> </span>fcgid-script<span class="w"> </span>.php
-<span class="w">   </span><span class="nb">FcgidInitialEnv</span><span class="w"> </span>PHPRC<span class="w"> </span><span class="s2">&quot;C:/path/to/php&quot;</span>
-<span class="w">   </span><span class="nb">FcgidWrapper</span><span class="w"> </span><span class="s2">&quot;C:/path/to/php/php-cgi.exe&quot;</span><span class="w"> </span>.php
-<span class="w">   </span><span class="nb">Options</span><span class="w"> </span>+ExecCGI
-<span class="w">   </span><span class="nb">FcgidMaxProcessesPerClass</span><span class="w"> </span><span class="m">150</span>
-<span class="w">   </span><span class="nb">FcgidMaxRequestsPerProcess</span><span class="w"> </span><span class="m">1000</span>
-<span class="w">   </span><span class="nb">FcgidProcessLifeTime</span><span class="w"> </span><span class="m">300</span>
-<span class="w">   </span><span class="nb">FcgidIOTimeout</span><span class="w"> </span><span class="m">120</span>
-<span class="w">   </span><span class="nb">FcgidPassHeader</span><span class="w"> </span>Authorization
-<span class="w">   </span><span class="nb">FcgidFixPathinfo</span><span class="w"> </span><span class="m">0</span>
-<span class="nt">&lt;/IfModule&gt;</span>
-</code></pre>
-</div>
-
-<p>And then atlast, update your virtual host:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="nt">&lt;VirtualHost</span><span class="w"> </span><span class="s">*:443</span><span class="nt">&gt;</span>
-<span class="w">   </span><span class="nb">ServerName</span><span class="w"> </span>example.com
-<span class="w">   </span><span class="nb">DocumentRoot</span><span class="w"> </span><span class="s2">&quot;C:/path/to/website/public&quot;</span>
-
-<span class="w">   </span><span class="nt">&lt;Directory</span><span class="w"> </span><span class="s">&quot;C:/path/to/website/public&quot;</span><span class="nt">&gt;</span>
-<span class="w">      </span><span class="nb">Options</span><span class="w"> </span>+ExecCGI<span class="w"> </span>-Indexes<span class="w"> </span>+FollowSymLinks
-<span class="w">      </span><span class="nb">AllowOverride</span><span class="w"> </span><span class="k">All</span>
-<span class="w">      </span><span class="nb">Require</span><span class="w"> </span><span class="k">all</span><span class="w"> </span>granted
-<span class="w">      </span><span class="nb">AddHandler</span><span class="w"> </span>fcgid-script<span class="w"> </span>.php
-<span class="w">      </span><span class="nb">FCGIWrapper</span><span class="w"> </span><span class="s2">&quot;C:/path/to/php/php-cgi.exe&quot;</span><span class="w"> </span>.php
-<span class="w">   </span><span class="nt">&lt;/Directory&gt;</span>
-
-<span class="w">   </span><span class="nb">SSLEngine</span><span class="w"> </span><span class="k">on</span>
-<span class="w">   </span><span class="nb">SSLCertificateFile</span><span class="w"> </span><span class="s2">&quot;...&quot;</span>
-<span class="w">   </span><span class="nb">SSLCertificateKeyFile</span><span class="w"> </span><span class="s2">&quot;...&quot;</span>
-<span class="nt">&lt;/VirtualHost&gt;</span>
-</code></pre>
-</div>
-
-<p>Restart the nginx service and clear the laravel application cache:</p>
-
-<div class="codehilite">
-<pre><span></span><code>httpd<span class="w"> </span>-k<span class="w"> </span>restart
-php<span class="w"> </span>artisan<span class="w"> </span>config:clear
-php<span class="w"> </span>artisan<span class="w"> </span>cache:clear
-</code></pre>
-</div>
-
-<h3>Bonus: Fixing 403 Forbidden Errors</h3>
-
-<p>After switching to FastCGI, I ran into a <code>403 Forbidden</code> error on one site. That turned out to be a <strong>missing <code>Options +ExecCGI</code></strong> and <code>Require all granted</code> in the <code>&lt;Directory&gt;</code> block. Once added, everything worked perfectly.</p>
-
-<h2>Result</h2>
-
-<p>Now, each Laravel site runs completely isolated, even though they use the same <code>php-cgi.exe</code>. No more <code>.env</code> bleed. No more wrong DBs. Just clean, independent Laravel environments — as it should be.</p>
-
-<h2>Takeaways</h2>
-
-<ul>
-<li>Don’t run multiple Laravel apps on Apache with <code>mod_php</code> unless you're okay with shared config risks.</li>
-<li>Use <code>mod_fcgid</code> and <code>php-cgi.exe</code> for <strong>true isolation</strong>.</li>
-<li>Even if using the <strong>same PHP version</strong>, FastCGI will <strong>spawn separate processes</strong>, so <code>.env</code> loading stays scoped.</li>
-<li>Always check Apache error logs (<code>error.log</code>) and <code>php_sapi_name()</code> for confirmation.</li>
-</ul>
-
-<p>If you’re running Laravel on Windows with Apache — <strong>this fix is a must</strong>. </p>
-
-<p>Happy hosting and hope you found this article useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>May 13th, 2025</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/php/">
-					PHP
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/devops/">
-					DevOps
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/windows/">
-					Windows
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/apache/">
-					Apache
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/removing-commits-from-a-branch-using-git-interactive-rebase">Removing Commits from a Branch Using Git Interactive Rebase</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>I'm working on a project that had approximately five minor incident fixes. However, I got approval from the client side to push only three of them. Luckily, my commits are atomic, so making this build was easier than I thought.</p>
-
-<p>At this moment, I decided to clone the latest branch into a temporary branch and roll back two commits for today's deployment while keeping the latest branch intact with all the fixes.</p>
-
-<p>To achieve this, I used <strong>Git interactive rebase</strong>, a powerful tool for modifying commit history.</p>
-
-<h2>Why Use Interactive Rebase?</h2>
-
-<p>Interactive rebase allows you to modify commit history, including:</p>
-
-<ul>
-<li>Removing unwanted commits</li>
-<li>Reordering commits</li>
-<li>Squashing multiple commits into one</li>
-<li>Editing commit messages</li>
-</ul>
-
-<h2>How I Did It?</h2>
-
-<p>Here’s the step-by-step process I followed:</p>
-
-<h3>1. Clone the Branch</h3>
-
-<p>Before making any changes, I cloned the branch to have a backup:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>checkout<span class="w"> </span>-b<span class="w"> </span>my-cloned-branch<span class="w"> </span>original-branch
-</code></pre>
-</div>
-
-<h3>2. Start Interactive Rebase</h3>
-
-<p>To remove specific commits, I ran:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>rebase<span class="w"> </span>-i<span class="w"> </span>HEAD~N
-</code></pre>
-</div>
-
-<p>Where <code>N</code> is the number of commits I wanted to review. This opened an editor displaying the most recent commits.</p>
-
-<h3>3. Modify the Commit List</h3>
-
-<p>The interactive rebase interface showed something like this:</p>
-
-<div class="codehilite">
-<pre><span></span><code>pick<span class="w"> </span>abc123<span class="w"> </span>Commit<span class="w"> </span>message<span class="w"> </span><span class="m">1</span>
-pick<span class="w"> </span>def456<span class="w"> </span>Commit<span class="w"> </span>message<span class="w"> </span><span class="m">2</span>
-pick<span class="w"> </span>ghi789<span class="w"> </span>Commit<span class="w"> </span>message<span class="w"> </span><span class="m">3</span>
-</code></pre>
-</div>
-
-<p>To <strong>remove</strong> a commit, I replaced <code>pick</code> with <code>drop</code>.</p>
-
-<p>To <strong>edit</strong> or <strong>squash</strong> commits, I could replace <code>pick</code> with commands like <code>edit</code> or <code>squash</code>.</p>
-
-<p>After making my changes, I saved and closed the editor.</p>
-
-<h3>4. Handle Any Conflicts (If Needed)</h3>
-
-<p>If Git encountered conflicts, it prompted me to resolve them. I fixed the files and continued the rebase:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>rebase<span class="w"> </span>--continue
-</code></pre>
-</div>
-
-<h2>Key Takeaways</h2>
-
-<ul>
-<li>Interactive rebase is powerful for cleaning up commit history.</li>
-<li>Always clone or create a backup branch before rebasing.</li>
-<li>If working with a team, communicate before modifying shared branches.</li>
-</ul>
-
-<p>This was a great learning experience, and now I feel more confident managing Git history efficiently!</p>
-
-<p>Hope you found this tip useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>February 24th, 2025</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/git/">
-					Git
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/vcs/">
-					VCS
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/recovering-my-sql-after-an-accidental-binlog-deletion">Recovering MySQL After an Accidental Binlog Deletion</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Last night, I found myself debugging a MySQL issue at an ungodly hour. The <strong>MySQL80 service refused to start</strong>, throwing a vague error:  </p>
-
-<blockquote>
-  <p><em>The MySQL80 service started and then stopped…</em>  </p>
-</blockquote>
-
-<p>Digging into <code>mysql.err</code>, I discovered the culprit—someone (not me! 😤) had <strong>accidentally deleted a binary log (<code>mysql-bin.000xxx</code>)</strong> while MySQL was still tracking it. Since MySQL relies on binlogs for replication and crash recovery, it panicked when it couldn't find the missing file.  </p>
-
-<h2>The Fix</h2>
-
-<p>To get MySQL running again, I had to:  </p>
-
-<ul>
-<li><strong>Disable binary logging</strong> (since this is a standalone server)  </li>
-<li><strong>Delete the corrupt binlog index file</strong> (<code>mysql-bin.index</code>)  </li>
-<li><strong>Purge all old binlog files</strong> that were hogging disk space  </li>
-</ul>
-
-<h2>How to Properly Disable Binary Logging in MySQL 8.0?</h2>
-
-<p>Since <strong>MySQL 8.0 enables binlogs by default</strong>, simply removing <code>log-bin=mysql-bin</code> from <code>my.ini</code> wasn’t enough. I had to:  </p>
-
-<h3>Comment out the existing binlog setting in my.ini</h3>
-
-<div class="codehilite">
-<pre><span></span><code><span class="c1"># log-bin=mysql-bin</span>
-</code></pre>
-</div>
-
-<h3>Explicitly disable binary logging</h3>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">[mysqld]</span>
-<span class="na">skip-log-bin</span>
-</code></pre>
-</div>
-
-<h3>Delete the old <code>mysql-bin.index</code> file</h3>
-
-<ul>
-<li>This file keeps track of all binary log files.  </li>
-<li>Since a referenced binlog file was deleted, MySQL would <strong>fail to start</strong> if the index still contained entries for missing files.  </li>
-<li>Deleting it ensures that MySQL doesn’t look for non-existent logs.  </li>
-</ul>
-
-<p>After restarting the service, I confirmed binlogging was off with:  </p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">SHOW</span><span class="w"> </span><span class="n">VARIABLES</span><span class="w"> </span><span class="k">LIKE</span><span class="w"> </span><span class="s1">&#39;log_bin&#39;</span><span class="p">;</span>
-</code></pre>
-</div>
-
-<p>Output:  </p>
-
-<div class="codehilite">
-<pre><span></span><code>log_bin<span class="w"> </span><span class="p">|</span><span class="w"> </span>OFF
-</code></pre>
-</div>
-
-<p>In conclusion, crisis averted, disk space reclaimed and finally got some sleep. 😴</p>
-
-<p>Hope you found this useful!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>February 18th, 2025</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/mysql/">
-					MySQL
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/databases/">
-					Databases
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/devops/">
-					DevOps
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
-					
-<div class="article">
-	<div class="article-header">
-		<h1 class="heading"><a href="/til/posts/how-to-revert-a-git-commit-on-the-server">How to Revert a Git Commit on the Server?</a></h1>
-		<p class="description"></p>
-	</div>
-	<div class="article-body">
-		<p>Today I learned how to revert a Git commit after pulling it on a server. Whether you've made a mistake or just need to backtrack, Git offers several ways to undo commits depending on your situation. Here's a quick guide on how to handle it.</p>
-
-<h2>If you haven't pushed the commit yet</h2>
-
-<p>If the commit hasn't been pushed to the remote repository, you can use <code>git reset</code> to undo it.</p>
-
-<h2>Soft Reset (keeps changes staged)</h2>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>reset<span class="w"> </span>--soft<span class="w"> </span>HEAD~1
-</code></pre>
-</div>
-
-<p>This moves the HEAD back by one commit but keeps your changes staged.</p>
-
-<h2>Mixed Reset (keeps changes unstaged):</h2>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>reset<span class="w"> </span>--mixed<span class="w"> </span>HEAD~1
-</code></pre>
-</div>
-
-<p>This moves the HEAD back by one commit and unstages your changes.</p>
-
-<h2>Hard Reset (discards changes):</h2>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>reset<span class="w"> </span>--hard<span class="w"> </span>HEAD~1
-</code></pre>
-</div>
-
-<p>This completely removes the last commit and discards any changes.</p>
-
-<blockquote>
-  <p><strong>Tip:</strong> Replace <code>HEAD~1</code> with <code>HEAD~2</code> to go back two commits, and so on.</p>
-</blockquote>
-
-<h2>If you've already pushed the commit</h2>
-
-<h3>Revert the commit (safe for shared repos):</h3>
-
-<p>If you've already pushed the commit and want to undo it without rewriting history, use <code>git revert</code>. This creates a new commit that undoes the changes.</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>revert<span class="w"> </span>&lt;commit_hash&gt;
-</code></pre>
-</div>
-
-<p>Find the commit hash using:</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>log<span class="w"> </span>--oneline
-</code></pre>
-</div>
-
-<h3>Force Reset (i.e. if you're okay with rewriting history):</h3>
-
-<p>If you don't mind rewriting history (and no one else is working on the branch), you can force reset.</p>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>reset<span class="w"> </span>--hard<span class="w"> </span>&lt;commit_hash&gt;
-git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>HEAD<span class="w"> </span>--force
-</code></pre>
-</div>
-
-<div class="post-notification">
-    <h3>⚠️Warning</h3>
-    <p>This is not recommended if others are working on the same branch as it can cause conflicts.</p>
-</div>
-
-<h2>If you just pulled and want to undo</h2>
-
-<p>If you just pulled and want to undo the merge, you can reset to the previous state using <code>ORIG_HEAD</code>.</p>
-
-<h3>Undo a merge pull:</h3>
-
-<div class="codehilite">
-<pre><span></span><code>git<span class="w"> </span>reset<span class="w"> </span>--hard<span class="w"> </span>ORIG_HEAD
-</code></pre>
-</div>
-
-<p>This will bring your repository back to the state before the last pull.</p>
-
-<h3>Final thoughts</h3>
-
-<p>Reverting commits can seem daunting at first, but once you understand the tools Git offers, it's pretty straightforward. Always double-check before using <code>--hard</code> or <code>--force</code> to avoid accidental data loss!</p>
-
-<p>Hope this helps you get back on track!</p>
-
-	</div>
-	<div class="article-footer">
-		<time>February 5th, 2025</time>
-		<ul class="tags">
-			
-			<li>
-				<a href="/category/git/">
-					Git
-				</a>
-			</li>
-			
-			<li>
-				<a href="/category/vcs/">
-					VCS
-				</a>
-			</li>
-			
-		</ul>
-	</div>
-</div>
-
-				
 			</div>
 			
 <div class="pagination">
@@ -925,7 +749,7 @@ git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </
 		
 	
 		
-			<a class="" href="/til/pages/23">23</a>
+			<a class="" href="/til/pages/24">24</a>
 		
 	
 
@@ -952,14 +776,14 @@ git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </
 		<li>
 			<a href="/category/devops/">
 				DevOps
-				<span class="count">36</span>
+				<span class="count">39</span>
 			</a>
 		</li>
 		
 		<li>
 			<a href="/category/linux/">
 				Linux
-				<span class="count">30</span>
+				<span class="count">32</span>
 			</a>
 		</li>
 		
@@ -988,6 +812,13 @@ git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </
 			<a href="/category/cryptography/">
 				Cryptography
 				<span class="count">12</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/kubernetes/">
+				Kubernetes
+				<span class="count">11</span>
 			</a>
 		</li>
 		
@@ -1034,13 +865,6 @@ git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </
 		</li>
 		
 		<li>
-			<a href="/category/kubernetes/">
-				Kubernetes
-				<span class="count">9</span>
-			</a>
-		</li>
-		
-		<li>
 			<a href="/category/vim/">
 				VIM
 				<span class="count">8</span>
@@ -1058,6 +882,13 @@ git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </
 			<a href="/category/c/">
 				C#
 				<span class="count">7</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/troubleshooting/">
+				Troubleshooting
+				<span class="count">6</span>
 			</a>
 		</li>
 		
@@ -1142,6 +973,20 @@ git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </
 			<a href="/category/arcade-challenge/">
 				Arcade Challenge
 				<span class="count">4</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/sql/">
+				SQL
+				<span class="count">3</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/windows/">
+				Windows
+				<span class="count">3</span>
 			</a>
 		</li>
 		
@@ -1237,8 +1082,15 @@ git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </
 		</li>
 		
 		<li>
-			<a href="/category/troubleshooting/">
-				Troubleshooting
+			<a href="/category/plesk/">
+				Plesk
+				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/storage/">
+				Storage
 				<span class="count">2</span>
 			</a>
 		</li>
@@ -1246,13 +1098,6 @@ git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </
 		<li>
 			<a href="/category/thoughts/">
 				Thoughts
-				<span class="count">2</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/windows/">
-				Windows
 				<span class="count">2</span>
 			</a>
 		</li>
@@ -1274,13 +1119,6 @@ git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </
 		<li>
 			<a href="/category/powershell/">
 				PowerShell
-				<span class="count">2</span>
-			</a>
-		</li>
-		
-		<li>
-			<a href="/category/sql/">
-				SQL
 				<span class="count">2</span>
 			</a>
 		</li>
@@ -1366,6 +1204,13 @@ git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </
 			<a href="/category/wamp/">
 				WAMP
 				<span class="count">2</span>
+			</a>
+		</li>
+		
+		<li>
+			<a href="/category/azure-devops/">
+				Azure DevOps
+				<span class="count">1</span>
 			</a>
 		</li>
 		
